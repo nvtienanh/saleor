@@ -8,10 +8,17 @@ find_replace () {
         else
             if ! [[ $pathname =~ "__pycache__" ]]; then
                 # Rename content
-                case "$newpath" in
+                case "$pathname" in
                     *.py|*.yaml)
-                    sed -i 's/Product/Room/g' $newpath
-                    sed -i 's/Product/Room/g' $newpath
+                    # Mapping Product -> Room
+                    sed -i 's/Product/Room/g' $pathname
+                    sed -i 's/product/room/g' $pathname
+                    sed -i 's/PRODUCT/ROOM/g' $pathname
+
+                    # Mapping Warehouse -> Hotel
+                    sed -i 's/Warehouse/Hotel/g' $pathname
+                    sed -i 's/warehouse/hotel/g' $pathname
+                    sed -i 's/WAREHOUSE/HOTEL/g' $pathname
                 esac
             fi
         fi

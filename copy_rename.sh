@@ -14,16 +14,14 @@ copy_rename () {
                 newpath="$(echo $newpath | sed -e 's/saleor/vanphong/')"
                 
                 # Move new path
-                if ![ -z "$newpath" ] then
+                if ! [ -z "$newpath" ]; then
                     printf 'Copy file: %s\n' "$newpath"
                     mkdir -p `dirname $newpath`
                     cp -r $pathname $newpath
                 fi
-
             fi
         fi
     done
 }
 
 copy_rename "saleor"
-# find_replace "vanphong"
