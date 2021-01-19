@@ -6,9 +6,9 @@ from prices import Money, TaxedMoney
 
 from ...payment import ChargeStatus, PaymentError, TransactionKind
 from ...payment.models import Payment
-from ...product.models import DigitalContent
-from ...product.tests.utils import create_image
-from ...warehouse.models import Allocation, Stock
+from ...room.models import DigitalContent
+from ...room.tests.utils import create_image
+from ...hotel.models import Allocation, Stock
 from .. import FulfillmentStatus, OrderEvents, OrderEventsEmails, OrderStatus
 from ..actions import (
     automatically_fulfill_digital_lines,
@@ -26,29 +26,29 @@ from ..models import Fulfillment, FulfillmentLine
 
 @pytest.fixture
 def order_with_digital_line(order, digital_content, stock, site_settings):
-    site_settings.automatic_fulfillment_digital_products = True
+    site_settings.automatic_fulfillment_digital_rooms = True
     site_settings.save()
 
-    variant = stock.product_variant
+    variant = stock.room_variant
     variant.digital_content = digital_content
     variant.digital_content.save()
 
-    product_type = variant.product.product_type
-    product_type.is_shipping_required = False
-    product_type.is_digital = True
-    product_type.save()
+    room_type = variant.room.room_type
+    room_type.is_shipping_required = False
+    room_type.is_digital = True
+    room_type.save()
 
     quantity = 3
-    product = variant.product
+    room = variant.room
     channel = order.channel
     variant_channel_listing = variant.channel_listings.get(channel=channel)
-    net = variant.get_price(product, [], channel, variant_channel_listing, None)
+    net = variant.get_price(room, [], channel, variant_channel_listing, None)
     gross = Money(amount=net.amount * Decimal(1.23), currency=net.currency)
     unit_price = TaxedMoney(net=net, gross=gross)
     line = order.lines.create(
-        product_name=str(product),
+        room_name=str(room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -170,11 +170,11 @@ def test_clean_mark_order_as_paid(payment_txn_preauth):
         clean_mark_order_as_paid(order)
 
 
-def test_cancel_fulfillment(fulfilled_order, warehouse):
+def test_cancel_fulfillment(fulfilled_order, hotel):
     fulfillment = fulfilled_order.fulfillments.first()
     line_1, line_2 = fulfillment.lines.all()
 
-    cancel_fulfillment(fulfillment, None, warehouse)
+    cancel_fulfillment(fulfillment, None, hotel)
 
     fulfillment.refresh_from_db()
     fulfilled_order.refresh_from_db()
@@ -185,14 +185,14 @@ def test_cancel_fulfillment(fulfilled_order, warehouse):
 
 
 def test_cancel_fulfillment_variant_witout_inventory_tracking(
-    fulfilled_order_without_inventory_tracking, warehouse
+    fulfilled_order_without_inventory_tracking, hotel
 ):
     fulfillment = fulfilled_order_without_inventory_tracking.fulfillments.first()
     line = fulfillment.lines.first()
     stock = line.order_line.variant.stocks.get()
     stock_quantity_before = stock.quantity
 
-    cancel_fulfillment(fulfillment, None, warehouse)
+    cancel_fulfillment(fulfillment, None, hotel)
 
     fulfillment.refresh_from_db()
     line.refresh_from_db()
@@ -259,10 +259,10 @@ def test_fulfill_order_line(order_with_lines):
     line = order.lines.first()
     quantity_fulfilled_before = line.quantity_fulfilled
     variant = line.variant
-    stock = Stock.objects.get(product_variant=variant)
+    stock = Stock.objects.get(room_variant=variant)
     stock_quantity_after = stock.quantity - line.quantity
 
-    fulfill_order_line(line, line.quantity, stock.warehouse.pk)
+    fulfill_order_line(line, line.quantity, stock.hotel.pk)
 
     stock.refresh_from_db()
     assert stock.quantity == stock_quantity_after
@@ -275,7 +275,7 @@ def test_fulfill_order_line_with_variant_deleted(order_with_lines):
 
     line.refresh_from_db()
 
-    fulfill_order_line(line, line.quantity, "warehouse_pk")
+    fulfill_order_line(line, line.quantity, "hotel_pk")
 
 
 def test_fulfill_order_line_without_inventory_tracking(order_with_lines):
@@ -285,12 +285,12 @@ def test_fulfill_order_line_without_inventory_tracking(order_with_lines):
     variant = line.variant
     variant.track_inventory = False
     variant.save()
-    stock = Stock.objects.get(product_variant=variant)
+    stock = Stock.objects.get(room_variant=variant)
 
     # stock should not change
     stock_quantity_after = stock.quantity
 
-    fulfill_order_line(line, line.quantity, stock.warehouse.pk)
+    fulfill_order_line(line, line.quantity, stock.hotel.pk)
 
     stock.refresh_from_db()
     assert stock.quantity == stock_quantity_after
@@ -308,7 +308,7 @@ def test_fulfill_digital_lines(
     image_file, image_name = create_image()
     variant = line.variant
     digital_content = DigitalContent.objects.create(
-        content_file=image_file, product_variant=variant, use_default_settings=True
+        content_file=image_file, room_variant=variant, use_default_settings=True
     )
 
     line.variant.digital_content = digital_content
@@ -588,7 +588,7 @@ def test_create_refund_fulfillment_multiple_refunds(
     fulfilled_order,
     variant,
     payment_dummy,
-    warehouse,
+    hotel,
     channel_USD,
     collection,
 ):
@@ -600,19 +600,19 @@ def test_create_refund_fulfillment_multiple_refunds(
     variant_channel_listing = variant.channel_listings.get(channel=channel_USD)
 
     stock = Stock.objects.create(
-        warehouse=warehouse, product_variant=variant, quantity=5
+        hotel=hotel, room_variant=variant, quantity=5
     )
     net = variant.get_price(
-        variant.product, [collection], channel_USD, variant_channel_listing, []
+        variant.room, [collection], channel_USD, variant_channel_listing, []
     )
     currency = net.currency
     gross = Money(amount=net.amount * Decimal(1.23), currency=currency)
     quantity = 5
     unit_price = TaxedMoney(net=net, gross=gross)
     order_line = fulfilled_order.lines.create(
-        product_name=str(variant.product),
+        room_name=str(variant.room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         quantity_fulfilled=2,

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0112_auto_20200129_0050"),
+        ("room", "0112_auto_20200129_0050"),
     ]
 
     operations = [
@@ -51,12 +51,12 @@ class Migration(migrations.Migration):
             field=models.SlugField(max_length=255, unique=True),
         ),
         migrations.AlterField(
-            model_name="producttype",
+            model_name="roomtype",
             name="name",
             field=models.CharField(max_length=250),
         ),
         migrations.AlterField(
-            model_name="producttype",
+            model_name="roomtype",
             name="slug",
             field=models.SlugField(max_length=255, unique=True),
         ),

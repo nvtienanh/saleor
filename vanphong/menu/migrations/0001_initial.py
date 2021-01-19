@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [("product", "0052_slug_field_length"), ("page", "0001_initial")]
+    dependencies = [("room", "0052_slug_field_length"), ("page", "0001_initial")]
 
     operations = [
         migrations.CreateModel(
@@ -57,7 +57,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="product.Category",
+                        to="room.Category",
                     ),
                 ),
                 (
@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="product.Collection",
+                        to="room.Collection",
                     ),
                 ),
                 (

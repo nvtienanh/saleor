@@ -3,7 +3,7 @@ import datetime
 import graphene
 from freezegun import freeze_time
 
-from ....product.error_codes import CollectionErrorCode
+from ....room.error_codes import CollectionErrorCode
 from ...tests.utils import assert_no_permission, get_graphql_content
 
 COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION = """
@@ -34,7 +34,7 @@ mutation UpdateCollectionChannelListing(
 
 
 def test_collection_channel_listing_update_duplicated_ids_in_add_and_remove(
-    staff_api_client, collection, permission_manage_products, channel_USD
+    staff_api_client, collection, permission_manage_rooms, channel_USD
 ):
     # given
     collection_id = graphene.Node.to_global_id("Collection", collection.pk)
@@ -51,7 +51,7 @@ def test_collection_channel_listing_update_duplicated_ids_in_add_and_remove(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -66,7 +66,7 @@ def test_collection_channel_listing_update_duplicated_ids_in_add_and_remove(
 
 
 def test_collection_channel_listing_update_duplicated_channel_in_add(
-    staff_api_client, collection, permission_manage_products, channel_USD
+    staff_api_client, collection, permission_manage_rooms, channel_USD
 ):
     # given
     collection_id = graphene.Node.to_global_id("Collection", collection.pk)
@@ -85,7 +85,7 @@ def test_collection_channel_listing_update_duplicated_channel_in_add(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -100,7 +100,7 @@ def test_collection_channel_listing_update_duplicated_channel_in_add(
 
 
 def test_collection_channel_listing_update_duplicated_channel_in_remove(
-    staff_api_client, collection, permission_manage_products, channel_USD
+    staff_api_client, collection, permission_manage_rooms, channel_USD
 ):
     # given
     collection_id = graphene.Node.to_global_id("Collection", collection.pk)
@@ -114,7 +114,7 @@ def test_collection_channel_listing_update_duplicated_channel_in_remove(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -129,7 +129,7 @@ def test_collection_channel_listing_update_duplicated_channel_in_remove(
 
 
 def test_collection_channel_listing_update_with_empty_input(
-    staff_api_client, collection, permission_manage_products
+    staff_api_client, collection, permission_manage_rooms
 ):
     # given
     collection_id = graphene.Node.to_global_id("Collection", collection.pk)
@@ -142,7 +142,7 @@ def test_collection_channel_listing_update_with_empty_input(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -154,7 +154,7 @@ def test_collection_channel_listing_update_with_empty_input(
 
 
 def test_collection_channel_listing_update_with_empty_lists_in_input(
-    staff_api_client, collection, permission_manage_products
+    staff_api_client, collection, permission_manage_rooms
 ):
     # given
     collection_id = graphene.Node.to_global_id("Collection", collection.pk)
@@ -167,7 +167,7 @@ def test_collection_channel_listing_update_with_empty_lists_in_input(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -181,7 +181,7 @@ def test_collection_channel_listing_update_with_empty_lists_in_input(
 def test_collection_channel_listing_update_as_staff_user(
     staff_api_client,
     published_collection,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
     channel_PLN,
 ):
@@ -206,7 +206,7 @@ def test_collection_channel_listing_update_as_staff_user(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -236,7 +236,7 @@ def test_collection_channel_listing_update_as_staff_user(
 def test_collection_channel_listing_update_as_app(
     app_api_client,
     published_collection,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
     channel_PLN,
 ):
@@ -261,7 +261,7 @@ def test_collection_channel_listing_update_as_app(
     response = app_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -330,7 +330,7 @@ def test_collection_channel_listing_update_as_anonymous(
 def test_collection_channel_listing_update_add_channel(
     staff_api_client,
     published_collection,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
     channel_PLN,
 ):
@@ -355,7 +355,7 @@ def test_collection_channel_listing_update_add_channel(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -382,7 +382,7 @@ def test_collection_channel_listing_update_add_channel(
 
 
 def test_collection_channel_listing_update_unpublished(
-    staff_api_client, published_collection, permission_manage_products, channel_USD
+    staff_api_client, published_collection, permission_manage_rooms, channel_USD
 ):
     # given
     collection_id = graphene.Node.to_global_id("Collection", published_collection.pk)
@@ -396,7 +396,7 @@ def test_collection_channel_listing_update_unpublished(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
     collection_channel_listing = published_collection.channel_listings.get()
@@ -415,7 +415,7 @@ def test_collection_channel_listing_update_unpublished(
 
 
 def test_collection_channel_listing_update_update_publication_date(
-    staff_api_client, collection, permission_manage_products, channel_USD
+    staff_api_client, collection, permission_manage_rooms, channel_USD
 ):
     # given
     publication_date = datetime.date.today()
@@ -434,7 +434,7 @@ def test_collection_channel_listing_update_update_publication_date(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -453,7 +453,7 @@ def test_collection_channel_listing_update_update_publication_date(
 def test_collection_channel_listing_update_remove_not_assigned_channel(
     staff_api_client,
     published_collection,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
     channel_PLN,
 ):
@@ -469,7 +469,7 @@ def test_collection_channel_listing_update_remove_not_assigned_channel(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -491,7 +491,7 @@ def test_collection_channel_listing_update_remove_not_assigned_channel(
 def test_collection_channel_listing_update_add_channel_without_publication_date(
     staff_api_client,
     published_collection,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
     channel_PLN,
 ):
@@ -507,7 +507,7 @@ def test_collection_channel_listing_update_add_channel_without_publication_date(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 
@@ -528,7 +528,7 @@ def test_collection_channel_listing_update_add_channel_without_publication_date(
 
 @freeze_time("2020-03-18 12:00:00")
 def test_collection_channel_listing_update_publish_without_publication_date(
-    staff_api_client, published_collection, permission_manage_products, channel_USD
+    staff_api_client, published_collection, permission_manage_rooms, channel_USD
 ):
     # given
     published_collection.channel_listings.update(is_published=False)
@@ -543,7 +543,7 @@ def test_collection_channel_listing_update_publish_without_publication_date(
     response = staff_api_client.post_graphql(
         COLLECTION_CHANNEL_LISTING_UPDATE_MUTATION,
         variables=variables,
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
     )
     content = get_graphql_content(response)
 

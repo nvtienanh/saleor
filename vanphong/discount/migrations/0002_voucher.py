@@ -12,7 +12,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0010_auto_20160129_0826"),
+        ("room", "0010_auto_20160129_0826"),
         ("discount", "0001_initial"),
     ]
 
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                     "type",
                     models.CharField(
                         choices=[
-                            ("product", "Product"),
+                            ("room", "Room"),
                             ("category", "Category"),
                             ("shipping", "Shipping"),
                             ("basket", "Baskets over"),
@@ -85,16 +85,16 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="product.Category",
+                        to="room.Category",
                     ),
                 ),
                 (
-                    "product",
+                    "room",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="product.Product",
+                        to="room.Room",
                     ),
                 ),
             ],

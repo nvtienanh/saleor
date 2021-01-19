@@ -9,7 +9,7 @@ VARIANT_QUERY = """
 query variant(
     $id: ID, $sku: String, $variantSelection: VariantAttributeScope, $channel: String
 ){
-    productVariant(id:$id, sku:$sku, channel: $channel){
+    roomVariant(id:$id, sku:$sku, channel: $channel){
         sku
         attributes(variantSelection: $variantSelection) {
             attribute {
@@ -21,13 +21,13 @@ query variant(
 """
 
 
-def test_get_variant_without_id_and_sku(staff_api_client, permission_manage_products):
+def test_get_variant_without_id_and_sku(staff_api_client, permission_manage_rooms):
     # given
 
     # when
     response = staff_api_client.post_graphql(
         VARIANT_QUERY,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -37,7 +37,7 @@ def test_get_variant_without_id_and_sku(staff_api_client, permission_manage_prod
     )
 
 
-def test_get_variant_with_id_and_sku(staff_api_client, permission_manage_products):
+def test_get_variant_with_id_and_sku(staff_api_client, permission_manage_rooms):
     # given
     variables = {"id": "ID", "sku": "sku"}
 
@@ -45,7 +45,7 @@ def test_get_variant_with_id_and_sku(staff_api_client, permission_manage_product
     response = staff_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -56,55 +56,55 @@ def test_get_variant_with_id_and_sku(staff_api_client, permission_manage_product
 
 
 def test_get_unpublished_variant_by_id_as_staff(
-    staff_api_client, permission_manage_products, unavailable_product_with_variant
+    staff_api_client, permission_manage_rooms, unavailable_room_with_variant
 ):
     # given
-    variant = unavailable_product_with_variant.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = unavailable_room_with_variant.variants.first()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id}
 
     # when
     response = staff_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
 def test_get_unpublished_variant_by_id_as_app(
-    app_api_client, permission_manage_products, unavailable_product_with_variant
+    app_api_client, permission_manage_rooms, unavailable_room_with_variant
 ):
     # given
-    variant = unavailable_product_with_variant.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = unavailable_room_with_variant.variants.first()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id}
 
     # when
     response = app_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
 def test_get_unpublished_variant_by_id_as_customer(
-    user_api_client, unavailable_product_with_variant, channel_USD
+    user_api_client, unavailable_room_with_variant, channel_USD
 ):
     # given
-    variant = unavailable_product_with_variant.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = unavailable_room_with_variant.variants.first()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "channel": channel_USD.slug}
 
     # when
@@ -116,15 +116,15 @@ def test_get_unpublished_variant_by_id_as_customer(
 
     # then
     content = get_graphql_content(response)
-    assert not content["data"]["productVariant"]
+    assert not content["data"]["roomVariant"]
 
 
 def test_get_unpublished_variant_by_id_as_anonymous_user(
-    api_client, unavailable_product_with_variant, channel_USD
+    api_client, unavailable_room_with_variant, channel_USD
 ):
     # given
-    variant = unavailable_product_with_variant.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = unavailable_room_with_variant.variants.first()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "channel": channel_USD.slug}
 
     # when
@@ -136,52 +136,52 @@ def test_get_unpublished_variant_by_id_as_anonymous_user(
 
     # then
     content = get_graphql_content(response)
-    assert not content["data"]["productVariant"]
+    assert not content["data"]["roomVariant"]
 
 
 def test_get_variant_by_id_as_staff(
-    staff_api_client, permission_manage_products, variant
+    staff_api_client, permission_manage_rooms, variant
 ):
     # given
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id}
 
     # when
     response = staff_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
-def test_get_variant_by_id_as_app(app_api_client, permission_manage_products, variant):
+def test_get_variant_by_id_as_app(app_api_client, permission_manage_rooms, variant):
     # given
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id}
 
     # when
     response = app_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
 def test_get_variant_by_id_as_customer(user_api_client, variant, channel_USD):
     # given
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "channel": channel_USD.slug}
 
     # when
@@ -193,13 +193,13 @@ def test_get_variant_by_id_as_customer(user_api_client, variant, channel_USD):
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
 def test_get_variant_by_id_as_anonymous_user(api_client, variant, channel_USD):
     # given
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "channel": channel_USD.slug}
 
     # when
@@ -211,57 +211,57 @@ def test_get_variant_by_id_as_anonymous_user(api_client, variant, channel_USD):
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
 def test_get_unpublished_variant_by_sku_as_staff(
-    staff_api_client, permission_manage_products, unavailable_product_with_variant
+    staff_api_client, permission_manage_rooms, unavailable_room_with_variant
 ):
     # given
-    variant = unavailable_product_with_variant.variants.first()
+    variant = unavailable_room_with_variant.variants.first()
     variables = {"sku": variant.sku}
 
     # when
     response = staff_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
 def test_get_unpublished_variant_by_sku_as_app(
-    app_api_client, permission_manage_products, unavailable_product_with_variant
+    app_api_client, permission_manage_rooms, unavailable_room_with_variant
 ):
     # given
-    variant = unavailable_product_with_variant.variants.first()
+    variant = unavailable_room_with_variant.variants.first()
     variables = {"sku": variant.sku}
 
     # when
     response = app_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
 def test_get_unpublished_variant_by_sku_as_customer(
-    user_api_client, unavailable_product_with_variant, channel_USD
+    user_api_client, unavailable_room_with_variant, channel_USD
 ):
     # given
-    variant = unavailable_product_with_variant.variants.first()
+    variant = unavailable_room_with_variant.variants.first()
     variables = {"sku": variant.sku, "channel": channel_USD.slug}
 
     # when
@@ -273,14 +273,14 @@ def test_get_unpublished_variant_by_sku_as_customer(
 
     # then
     content = get_graphql_content(response)
-    assert not content["data"]["productVariant"]
+    assert not content["data"]["roomVariant"]
 
 
 def test_get_unpublished_variant_by_sku_as_anonymous_user(
-    api_client, unavailable_product_with_variant, channel_USD
+    api_client, unavailable_room_with_variant, channel_USD
 ):
     # given
-    variant = unavailable_product_with_variant.variants.first()
+    variant = unavailable_room_with_variant.variants.first()
     variables = {"sku": variant.sku, "channel": channel_USD.slug}
 
     # when
@@ -292,11 +292,11 @@ def test_get_unpublished_variant_by_sku_as_anonymous_user(
 
     # then
     content = get_graphql_content(response)
-    assert not content["data"]["productVariant"]
+    assert not content["data"]["roomVariant"]
 
 
 def test_get_variant_by_sku_as_staff(
-    staff_api_client, permission_manage_products, variant
+    staff_api_client, permission_manage_rooms, variant
 ):
     # given
     variables = {"sku": variant.sku}
@@ -305,17 +305,17 @@ def test_get_variant_by_sku_as_staff(
     response = staff_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
-def test_get_variant_by_sku_as_app(app_api_client, permission_manage_products, variant):
+def test_get_variant_by_sku_as_app(app_api_client, permission_manage_rooms, variant):
     # given
     variables = {"sku": variant.sku}
 
@@ -323,13 +323,13 @@ def test_get_variant_by_sku_as_app(app_api_client, permission_manage_products, v
     response = app_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
@@ -346,7 +346,7 @@ def test_get_variant_by_sku_as_customer(user_api_client, variant, channel_USD):
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
@@ -363,7 +363,7 @@ def test_get_variant_by_sku_as_anonymous_user(api_client, variant, channel_USD):
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
 
 
@@ -378,17 +378,17 @@ def test_get_variant_by_sku_as_anonymous_user(api_client, variant, channel_USD):
 def test_get_variant_by_id_with_variant_selection_filter(
     variant_selection,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     variant,
     size_attribute,
     file_attribute_with_file_input_type_without_values,
-    product_type,
+    room_type,
 ):
     # given
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "variantSelection": variant_selection}
 
-    product_type.variant_attributes.add(
+    room_type.variant_attributes.add(
         file_attribute_with_file_input_type_without_values
     )
 
@@ -401,13 +401,13 @@ def test_get_variant_by_id_with_variant_selection_filter(
     response = staff_api_client.post_graphql(
         VARIANT_QUERY,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["sku"] == variant.sku
     if variant_selection == VariantAttributeScope.NOT_VARIANT_SELECTION.name:
         assert len(data["attributes"]) == 1

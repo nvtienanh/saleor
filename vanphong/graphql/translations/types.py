@@ -6,7 +6,7 @@ from ...core.permissions import DiscountPermissions, ShippingPermissions
 from ...discount import models as discount_models
 from ...menu import models as menu_models
 from ...page import models as page_models
-from ...product import models as product_models
+from ...room import models as room_models
 from ...shipping import models as shipping_models
 from ...site import models as site_models
 from ..channel import ChannelContext
@@ -88,7 +88,7 @@ class AttributeTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(AttributeTranslation, type_name="attribute")
     attribute = graphene.Field(
         "saleor.graphql.attribute.types.Attribute",
-        description="Custom attribute of a product.",
+        description="Custom attribute of a room.",
     )
 
     class Meta:
@@ -101,61 +101,61 @@ class AttributeTranslatableContent(CountableDjangoObjectType):
         return root
 
 
-class ProductVariantTranslation(BaseTranslationType):
+class RoomVariantTranslation(BaseTranslationType):
     class Meta:
-        model = product_models.ProductVariantTranslation
+        model = room_models.RoomVariantTranslation
         interfaces = [graphene.relay.Node]
         only_fields = BASIC_TRANSLATABLE_FIELDS
 
 
-class ProductVariantTranslatableContent(CountableDjangoObjectType):
+class RoomVariantTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(
-        ProductVariantTranslation, type_name="product variant"
+        RoomVariantTranslation, type_name="room variant"
     )
-    product_variant = graphene.Field(
-        "saleor.graphql.product.types.products.ProductVariant",
+    room_variant = graphene.Field(
+        "saleor.graphql.room.types.rooms.RoomVariant",
         description=(
-            "Represents a version of a product such as different size or color."
+            "Represents a version of a room such as different size or color."
         ),
     )
 
     class Meta:
-        model = product_models.ProductVariant
+        model = room_models.RoomVariant
         interfaces = [graphene.relay.Node]
         only_fields = BASIC_TRANSLATABLE_FIELDS
 
     @staticmethod
-    def resolve_product_variant(root: product_models.ProductVariant, info):
+    def resolve_room_variant(root: room_models.RoomVariant, info):
         return ChannelContext(node=root, channel_slug=None)
 
 
-class ProductTranslation(BaseTranslationType):
+class RoomTranslation(BaseTranslationType):
     class Meta:
-        model = product_models.ProductTranslation
+        model = room_models.RoomTranslation
         interfaces = [graphene.relay.Node]
         only_fields = EXTENDED_TRANSLATABLE_FIELDS
 
 
-class ProductTranslatableContent(CountableDjangoObjectType):
-    translation = TranslationField(ProductTranslation, type_name="product")
-    product = graphene.Field(
-        "saleor.graphql.product.types.products.Product",
+class RoomTranslatableContent(CountableDjangoObjectType):
+    translation = TranslationField(RoomTranslation, type_name="room")
+    room = graphene.Field(
+        "saleor.graphql.room.types.rooms.Room",
         description="Represents an individual item for sale in the storefront.",
     )
 
     class Meta:
-        model = product_models.Product
+        model = room_models.Room
         interfaces = [graphene.relay.Node]
         only_fields = EXTENDED_TRANSLATABLE_FIELDS
 
     @staticmethod
-    def resolve_product(root: product_models.Product, info):
+    def resolve_room(root: room_models.Room, info):
         return ChannelContext(node=root, channel_slug=None)
 
 
 class CollectionTranslation(BaseTranslationType):
     class Meta:
-        model = product_models.CollectionTranslation
+        model = room_models.CollectionTranslation
         interfaces = [graphene.relay.Node]
         only_fields = EXTENDED_TRANSLATABLE_FIELDS
 
@@ -163,18 +163,18 @@ class CollectionTranslation(BaseTranslationType):
 class CollectionTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(CollectionTranslation, type_name="collection")
     collection = graphene.Field(
-        "saleor.graphql.product.types.products.Collection",
-        description="Represents a collection of products.",
+        "saleor.graphql.room.types.rooms.Collection",
+        description="Represents a collection of rooms.",
     )
 
     class Meta:
-        model = product_models.Collection
+        model = room_models.Collection
         interfaces = [graphene.relay.Node]
         only_fields = EXTENDED_TRANSLATABLE_FIELDS
 
     @staticmethod
-    def resolve_collection(root: product_models.Collection, info):
-        collection = product_models.Collection.objects.all().filter(pk=root.id).first()
+    def resolve_collection(root: room_models.Collection, info):
+        collection = room_models.Collection.objects.all().filter(pk=root.id).first()
         return (
             ChannelContext(node=collection, channel_slug=None) if collection else None
         )
@@ -182,7 +182,7 @@ class CollectionTranslatableContent(CountableDjangoObjectType):
 
 class CategoryTranslation(BaseTranslationType):
     class Meta:
-        model = product_models.CategoryTranslation
+        model = room_models.CategoryTranslation
         interfaces = [graphene.relay.Node]
         only_fields = EXTENDED_TRANSLATABLE_FIELDS
 
@@ -190,17 +190,17 @@ class CategoryTranslation(BaseTranslationType):
 class CategoryTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(CategoryTranslation, type_name="category")
     category = graphene.Field(
-        "saleor.graphql.product.types.products.Category",
-        description="Represents a single category of products.",
+        "saleor.graphql.room.types.rooms.Category",
+        description="Represents a single category of rooms.",
     )
 
     class Meta:
-        model = product_models.Category
+        model = room_models.Category
         interfaces = [graphene.relay.Node]
         only_fields = EXTENDED_TRANSLATABLE_FIELDS
 
     @staticmethod
-    def resolve_category(root: product_models.Category, _info):
+    def resolve_category(root: room_models.Category, _info):
         return root
 
 
@@ -262,7 +262,7 @@ class VoucherTranslatableContent(CountableDjangoObjectType):
         "saleor.graphql.discount.types.Voucher",
         description=(
             "Vouchers allow giving discounts to particular customers on categories, "
-            "collections or specific products. They can be used during checkout by "
+            "collections or specific rooms. They can be used during checkout by "
             "providing valid voucher codes."
         ),
     )
@@ -291,7 +291,7 @@ class SaleTranslatableContent(CountableDjangoObjectType):
         "saleor.graphql.discount.types.Sale",
         description=(
             "Sales allow creating discounts for categories, collections "
-            "or products and are visible to all the customers."
+            "or rooms and are visible to all the customers."
         ),
     )
 

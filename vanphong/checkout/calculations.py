@@ -10,11 +10,11 @@ if TYPE_CHECKING:
     from ..account.models import Address
     from ..channel.models import Channel
     from ..plugins.manager import PluginsManager
-    from ..product.models import (
+    from ..room.models import (
         Collection,
-        Product,
-        ProductVariant,
-        ProductVariantChannelListing,
+        Room,
+        RoomVariant,
+        RoomVariantChannelListing,
     )
     from . import CheckoutLineInfo
     from .models import Checkout, CheckoutLine
@@ -103,12 +103,12 @@ def checkout_line_total(
     manager: "PluginsManager",
     checkout: "Checkout",
     line: "CheckoutLine",  # FIXME: convert to CheckoutLineInfo
-    variant: "ProductVariant",
-    product: "Product",
+    variant: "RoomVariant",
+    room: "Room",
     collections: Iterable["Collection"],
     address: Optional["Address"],
     channel: "Channel",
-    channel_listing: "ProductVariantChannelListing",
+    channel_listing: "RoomVariantChannelListing",
     discounts: Optional[Iterable[DiscountInfo]] = None,
 ) -> "TaxedMoney":
     """Return the total price of provided line, taxes included.
@@ -119,7 +119,7 @@ def checkout_line_total(
         checkout,
         line,
         variant,
-        product,
+        room,
         collections,
         address,
         channel,

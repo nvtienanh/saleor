@@ -7,11 +7,11 @@ from freezegun import freeze_time
 from ...core import JobStatus
 from .. import ExportEvents, FileTypes
 from ..models import ExportEvent
-from ..tasks import export_products_task, on_task_failure, on_task_success
+from ..tasks import export_rooms_task, on_task_failure, on_task_success
 
 
-@patch("saleor.csv.tasks.export_products")
-def test_export_products_task(export_products_mock, user_export_file):
+@patch("saleor.csv.tasks.export_rooms")
+def test_export_rooms_task(export_rooms_mock, user_export_file):
     # given
     scope = {"all": ""}
     export_info = {"fields": "name"}
@@ -19,10 +19,10 @@ def test_export_products_task(export_products_mock, user_export_file):
     delimiter = ";"
 
     # when
-    export_products_task(user_export_file.id, scope, export_info, file_type, delimiter)
+    export_rooms_task(user_export_file.id, scope, export_info, file_type, delimiter)
 
     # then
-    export_products_mock.assert_called_once_with(
+    export_rooms_mock.assert_called_once_with(
         user_export_file, scope, export_info, file_type, delimiter
     )
 

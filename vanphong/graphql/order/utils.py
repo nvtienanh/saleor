@@ -3,8 +3,8 @@ from django.core.exceptions import ValidationError
 
 from ...core.exceptions import InsufficientStock
 from ...order.error_codes import OrderErrorCode
-from ...product.models import Product, ProductVariant, ProductVariantChannelListing
-from ...warehouse.availability import check_stock_quantity
+from ...room.models import Room, RoomVariant, RoomVariantChannelListing
+from ...hotel.availability import check_stock_quantity
 
 
 def validate_total_quantity(order):
@@ -12,7 +12,7 @@ def validate_total_quantity(order):
         raise ValidationError(
             {
                 "lines": ValidationError(
-                    "Could not create order without any products.",
+                    "Could not create order without any rooms.",
                     code=OrderErrorCode.REQUIRED,
                 )
             }
@@ -73,7 +73,7 @@ def validate_order_lines(order, country):
             raise ValidationError(
                 {
                     "lines": ValidationError(
-                        "Could not create orders with non-existing products.",
+                        "Could not create orders with non-existing rooms.",
                         code=OrderErrorCode.NOT_FOUND,
                     )
                 }
@@ -85,53 +85,53 @@ def validate_order_lines(order, country):
                 raise ValidationError(
                     {
                         "lines": ValidationError(
-                            f"Insufficient product stock: {exc.item}",
+                            f"Insufficient room stock: {exc.item}",
                             code=OrderErrorCode.INSUFFICIENT_STOCK,
                         )
                     }
                 )
 
 
-def validate_product_is_published(order):
+def validate_room_is_published(order):
     variant_ids = []
     for line in order:
         variant_ids.append(line.variant_id)
-    unpublished_product = Product.objects.filter(
+    unpublished_room = Room.objects.filter(
         variants__id__in=variant_ids
     ).not_published(order.channel.slug)
-    if unpublished_product.exists():
+    if unpublished_room.exists():
         raise ValidationError(
             {
                 "lines": ValidationError(
-                    "Can't finalize draft with unpublished product.",
-                    code=OrderErrorCode.PRODUCT_NOT_PUBLISHED,
+                    "Can't finalize draft with unpublished room.",
+                    code=OrderErrorCode.ROOM_NOT_PUBLISHED,
                 )
             }
         )
 
 
-def validate_product_is_published_in_channel(variants, channel):
+def validate_room_is_published_in_channel(variants, channel):
     if not channel:
         raise ValidationError(
-            "Can't add product variant for draft order without channel",
+            "Can't add room variant for draft order without channel",
             code=OrderErrorCode.REQUIRED,
         )
     variant_ids = [variant.id for variant in variants]
-    unpublished_product = list(
-        Product.objects.filter(variants__id__in=variant_ids).not_published(channel.slug)
+    unpublished_room = list(
+        Room.objects.filter(variants__id__in=variant_ids).not_published(channel.slug)
     )
-    if unpublished_product:
-        unpublished_variants = ProductVariant.objects.filter(
-            product_id__in=unpublished_product, id__in=variant_ids
+    if unpublished_room:
+        unpublished_variants = RoomVariant.objects.filter(
+            room_id__in=unpublished_room, id__in=variant_ids
         ).values_list("pk", flat=True)
         unpublished_variants_global_ids = [
-            graphene.Node.to_global_id("ProductVariant", unpublished_variant)
+            graphene.Node.to_global_id("RoomVariant", unpublished_variant)
             for unpublished_variant in unpublished_variants
         ]
         raise ValidationError(
-            "Can't add product variant that are not published in "
+            "Can't add room variant that are not published in "
             "the channel associated with this draft order.",
-            code=OrderErrorCode.PRODUCT_NOT_PUBLISHED,
+            code=OrderErrorCode.ROOM_NOT_PUBLISHED,
             params={"variants": unpublished_variants_global_ids},
         )
 
@@ -139,11 +139,11 @@ def validate_product_is_published_in_channel(variants, channel):
 def validate_variant_channel_listings(variants, channel):
     if not channel:
         raise ValidationError(
-            "Can't add product variant for draft order without channel",
+            "Can't add room variant for draft order without channel",
             code=OrderErrorCode.REQUIRED,
         )
     variant_ids = set([variant.id for variant in variants])
-    variant_channel_listings = ProductVariantChannelListing.objects.filter(
+    variant_channel_listings = RoomVariantChannelListing.objects.filter(
         channel=channel, variant_id__in=variant_ids
     )
     variant_ids_in_channel = set(
@@ -155,31 +155,31 @@ def validate_variant_channel_listings(variants, channel):
     missing_variant_ids_in_channel = variant_ids - variant_ids_in_channel
     if missing_variant_ids_in_channel:
         missing_variant_global_ids = [
-            graphene.Node.to_global_id("ProductVariant", missing_variant_id_in_channel)
+            graphene.Node.to_global_id("RoomVariant", missing_variant_id_in_channel)
             for missing_variant_id_in_channel in missing_variant_ids_in_channel
         ]
         raise ValidationError(
-            "Can't add product variant that are don't have price in"
+            "Can't add room variant that are don't have price in"
             "the channel associated with this draft order.",
             code=OrderErrorCode.NOT_AVAILABLE_IN_CHANNEL,
             params={"variants": missing_variant_global_ids},
         )
 
 
-def validate_product_is_available_for_purchase(order):
+def validate_room_is_available_for_purchase(order):
     for line in order:
-        product_channel_listing = line.variant.product.channel_listings.filter(
+        room_channel_listing = line.variant.room.channel_listings.filter(
             channel_id=order.channel_id
         ).first()
         if not (
-            product_channel_listing
-            and product_channel_listing.is_available_for_purchase()
+            room_channel_listing
+            and room_channel_listing.is_available_for_purchase()
         ):
             raise ValidationError(
                 {
                     "lines": ValidationError(
-                        "Can't finalize draft with product unavailable for purchase.",
-                        code=OrderErrorCode.PRODUCT_UNAVAILABLE_FOR_PURCHASE,
+                        "Can't finalize draft with room unavailable for purchase.",
+                        code=OrderErrorCode.ROOM_UNAVAILABLE_FOR_PURCHASE,
                     )
                 }
             )
@@ -202,9 +202,9 @@ def validate_draft_order(order, country):
 
     - Has proper customer data,
     - Shipping address and method are set up,
-    - Product variants for order lines still exists in database.
-    - Product variants are available in requested quantity.
-    - Product variants are published.
+    - Room variants for order lines still exists in database.
+    - Room variants are available in requested quantity.
+    - Room variants are published.
 
     Returns a list of errors if any were found.
     """
@@ -214,6 +214,6 @@ def validate_draft_order(order, country):
         validate_shipping_method(order)
     validate_total_quantity(order)
     validate_order_lines(order, country)
-    validate_product_is_published(order)
-    validate_product_is_available_for_purchase(order)
+    validate_room_is_published(order)
+    validate_room_is_available_for_purchase(order)
     validate_channel_is_active(order.channel)

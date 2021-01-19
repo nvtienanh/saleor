@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0007_auto_20160112_1025")]
+    dependencies = [("room", "0007_auto_20160112_1025")]
 
     operations = [
         migrations.RemoveField(model_name="discount", name="discount"),

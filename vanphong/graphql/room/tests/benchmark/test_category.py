@@ -6,9 +6,9 @@ from ....tests.utils import get_graphql_content
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_category_view(api_client, category_with_products, count_queries, channel_USD):
+def test_category_view(api_client, category_with_rooms, count_queries, channel_USD):
     query = """
-        fragment BasicProductFields on Product {
+        fragment BasicRoomFields on Room {
           id
           name
           thumbnail {
@@ -31,7 +31,7 @@ def test_category_view(api_client, category_with_products, count_queries, channe
           }
         }
 
-        fragment ProductPricingField on Product {
+        fragment RoomPricingField on Room {
           pricing {
             onSale
             priceRangeUndiscounted {
@@ -54,7 +54,7 @@ def test_category_view(api_client, category_with_products, count_queries, channe
         }
 
         query Category($id: ID!, $pageSize: Int, $channel: String) {
-          products (
+          rooms (
             first: $pageSize,
             filter: {categories: [$id]},
             channel: $channel
@@ -62,8 +62,8 @@ def test_category_view(api_client, category_with_products, count_queries, channe
             totalCount
             edges {
               node {
-                ...BasicProductFields
-                ...ProductPricingField
+                ...BasicRoomFields
+                ...RoomPricingField
                 category {
                   id
                   name
@@ -112,7 +112,7 @@ def test_category_view(api_client, category_with_products, count_queries, channe
     """
     variables = {
         "pageSize": 100,
-        "id": graphene.Node.to_global_id("Category", category_with_products.pk),
+        "id": graphene.Node.to_global_id("Category", category_with_rooms.pk),
         "channel": channel_USD.slug,
     }
     get_graphql_content(api_client.post_graphql(query, variables))

@@ -6,12 +6,12 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0116_auto_20200225_0237"),
+        ("room", "0116_auto_20200225_0237"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="producttranslation",
+            model_name="roomtranslation",
             name="name",
             field=models.CharField(max_length=250),
         ),

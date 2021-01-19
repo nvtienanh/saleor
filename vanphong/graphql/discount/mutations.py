@@ -10,18 +10,18 @@ from ...core.utils.promo_code import generate_promo_code, is_available_promo_cod
 from ...discount import DiscountValueType, models
 from ...discount.error_codes import DiscountErrorCode
 from ...discount.models import SaleChannelListing
-from ...product.tasks import (
-    update_products_discounted_prices_of_catalogues_task,
-    update_products_discounted_prices_of_discount_task,
+from ...room.tasks import (
+    update_rooms_discounted_prices_of_catalogues_task,
+    update_rooms_discounted_prices_of_discount_task,
 )
-from ...product.utils import get_products_ids_without_variants
+from ...room.utils import get_rooms_ids_without_variants
 from ..channel import ChannelContext
 from ..channel.mutations import BaseChannelListingMutation
 from ..core.mutations import BaseMutation, ModelDeleteMutation, ModelMutation
 from ..core.scalars import PositiveDecimal
 from ..core.types.common import DiscountError
 from ..core.validators import validate_price_precision
-from ..product.types import Category, Collection, Product
+from ..room.types import Category, Collection, Room
 from .enums import DiscountValueTypeEnum, VoucherTypeEnum
 from .types import Sale, Voucher
 
@@ -32,8 +32,8 @@ ErrorType = DefaultDict[str, List[ValidationError]]
 
 
 class CatalogueInput(graphene.InputObjectType):
-    products = graphene.List(
-        graphene.ID, description="Products related to the discount.", name="products"
+    rooms = graphene.List(
+        graphene.ID, description="Rooms related to the discount.", name="rooms"
     )
     categories = graphene.List(
         graphene.ID,
@@ -52,20 +52,20 @@ class BaseDiscountCatalogueMutation(BaseMutation):
         abstract = True
 
     @classmethod
-    def recalculate_discounted_prices(cls, products, categories, collections):
-        update_products_discounted_prices_of_catalogues_task.delay(
-            product_ids=[p.pk for p in products],
+    def recalculate_discounted_prices(cls, rooms, categories, collections):
+        update_rooms_discounted_prices_of_catalogues_task.delay(
+            room_ids=[p.pk for p in rooms],
             category_ids=[c.pk for c in categories],
             collection_ids=[c.pk for c in collections],
         )
 
     @classmethod
     def add_catalogues_to_node(cls, node, input):
-        products = input.get("products", [])
-        if products:
-            products = cls.get_nodes_or_error(products, "products", Product)
-            cls.clean_product(products)
-            node.products.add(*products)
+        rooms = input.get("rooms", [])
+        if rooms:
+            rooms = cls.get_nodes_or_error(rooms, "rooms", Room)
+            cls.clean_room(rooms)
+            node.rooms.add(*rooms)
         categories = input.get("categories", [])
         if categories:
             categories = cls.get_nodes_or_error(categories, "categories", Category)
@@ -74,29 +74,29 @@ class BaseDiscountCatalogueMutation(BaseMutation):
         if collections:
             collections = cls.get_nodes_or_error(collections, "collections", Collection)
             node.collections.add(*collections)
-        # Updated the db entries, recalculating discounts of affected products
-        cls.recalculate_discounted_prices(products, categories, collections)
+        # Updated the db entries, recalculating discounts of affected rooms
+        cls.recalculate_discounted_prices(rooms, categories, collections)
 
     @classmethod
-    def clean_product(cls, products):
-        products_ids_without_variants = get_products_ids_without_variants(products)
-        if products_ids_without_variants:
+    def clean_room(cls, rooms):
+        rooms_ids_without_variants = get_rooms_ids_without_variants(rooms)
+        if rooms_ids_without_variants:
             raise ValidationError(
                 {
-                    "products": ValidationError(
-                        "Cannot manage products without variants.",
-                        code=DiscountErrorCode.CANNOT_MANAGE_PRODUCT_WITHOUT_VARIANT,
-                        params={"products": products_ids_without_variants},
+                    "rooms": ValidationError(
+                        "Cannot manage rooms without variants.",
+                        code=DiscountErrorCode.CANNOT_MANAGE_ROOM_WITHOUT_VARIANT,
+                        params={"rooms": rooms_ids_without_variants},
                     )
                 }
             )
 
     @classmethod
     def remove_catalogues_from_node(cls, node, input):
-        products = input.get("products", [])
-        if products:
-            products = cls.get_nodes_or_error(products, "products", Product)
-            node.products.remove(*products)
+        rooms = input.get("rooms", [])
+        if rooms:
+            rooms = cls.get_nodes_or_error(rooms, "rooms", Room)
+            node.rooms.remove(*rooms)
         categories = input.get("categories", [])
         if categories:
             categories = cls.get_nodes_or_error(categories, "categories", Category)
@@ -105,13 +105,13 @@ class BaseDiscountCatalogueMutation(BaseMutation):
         if collections:
             collections = cls.get_nodes_or_error(collections, "collections", Collection)
             node.collections.remove(*collections)
-        # Updated the db entries, recalculating discounts of affected products
-        cls.recalculate_discounted_prices(products, categories, collections)
+        # Updated the db entries, recalculating discounts of affected rooms
+        cls.recalculate_discounted_prices(rooms, categories, collections)
 
 
 class VoucherInput(graphene.InputObjectType):
     type = VoucherTypeEnum(
-        description=("Voucher type: PRODUCT, CATEGORY SHIPPING or ENTIRE_ORDER.")
+        description=("Voucher type: ROOM, CATEGORY SHIPPING or ENTIRE_ORDER.")
     )
     name = graphene.String(description="Voucher name.")
     code = graphene.String(description="Code to use the voucher.")
@@ -124,8 +124,8 @@ class VoucherInput(graphene.InputObjectType):
     discount_value_type = DiscountValueTypeEnum(
         description="Choices: fixed or percentage."
     )
-    products = graphene.List(
-        graphene.ID, description="Products discounted by the voucher.", name="products"
+    rooms = graphene.List(
+        graphene.ID, description="Rooms discounted by the voucher.", name="rooms"
     )
     collections = graphene.List(
         graphene.ID,
@@ -250,7 +250,7 @@ class VoucherBaseCatalogueMutation(BaseDiscountCatalogueMutation):
 
 class VoucherAddCatalogues(VoucherBaseCatalogueMutation):
     class Meta:
-        description = "Adds products, categories, collections to a voucher."
+        description = "Adds rooms, categories, collections to a voucher."
         permissions = (DiscountPermissions.MANAGE_DISCOUNTS,)
         error_type_class = DiscountError
         error_type_field = "discount_errors"
@@ -266,7 +266,7 @@ class VoucherAddCatalogues(VoucherBaseCatalogueMutation):
 
 class VoucherRemoveCatalogues(VoucherBaseCatalogueMutation):
     class Meta:
-        description = "Removes products, categories, collections from a voucher."
+        description = "Removes rooms, categories, collections from a voucher."
         permissions = (DiscountPermissions.MANAGE_DISCOUNTS,)
         error_type_class = DiscountError
         error_type_field = "discount_errors"
@@ -434,8 +434,8 @@ class SaleInput(graphene.InputObjectType):
     name = graphene.String(description="Voucher name.")
     type = DiscountValueTypeEnum(description="Fixed or percentage.")
     value = PositiveDecimal(description="Value of the voucher.")
-    products = graphene.List(
-        graphene.ID, description="Products related to the discount.", name="products"
+    rooms = graphene.List(
+        graphene.ID, description="Rooms related to the discount.", name="rooms"
     )
     categories = graphene.List(
         graphene.ID,
@@ -459,8 +459,8 @@ class SaleUpdateDiscountedPriceMixin:
     @classmethod
     def success_response(cls, instance):
         # Update the "discounted_prices" of the associated, discounted
-        # products (including collections and categories).
-        update_products_discounted_prices_of_discount_task.delay(instance.pk)
+        # rooms (including collections and categories).
+        update_rooms_discounted_prices_of_discount_task.delay(instance.pk)
         return super().success_response(
             ChannelContext(node=instance, channel_slug=None)
         )
@@ -525,7 +525,7 @@ class SaleBaseCatalogueMutation(BaseDiscountCatalogueMutation):
 
 class SaleAddCatalogues(SaleBaseCatalogueMutation):
     class Meta:
-        description = "Adds products, categories, collections to a voucher."
+        description = "Adds rooms, categories, collections to a voucher."
         permissions = (DiscountPermissions.MANAGE_DISCOUNTS,)
         error_type_class = DiscountError
         error_type_field = "discount_errors"
@@ -541,7 +541,7 @@ class SaleAddCatalogues(SaleBaseCatalogueMutation):
 
 class SaleRemoveCatalogues(SaleBaseCatalogueMutation):
     class Meta:
-        description = "Removes products, categories, collections from a sale."
+        description = "Removes rooms, categories, collections from a sale."
         permissions = (DiscountPermissions.MANAGE_DISCOUNTS,)
         error_type_class = DiscountError
         error_type_field = "discount_errors"
@@ -641,7 +641,7 @@ class SaleChannelListingUpdate(BaseChannelListingMutation):
     def save(cls, info, sale: "SaleModel", cleaned_input: Dict):
         cls.add_channels(sale, cleaned_input.get("add_channels", []))
         cls.remove_channels(sale, cleaned_input.get("remove_channels", []))
-        update_products_discounted_prices_of_discount_task.delay(sale.pk)
+        update_rooms_discounted_prices_of_discount_task.delay(sale.pk)
 
     @classmethod
     def perform_mutation(cls, _root, info, id, input):

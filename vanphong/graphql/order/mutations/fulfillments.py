@@ -22,17 +22,17 @@ from ...core.types.common import OrderError
 from ...core.utils import from_global_id_strict_type, get_duplicated_values
 from ...order.types import Fulfillment, FulfillmentLine, Order
 from ...utils import get_user_or_app_from_context
-from ...warehouse.types import Warehouse
+from ...hotel.types import Hotel
 from ..types import OrderLine
 
 
 class OrderFulfillStockInput(graphene.InputObjectType):
     quantity = graphene.Int(
-        description="The number of line items to be fulfilled from given warehouse.",
+        description="The number of line items to be fulfilled from given hotel.",
         required=True,
     )
-    warehouse = graphene.ID(
-        description="ID of the warehouse from which the item will be fulfilled.",
+    hotel = graphene.ID(
+        description="ID of the hotel from which the item will be fulfilled.",
         required=True,
     )
 
@@ -68,8 +68,8 @@ class FulfillmentUpdateTrackingInput(graphene.InputObjectType):
 
 
 class FulfillmentCancelInput(graphene.InputObjectType):
-    warehouse_id = graphene.ID(
-        description="ID of warehouse where items will be restock.", required=True
+    hotel_id = graphene.ID(
+        description="ID of hotel where items will be restock.", required=True
     )
 
 
@@ -121,16 +121,16 @@ class OrderFulfill(BaseMutation):
                 )
 
     @classmethod
-    def check_warehouses_for_duplicates(cls, warehouse_ids):
-        for warehouse_ids_for_line in warehouse_ids:
-            duplicates = get_duplicated_values(warehouse_ids_for_line)
+    def check_hotels_for_duplicates(cls, hotel_ids):
+        for hotel_ids_for_line in hotel_ids:
+            duplicates = get_duplicated_values(hotel_ids_for_line)
             if duplicates:
                 raise ValidationError(
                     {
-                        "warehouse": ValidationError(
-                            "Duplicated warehouse ID.",
+                        "hotel": ValidationError(
+                            "Duplicated hotel ID.",
                             code=OrderErrorCode.DUPLICATED_INPUT_ITEM,
-                            params={"warehouse": duplicates.pop()},
+                            params={"hotel": duplicates.pop()},
                         )
                     }
                 )
@@ -166,10 +166,10 @@ class OrderFulfill(BaseMutation):
     def clean_input(cls, data):
         lines = data["lines"]
 
-        warehouse_ids_for_lines = [
-            [stock["warehouse"] for stock in line["stocks"]] for line in lines
+        hotel_ids_for_lines = [
+            [stock["hotel"] for stock in line["stocks"]] for line in lines
         ]
-        cls.check_warehouses_for_duplicates(warehouse_ids_for_lines)
+        cls.check_hotels_for_duplicates(hotel_ids_for_lines)
 
         quantities_for_lines = [
             [stock["quantity"] for stock in line["stocks"]] for line in lines
@@ -185,20 +185,20 @@ class OrderFulfill(BaseMutation):
 
         cls.check_total_quantity_of_items(quantities_for_lines)
 
-        lines_for_warehouses = defaultdict(list)
+        lines_for_hotels = defaultdict(list)
         for line, order_line in zip(lines, order_lines):
             for stock in line["stocks"]:
                 if stock["quantity"] > 0:
-                    warehouse_pk = from_global_id_strict_type(
-                        stock["warehouse"], only_type=Warehouse, field="warehouse"
+                    hotel_pk = from_global_id_strict_type(
+                        stock["hotel"], only_type=Hotel, field="hotel"
                     )
-                    lines_for_warehouses[warehouse_pk].append(
+                    lines_for_hotels[hotel_pk].append(
                         {"order_line": order_line, "quantity": stock["quantity"]}
                     )
 
         data["order_lines"] = order_lines
         data["quantities"] = quantities_for_lines
-        data["lines_for_warehouses"] = lines_for_warehouses
+        data["lines_for_hotels"] = lines_for_hotels
         return data
 
     @classmethod
@@ -209,28 +209,28 @@ class OrderFulfill(BaseMutation):
         cleaned_input = cls.clean_input(data)
 
         user = info.context.user
-        lines_for_warehouses = cleaned_input["lines_for_warehouses"]
+        lines_for_hotels = cleaned_input["lines_for_hotels"]
         notify_customer = cleaned_input.get("notify_customer", True)
 
         try:
             fulfillments = create_fulfillments(
-                user, order, dict(lines_for_warehouses), notify_customer
+                user, order, dict(lines_for_hotels), notify_customer
             )
         except InsufficientStock as exc:
             order_line_global_id = graphene.Node.to_global_id(
                 "OrderLine", exc.context["order_line"].pk
             )
-            warehouse_global_id = graphene.Node.to_global_id(
-                "Warehouse", exc.context["warehouse_pk"]
+            hotel_global_id = graphene.Node.to_global_id(
+                "Hotel", exc.context["hotel_pk"]
             )
             raise ValidationError(
                 {
                     "stocks": ValidationError(
-                        f"Insufficient product stock: {exc.item}",
+                        f"Insufficient room stock: {exc.item}",
                         code=OrderErrorCode.INSUFFICIENT_STOCK,
                         params={
                             "order_line": order_line_global_id,
-                            "warehouse": warehouse_global_id,
+                            "hotel": hotel_global_id,
                         },
                     )
                 }
@@ -292,9 +292,9 @@ class FulfillmentCancel(BaseMutation):
 
     @classmethod
     def perform_mutation(cls, _root, info, **data):
-        warehouse_id = data.get("input").get("warehouse_id")
-        warehouse = cls.get_node_or_error(
-            info, warehouse_id, only_type="Warehouse", field="warehouse_id"
+        hotel_id = data.get("input").get("hotel_id")
+        hotel = cls.get_node_or_error(
+            info, hotel_id, only_type="Hotel", field="hotel_id"
         )
         fulfillment = cls.get_node_or_error(info, data.get("id"), only_type=Fulfillment)
 
@@ -309,7 +309,7 @@ class FulfillmentCancel(BaseMutation):
             )
 
         order = fulfillment.order
-        cancel_fulfillment(fulfillment, info.context.user, warehouse)
+        cancel_fulfillment(fulfillment, info.context.user, hotel)
         fulfillment.refresh_from_db(fields=["status"])
         order.refresh_from_db(fields=["status"])
         return FulfillmentCancel(fulfillment=fulfillment, order=order)
@@ -339,7 +339,7 @@ class OrderRefundFulfillmentLineInput(graphene.InputObjectType):
     )
 
 
-class OrderRefundProductsInput(graphene.InputObjectType):
+class OrderRefundRoomsInput(graphene.InputObjectType):
     order_lines = graphene.List(
         graphene.NonNull(OrderRefundLineInput),
         description="List of unfulfilled lines to refund.",
@@ -361,7 +361,7 @@ class OrderRefundProductsInput(graphene.InputObjectType):
     )
 
 
-class FulfillmentRefundProducts(BaseMutation):
+class FulfillmentRefundRooms(BaseMutation):
     fulfillment = graphene.Field(Fulfillment, description="A refunded fulfillment.")
     order = graphene.Field(Order, description="Order which fulfillment was refunded.")
 
@@ -369,13 +369,13 @@ class FulfillmentRefundProducts(BaseMutation):
         order = graphene.ID(
             description="ID of the order to be refunded.", required=True
         )
-        input = OrderRefundProductsInput(
+        input = OrderRefundRoomsInput(
             required=True,
             description="Fields required to create an refund fulfillment.",
         )
 
     class Meta:
-        description = "Refund products."
+        description = "Refund rooms."
         permissions = (OrderPermissions.MANAGE_ORDERS,)
         error_type_class = OrderError
         error_type_field = "order_errors"

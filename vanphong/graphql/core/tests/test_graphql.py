@@ -9,7 +9,7 @@ from django.shortcuts import reverse
 from graphql.error import GraphQLError
 from graphql_relay import to_global_id
 
-from ...product.types import Product
+from ...room.types import Room
 from ...tests.utils import get_graphql_content
 from ...utils import get_nodes
 from ...utils.filters import filter_by_query_param
@@ -73,28 +73,28 @@ def test_jwt_middleware(client, admin_user):
     assert repl_data["data"]["me"] == {"email": admin_user.email}
 
 
-def test_real_query(user_api_client, product, channel_USD):
-    product_attr = product.product_type.product_attributes.first()
-    category = product.category
-    attr_value = product_attr.values.first()
+def test_real_query(user_api_client, room, channel_USD):
+    room_attr = room.room_type.room_attributes.first()
+    category = room.category
+    attr_value = room_attr.values.first()
     query = """
-    query Root($categoryId: ID!, $sortBy: ProductOrder, $first: Int,
+    query Root($categoryId: ID!, $sortBy: RoomOrder, $first: Int,
             $attributesFilter: [AttributeInput], $channel: String) {
 
         category(id: $categoryId) {
             ...CategoryPageFragmentQuery
             __typename
         }
-        products(first: $first, sortBy: $sortBy, filter: {categories: [$categoryId],
+        rooms(first: $first, sortBy: $sortBy, filter: {categories: [$categoryId],
             attributes: $attributesFilter}, channel: $channel) {
 
-            ...ProductListFragmentQuery
+            ...RoomListFragmentQuery
             __typename
         }
         attributes(first: 20, filter: {inCategory: $categoryId, channel: $channel}) {
             edges {
                 node {
-                    ...ProductFiltersFragmentQuery
+                    ...RoomFiltersFragmentQuery
                     __typename
                 }
             }
@@ -129,10 +129,10 @@ def test_real_query(user_api_client, product, channel_USD):
         __typename
     }
 
-    fragment ProductListFragmentQuery on ProductCountableConnection {
+    fragment RoomListFragmentQuery on RoomCountableConnection {
         edges {
             node {
-                ...ProductFragmentQuery
+                ...RoomFragmentQuery
                 __typename
             }
             __typename
@@ -144,12 +144,12 @@ def test_real_query(user_api_client, product, channel_USD):
         __typename
     }
 
-    fragment ProductFragmentQuery on Product {
+    fragment RoomFragmentQuery on Room {
         id
         isAvailable
         name
         pricing {
-            ...ProductPriceFragmentQuery
+            ...RoomPriceFragmentQuery
             __typename
         }
         thumbnailUrl1x: thumbnail(size: 255){
@@ -162,7 +162,7 @@ def test_real_query(user_api_client, product, channel_USD):
         __typename
     }
 
-    fragment ProductPriceFragmentQuery on ProductPricingInfo {
+    fragment RoomPriceFragmentQuery on RoomPricingInfo {
         discount {
             gross {
                 amount
@@ -197,7 +197,7 @@ def test_real_query(user_api_client, product, channel_USD):
         __typename
     }
 
-    fragment ProductFiltersFragmentQuery on Attribute {
+    fragment RoomFiltersFragmentQuery on Attribute {
         id
         name
         slug
@@ -215,7 +215,7 @@ def test_real_query(user_api_client, product, channel_USD):
         "sortBy": {"field": "NAME", "direction": "ASC"},
         "first": 1,
         "attributesFilter": [
-            {"slug": f"{product_attr.slug}", "value": f"{attr_value.slug}"}
+            {"slug": f"{room_attr.slug}", "value": f"{attr_value.slug}"}
         ],
         "channel": channel_USD.slug,
     }
@@ -223,16 +223,16 @@ def test_real_query(user_api_client, product, channel_USD):
     get_graphql_content(response)
 
 
-def test_get_nodes(product_list):
-    global_ids = [to_global_id("Product", product.pk) for product in product_list]
+def test_get_nodes(room_list):
+    global_ids = [to_global_id("Room", room.pk) for room in room_list]
     # Make sure function works even if duplicated ids are provided
-    global_ids.append(to_global_id("Product", product_list[0].pk))
-    # Return products corresponding to global ids
-    products = get_nodes(global_ids, Product)
-    assert products == product_list
+    global_ids.append(to_global_id("Room", room_list[0].pk))
+    # Return rooms corresponding to global ids
+    rooms = get_nodes(global_ids, Room)
+    assert rooms == room_list
 
     # Raise an error if requested id has no related database object
-    nonexistent_item = Mock(type="Product", pk=123)
+    nonexistent_item = Mock(type="Room", pk=123)
     nonexistent_item_global_id = to_global_id(
         nonexistent_item.type, nonexistent_item.pk
     )
@@ -241,7 +241,7 @@ def test_get_nodes(product_list):
         nonexistent_item.type, nonexistent_item.pk
     )
     with pytest.raises(AssertionError) as exc:
-        get_nodes(global_ids, Product)
+        get_nodes(global_ids, Room)
 
     assert exc.value.args == (msg,)
     global_ids.pop()
@@ -251,15 +251,15 @@ def test_get_nodes(product_list):
     invalid_item_global_id = to_global_id(invalid_item.type, invalid_item.pk)
     global_ids.append(invalid_item_global_id)
     with pytest.raises(GraphQLError) as exc:
-        get_nodes(global_ids, Product)
+        get_nodes(global_ids, Room)
 
-    assert exc.value.args == (f"Must receive Product id: {invalid_item_global_id}",)
+    assert exc.value.args == (f"Must receive Room id: {invalid_item_global_id}",)
 
     # Raise an error if no nodes were found
     global_ids = []
     msg = f"Could not resolve to a node with the global id list of '{global_ids}'."
     with pytest.raises(Exception) as exc:
-        get_nodes(global_ids, Product)
+        get_nodes(global_ids, Room)
 
     assert exc.value.args == (msg,)
 
@@ -267,12 +267,12 @@ def test_get_nodes(product_list):
     global_ids = ["a", "bb"]
     msg = f"Could not resolve to a node with the global id list of '{global_ids}'."
     with pytest.raises(Exception) as exc:
-        get_nodes(global_ids, Product)
+        get_nodes(global_ids, Room)
 
     assert exc.value.args == (msg,)
 
 
-@patch("saleor.product.models.Product.objects")
+@patch("saleor.room.models.Room.objects")
 def test_filter_by_query_param(qs):
     qs.filter.return_value = qs
 

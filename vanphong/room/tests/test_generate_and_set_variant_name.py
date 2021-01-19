@@ -6,25 +6,25 @@ import pytest
 from ...attribute import AttributeInputType
 from ...attribute.models import AttributeValue
 from ...attribute.utils import associate_attribute_values_to_instance
-from ...product.models import ProductVariantChannelListing
-from ..models import Product, ProductType, ProductVariant
+from ...room.models import RoomVariantChannelListing
+from ..models import Room, RoomType, RoomVariant
 from ..tasks import _update_variants_names
 from ..utils.variants import generate_and_set_variant_name
 
 
 @pytest.fixture()
 def variant_with_no_attributes(category, channel_USD):
-    """Create a variant having no attributes, the same for the parent product."""
-    product_type = ProductType.objects.create(
-        name="Test product type", has_variants=True, is_shipping_required=True
+    """Create a variant having no attributes, the same for the parent room."""
+    room_type = RoomType.objects.create(
+        name="Test room type", has_variants=True, is_shipping_required=True
     )
-    product = Product.objects.create(
-        name="Test product",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room",
+        room_type=room_type,
         category=category,
     )
-    variant = ProductVariant.objects.create(product=product, sku="123")
-    ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="123")
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         cost_price_amount=Decimal(1),
@@ -44,8 +44,8 @@ def test_generate_and_set_variant_name_different_attributes(
     variant = variant_with_no_attributes
     color_attribute = color_attribute_without_values
 
-    # Assign the attributes to the product type
-    variant.product.product_type.variant_attributes.set(
+    # Assign the attributes to the room type
+    variant.room.room_type.variant_attributes.set(
         (color_attribute, size_attribute)
     )
 
@@ -85,8 +85,8 @@ def test_generate_and_set_variant_name_only_variant_selection_attributes(
     variant = variant_with_no_attributes
     color_attribute = color_attribute_without_values
 
-    # Assign the attributes to the product type
-    variant.product.product_type.variant_attributes.set(
+    # Assign the attributes to the room type
+    variant.room.room_type.variant_attributes.set(
         (color_attribute, size_attribute)
     )
 
@@ -130,8 +130,8 @@ def test_generate_and_set_variant_name_only_not_variant_selection_attributes(
     variant = variant_with_no_attributes
     color_attribute = color_attribute_without_values
 
-    # Assign the attributes to the product type
-    variant.product.product_type.variant_attributes.set(
+    # Assign the attributes to the room type
+    variant.room.room_type.variant_attributes.set(
         (color_attribute, file_attribute)
     )
 
@@ -173,34 +173,34 @@ def test_generate_name_from_values_empty(variant_with_no_attributes):
     assert variant.name == variant.sku
 
 
-def test_product_type_update_changes_variant_name(product):
+def test_room_type_update_changes_variant_name(room):
     new_name = "test_name"
-    product_variant = product.variants.first()
-    assert not product_variant.name == new_name
-    attribute = product.product_type.variant_attributes.first()
+    room_variant = room.variants.first()
+    assert not room_variant.name == new_name
+    attribute = room.room_type.variant_attributes.first()
     attribute_value = attribute.values.first()
     attribute_value.name = new_name
     attribute_value.save()
-    _update_variants_names(product.product_type, [attribute])
-    product_variant.refresh_from_db()
-    assert product_variant.name == new_name
+    _update_variants_names(room.room_type, [attribute])
+    room_variant.refresh_from_db()
+    assert room_variant.name == new_name
 
 
-def test_only_not_variant_selection_attr_left_variant_name_change_to_sku(product):
+def test_only_not_variant_selection_attr_left_variant_name_change_to_sku(room):
     new_name = "test_name"
-    product_variant = product.variants.first()
-    assert not product_variant.name == new_name
-    attribute = product.product_type.variant_attributes.first()
+    room_variant = room.variants.first()
+    assert not room_variant.name == new_name
+    attribute = room.room_type.variant_attributes.first()
     attribute.input_type = AttributeInputType.MULTISELECT
     attribute.save(update_fields=["input_type"])
-    _update_variants_names(product.product_type, [attribute])
-    product_variant.refresh_from_db()
-    assert product_variant.name == product_variant.sku
+    _update_variants_names(room.room_type, [attribute])
+    room_variant.refresh_from_db()
+    assert room_variant.name == room_variant.sku
 
 
 def test_update_variants_changed_does_nothing_with_no_attributes():
-    product_type = MagicMock(spec=ProductType)
-    product_type.variant_attributes.all = Mock(return_value=[])
+    room_type = MagicMock(spec=RoomType)
+    room_type.variant_attributes.all = Mock(return_value=[])
     saved_attributes = []
     # FIXME: This method no longer returns any value
-    assert _update_variants_names(product_type, saved_attributes) is None
+    assert _update_variants_names(room_type, saved_attributes) is None

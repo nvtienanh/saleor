@@ -9,7 +9,7 @@ import saleor.core.sanitizers.editorjs_sanitizer
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0130_migrate_from_draftjs_to_editorjs_format"),
+        ("room", "0130_migrate_from_draftjs_to_editorjs_format"),
     ]
 
     operations = [
@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="description_json",
             field=saleor.core.db.fields.SanitizedJSONField(
                 blank=True,
@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="producttranslation",
+            model_name="roomtranslation",
             name="description_json",
             field=saleor.core.db.fields.SanitizedJSONField(
                 blank=True,

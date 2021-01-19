@@ -25,8 +25,8 @@ class ShopSettingsInput(graphene.InputObjectType):
         description="Enable inventory tracking."
     )
     default_weight_unit = WeightUnitsEnum(description="Default weight unit.")
-    automatic_fulfillment_digital_products = graphene.Boolean(
-        description="Enable automatic fulfillment for all digital products."
+    automatic_fulfillment_digital_rooms = graphene.Boolean(
+        description="Enable automatic fulfillment for all digital rooms."
     )
     default_digital_max_downloads = graphene.Int(
         description="Default number of max downloads per digital content URL."

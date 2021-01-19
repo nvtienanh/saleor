@@ -7,14 +7,14 @@ from django.views.decorators.csrf import csrf_exempt
 from .graphql.api import schema
 from .graphql.views import GraphQLView
 from .plugins.views import handle_plugin_webhook
-from .product.views import digital_product
+from .room.views import digital_room
 
 urlpatterns = [
     url(r"^graphql/", csrf_exempt(GraphQLView.as_view(schema=schema)), name="api"),
     url(
         r"^digital-download/(?P<token>[0-9A-Za-z_\-]+)/$",
-        digital_product,
-        name="digital-product",
+        digital_room,
+        name="digital-room",
     ),
     url(
         r"plugins/(?P<plugin_id>[.0-9A-Za-z_\-]+)/",

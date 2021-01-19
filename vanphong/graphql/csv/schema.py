@@ -1,11 +1,11 @@
 import graphene
 
-from ...core.permissions import ProductPermissions
+from ...core.permissions import RoomPermissions
 from ...csv import models
 from ..core.fields import FilterInputConnectionField
 from ..decorators import permission_required
 from .filters import ExportFileFilterInput
-from .mutations import ExportProducts
+from .mutations import ExportRooms
 from .sorters import ExportFileSortingInput
 from .types import ExportFile
 
@@ -25,14 +25,14 @@ class CsvQueries(graphene.ObjectType):
         description="List of export files.",
     )
 
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def resolve_export_file(self, info, id):
         return graphene.Node.get_node_from_global_id(info, id, ExportFile)
 
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def resolve_export_files(self, info, query=None, sort_by=None, **kwargs):
         return models.ExportFile.objects.all()
 
 
 class CsvMutations(graphene.ObjectType):
-    export_products = ExportProducts.Field()
+    export_rooms = ExportRooms.Field()

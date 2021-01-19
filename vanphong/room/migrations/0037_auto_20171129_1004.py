@@ -7,7 +7,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0036_auto_20171115_0608")]
+    dependencies = [("room", "0036_auto_20171115_0608")]
 
     operations = [
         migrations.AlterModelOptions(name="attributechoicevalue", options={}),
@@ -21,23 +21,23 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AlterModelOptions(
-            name="product",
+            name="room",
             options={
                 "permissions": (
-                    ("view_product", "Can view products"),
-                    ("edit_product", "Can edit products"),
-                    ("view_properties", "Can view product properties"),
-                    ("edit_properties", "Can edit product properties"),
+                    ("view_room", "Can view rooms"),
+                    ("edit_room", "Can edit rooms"),
+                    ("view_properties", "Can view room properties"),
+                    ("edit_properties", "Can edit room properties"),
                 )
             },
         ),
         migrations.AlterModelOptions(
-            name="productattribute", options={"ordering": ("slug",)}
+            name="roomattribute", options={"ordering": ("slug",)}
         ),
-        migrations.AlterModelOptions(name="productclass", options={}),
+        migrations.AlterModelOptions(name="roomclass", options={}),
         migrations.AlterModelOptions(
-            name="productimage", options={"ordering": ("order",)}
+            name="roomimage", options={"ordering": ("order",)}
         ),
-        migrations.AlterModelOptions(name="productvariant", options={}),
+        migrations.AlterModelOptions(name="roomvariant", options={}),
         migrations.AlterModelOptions(name="variantimage", options={}),
     ]

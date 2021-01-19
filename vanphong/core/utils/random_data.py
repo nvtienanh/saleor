@@ -26,11 +26,11 @@ from ...account.models import Address, User
 from ...account.utils import store_user_address
 from ...attribute.models import (
     AssignedPageAttribute,
-    AssignedProductAttribute,
+    AssignedRoomAttribute,
     AssignedVariantAttribute,
     Attribute,
     AttributePage,
-    AttributeProduct,
+    AttributeRoom,
     AttributeValue,
     AttributeVariant,
 )
@@ -57,24 +57,24 @@ from ...page.models import Page, PageType
 from ...payment import gateway
 from ...payment.utils import create_payment
 from ...plugins.manager import get_plugins_manager
-from ...product.models import (
+from ...room.models import (
     Category,
     Collection,
     CollectionChannelListing,
-    CollectionProduct,
-    Product,
-    ProductChannelListing,
-    ProductImage,
-    ProductType,
-    ProductVariant,
-    ProductVariantChannelListing,
+    CollectionRoom,
+    Room,
+    RoomChannelListing,
+    RoomImage,
+    RoomType,
+    RoomVariant,
+    RoomVariantChannelListing,
     VariantImage,
 )
-from ...product.tasks import update_products_discounted_prices_of_discount_task
-from ...product.thumbnails import (
+from ...room.tasks import update_rooms_discounted_prices_of_discount_task
+from ...room.thumbnails import (
     create_category_background_image_thumbnails,
     create_collection_background_image_thumbnails,
-    create_product_thumbnails,
+    create_room_thumbnails,
 )
 from ...shipping.models import (
     ShippingMethod,
@@ -82,65 +82,65 @@ from ...shipping.models import (
     ShippingMethodType,
     ShippingZone,
 )
-from ...warehouse.management import increase_stock
-from ...warehouse.models import Stock, Warehouse
+from ...hotel.management import increase_stock
+from ...hotel.models import Stock, Hotel
 
 fake = Factory.create()
-PRODUCTS_LIST_DIR = "products-list/"
+ROOMS_LIST_DIR = "rooms-list/"
 
 IMAGES_MAPPING = {
-    61: ["saleordemoproduct_paints_01.png"],
-    62: ["saleordemoproduct_paints_02.png"],
-    63: ["saleordemoproduct_paints_03.png"],
-    64: ["saleordemoproduct_paints_04.png"],
-    65: ["saleordemoproduct_paints_05.png"],
-    71: ["saleordemoproduct_fd_juice_06.png"],
-    72: ["saleordemoproduct_fd_juice_06.png"],  # FIXME inproper image
-    73: ["saleordemoproduct_fd_juice_05.png"],
-    74: ["saleordemoproduct_fd_juice_01.png"],
-    75: ["saleordemoproduct_fd_juice_03.png"],  # FIXME inproper image
-    76: ["saleordemoproduct_fd_juice_02.png"],  # FIXME inproper image
-    77: ["saleordemoproduct_fd_juice_03.png"],
-    78: ["saleordemoproduct_fd_juice_04.png"],
-    79: ["saleordemoproduct_fd_juice_02.png"],
-    81: ["saleordemoproduct_wine-red.png"],
-    82: ["saleordemoproduct_wine-white.png"],
-    83: ["saleordemoproduct_beer-02_1.png", "saleordemoproduct_beer-02_2.png"],
-    84: ["saleordemoproduct_beer-01_1.png", "saleordemoproduct_beer-01_2.png"],
-    85: ["saleordemoproduct_cuschion01.png"],
-    86: ["saleordemoproduct_cuschion02.png"],
+    61: ["saleordemoroom_paints_01.png"],
+    62: ["saleordemoroom_paints_02.png"],
+    63: ["saleordemoroom_paints_03.png"],
+    64: ["saleordemoroom_paints_04.png"],
+    65: ["saleordemoroom_paints_05.png"],
+    71: ["saleordemoroom_fd_juice_06.png"],
+    72: ["saleordemoroom_fd_juice_06.png"],  # FIXME inproper image
+    73: ["saleordemoroom_fd_juice_05.png"],
+    74: ["saleordemoroom_fd_juice_01.png"],
+    75: ["saleordemoroom_fd_juice_03.png"],  # FIXME inproper image
+    76: ["saleordemoroom_fd_juice_02.png"],  # FIXME inproper image
+    77: ["saleordemoroom_fd_juice_03.png"],
+    78: ["saleordemoroom_fd_juice_04.png"],
+    79: ["saleordemoroom_fd_juice_02.png"],
+    81: ["saleordemoroom_wine-red.png"],
+    82: ["saleordemoroom_wine-white.png"],
+    83: ["saleordemoroom_beer-02_1.png", "saleordemoroom_beer-02_2.png"],
+    84: ["saleordemoroom_beer-01_1.png", "saleordemoroom_beer-01_2.png"],
+    85: ["saleordemoroom_cuschion01.png"],
+    86: ["saleordemoroom_cuschion02.png"],
     87: [
-        "saleordemoproduct_sneakers_01_1.png",
-        "saleordemoproduct_sneakers_01_2.png",
-        "saleordemoproduct_sneakers_01_3.png",
-        "saleordemoproduct_sneakers_01_4.png",
+        "saleordemoroom_sneakers_01_1.png",
+        "saleordemoroom_sneakers_01_2.png",
+        "saleordemoroom_sneakers_01_3.png",
+        "saleordemoroom_sneakers_01_4.png",
     ],
     88: [
-        "saleordemoproduct_sneakers_02_1.png",
-        "saleordemoproduct_sneakers_02_2.png",
-        "saleordemoproduct_sneakers_02_3.png",
-        "saleordemoproduct_sneakers_02_4.png",
+        "saleordemoroom_sneakers_02_1.png",
+        "saleordemoroom_sneakers_02_2.png",
+        "saleordemoroom_sneakers_02_3.png",
+        "saleordemoroom_sneakers_02_4.png",
     ],
-    89: ["saleordemoproduct_cl_boot07_1.png", "saleordemoproduct_cl_boot07_2.png"],
-    107: ["saleordemoproduct_cl_polo01.png"],
-    108: ["saleordemoproduct_cl_polo02.png"],
-    109: ["saleordemoproduct_cl_polo03-woman.png"],
-    110: ["saleordemoproduct_cl_polo04-woman.png"],
+    89: ["saleordemoroom_cl_boot07_1.png", "saleordemoroom_cl_boot07_2.png"],
+    107: ["saleordemoroom_cl_polo01.png"],
+    108: ["saleordemoroom_cl_polo02.png"],
+    109: ["saleordemoroom_cl_polo03-woman.png"],
+    110: ["saleordemoroom_cl_polo04-woman.png"],
     111: [
-        "saleordemoproduct_cl_boot01_1.png",
-        "saleordemoproduct_cl_boot01_2.png",
-        "saleordemoproduct_cl_boot01_3.png",
+        "saleordemoroom_cl_boot01_1.png",
+        "saleordemoroom_cl_boot01_2.png",
+        "saleordemoroom_cl_boot01_3.png",
     ],
-    112: ["saleordemoproduct_cl_boot03_1.png", "saleordemoproduct_cl_boot03_2.png"],
-    113: ["saleordemoproduct_cl_boot06_1.png", "saleordemoproduct_cl_boot06_2.png"],
+    112: ["saleordemoroom_cl_boot03_1.png", "saleordemoroom_cl_boot03_2.png"],
+    113: ["saleordemoroom_cl_boot06_1.png", "saleordemoroom_cl_boot06_2.png"],
     114: [
-        "saleordemoproduct_cl_boot06_1.png",
-        "saleordemoproduct_cl_boot06_2.png",
+        "saleordemoroom_cl_boot06_1.png",
+        "saleordemoroom_cl_boot06_2.png",
     ],  # FIXME incorrect image
-    115: ["saleordemoproduct_cl_bogo01_1.png"],
-    116: ["saleordemoproduct_cl_bogo02_1.png"],
-    117: ["saleordemoproduct_cl_bogo03_1.png"],
-    118: ["saleordemoproduct_cl_bogo04_1.png", "saleordemoproduct_cl_bogo04_2.png"],
+    115: ["saleordemoroom_cl_bogo01_1.png"],
+    116: ["saleordemoroom_cl_bogo02_1.png"],
+    117: ["saleordemoroom_cl_bogo03_1.png"],
+    118: ["saleordemoroom_cl_bogo04_1.png", "saleordemoroom_cl_bogo04_2.png"],
     119: ["saleor-digital-03_1.png"],
     120: ["saleor-digital-03_2.png"],
     121: ["saleor-digital-03_3.png"],
@@ -162,16 +162,16 @@ def get_weight(weight):
     return Weight(**{unit: value})
 
 
-def create_product_types(product_type_data):
-    for product_type in product_type_data:
-        pk = product_type["pk"]
-        defaults = product_type["fields"]
+def create_room_types(room_type_data):
+    for room_type in room_type_data:
+        pk = room_type["pk"]
+        defaults = room_type["fields"]
         defaults["weight"] = get_weight(defaults["weight"])
-        ProductType.objects.update_or_create(pk=pk, defaults=defaults)
+        RoomType.objects.update_or_create(pk=pk, defaults=defaults)
 
 
 def create_categories(categories_data, placeholder_dir):
-    placeholder_dir = get_product_list_images_dir(placeholder_dir)
+    placeholder_dir = get_room_list_images_dir(placeholder_dir)
     for category in categories_data:
         pk = category["pk"]
         defaults = category["fields"]
@@ -200,7 +200,7 @@ def create_collection_channel_listings(collection_channel_listings_data):
 
 
 def create_collections(data, placeholder_dir):
-    placeholder_dir = get_product_list_images_dir(placeholder_dir)
+    placeholder_dir = get_room_list_images_dir(placeholder_dir)
     for collection in data:
         pk = collection["pk"]
         defaults = collection["fields"]
@@ -211,13 +211,13 @@ def create_collections(data, placeholder_dir):
         create_collection_background_image_thumbnails.delay(pk)
 
 
-def assign_products_to_collections(associations: list):
+def assign_rooms_to_collections(associations: list):
     for value in associations:
         pk = value["pk"]
         defaults = value["fields"]
         defaults["collection_id"] = defaults.pop("collection")
-        defaults["product_id"] = defaults.pop("product")
-        CollectionProduct.objects.update_or_create(pk=pk, defaults=defaults)
+        defaults["room_id"] = defaults.pop("room")
+        CollectionRoom.objects.update_or_create(pk=pk, defaults=defaults)
 
 
 def create_attributes(attributes_data):
@@ -235,95 +235,95 @@ def create_attributes_values(values_data):
         AttributeValue.objects.update_or_create(pk=pk, defaults=defaults)
 
 
-def create_products(products_data, placeholder_dir, create_images):
-    for product in products_data:
-        pk = product["pk"]
-        # We are skipping products without images
+def create_rooms(rooms_data, placeholder_dir, create_images):
+    for room in rooms_data:
+        pk = room["pk"]
+        # We are skipping rooms without images
         if pk not in IMAGES_MAPPING:
             continue
 
-        defaults = product["fields"]
+        defaults = room["fields"]
         defaults["weight"] = get_weight(defaults["weight"])
         defaults["category_id"] = defaults.pop("category")
-        defaults["product_type_id"] = defaults.pop("product_type")
+        defaults["room_type_id"] = defaults.pop("room_type")
 
-        product, _ = Product.objects.update_or_create(pk=pk, defaults=defaults)
+        room, _ = Room.objects.update_or_create(pk=pk, defaults=defaults)
 
         if create_images:
             images = IMAGES_MAPPING.get(pk, [])
             for image_name in images:
-                create_product_image(product, placeholder_dir, image_name)
+                create_room_image(room, placeholder_dir, image_name)
 
 
-def create_product_channel_listings(product_channel_listings_data):
+def create_room_channel_listings(room_channel_listings_data):
     channel_USD = Channel.objects.get(currency_code="USD")
     channel_PLN = Channel.objects.get(currency_code="PLN")
-    for product_channel_listing in product_channel_listings_data:
-        pk = product_channel_listing["pk"]
-        defaults = product_channel_listing["fields"]
-        defaults["product_id"] = defaults.pop("product")
+    for room_channel_listing in room_channel_listings_data:
+        pk = room_channel_listing["pk"]
+        defaults = room_channel_listing["fields"]
+        defaults["room_id"] = defaults.pop("room")
         channel = defaults.pop("channel")
         defaults["channel_id"] = channel_USD.pk if channel == 1 else channel_PLN.pk
-        ProductChannelListing.objects.update_or_create(pk=pk, defaults=defaults)
+        RoomChannelListing.objects.update_or_create(pk=pk, defaults=defaults)
 
 
-def create_stocks(variant, warehouse_qs=None, **defaults):
-    if warehouse_qs is None:
-        warehouse_qs = Warehouse.objects.all()
+def create_stocks(variant, hotel_qs=None, **defaults):
+    if hotel_qs is None:
+        hotel_qs = Hotel.objects.all()
 
-    for warehouse in warehouse_qs:
+    for hotel in hotel_qs:
         Stock.objects.update_or_create(
-            warehouse=warehouse, product_variant=variant, defaults=defaults
+            hotel=hotel, room_variant=variant, defaults=defaults
         )
 
 
-def create_product_variants(variants_data, create_images):
+def create_room_variants(variants_data, create_images):
     for variant in variants_data:
         pk = variant["pk"]
         defaults = variant["fields"]
         defaults["weight"] = get_weight(defaults["weight"])
-        product_id = defaults.pop("product")
-        # We have not created products without images
-        if product_id not in IMAGES_MAPPING:
+        room_id = defaults.pop("room")
+        # We have not created rooms without images
+        if room_id not in IMAGES_MAPPING:
             continue
-        defaults["product_id"] = product_id
+        defaults["room_id"] = room_id
         set_field_as_money(defaults, "price_override")
         set_field_as_money(defaults, "cost_price")
         is_default_variant = defaults.pop("default", False)
-        variant, _ = ProductVariant.objects.update_or_create(pk=pk, defaults=defaults)
+        variant, _ = RoomVariant.objects.update_or_create(pk=pk, defaults=defaults)
         if is_default_variant:
-            product = variant.product
-            product.default_variant = variant
-            product.save(update_fields=["default_variant", "updated_at"])
+            room = variant.room
+            room.default_variant = variant
+            room.save(update_fields=["default_variant", "updated_at"])
         if create_images:
-            image = variant.product.images.filter().first()
+            image = variant.room.images.filter().first()
             VariantImage.objects.create(variant=variant, image=image)
         quantity = random.randint(100, 500)
         create_stocks(variant, quantity=quantity)
 
 
-def create_product_variant_channel_listings(product_variant_channel_listings_data):
+def create_room_variant_channel_listings(room_variant_channel_listings_data):
     channel_USD = Channel.objects.get(currency_code="USD")
     channel_PLN = Channel.objects.get(currency_code="PLN")
-    for variant_channel_listing in product_variant_channel_listings_data:
+    for variant_channel_listing in room_variant_channel_listings_data:
         pk = variant_channel_listing["pk"]
         defaults = variant_channel_listing["fields"]
 
         defaults["variant_id"] = defaults.pop("variant")
         channel = defaults.pop("channel")
         defaults["channel_id"] = channel_USD.pk if channel == 1 else channel_PLN.pk
-        ProductVariantChannelListing.objects.update_or_create(pk=pk, defaults=defaults)
+        RoomVariantChannelListing.objects.update_or_create(pk=pk, defaults=defaults)
 
 
-def assign_attributes_to_product_types(
-    association_model: Union[Type[AttributeProduct], Type[AttributeVariant]],
+def assign_attributes_to_room_types(
+    association_model: Union[Type[AttributeRoom], Type[AttributeVariant]],
     attributes: list,
 ):
     for value in attributes:
         pk = value["pk"]
         defaults = value["fields"]
         defaults["attribute_id"] = defaults.pop("attribute")
-        defaults["product_type_id"] = defaults.pop("product_type")
+        defaults["room_type_id"] = defaults.pop("room_type")
         association_model.objects.update_or_create(pk=pk, defaults=defaults)
 
 
@@ -339,14 +339,14 @@ def assign_attributes_to_page_types(
         association_model.objects.update_or_create(pk=pk, defaults=defaults)
 
 
-def assign_attributes_to_products(product_attributes):
-    for value in product_attributes:
+def assign_attributes_to_rooms(room_attributes):
+    for value in room_attributes:
         pk = value["pk"]
         defaults = value["fields"]
-        defaults["product_id"] = defaults.pop("product")
+        defaults["room_id"] = defaults.pop("room")
         defaults["assignment_id"] = defaults.pop("assignment")
         assigned_values = defaults.pop("values")
-        assoc, created = AssignedProductAttribute.objects.update_or_create(
+        assoc, created = AssignedRoomAttribute.objects.update_or_create(
             pk=pk, defaults=defaults
         )
         if created:
@@ -387,7 +387,7 @@ def set_field_as_money(defaults, field):
         defaults[field] = Money(defaults[amount_field], settings.DEFAULT_CURRENCY)
 
 
-def create_products_by_schema(placeholder_dir, create_images):
+def create_rooms_by_schema(placeholder_dir, create_images):
     path = os.path.join(
         settings.PROJECT_ROOT, "saleor", "static", "populatedb_data.json"
     )
@@ -399,51 +399,51 @@ def create_products_by_schema(placeholder_dir, create_images):
         model = item.pop("model")
         types[model].append(item)
 
-    create_product_types(product_type_data=types["product.producttype"])
+    create_room_types(room_type_data=types["room.roomtype"])
     create_categories(
-        categories_data=types["product.category"], placeholder_dir=placeholder_dir
+        categories_data=types["room.category"], placeholder_dir=placeholder_dir
     )
-    create_attributes(attributes_data=types["product.attribute"])
-    create_attributes_values(values_data=types["product.attributevalue"])
-    create_products(
-        products_data=types["product.product"],
+    create_attributes(attributes_data=types["room.attribute"])
+    create_attributes_values(values_data=types["room.attributevalue"])
+    create_rooms(
+        rooms_data=types["room.room"],
         placeholder_dir=placeholder_dir,
         create_images=create_images,
     )
-    create_product_channel_listings(
-        product_channel_listings_data=types["product.productchannellisting"],
+    create_room_channel_listings(
+        room_channel_listings_data=types["room.roomchannellisting"],
     )
-    create_product_variants(
-        variants_data=types["product.productvariant"], create_images=create_images
+    create_room_variants(
+        variants_data=types["room.roomvariant"], create_images=create_images
     )
-    create_product_variant_channel_listings(
-        product_variant_channel_listings_data=types[
-            "product.productvariantchannellisting"
+    create_room_variant_channel_listings(
+        room_variant_channel_listings_data=types[
+            "room.roomvariantchannellisting"
         ],
     )
-    assign_attributes_to_product_types(
-        AttributeProduct, attributes=types["product.attributeproduct"]
+    assign_attributes_to_room_types(
+        AttributeRoom, attributes=types["room.attributeroom"]
     )
-    assign_attributes_to_product_types(
-        AttributeVariant, attributes=types["product.attributevariant"]
+    assign_attributes_to_room_types(
+        AttributeVariant, attributes=types["room.attributevariant"]
     )
     assign_attributes_to_page_types(
-        AttributePage, attributes=types["product.attributepage"]
+        AttributePage, attributes=types["room.attributepage"]
     )
-    assign_attributes_to_products(
-        product_attributes=types["product.assignedproductattribute"]
+    assign_attributes_to_rooms(
+        room_attributes=types["room.assignedroomattribute"]
     )
     assign_attributes_to_variants(
-        variant_attributes=types["product.assignedvariantattribute"]
+        variant_attributes=types["room.assignedvariantattribute"]
     )
-    assign_attributes_to_pages(page_attributes=types["product.assignedpageattribute"])
+    assign_attributes_to_pages(page_attributes=types["room.assignedpageattribute"])
     create_collections(
-        data=types["product.collection"], placeholder_dir=placeholder_dir
+        data=types["room.collection"], placeholder_dir=placeholder_dir
     )
     create_collection_channel_listings(
-        collection_channel_listings_data=types["product.collectionchannellisting"],
+        collection_channel_listings_data=types["room.collectionchannellisting"],
     )
-    assign_products_to_collections(associations=types["product.collectionproduct"])
+    assign_rooms_to_collections(associations=types["room.collectionroom"])
 
 
 class SaleorProvider(BaseProvider):
@@ -466,15 +466,15 @@ def get_email(first_name, last_name):
     )
 
 
-def create_product_image(product, placeholder_dir, image_name):
+def create_room_image(room, placeholder_dir, image_name):
     image = get_image(placeholder_dir, image_name)
-    # We don't want to create duplicated product images
-    if product.images.count() >= len(IMAGES_MAPPING.get(product.pk, [])):
+    # We don't want to create duplicated room images
+    if room.images.count() >= len(IMAGES_MAPPING.get(room.pk, [])):
         return None
-    product_image = ProductImage(product=product, image=image)
-    product_image.save()
-    create_product_thumbnails.delay(product_image.pk)
-    return product_image
+    room_image = RoomImage(room=room, image=image)
+    room_image.save()
+    create_room_thumbnails.delay(room_image.pk)
+    return room_image
 
 
 def create_address(save=True):
@@ -563,20 +563,20 @@ def create_order_lines(order, discounts, how_many=10):
         "variant_id", flat=True
     )
     variants = (
-        ProductVariant.objects.filter(pk__in=available_variant_ids)
+        RoomVariant.objects.filter(pk__in=available_variant_ids)
         .order_by("?")
-        .prefetch_related("product__product_type")[:how_many]
+        .prefetch_related("room__room_type")[:how_many]
     )
     variants_iter = itertools.cycle(variants)
     lines = []
     for _ in range(how_many):
         variant = next(variants_iter)
         variant_channel_listing = variant.channel_listings.get(channel=channel)
-        product = variant.product
+        room = variant.room
         quantity = random.randrange(1, 5)
         unit_price = variant.get_price(
-            product,
-            product.collections.all(),
+            room,
+            room.collections.all(),
             channel,
             variant_channel_listing,
             discounts,
@@ -586,9 +586,9 @@ def create_order_lines(order, discounts, how_many=10):
         lines.append(
             OrderLine(
                 order=order,
-                product_name=str(product),
+                room_name=str(room),
                 variant_name=str(variant),
-                product_sku=variant.sku,
+                room_sku=variant.sku,
                 is_shipping_required=variant.is_shipping_required(),
                 quantity=quantity,
                 variant=variant,
@@ -600,16 +600,16 @@ def create_order_lines(order, discounts, how_many=10):
     lines = OrderLine.objects.bulk_create(lines)
     manager = get_plugins_manager()
     country = order.shipping_method.shipping_zone.countries[0]
-    warehouses = Warehouse.objects.filter(
+    hotels = Hotel.objects.filter(
         shipping_zones__countries__contains=country
     ).order_by("?")
-    warehouse_iter = itertools.cycle(warehouses)
+    hotel_iter = itertools.cycle(hotels)
     for line in lines:
         unit_price = manager.calculate_order_line_unit(line)
         line.unit_price = unit_price
         line.tax_rate = unit_price.tax / unit_price.net
-        warehouse = next(warehouse_iter)
-        increase_stock(line, warehouse, line.quantity, allocate=True)
+        hotel = next(hotel_iter)
+        increase_stock(line, hotel, line.quantity, allocate=True)
     OrderLine.objects.bulk_update(
         lines,
         ["unit_price_net_amount", "unit_price_gross_amount", "currency", "tax_rate"],
@@ -711,8 +711,8 @@ def create_fake_sale():
             sale=sale,
             discount_value=random.choice([10, 20, 30, 40, 50]),
         )
-    for product in Product.objects.all().order_by("?")[:4]:
-        sale.products.add(product)
+    for room in Room.objects.all().order_by("?")[:4]:
+        sale.rooms.add(room)
     return sale
 
 
@@ -780,10 +780,10 @@ def create_orders(how_many=10):
         yield "Order: %s" % (order,)
 
 
-def create_product_sales(how_many=5):
+def create_room_sales(how_many=5):
     for dummy in range(how_many):
         sale = create_fake_sale()
-        update_products_discounted_prices_of_discount_task.delay(sale.pk)
+        update_rooms_discounted_prices_of_discount_task.delay(sale.pk)
         yield "Sale: %s" % (sale,)
 
 
@@ -1141,15 +1141,15 @@ def create_shipping_zones():
     )
 
 
-def create_warehouses():
+def create_hotels():
     for shipping_zone in ShippingZone.objects.all():
         shipping_zone_name = shipping_zone.name
-        warehouse, _ = Warehouse.objects.update_or_create(
+        hotel, _ = Hotel.objects.update_or_create(
             name=shipping_zone_name,
             slug=slugify(shipping_zone_name),
             defaults={"company_name": fake.company(), "address": create_address()},
         )
-        warehouse.shipping_zones.add(shipping_zone)
+        hotel.shipping_zones.add(shipping_zone)
 
 
 def create_vouchers():
@@ -1355,8 +1355,8 @@ def generate_menu_tree(menu):
     categories = (
         Category.tree.get_queryset()
         .filter(
-            Q(parent__isnull=True) & Q(products__isnull=False)
-            | Q(children__products__isnull=False)
+            Q(parent__isnull=True) & Q(rooms__isnull=False)
+            | Q(children__rooms__isnull=False)
         )
         .distinct()
     )
@@ -1381,11 +1381,11 @@ def create_menus():
         name=settings.DEFAULT_MENUS["bottom_menu_name"]
     )
     bottom_menu.items.all().delete()
-    collection = Collection.objects.filter(products__isnull=False).order_by("?")[0]
+    collection = Collection.objects.filter(rooms__isnull=False).order_by("?")[0]
     item, _ = bottom_menu.items.get_or_create(name="Collections", collection=collection)
 
     for collection in Collection.objects.filter(
-        products__isnull=False, background_image__isnull=False
+        rooms__isnull=False, background_image__isnull=False
     ):
         bottom_menu.items.get_or_create(
             name=collection.name, collection=collection, parent=item
@@ -1409,9 +1409,9 @@ def create_menus():
     site_settings.save()
 
 
-def get_product_list_images_dir(placeholder_dir):
-    product_list_images_dir = os.path.join(placeholder_dir, PRODUCTS_LIST_DIR)
-    return product_list_images_dir
+def get_room_list_images_dir(placeholder_dir):
+    room_list_images_dir = os.path.join(placeholder_dir, ROOMS_LIST_DIR)
+    return room_list_images_dir
 
 
 def get_image(image_dir, image_name):

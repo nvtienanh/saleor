@@ -6,25 +6,25 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0136_add_attribute_type_and_page_to_attribute_relation"),
+        ("room", "0136_add_attribute_type_and_page_to_attribute_relation"),
         ("attribute", "0001_initial"),
     ]
 
     state_operations = [
         migrations.AlterUniqueTogether(
-            name="assignedproductattribute",
+            name="assignedroomattribute",
             unique_together=None,
         ),
         migrations.RemoveField(
-            model_name="assignedproductattribute",
+            model_name="assignedroomattribute",
             name="assignment",
         ),
         migrations.RemoveField(
-            model_name="assignedproductattribute",
-            name="product",
+            model_name="assignedroomattribute",
+            name="room",
         ),
         migrations.RemoveField(
-            model_name="assignedproductattribute",
+            model_name="assignedroomattribute",
             name="values",
         ),
         migrations.AlterUniqueTogether(
@@ -49,11 +49,11 @@ class Migration(migrations.Migration):
         ),
         migrations.RemoveField(
             model_name="attribute",
-            name="product_types",
+            name="room_types",
         ),
         migrations.RemoveField(
             model_name="attribute",
-            name="product_variant_types",
+            name="room_variant_types",
         ),
         migrations.AlterUniqueTogether(
             name="attributepage",
@@ -72,20 +72,20 @@ class Migration(migrations.Migration):
             name="page_type",
         ),
         migrations.AlterUniqueTogether(
-            name="attributeproduct",
+            name="attributeroom",
             unique_together=None,
         ),
         migrations.RemoveField(
-            model_name="attributeproduct",
-            name="assigned_products",
+            model_name="attributeroom",
+            name="assigned_rooms",
         ),
         migrations.RemoveField(
-            model_name="attributeproduct",
+            model_name="attributeroom",
             name="attribute",
         ),
         migrations.RemoveField(
-            model_name="attributeproduct",
-            name="product_type",
+            model_name="attributeroom",
+            name="room_type",
         ),
         migrations.AlterUniqueTogether(
             name="attributetranslation",
@@ -125,13 +125,13 @@ class Migration(migrations.Migration):
         ),
         migrations.RemoveField(
             model_name="attributevariant",
-            name="product_type",
+            name="room_type",
         ),
         migrations.DeleteModel(
             name="AssignedPageAttribute",
         ),
         migrations.DeleteModel(
-            name="AssignedProductAttribute",
+            name="AssignedRoomAttribute",
         ),
         migrations.DeleteModel(
             name="AssignedVariantAttribute",
@@ -143,7 +143,7 @@ class Migration(migrations.Migration):
             name="AttributePage",
         ),
         migrations.DeleteModel(
-            name="AttributeProduct",
+            name="AttributeRoom",
         ),
         migrations.DeleteModel(
             name="AttributeTranslation",

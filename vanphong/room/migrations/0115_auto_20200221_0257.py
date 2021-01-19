@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0114_auto_20200129_0815"),
+        ("room", "0114_auto_20200129_0815"),
     ]
 
     operations = [
@@ -51,32 +51,32 @@ class Migration(migrations.Migration):
             new_name="private_metadata",
         ),
         migrations.RenameField(
-            model_name="product",
+            model_name="room",
             old_name="meta",
             new_name="metadata",
         ),
         migrations.RenameField(
-            model_name="product",
+            model_name="room",
             old_name="private_meta",
             new_name="private_metadata",
         ),
         migrations.RenameField(
-            model_name="producttype",
+            model_name="roomtype",
             old_name="meta",
             new_name="metadata",
         ),
         migrations.RenameField(
-            model_name="producttype",
+            model_name="roomtype",
             old_name="private_meta",
             new_name="private_metadata",
         ),
         migrations.RenameField(
-            model_name="productvariant",
+            model_name="roomvariant",
             old_name="meta",
             new_name="metadata",
         ),
         migrations.RenameField(
-            model_name="productvariant",
+            model_name="roomvariant",
             old_name="private_meta",
             new_name="private_metadata",
         ),

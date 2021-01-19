@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from ...checkout.models import Checkout, CheckoutLine
     from ...discount import DiscountInfo
     from ...order.models import Order
-    from ...product.models import Product, ProductType
+    from ...room.models import Room, RoomType
 
 
 class PluginSample(BasePlugin):
@@ -93,7 +93,7 @@ class PluginSample(BasePlugin):
         checkout,
         checkout_line,
         variant,
-        product,
+        room,
         collections,
         address,
         channel,
@@ -120,7 +120,7 @@ class PluginSample(BasePlugin):
     def show_taxes_on_storefront(self, previous_value: bool) -> bool:
         return True
 
-    def apply_taxes_to_product(self, product, price, country, previous_value, **kwargs):
+    def apply_taxes_to_room(self, room, price, country, previous_value, **kwargs):
         price = Money("1.0", price.currency)
         return TaxedMoney(price, price)
 
@@ -131,7 +131,7 @@ class PluginSample(BasePlugin):
         return TaxedMoney(price, price)
 
     def get_tax_rate_percentage_value(
-        self, obj: Union["Product", "ProductType"], country: Country, previous_value
+        self, obj: Union["Room", "RoomType"], country: Country, previous_value
     ) -> Decimal:
         return Decimal("15.0").quantize(Decimal("1."))
 
@@ -148,7 +148,7 @@ class PluginSample(BasePlugin):
     def get_order_line_tax_rate(
         self,
         order: "Order",
-        product: "Product",
+        room: "Room",
         address: Optional["Address"],
         previous_value: Decimal,
     ) -> Decimal:

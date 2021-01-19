@@ -15,8 +15,8 @@ from ..order import FulfillmentStatus, OrderStatus
 from ..order.models import Fulfillment, FulfillmentLine, Order, OrderLine
 from ..order.utils import get_order_country
 from ..payment import ChargeStatus
-from ..product.models import Product
-from ..warehouse.models import Warehouse
+from ..room.models import Room
+from ..hotel.models import Hotel
 from .event_types import WebhookEventType
 from .payload_serializers import PayloadSerializer
 from .serializers import serialize_checkout_lines
@@ -58,11 +58,11 @@ ORDER_FIELDS = (
 
 def generate_order_lines_payload(lines: Iterable[OrderLine]):
     line_fields = (
-        "product_name",
+        "room_name",
         "variant_name",
-        "translated_product_name",
+        "translated_room_name",
         "translated_variant_name",
-        "product_sku",
+        "room_sku",
         "quantity",
         "currency",
         "unit_price_net_amount",
@@ -199,12 +199,12 @@ def generate_customer_payload(customer: "User"):
     return data
 
 
-def generate_product_payload(product: "Product"):
+def generate_room_payload(room: "Room"):
     serializer = PayloadSerializer(
-        extra_model_fields={"ProductVariant": ("quantity", "quantity_allocated")}
+        extra_model_fields={"RoomVariant": ("quantity", "quantity_allocated")}
     )
 
-    product_fields = (
+    room_fields = (
         "name",
         "description_json",
         "currency",
@@ -217,7 +217,7 @@ def generate_product_payload(product: "Product"):
         "private_metadata",
         "metadata",
     )
-    product_variant_fields = (
+    room_variant_fields = (
         "sku",
         "name",
         "currency",
@@ -227,25 +227,25 @@ def generate_product_payload(product: "Product"):
         "private_metadata",
         "metadata",
     )
-    product_payload = serializer.serialize(
-        [product],
-        fields=product_fields,
+    room_payload = serializer.serialize(
+        [room],
+        fields=room_fields,
         additional_fields={
             "category": (lambda p: p.category, ("name", "slug")),
             "collections": (lambda p: p.collections.all(), ("name", "slug")),
             "variants": (
                 lambda p: p.variants.annotate_quantities().all(),
-                product_variant_fields,
+                room_variant_fields,
             ),
         },
     )
-    return product_payload
+    return room_payload
 
 
 def generate_fulfillment_lines_payload(fulfillment: Fulfillment):
     serializer = PayloadSerializer()
     lines = FulfillmentLine.objects.prefetch_related(
-        "order_line__variant__product__product_type"
+        "order_line__variant__room__room_type"
     ).filter(fulfillment=fulfillment)
     line_fields = ("quantity",)
     return serializer.serialize(
@@ -254,8 +254,8 @@ def generate_fulfillment_lines_payload(fulfillment: Fulfillment):
         extra_dict_data={
             "weight": (lambda fl: fl.order_line.variant.get_weight().g),
             "weight_unit": "gram",
-            "product_type": (
-                lambda fl: fl.order_line.variant.product.product_type.name
+            "room_type": (
+                lambda fl: fl.order_line.variant.room.room_type.name
             ),
             "unit_price_gross": lambda fl: fl.order_line.unit_price_gross_amount,
             "currency": (lambda fl: fl.order_line.currency),
@@ -271,14 +271,14 @@ def generate_fulfillment_payload(fulfillment: Fulfillment):
     order_country = get_order_country(fulfillment.order)
     fulfillment_line = fulfillment.lines.first()
     if fulfillment_line and fulfillment_line.stock:
-        warehouse = fulfillment_line.stock.warehouse
+        hotel = fulfillment_line.stock.hotel
     else:
-        warehouse = Warehouse.objects.for_country(order_country).first()
+        hotel = Hotel.objects.for_country(order_country).first()
     fulfillment_data = serializer.serialize(
         [fulfillment],
         fields=fulfillment_fields,
         additional_fields={
-            "warehouse_address": (lambda f: warehouse.address, ADDRESS_FIELDS),
+            "hotel_address": (lambda f: hotel.address, ADDRESS_FIELDS),
         },
         extra_dict_data={
             "order": json.loads(generate_order_payload(fulfillment.order))[0],
@@ -333,14 +333,14 @@ def generate_sample_payload(event_name: str) -> Optional[dict]:
     if event_name == WebhookEventType.CUSTOMER_CREATED:
         user = generate_fake_user()
         payload = generate_customer_payload(user)
-    elif event_name == WebhookEventType.PRODUCT_CREATED:
-        product = _get_sample_object(
-            Product.objects.prefetch_related("category", "collections", "variants")
+    elif event_name == WebhookEventType.ROOM_CREATED:
+        room = _get_sample_object(
+            Room.objects.prefetch_related("category", "collections", "variants")
         )
-        payload = generate_product_payload(product) if product else None
+        payload = generate_room_payload(room) if room else None
     elif event_name in checkout_events:
         checkout = _get_sample_object(
-            Checkout.objects.prefetch_related("lines__variant__product")
+            Checkout.objects.prefetch_related("lines__variant__room")
         )
         if checkout:
             anonymized_checkout = anonymize_checkout(checkout)

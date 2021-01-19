@@ -5,17 +5,17 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0082_merge_20181219_1440")]
+    dependencies = [("room", "0082_merge_20181219_1440")]
 
     operations = [
         migrations.AlterModelOptions(
             name="collection", options={"ordering": ("slug",)}
         ),
         migrations.AlterModelOptions(
-            name="product",
+            name="room",
             options={
                 "ordering": ("name",),
-                "permissions": (("manage_products", "Manage products."),),
+                "permissions": (("manage_rooms", "Manage rooms."),),
             },
         ),
     ]

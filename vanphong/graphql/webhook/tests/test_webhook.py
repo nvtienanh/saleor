@@ -419,8 +419,8 @@ SAMPLE_PAYLOAD_QUERY = """
         (WebhookSampleEventTypeEnum.ORDER_CANCELLED, True),
         (WebhookSampleEventTypeEnum.ORDER_FULFILLED, True),
         (WebhookSampleEventTypeEnum.CUSTOMER_CREATED, False),
-        (WebhookSampleEventTypeEnum.PRODUCT_CREATED, False),
-        (WebhookSampleEventTypeEnum.PRODUCT_UPDATED, False),
+        (WebhookSampleEventTypeEnum.ROOM_CREATED, False),
+        (WebhookSampleEventTypeEnum.ROOM_UPDATED, False),
         (WebhookSampleEventTypeEnum.CHECKOUT_QUANTITY_CHANGED, False),
         (WebhookSampleEventTypeEnum.CHECKOUT_CREATED, False),
         (WebhookSampleEventTypeEnum.CHECKOUT_UPDATED, False),
@@ -460,8 +460,8 @@ def test_sample_payload_query_by_app(
         (WebhookSampleEventTypeEnum.ORDER_CANCELLED, False),
         (WebhookSampleEventTypeEnum.ORDER_FULFILLED, False),
         (WebhookSampleEventTypeEnum.CUSTOMER_CREATED, True),
-        (WebhookSampleEventTypeEnum.PRODUCT_CREATED, True),
-        (WebhookSampleEventTypeEnum.PRODUCT_UPDATED, True),
+        (WebhookSampleEventTypeEnum.ROOM_CREATED, True),
+        (WebhookSampleEventTypeEnum.ROOM_UPDATED, True),
         (WebhookSampleEventTypeEnum.CHECKOUT_QUANTITY_CHANGED, True),
         (WebhookSampleEventTypeEnum.CHECKOUT_CREATED, True),
         (WebhookSampleEventTypeEnum.CHECKOUT_UPDATED, True),
@@ -474,13 +474,13 @@ def test_sample_payload_query_by_staff(
     has_access,
     staff_api_client,
     permission_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_checkouts,
 ):
     mock_generate_sample_payload.return_value = {"mocked_response": ""}
     query = SAMPLE_PAYLOAD_QUERY
     staff_api_client.user.user_permissions.add(permission_manage_users)
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     staff_api_client.user.user_permissions.add(permission_manage_checkouts)
     variables = {"event_type": event_type.name}
     response = staff_api_client.post_graphql(query, variables=variables)

@@ -11,24 +11,24 @@ def test_variant_quantity_available_without_country_code(
 ):
     query = """
     query variantAvailability($id: ID!, $channel: String) {
-        productVariant(id: $id, channel: $channel) {
+        roomVariant(id: $id, channel: $channel) {
             quantityAvailable
         }
     }
     """
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant_with_many_stocks.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant_with_many_stocks.pk),
         "channel": channel_USD.slug,
     }
     response = api_client.post_graphql(query, variables)
     content = get_graphql_content(response)
-    variant_data = content["data"]["productVariant"]
+    variant_data = content["data"]["roomVariant"]
     assert variant_data["quantityAvailable"] == 7
 
 
 QUERY_VARIANT_AVAILABILITY = """
     query variantAvailability($id: ID!, $country: CountryCode, $channel: String) {
-        productVariant(id: $id, channel: $channel) {
+        roomVariant(id: $id, channel: $channel) {
             quantityAvailable(countryCode: $country)
         }
     }
@@ -39,13 +39,13 @@ def test_variant_quantity_available_with_country_code(
     api_client, variant_with_many_stocks, channel_USD
 ):
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant_with_many_stocks.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant_with_many_stocks.pk),
         "country": COUNTRY_CODE,
         "channel": channel_USD.slug,
     }
     response = api_client.post_graphql(QUERY_VARIANT_AVAILABILITY, variables)
     content = get_graphql_content(response)
-    variant_data = content["data"]["productVariant"]
+    variant_data = content["data"]["roomVariant"]
     assert variant_data["quantityAvailable"] == 7
 
 
@@ -53,13 +53,13 @@ def test_variant_quantity_available_with_null_as_country_code(
     api_client, variant_with_many_stocks, channel_USD
 ):
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant_with_many_stocks.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant_with_many_stocks.pk),
         "country": None,
         "channel": channel_USD.slug,
     }
     response = api_client.post_graphql(QUERY_VARIANT_AVAILABILITY, variables)
     content = get_graphql_content(response)
-    variant_data = content["data"]["productVariant"]
+    variant_data = content["data"]["roomVariant"]
     assert variant_data["quantityAvailable"] == 7
 
 
@@ -71,13 +71,13 @@ def test_variant_quantity_available_with_max(
     stock.quantity = 16
     stock.save(update_fields=["quantity"])
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant_with_many_stocks.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant_with_many_stocks.pk),
         "country": COUNTRY_CODE,
         "channel": channel_USD.slug,
     }
     response = api_client.post_graphql(QUERY_VARIANT_AVAILABILITY, variables)
     content = get_graphql_content(response)
-    variant_data = content["data"]["productVariant"]
+    variant_data = content["data"]["roomVariant"]
     assert variant_data["quantityAvailable"] == settings.MAX_CHECKOUT_LINE_QUANTITY
 
 
@@ -86,13 +86,13 @@ def test_variant_quantity_available_without_stocks(
 ):
     variant_with_many_stocks.stocks.all().delete()
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant_with_many_stocks.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant_with_many_stocks.pk),
         "country": COUNTRY_CODE,
         "channel": channel_USD.slug,
     }
     response = api_client.post_graphql(QUERY_VARIANT_AVAILABILITY, variables)
     content = get_graphql_content(response)
-    variant_data = content["data"]["productVariant"]
+    variant_data = content["data"]["roomVariant"]
     assert variant_data["quantityAvailable"] == 0
 
 
@@ -104,13 +104,13 @@ def test_variant_quantity_available_with_allocations(
     channel_USD,
 ):
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant_with_many_stocks.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant_with_many_stocks.pk),
         "country": COUNTRY_CODE,
         "channel": channel_USD.slug,
     }
     response = api_client.post_graphql(QUERY_VARIANT_AVAILABILITY, variables)
     content = get_graphql_content(response)
-    variant_data = content["data"]["productVariant"]
+    variant_data = content["data"]["roomVariant"]
     assert variant_data["quantityAvailable"] == 3
 
 
@@ -121,13 +121,13 @@ def test_variant_quantity_available_without_inventory_tracking(
     variant_with_many_stocks.track_inventory = False
     variant_with_many_stocks.save(update_fields=["track_inventory"])
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant_with_many_stocks.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant_with_many_stocks.pk),
         "country": COUNTRY_CODE,
         "channel": channel_USD.slug,
     }
     response = api_client.post_graphql(QUERY_VARIANT_AVAILABILITY, variables)
     content = get_graphql_content(response)
-    variant_data = content["data"]["productVariant"]
+    variant_data = content["data"]["roomVariant"]
     assert variant_data["quantityAvailable"] == settings.MAX_CHECKOUT_LINE_QUANTITY
 
 
@@ -138,11 +138,11 @@ def test_variant_quantity_available_without_inventory_tracking_and_stocks(
     variant.track_inventory = False
     variant.save(update_fields=["track_inventory"])
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant.pk),
         "country": COUNTRY_CODE,
         "channel": channel_USD.slug,
     }
     response = api_client.post_graphql(QUERY_VARIANT_AVAILABILITY, variables)
     content = get_graphql_content(response)
-    variant_data = content["data"]["productVariant"]
+    variant_data = content["data"]["roomVariant"]
     assert variant_data["quantityAvailable"] == settings.MAX_CHECKOUT_LINE_QUANTITY

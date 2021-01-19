@@ -1,10 +1,10 @@
 # flake8: noqa
 from .digital_contents import DigitalContent, DigitalContentUrl
-from .products import (
+from .rooms import (
     Category,
     Collection,
-    Product,
-    ProductImage,
-    ProductType,
-    ProductVariant,
+    Room,
+    RoomImage,
+    RoomType,
+    RoomVariant,
 )

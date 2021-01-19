@@ -11,8 +11,8 @@ def add_variant_name_to_order_line(apps, schema_editor):
         if order_line.variant:
             variant_name = order_line.variant.name or order_line.variant.sku
             order_line.variant_name = variant_name
-            order_line.product_name = order_line.variant.product.name
-            order_line.save(update_fields=["variant_name", "product_name"])
+            order_line.room_name = order_line.variant.room.name
+            order_line.save(update_fields=["variant_name", "room_name"])
 
 
 class Migration(migrations.Migration):

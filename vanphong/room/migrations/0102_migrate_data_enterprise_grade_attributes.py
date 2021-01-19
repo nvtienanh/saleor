@@ -8,10 +8,10 @@ from django.db.models.functions import RowNumber
 def ensure_attribute_slugs_are_unique_or_fix(apps, schema_editor):
     """Ensure all attribute slugs are unique.
 
-    Instead of being unique within a product type, attributes' slug are now globally
+    Instead of being unique within a room type, attributes' slug are now globally
     unique. For that, we look for duplicate slugs and rename them with a new suffix.
     """
-    Attribute = apps.get_model("product", "Attribute")  # noqa
+    Attribute = apps.get_model("room", "Attribute")  # noqa
     non_unique_slugs = (
         Attribute.objects.values_list("slug", flat=True)
         .annotate(slug_count=Count("slug"))
@@ -23,17 +23,17 @@ def ensure_attribute_slugs_are_unique_or_fix(apps, schema_editor):
         attr.save(update_fields=["slug"])
 
 
-def remove_duplicates_products_in_collections(apps, schema_editor):
+def remove_duplicates_rooms_in_collections(apps, schema_editor):
     """Remove any duplicated M2M, and keep only one of them.
 
     First we select the duplicates, by grouping them and counting them:
 
         SELECT
-            collection_id, product_id, COUNT(*)
+            collection_id, room_id, COUNT(*)
         FROM
-            public.product_collectionproduct
+            public.room_collectionroom
         GROUP BY
-            collection_id, product_id
+            collection_id, room_id
         HAVING
             COUNT(*) > 1
 
@@ -43,10 +43,10 @@ def remove_duplicates_products_in_collections(apps, schema_editor):
     LIMIT).
     """
 
-    CollectionProduct = apps.get_model("product", "CollectionProduct")
+    CollectionRoom = apps.get_model("room", "CollectionRoom")
 
     duplicates = (
-        CollectionProduct.objects.values("collection_id", "product_id")
+        CollectionRoom.objects.values("collection_id", "room_id")
         .annotate(duplicate_count=Count("*"))
         .filter(duplicate_count__gt=1)
     )
@@ -54,20 +54,20 @@ def remove_duplicates_products_in_collections(apps, schema_editor):
     for duplicate in duplicates:
         dup_count = duplicate.pop("duplicate_count")
         delete_limit = dup_count - 1
-        entries_to_delete = CollectionProduct.objects.filter(**duplicate)[:delete_limit]
+        entries_to_delete = CollectionRoom.objects.filter(**duplicate)[:delete_limit]
         for entry in entries_to_delete:
             entry.delete()
 
 
 @dataclass(frozen=True)
-class NewCollectionProductSortOrder:
+class NewCollectionRoomSortOrder:
     pk: int
     sort_order: int
 
 
 def ensure_model_is_ordered(model_name):
     def reorder_model(apps, schema_editor):
-        model_cls = apps.get_model("product", "CollectionProduct")
+        model_cls = apps.get_model("room", "CollectionRoom")
         new_values = model_cls.objects.values("id").annotate(
             sort_order=Window(
                 expression=RowNumber(),
@@ -75,29 +75,29 @@ def ensure_model_is_ordered(model_name):
             )
         )
 
-        batch = [NewCollectionProductSortOrder(*row.values()) for row in new_values]
+        batch = [NewCollectionRoomSortOrder(*row.values()) for row in new_values]
         model_cls.objects.bulk_update(batch, ["sort_order"])
 
     return reorder_model
 
 
-PRODUCT_TYPE_UNIQUE_SLUGS = [
+ROOM_TYPE_UNIQUE_SLUGS = [
     migrations.RunPython(ensure_attribute_slugs_are_unique_or_fix)
 ]
 
-M2M_UNIQUE_TOGETHER = [migrations.RunPython(remove_duplicates_products_in_collections)]
+M2M_UNIQUE_TOGETHER = [migrations.RunPython(remove_duplicates_rooms_in_collections)]
 
 SORTING_NULLABLE_LOGIC = [
     migrations.RunPython(ensure_model_is_ordered("AttributeValue")),
-    migrations.RunPython(ensure_model_is_ordered("CollectionProduct")),
-    migrations.RunPython(ensure_model_is_ordered("ProductImage")),
+    migrations.RunPython(ensure_model_is_ordered("CollectionRoom")),
+    migrations.RunPython(ensure_model_is_ordered("RoomImage")),
 ]
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0101_auto_20190719_0839")]
+    dependencies = [("room", "0101_auto_20190719_0839")]
 
     operations = (
-        PRODUCT_TYPE_UNIQUE_SLUGS + M2M_UNIQUE_TOGETHER + SORTING_NULLABLE_LOGIC
+        ROOM_TYPE_UNIQUE_SLUGS + M2M_UNIQUE_TOGETHER + SORTING_NULLABLE_LOGIC
     )

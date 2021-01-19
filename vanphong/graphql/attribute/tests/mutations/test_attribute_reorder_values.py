@@ -22,8 +22,8 @@ ATTRIBUTE_VALUES_REORDER_MUTATION = """
 """
 
 
-def test_sort_values_within_attribute_invalid_product_type(
-    staff_api_client, permission_manage_product_types_and_attributes
+def test_sort_values_within_attribute_invalid_room_type(
+    staff_api_client, permission_manage_room_types_and_attributes
 ):
     """Try to reorder an invalid attribute (invalid ID)."""
 
@@ -39,7 +39,7 @@ def test_sort_values_within_attribute_invalid_product_type(
         staff_api_client.post_graphql(
             ATTRIBUTE_VALUES_REORDER_MUTATION,
             variables,
-            permissions=[permission_manage_product_types_and_attributes],
+            permissions=[permission_manage_room_types_and_attributes],
         )
     )["data"]["attributeReorderValues"]
 
@@ -52,7 +52,7 @@ def test_sort_values_within_attribute_invalid_product_type(
 
 
 def test_sort_values_within_attribute_invalid_id(
-    staff_api_client, permission_manage_product_types_and_attributes, color_attribute
+    staff_api_client, permission_manage_room_types_and_attributes, color_attribute
 ):
     """Try to reorder a value not associated to the given attribute."""
 
@@ -69,7 +69,7 @@ def test_sort_values_within_attribute_invalid_id(
         staff_api_client.post_graphql(
             ATTRIBUTE_VALUES_REORDER_MUTATION,
             variables,
-            permissions=[permission_manage_product_types_and_attributes],
+            permissions=[permission_manage_room_types_and_attributes],
         )
     )["data"]["attributeReorderValues"]
 
@@ -82,7 +82,7 @@ def test_sort_values_within_attribute_invalid_id(
 
 
 def test_sort_values_within_attribute(
-    staff_api_client, color_attribute, permission_manage_product_types_and_attributes
+    staff_api_client, color_attribute, permission_manage_room_types_and_attributes
 ):
     attribute = color_attribute
     AttributeValue.objects.create(attribute=attribute, name="Green", slug="green")
@@ -90,7 +90,7 @@ def test_sort_values_within_attribute(
     assert len(values) == 3
 
     staff_api_client.user.user_permissions.add(
-        permission_manage_product_types_and_attributes
+        permission_manage_room_types_and_attributes
     )
 
     attribute_id = graphene.Node.to_global_id("Attribute", attribute.id)

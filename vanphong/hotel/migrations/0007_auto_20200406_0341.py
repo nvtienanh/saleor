@@ -8,20 +8,20 @@ PARTIALLY_FULFILLED = "partially fulfilled"
 
 
 def create_allocation(
-    product_variant, warehouse, order_line, quantity_allocated, Allocation
+    room_variant, hotel, order_line, quantity_allocated, Allocation
 ):
-    stock = product_variant.stocks.get(warehouse=warehouse)
+    stock = room_variant.stocks.get(hotel=hotel)
     Allocation.objects.create(
         order_line=order_line, stock=stock, quantity_allocated=quantity_allocated
     )
 
 
 def create_allocations(apps, schema_editor):
-    Allocation = apps.get_model("warehouse", "Allocation")
+    Allocation = apps.get_model("hotel", "Allocation")
     OrderLine = apps.get_model("order", "OrderLine")
-    Warehouse = apps.get_model("warehouse", "Warehouse")
-    for warehouse in Warehouse.objects.iterator():
-        shipping_zone = warehouse.shipping_zones.first()
+    Hotel = apps.get_model("hotel", "Hotel")
+    for hotel in Hotel.objects.iterator():
+        shipping_zone = hotel.shipping_zones.first()
         if not shipping_zone:
             continue
         shipping_zone_pk = shipping_zone.pk
@@ -33,7 +33,7 @@ def create_allocations(apps, schema_editor):
             if quantity_unfulfilled > 0 and order_line.variant:
                 create_allocation(
                     order_line.variant,
-                    warehouse,
+                    hotel,
                     order_line,
                     quantity_unfulfilled,
                     Allocation,
@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("order", "0081_auto_20200406_0456"),
-        ("warehouse", "0006_auto_20200228_0519"),
+        ("hotel", "0006_auto_20200228_0519"),
     ]
 
     operations = [
@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="allocations",
-                        to="warehouse.Stock",
+                        to="hotel.Stock",
                     ),
                 ),
             ],

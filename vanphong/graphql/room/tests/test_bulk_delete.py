@@ -7,15 +7,15 @@ from prices import Money, TaxedMoney
 
 from ....order import OrderStatus
 from ....order.models import OrderLine
-from ....product.models import (
+from ....room.models import (
     Category,
     Collection,
-    Product,
-    ProductChannelListing,
-    ProductImage,
-    ProductType,
-    ProductVariant,
-    ProductVariantChannelListing,
+    Room,
+    RoomChannelListing,
+    RoomImage,
+    RoomType,
+    RoomVariant,
+    RoomVariantChannelListing,
 )
 from ...tests.utils import get_graphql_content
 
@@ -29,11 +29,11 @@ def category_list():
 
 
 @pytest.fixture
-def product_type_list():
-    product_type_1 = ProductType.objects.create(name="Type 1", slug="type-1")
-    product_type_2 = ProductType.objects.create(name="Type 2", slug="type-2")
-    product_type_3 = ProductType.objects.create(name="Type 3", slug="type-3")
-    return product_type_1, product_type_2, product_type_3
+def room_type_list():
+    room_type_1 = RoomType.objects.create(name="Type 1", slug="type-1")
+    room_type_2 = RoomType.objects.create(name="Type 2", slug="type-2")
+    room_type_3 = RoomType.objects.create(name="Type 3", slug="type-3")
+    return room_type_1, room_type_2, room_type_3
 
 
 MUTATION_CATEGORY_BULK_DELETE = """
@@ -45,7 +45,7 @@ MUTATION_CATEGORY_BULK_DELETE = """
 """
 
 
-def test_delete_categories(staff_api_client, category_list, permission_manage_products):
+def test_delete_categories(staff_api_client, category_list, permission_manage_rooms):
     variables = {
         "ids": [
             graphene.Node.to_global_id("Category", category.id)
@@ -55,7 +55,7 @@ def test_delete_categories(staff_api_client, category_list, permission_manage_pr
     response = staff_api_client.post_graphql(
         MUTATION_CATEGORY_BULK_DELETE,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
@@ -65,34 +65,34 @@ def test_delete_categories(staff_api_client, category_list, permission_manage_pr
     ).exists()
 
 
-@patch("saleor.product.utils.update_products_discounted_prices_task")
-def test_delete_categories_with_subcategories_and_products(
-    mock_update_products_discounted_prices_task,
+@patch("saleor.room.utils.update_rooms_discounted_prices_task")
+def test_delete_categories_with_subcategories_and_rooms(
+    mock_update_rooms_discounted_prices_task,
     staff_api_client,
     category_list,
-    permission_manage_products,
-    product,
+    permission_manage_rooms,
+    room,
     category,
     channel_USD,
     channel_PLN,
 ):
-    product.category = category
+    room.category = category
     category.parent = category_list[0]
     category.save()
 
-    parent_product = Product.objects.get(pk=product.pk)
-    parent_product.slug = "parent-product"
-    parent_product.id = None
-    parent_product.category = category_list[0]
-    parent_product.save()
+    parent_room = Room.objects.get(pk=room.pk)
+    parent_room.slug = "parent-room"
+    parent_room.id = None
+    parent_room.category = category_list[0]
+    parent_room.save()
 
-    ProductChannelListing.objects.bulk_create(
+    RoomChannelListing.objects.bulk_create(
         [
-            ProductChannelListing(
-                product=parent_product, channel=channel_USD, is_published=True
+            RoomChannelListing(
+                room=parent_room, channel=channel_USD, is_published=True
             ),
-            ProductChannelListing(
-                product=parent_product,
+            RoomChannelListing(
+                room=parent_room,
                 channel=channel_PLN,
                 is_published=True,
                 publication_date=timezone.now(),
@@ -100,7 +100,7 @@ def test_delete_categories_with_subcategories_and_products(
         ]
     )
 
-    product_list = [product, parent_product]
+    room_list = [room, parent_room]
 
     variables = {
         "ids": [
@@ -111,7 +111,7 @@ def test_delete_categories_with_subcategories_and_products(
     response = staff_api_client.post_graphql(
         MUTATION_CATEGORY_BULK_DELETE,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
@@ -120,29 +120,29 @@ def test_delete_categories_with_subcategories_and_products(
         id__in=[category.id for category in category_list]
     ).exists()
 
-    mock_update_products_discounted_prices_task.delay.assert_called_once()
+    mock_update_rooms_discounted_prices_task.delay.assert_called_once()
     (
         _call_args,
         call_kwargs,
-    ) = mock_update_products_discounted_prices_task.delay.call_args
+    ) = mock_update_rooms_discounted_prices_task.delay.call_args
 
-    assert set(call_kwargs["product_ids"]) == set([p.pk for p in product_list])
+    assert set(call_kwargs["room_ids"]) == set([p.pk for p in room_list])
 
-    for product in product_list:
-        product.refresh_from_db()
-        assert not product.category
+    for room in room_list:
+        room.refresh_from_db()
+        assert not room.category
 
-    product_channel_listings = ProductChannelListing.objects.filter(
-        product__in=product_list
+    room_channel_listings = RoomChannelListing.objects.filter(
+        room__in=room_list
     )
-    for product_channel_listing in product_channel_listings:
-        assert product_channel_listing.is_published is False
-        assert not product_channel_listing.publication_date
-    assert product_channel_listings.count() == 3
+    for room_channel_listing in room_channel_listings:
+        assert room_channel_listing.is_published is False
+        assert not room_channel_listing.publication_date
+    assert room_channel_listings.count() == 3
 
 
 def test_delete_collections(
-    staff_api_client, collection_list, permission_manage_products
+    staff_api_client, collection_list, permission_manage_rooms
 ):
     query = """
     mutation collectionBulkDelete($ids: [ID]!) {
@@ -159,7 +159,7 @@ def test_delete_collections(
         ]
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
 
@@ -169,20 +169,20 @@ def test_delete_collections(
     ).exists()
 
 
-DELETE_PRODUCTS_MUTATION = """
-mutation productBulkDelete($ids: [ID]!) {
-    productBulkDelete(ids: $ids) {
+DELETE_ROOMS_MUTATION = """
+mutation roomBulkDelete($ids: [ID]!) {
+    roomBulkDelete(ids: $ids) {
         count
     }
 }
 """
 
 
-def test_delete_products(
-    staff_api_client, product_list, permission_manage_products, order_list, channel_USD
+def test_delete_rooms(
+    staff_api_client, room_list, permission_manage_rooms, order_list, channel_USD
 ):
     # given
-    query = DELETE_PRODUCTS_MUTATION
+    query = DELETE_ROOMS_MUTATION
 
     not_draft_order = order_list[0]
     draft_order = order_list[1]
@@ -191,19 +191,19 @@ def test_delete_products(
 
     draft_order_lines_pks = []
     not_draft_order_lines_pks = []
-    for variant in [product_list[0].variants.first(), product_list[1].variants.first()]:
-        product = variant.product
+    for variant in [room_list[0].variants.first(), room_list[1].variants.first()]:
+        room = variant.room
         variant_channel_listing = variant.channel_listings.get(channel=channel_USD)
-        net = variant.get_price(product, [], channel_USD, variant_channel_listing, None)
+        net = variant.get_price(room, [], channel_USD, variant_channel_listing, None)
         gross = Money(amount=net.amount, currency=net.currency)
         quantity = 3
         total_price = TaxedMoney(net=net * quantity, gross=gross * quantity)
         order_line = OrderLine.objects.create(
             variant=variant,
             order=draft_order,
-            product_name=str(product),
+            room_name=str(room),
             variant_name=str(variant),
-            product_sku=variant.sku,
+            room_sku=variant.sku,
             is_shipping_required=variant.is_shipping_required(),
             unit_price=TaxedMoney(net=net, gross=gross),
             total_price=total_price,
@@ -214,9 +214,9 @@ def test_delete_products(
         order_line_not_draft = OrderLine.objects.create(
             variant=variant,
             order=not_draft_order,
-            product_name=str(product),
+            room_name=str(room),
             variant_name=str(variant),
-            product_sku=variant.sku,
+            room_sku=variant.sku,
             is_shipping_required=variant.is_shipping_required(),
             unit_price=TaxedMoney(net=net, gross=gross),
             total_price=total_price,
@@ -226,22 +226,22 @@ def test_delete_products(
 
     variables = {
         "ids": [
-            graphene.Node.to_global_id("Product", product.id)
-            for product in product_list
+            graphene.Node.to_global_id("Room", room.id)
+            for room in room_list
         ]
     }
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
     content = get_graphql_content(response)
 
-    assert content["data"]["productBulkDelete"]["count"] == 3
-    assert not Product.objects.filter(
-        id__in=[product.id for product in product_list]
+    assert content["data"]["roomBulkDelete"]["count"] == 3
+    assert not Room.objects.filter(
+        id__in=[room.id for room in room_list]
     ).exists()
 
     assert not OrderLine.objects.filter(pk__in=draft_order_lines_pks).exists()
@@ -249,43 +249,43 @@ def test_delete_products(
     assert OrderLine.objects.filter(pk__in=not_draft_order_lines_pks).exists()
 
 
-def test_delete_products_variants_in_draft_order(
-    staff_api_client, product_list, permission_manage_products
+def test_delete_rooms_variants_in_draft_order(
+    staff_api_client, room_list, permission_manage_rooms
 ):
-    query = DELETE_PRODUCTS_MUTATION
+    query = DELETE_ROOMS_MUTATION
 
-    assert ProductChannelListing.objects.filter(
-        product_id__in=[product.id for product in product_list]
+    assert RoomChannelListing.objects.filter(
+        room_id__in=[room.id for room in room_list]
     ).exists()
 
     variables = {
         "ids": [
-            graphene.Node.to_global_id("Product", product.id)
-            for product in product_list
+            graphene.Node.to_global_id("Room", room.id)
+            for room in room_list
         ]
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
 
-    assert content["data"]["productBulkDelete"]["count"] == 3
-    assert not Product.objects.filter(
-        id__in=[product.id for product in product_list]
+    assert content["data"]["roomBulkDelete"]["count"] == 3
+    assert not Room.objects.filter(
+        id__in=[room.id for room in room_list]
     ).exists()
-    assert not ProductChannelListing.objects.filter(
-        product_id__in=[product.id for product in product_list]
+    assert not RoomChannelListing.objects.filter(
+        room_id__in=[room.id for room in room_list]
     ).exists()
 
 
-def test_delete_product_images(
-    staff_api_client, product_with_images, permission_manage_products
+def test_delete_room_images(
+    staff_api_client, room_with_images, permission_manage_rooms
 ):
-    images = product_with_images.images.all()
+    images = room_with_images.images.all()
 
     query = """
-    mutation productImageBulkDelete($ids: [ID]!) {
-        productImageBulkDelete(ids: $ids) {
+    mutation roomImageBulkDelete($ids: [ID]!) {
+        roomImageBulkDelete(ids: $ids) {
             count
         }
     }
@@ -293,26 +293,26 @@ def test_delete_product_images(
 
     variables = {
         "ids": [
-            graphene.Node.to_global_id("ProductImage", image.id) for image in images
+            graphene.Node.to_global_id("RoomImage", image.id) for image in images
         ]
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
 
-    assert content["data"]["productImageBulkDelete"]["count"] == 2
-    assert not ProductImage.objects.filter(
+    assert content["data"]["roomImageBulkDelete"]["count"] == 2
+    assert not RoomImage.objects.filter(
         id__in=[image.id for image in images]
     ).exists()
 
 
-def test_delete_product_types(
-    staff_api_client, product_type_list, permission_manage_product_types_and_attributes
+def test_delete_room_types(
+    staff_api_client, room_type_list, permission_manage_room_types_and_attributes
 ):
     query = """
-    mutation productTypeBulkDelete($ids: [ID]!) {
-        productTypeBulkDelete(ids: $ids) {
+    mutation roomTypeBulkDelete($ids: [ID]!) {
+        roomTypeBulkDelete(ids: $ids) {
             count
         }
     }
@@ -320,79 +320,79 @@ def test_delete_product_types(
 
     variables = {
         "ids": [
-            graphene.Node.to_global_id("ProductType", type.id)
-            for type in product_type_list
+            graphene.Node.to_global_id("RoomType", type.id)
+            for type in room_type_list
         ]
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
     content = get_graphql_content(response)
 
-    assert content["data"]["productTypeBulkDelete"]["count"] == 3
-    assert not ProductType.objects.filter(
-        id__in=[type.id for type in product_type_list]
+    assert content["data"]["roomTypeBulkDelete"]["count"] == 3
+    assert not RoomType.objects.filter(
+        id__in=[type.id for type in room_type_list]
     ).exists()
 
 
-PRODUCT_VARIANT_BULK_DELETE_MUTATION = """
-mutation productVariantBulkDelete($ids: [ID]!) {
-    productVariantBulkDelete(ids: $ids) {
+ROOM_VARIANT_BULK_DELETE_MUTATION = """
+mutation roomVariantBulkDelete($ids: [ID]!) {
+    roomVariantBulkDelete(ids: $ids) {
         count
     }
 }
 """
 
 
-def test_delete_product_variants(
-    staff_api_client, product_variant_list, permission_manage_products
+def test_delete_room_variants(
+    staff_api_client, room_variant_list, permission_manage_rooms
 ):
-    query = PRODUCT_VARIANT_BULK_DELETE_MUTATION
+    query = ROOM_VARIANT_BULK_DELETE_MUTATION
 
-    assert ProductVariantChannelListing.objects.filter(
-        variant_id__in=[variant.id for variant in product_variant_list]
+    assert RoomVariantChannelListing.objects.filter(
+        variant_id__in=[variant.id for variant in room_variant_list]
     ).exists()
 
     variables = {
         "ids": [
-            graphene.Node.to_global_id("ProductVariant", variant.id)
-            for variant in product_variant_list
+            graphene.Node.to_global_id("RoomVariant", variant.id)
+            for variant in room_variant_list
         ]
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
 
-    assert content["data"]["productVariantBulkDelete"]["count"] == 3
-    assert not ProductVariant.objects.filter(
-        id__in=[variant.id for variant in product_variant_list]
+    assert content["data"]["roomVariantBulkDelete"]["count"] == 3
+    assert not RoomVariant.objects.filter(
+        id__in=[variant.id for variant in room_variant_list]
     ).exists()
 
 
-def test_delete_product_variants_in_draft_orders(
+def test_delete_room_variants_in_draft_orders(
     staff_api_client,
-    product_variant_list,
-    permission_manage_products,
+    room_variant_list,
+    permission_manage_rooms,
     order_line,
     order_list,
     channel_USD,
 ):
     # given
-    query = PRODUCT_VARIANT_BULK_DELETE_MUTATION
-    variants = product_variant_list
+    query = ROOM_VARIANT_BULK_DELETE_MUTATION
+    variants = room_variant_list
 
     draft_order = order_line.order
     draft_order.status = OrderStatus.DRAFT
     draft_order.save(update_fields=["status"])
 
     second_variant_in_draft = variants[1]
-    second_product = second_variant_in_draft.product
+    second_room = second_variant_in_draft.room
     second_variant_channel_listing = second_variant_in_draft.channel_listings.get(
         channel=channel_USD
     )
     net = second_variant_in_draft.get_price(
-        second_product, [], channel_USD, second_variant_channel_listing, None
+        second_room, [], channel_USD, second_variant_channel_listing, None
     )
     gross = Money(amount=net.amount, currency=net.currency)
     unit_price = TaxedMoney(net=net, gross=gross)
@@ -401,9 +401,9 @@ def test_delete_product_variants_in_draft_orders(
     second_draft_order = OrderLine.objects.create(
         variant=second_variant_in_draft,
         order=draft_order,
-        product_name=str(second_product),
+        room_name=str(second_room),
         variant_name=str(second_variant_in_draft),
-        product_sku=second_variant_in_draft.sku,
+        room_sku=second_variant_in_draft.sku,
         is_shipping_required=second_variant_in_draft.is_shipping_required(),
         unit_price=TaxedMoney(net=net, gross=gross),
         total_price=total_price,
@@ -411,9 +411,9 @@ def test_delete_product_variants_in_draft_orders(
     )
 
     variant = variants[0]
-    product = variant.product
+    room = variant.room
     variant_channel_listing = variant.channel_listings.get(channel=channel_USD)
-    net = variant.get_price(product, [], channel_USD, variant_channel_listing, None)
+    net = variant.get_price(room, [], channel_USD, variant_channel_listing, None)
     gross = Money(amount=net.amount, currency=net.currency)
     unit_price = TaxedMoney(net=net, gross=gross)
     quantity = 3
@@ -422,9 +422,9 @@ def test_delete_product_variants_in_draft_orders(
     order_line_not_in_draft = OrderLine.objects.create(
         variant=variant,
         order=order_not_draft,
-        product_name=str(product),
+        room_name=str(room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         unit_price=TaxedMoney(net=net, gross=gross),
         total_price=total_price,
@@ -432,26 +432,26 @@ def test_delete_product_variants_in_draft_orders(
     )
     order_line_not_in_draft_pk = order_line_not_in_draft.pk
 
-    variant_count = ProductVariant.objects.count()
+    variant_count = RoomVariant.objects.count()
 
     variables = {
         "ids": [
-            graphene.Node.to_global_id("ProductVariant", variant.id)
-            for variant in ProductVariant.objects.all()
+            graphene.Node.to_global_id("RoomVariant", variant.id)
+            for variant in RoomVariant.objects.all()
         ]
     }
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
     content = get_graphql_content(response)
 
-    assert content["data"]["productVariantBulkDelete"]["count"] == variant_count
-    assert not ProductVariant.objects.filter(
-        id__in=[variant.id for variant in product_variant_list]
+    assert content["data"]["roomVariantBulkDelete"]["count"] == variant_count
+    assert not RoomVariant.objects.filter(
+        id__in=[variant.id for variant in room_variant_list]
     ).exists()
 
     with pytest.raises(order_line._meta.model.DoesNotExist):
@@ -463,138 +463,138 @@ def test_delete_product_variants_in_draft_orders(
     assert OrderLine.objects.filter(pk=order_line_not_in_draft_pk).exists()
 
 
-def test_delete_product_variants_delete_default_variant(
-    staff_api_client, product, permission_manage_products
+def test_delete_room_variants_delete_default_variant(
+    staff_api_client, room, permission_manage_rooms
 ):
     # given
-    query = PRODUCT_VARIANT_BULK_DELETE_MUTATION
+    query = ROOM_VARIANT_BULK_DELETE_MUTATION
 
-    new_default_variant = product.variants.first()
+    new_default_variant = room.variants.first()
 
-    variants = ProductVariant.objects.bulk_create(
+    variants = RoomVariant.objects.bulk_create(
         [
-            ProductVariant(product=product, sku="1"),
-            ProductVariant(product=product, sku="2"),
-            ProductVariant(product=product, sku="3"),
+            RoomVariant(room=room, sku="1"),
+            RoomVariant(room=room, sku="2"),
+            RoomVariant(room=room, sku="3"),
         ]
     )
 
     default_variant = variants[0]
 
-    product = default_variant.product
-    product.default_variant = default_variant
-    product.save(update_fields=["default_variant"])
+    room = default_variant.room
+    room.default_variant = default_variant
+    room.save(update_fields=["default_variant"])
 
     variables = {
         "ids": [
-            graphene.Node.to_global_id("ProductVariant", variant.id)
+            graphene.Node.to_global_id("RoomVariant", variant.id)
             for variant in variants
         ]
     }
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
     content = get_graphql_content(response)
 
-    assert content["data"]["productVariantBulkDelete"]["count"] == 3
-    assert not ProductVariant.objects.filter(
+    assert content["data"]["roomVariantBulkDelete"]["count"] == 3
+    assert not RoomVariant.objects.filter(
         id__in=[variant.id for variant in variants]
     ).exists()
 
-    product.refresh_from_db()
-    assert product.default_variant.pk == new_default_variant.pk
+    room.refresh_from_db()
+    assert room.default_variant.pk == new_default_variant.pk
 
 
-def test_delete_product_variants_delete_all_product_variants(
-    staff_api_client, product, permission_manage_products
+def test_delete_room_variants_delete_all_room_variants(
+    staff_api_client, room, permission_manage_rooms
 ):
     # given
-    query = PRODUCT_VARIANT_BULK_DELETE_MUTATION
+    query = ROOM_VARIANT_BULK_DELETE_MUTATION
 
-    new_default_variant = product.variants.first()
+    new_default_variant = room.variants.first()
 
-    variants = ProductVariant.objects.bulk_create(
+    variants = RoomVariant.objects.bulk_create(
         [
-            ProductVariant(product=product, sku="1"),
-            ProductVariant(product=product, sku="2"),
+            RoomVariant(room=room, sku="1"),
+            RoomVariant(room=room, sku="2"),
         ]
     )
 
     default_variant = variants[0]
 
-    product = default_variant.product
-    product.default_variant = default_variant
-    product.save(update_fields=["default_variant"])
+    room = default_variant.room
+    room.default_variant = default_variant
+    room.save(update_fields=["default_variant"])
 
     ids = [
-        graphene.Node.to_global_id("ProductVariant", variant.id) for variant in variants
+        graphene.Node.to_global_id("RoomVariant", variant.id) for variant in variants
     ]
-    ids.append(graphene.Node.to_global_id("ProductVariant", new_default_variant.id))
+    ids.append(graphene.Node.to_global_id("RoomVariant", new_default_variant.id))
 
     variables = {"ids": ids}
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
     content = get_graphql_content(response)
 
-    assert content["data"]["productVariantBulkDelete"]["count"] == 3
-    assert not ProductVariant.objects.filter(
+    assert content["data"]["roomVariantBulkDelete"]["count"] == 3
+    assert not RoomVariant.objects.filter(
         id__in=[variant.id for variant in variants]
     ).exists()
 
-    product.refresh_from_db()
-    assert product.default_variant is None
+    room.refresh_from_db()
+    assert room.default_variant is None
 
 
-def test_delete_product_variants_from_different_products(
-    staff_api_client, product, product_with_two_variants, permission_manage_products
+def test_delete_room_variants_from_different_rooms(
+    staff_api_client, room, room_with_two_variants, permission_manage_rooms
 ):
     # given
-    query = PRODUCT_VARIANT_BULK_DELETE_MUTATION
+    query = ROOM_VARIANT_BULK_DELETE_MUTATION
 
-    product_1 = product
-    product_2 = product_with_two_variants
+    room_1 = room
+    room_2 = room_with_two_variants
 
-    product_1_default_variant = product_1.variants.first()
-    product_2_default_variant = product_2.variants.first()
+    room_1_default_variant = room_1.variants.first()
+    room_2_default_variant = room_2.variants.first()
 
-    product_1.default_variant = product_1_default_variant
-    product_2.default_variant = product_2_default_variant
+    room_1.default_variant = room_1_default_variant
+    room_2.default_variant = room_2_default_variant
 
-    Product.objects.bulk_update([product_1, product_2], ["default_variant"])
+    Room.objects.bulk_update([room_1, room_2], ["default_variant"])
 
-    product_2_second_variant = product_2.variants.last()
+    room_2_second_variant = room_2.variants.last()
 
     variables = {
         "ids": [
-            graphene.Node.to_global_id("ProductVariant", product_1_default_variant.id),
-            graphene.Node.to_global_id("ProductVariant", product_2_default_variant.id),
+            graphene.Node.to_global_id("RoomVariant", room_1_default_variant.id),
+            graphene.Node.to_global_id("RoomVariant", room_2_default_variant.id),
         ]
     }
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
     content = get_graphql_content(response)
 
-    assert content["data"]["productVariantBulkDelete"]["count"] == 2
-    assert not ProductVariant.objects.filter(
-        id__in=[product_1_default_variant.id, product_2_default_variant.id]
+    assert content["data"]["roomVariantBulkDelete"]["count"] == 2
+    assert not RoomVariant.objects.filter(
+        id__in=[room_1_default_variant.id, room_2_default_variant.id]
     ).exists()
 
-    product_1.refresh_from_db()
-    product_2.refresh_from_db()
+    room_1.refresh_from_db()
+    room_2.refresh_from_db()
 
-    assert product_1.default_variant is None
-    assert product_2.default_variant.pk == product_2_second_variant.pk
+    assert room_1.default_variant is None
+    assert room_2.default_variant.pk == room_2_second_variant.pk

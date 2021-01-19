@@ -6,7 +6,7 @@ from ..core.models import ModelWithMetadata, SortableModel
 from ..core.permissions import MenuPermissions
 from ..core.utils.translations import TranslationProxy
 from ..page.models import Page
-from ..product.models import Category, Collection
+from ..room.models import Category, Collection
 
 
 class Menu(ModelWithMetadata):

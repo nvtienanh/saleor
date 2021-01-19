@@ -1,6 +1,6 @@
 from ...attribute import models as attribute_models
 from ...discount import models as discount_models
-from ...product import models as product_models
+from ...room import models as room_models
 from ...shipping import models as shipping_models
 
 
@@ -17,12 +17,12 @@ def resolve_attribute_values(info):
     return attribute_models.AttributeValue.objects.all()
 
 
-def resolve_products(_info):
-    return product_models.Product.objects.all()
+def resolve_rooms(_info):
+    return room_models.Room.objects.all()
 
 
-def resolve_product_variants(_info):
-    return product_models.ProductVariant.objects.all()
+def resolve_room_variants(_info):
+    return room_models.RoomVariant.objects.all()
 
 
 def resolve_sales(_info):
@@ -34,4 +34,4 @@ def resolve_vouchers(_info):
 
 
 def resolve_collections(_info):
-    return product_models.Collection.objects.all()
+    return room_models.Collection.objects.all()

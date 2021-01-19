@@ -1,11 +1,11 @@
 from django.db.models import Sum
 
 from ...order import OrderStatus
-from ...product import models
+from ...room import models
 from ..channel import ChannelQsContext
 from ..utils import get_database_id
 from ..utils.filters import filter_by_period
-from .filters import filter_products_by_stock_availability
+from .filters import filter_rooms_by_stock_availability
 
 
 def resolve_category_by_slug(slug):
@@ -46,28 +46,28 @@ def resolve_digital_contents(_info):
     return models.DigitalContent.objects.all()
 
 
-def resolve_product_by_id(info, id, channel_slug, requestor):
+def resolve_room_by_id(info, id, channel_slug, requestor):
     return (
-        models.Product.objects.visible_to_user(requestor, channel_slug=channel_slug)
+        models.Room.objects.visible_to_user(requestor, channel_slug=channel_slug)
         .filter(id=id)
         .first()
     )
 
 
-def resolve_product_by_slug(info, product_slug, channel_slug, requestor):
+def resolve_room_by_slug(info, room_slug, channel_slug, requestor):
     return (
-        models.Product.objects.visible_to_user(requestor, channel_slug=channel_slug)
-        .filter(slug=product_slug)
+        models.Room.objects.visible_to_user(requestor, channel_slug=channel_slug)
+        .filter(slug=room_slug)
         .first()
     )
 
 
-def resolve_products(
+def resolve_rooms(
     info, requestor, stock_availability=None, channel_slug=None, **_kwargs
 ) -> ChannelQsContext:
-    qs = models.Product.objects.visible_to_user(requestor, channel_slug)
+    qs = models.Room.objects.visible_to_user(requestor, channel_slug)
     if stock_availability:
-        qs = filter_products_by_stock_availability(qs, stock_availability)
+        qs = filter_rooms_by_stock_availability(qs, stock_availability)
     if not qs.user_has_access_to_all(requestor):
         qs = qs.annotate_visible_in_listings(channel_slug).exclude(
             visible_in_listings=False
@@ -76,51 +76,51 @@ def resolve_products(
 
 
 def resolve_variant_by_id(info, id, channel_slug, requestor):
-    visible_products = models.Product.objects.visible_to_user(
+    visible_rooms = models.Room.objects.visible_to_user(
         requestor, channel_slug
     ).values_list("pk", flat=True)
-    qs = models.ProductVariant.objects.filter(product__id__in=visible_products)
+    qs = models.RoomVariant.objects.filter(room__id__in=visible_rooms)
     return qs.filter(pk=id).first()
 
 
-def resolve_product_types(_info, **_kwargs):
-    return models.ProductType.objects.all()
+def resolve_room_types(_info, **_kwargs):
+    return models.RoomType.objects.all()
 
 
-def resolve_product_variant_by_sku(
+def resolve_room_variant_by_sku(
     info, sku, channel_slug, requestor, requestor_has_access_to_all
 ):
-    visible_products = models.Product.objects.visible_to_user(requestor, channel_slug)
+    visible_rooms = models.Room.objects.visible_to_user(requestor, channel_slug)
     if not requestor_has_access_to_all:
-        visible_products = visible_products.annotate_visible_in_listings(
+        visible_rooms = visible_rooms.annotate_visible_in_listings(
             channel_slug
         ).exclude(visible_in_listings=False)
 
     return (
-        models.ProductVariant.objects.filter(product__id__in=visible_products)
+        models.RoomVariant.objects.filter(room__id__in=visible_rooms)
         .filter(sku=sku)
         .first()
     )
 
 
-def resolve_product_variants(
+def resolve_room_variants(
     info, requestor_has_access_to_all, requestor, ids=None, channel_slug=None
 ) -> ChannelQsContext:
-    visible_products = models.Product.objects.visible_to_user(requestor, channel_slug)
+    visible_rooms = models.Room.objects.visible_to_user(requestor, channel_slug)
     if not requestor_has_access_to_all:
-        visible_products = visible_products.annotate_visible_in_listings(
+        visible_rooms = visible_rooms.annotate_visible_in_listings(
             channel_slug
         ).exclude(visible_in_listings=False)
 
-    qs = models.ProductVariant.objects.filter(product__id__in=visible_products)
+    qs = models.RoomVariant.objects.filter(room__id__in=visible_rooms)
     if ids:
-        db_ids = [get_database_id(info, node_id, "ProductVariant") for node_id in ids]
+        db_ids = [get_database_id(info, node_id, "RoomVariant") for node_id in ids]
         qs = qs.filter(pk__in=db_ids)
     return ChannelQsContext(qs=qs, channel_slug=channel_slug)
 
 
-def resolve_report_product_sales(period, channel_slug) -> ChannelQsContext:
-    qs = models.ProductVariant.objects.all()
+def resolve_report_room_sales(period, channel_slug) -> ChannelQsContext:
+    qs = models.RoomVariant.objects.all()
 
     # exclude draft and canceled orders
     exclude_status = [OrderStatus.DRAFT, OrderStatus.CANCELED]

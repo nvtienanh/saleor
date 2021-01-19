@@ -11,9 +11,9 @@ def remove_duplicated_attribute_values(apps, schema_editor):
     and different names(eg.Names  `Orange` and `ORANGE` give the same slug `orange`).
     After this migration values for each attribute should have a unique slug.
     Before removing these duplicated values we need to assign proper values
-    to all `Product` and `ProductVariant` witch use duplicated values.
+    to all `Room` and `RoomVariant` witch use duplicated values.
     """
-    AttributeValue = apps.get_model("product", "AttributeValue")
+    AttributeValue = apps.get_model("room", "AttributeValue")
     duplicated_pk_for_attribute_values = (
         AttributeValue.objects.values("slug", "attribute")
         .order_by()
@@ -33,7 +33,7 @@ def remove_duplicated_attribute_values(apps, schema_editor):
                     value_to_be_removed.assignedvariantattribute_set.all()
                 )
                 invalid_assigned_attributes.extend(
-                    list(value_to_be_removed.assignedproductattribute_set.all())
+                    list(value_to_be_removed.assignedroomattribute_set.all())
                 )
                 for invalid_assigned_attribute in invalid_assigned_attributes:
                     invalid_assigned_attribute.values.remove(value_to_be_removed)
@@ -45,7 +45,7 @@ def remove_duplicated_attribute_values(apps, schema_editor):
 class Migration(migrations.Migration):
     atomic = False
 
-    dependencies = [("product", "0107_attributes_map_to_m2m")]
+    dependencies = [("room", "0107_attributes_map_to_m2m")]
 
     operations = [
         migrations.RunPython(

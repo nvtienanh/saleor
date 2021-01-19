@@ -10,37 +10,37 @@ from django.db.models.functions import Concat
 
 from ...attribute import AttributeInputType
 from ...core.utils import build_absolute_uri
-from . import ProductExportFields
+from . import RoomExportFields
 
 if TYPE_CHECKING:
     # flake8: noqa
     from django.db.models import QuerySet
 
 
-def get_products_data(
+def get_rooms_data(
     queryset: "QuerySet",
     export_fields: Set[str],
     attribute_ids: Optional[List[int]],
-    warehouse_ids: Optional[List[int]],
+    hotel_ids: Optional[List[int]],
     channel_ids: Optional[List[int]],
 ) -> List[Dict[str, Union[str, bool]]]:
-    """Create data list of products and their variants with fields values.
+    """Create data list of rooms and their variants with fields values.
 
-    It return list with product and variant data which can be used as import to
-    csv writer and list of attribute and warehouse headers.
+    It return list with room and variant data which can be used as import to
+    csv writer and list of attribute and hotel headers.
     """
 
-    products_with_variants_data = []
+    rooms_with_variants_data = []
 
-    product_fields = set(
-        ProductExportFields.HEADERS_TO_FIELDS_MAPPING["fields"].values()
+    room_fields = set(
+        RoomExportFields.HEADERS_TO_FIELDS_MAPPING["fields"].values()
     )
-    product_export_fields = export_fields & product_fields
-    product_export_fields.add("variants__id")
+    room_export_fields = export_fields & room_fields
+    room_export_fields.add("variants__id")
 
-    products_data = (
+    rooms_data = (
         queryset.annotate(
-            product_weight=Case(
+            room_weight=Case(
                 When(weight__isnull=False, then=Concat("weight", V(" g"))),
                 default=V(""),
                 output_field=CharField(),
@@ -55,70 +55,70 @@ def get_products_data(
             ),
         )
         .order_by("pk", "variants__pk")
-        .values(*product_export_fields)
+        .values(*room_export_fields)
         .distinct("pk", "variants__pk")
     )
 
-    products_relations_data = get_products_relations_data(
+    rooms_relations_data = get_rooms_relations_data(
         queryset, export_fields, attribute_ids, channel_ids
     )
 
     variants_relations_data = get_variants_relations_data(
-        queryset, export_fields, attribute_ids, warehouse_ids, channel_ids
+        queryset, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
-    for product_data in products_data:
-        pk = product_data["id"]
-        variant_pk = product_data.pop("variants__id")
+    for room_data in rooms_data:
+        pk = room_data["id"]
+        variant_pk = room_data.pop("variants__id")
 
-        product_relations_data: Dict[str, str] = products_relations_data.get(pk, {})
+        room_relations_data: Dict[str, str] = rooms_relations_data.get(pk, {})
         variant_relations_data: Dict[str, str] = variants_relations_data.get(
             variant_pk, {}
         )
 
-        data = {**product_data, **product_relations_data, **variant_relations_data}
+        data = {**room_data, **room_relations_data, **variant_relations_data}
 
-        products_with_variants_data.append(data)
+        rooms_with_variants_data.append(data)
 
-    return products_with_variants_data
+    return rooms_with_variants_data
 
 
-def get_products_relations_data(
+def get_rooms_relations_data(
     queryset: "QuerySet",
     export_fields: Set[str],
     attribute_ids: Optional[List[int]],
     channel_ids: Optional[List[int]],
 ) -> Dict[int, Dict[str, str]]:
-    """Get data about product relations fields.
+    """Get data about room relations fields.
 
     If any many to many fields are in export_fields or some attribute_ids exists then
-    dict with product relations fields is returned.
+    dict with room relations fields is returned.
     Otherwise it returns empty dict.
     """
     many_to_many_fields = set(
-        ProductExportFields.HEADERS_TO_FIELDS_MAPPING["product_many_to_many"].values()
+        RoomExportFields.HEADERS_TO_FIELDS_MAPPING["room_many_to_many"].values()
     )
     relations_fields = export_fields & many_to_many_fields
     if relations_fields or attribute_ids or channel_ids:
-        return prepare_products_relations_data(
+        return prepare_rooms_relations_data(
             queryset, relations_fields, attribute_ids, channel_ids
         )
 
     return {}
 
 
-def prepare_products_relations_data(
+def prepare_rooms_relations_data(
     queryset: "QuerySet",
     fields: Set[str],
     attribute_ids: Optional[List[int]],
     channel_ids: Optional[List[int]],
 ) -> Dict[int, Dict[str, str]]:
-    """Prepare data about products relation fields for given queryset.
+    """Prepare data about rooms relation fields for given queryset.
 
-    It return dict where key is a product pk, value is a dict with relation fields data.
+    It return dict where key is a room pk, value is a dict with relation fields data.
     """
-    attribute_fields = ProductExportFields.PRODUCT_ATTRIBUTE_FIELDS
-    channel_fields = ProductExportFields.PRODUCT_CHANNEL_LISTING_FIELDS.copy()
+    attribute_fields = RoomExportFields.ROOM_ATTRIBUTE_FIELDS
+    channel_fields = RoomExportFields.ROOM_CHANNEL_LISTING_FIELDS.copy()
     result_data: Dict[int, dict] = defaultdict(dict)
 
     fields.add("pk")
@@ -141,7 +141,7 @@ def prepare_products_relations_data(
         result_data = add_collection_info_to_data(pk, collection, result_data)
 
         result_data, data = handle_attribute_data(
-            pk, data, attribute_ids, result_data, attribute_fields, "product attribute"
+            pk, data, attribute_ids, result_data, attribute_fields, "room attribute"
         )
         result_data, data = handle_channel_data(
             pk,
@@ -167,22 +167,22 @@ def get_variants_relations_data(
     queryset: "QuerySet",
     export_fields: Set[str],
     attribute_ids: Optional[List[int]],
-    warehouse_ids: Optional[List[int]],
+    hotel_ids: Optional[List[int]],
     channel_ids: Optional[List[int]],
 ) -> Dict[int, Dict[str, str]]:
     """Get data about variants relations fields.
 
     If any many to many fields are in export_fields or some attribute_ids or
-    warehouse_ids exists then dict with variant relations fields is returned.
+    hotel_ids exists then dict with variant relations fields is returned.
     Otherwise it returns empty dict.
     """
     many_to_many_fields = set(
-        ProductExportFields.HEADERS_TO_FIELDS_MAPPING["variant_many_to_many"].values()
+        RoomExportFields.HEADERS_TO_FIELDS_MAPPING["variant_many_to_many"].values()
     )
     relations_fields = export_fields & many_to_many_fields
-    if relations_fields or attribute_ids or warehouse_ids or channel_ids:
+    if relations_fields or attribute_ids or hotel_ids or channel_ids:
         return prepare_variants_relations_data(
-            queryset, relations_fields, attribute_ids, warehouse_ids, channel_ids
+            queryset, relations_fields, attribute_ids, hotel_ids, channel_ids
         )
 
     return {}
@@ -192,24 +192,24 @@ def prepare_variants_relations_data(
     queryset: "QuerySet",
     fields: Set[str],
     attribute_ids: Optional[List[int]],
-    warehouse_ids: Optional[List[int]],
+    hotel_ids: Optional[List[int]],
     channel_ids: Optional[List[int]],
 ) -> Dict[int, Dict[str, str]]:
     """Prepare data about variants relation fields for given queryset.
 
-    It return dict where key is a product pk, value is a dict with relation fields data.
+    It return dict where key is a room pk, value is a dict with relation fields data.
     """
-    attribute_fields = ProductExportFields.VARIANT_ATTRIBUTE_FIELDS
-    warehouse_fields = ProductExportFields.WAREHOUSE_FIELDS
-    channel_fields = ProductExportFields.VARIANT_CHANNEL_LISTING_FIELDS.copy()
+    attribute_fields = RoomExportFields.VARIANT_ATTRIBUTE_FIELDS
+    hotel_fields = RoomExportFields.HOTEL_FIELDS
+    channel_fields = RoomExportFields.VARIANT_CHANNEL_LISTING_FIELDS.copy()
 
     result_data: Dict[int, dict] = defaultdict(dict)
     fields.add("variants__pk")
 
     if attribute_ids:
         fields.update(attribute_fields.values())
-    if warehouse_ids:
-        fields.update(warehouse_fields.values())
+    if hotel_ids:
+        fields.update(hotel_fields.values())
     if channel_ids:
         fields.update(channel_fields.values())
 
@@ -237,8 +237,8 @@ def prepare_variants_relations_data(
             channel_slug_lookup,
             channel_fields,
         )
-        result_data, data = handle_warehouse_data(
-            pk, data, warehouse_ids, result_data, warehouse_fields
+        result_data, data = handle_hotel_data(
+            pk, data, hotel_ids, result_data, hotel_fields
         )
 
     result: Dict[int, Dict[str, str]] = {
@@ -254,12 +254,12 @@ def prepare_variants_relations_data(
 def add_collection_info_to_data(
     pk: int, collection: str, result_data: Dict[int, dict]
 ) -> Dict[int, dict]:
-    """Add collection info to product data.
+    """Add collection info to room data.
 
-    This functions adds info about collection to dict with product data.
+    This functions adds info about collection to dict with room data.
     If some collection info already exists in data, collection slug is added
     to set with other values.
-    It returns updated product data.
+    It returns updated room data.
     """
 
     if collection:
@@ -274,10 +274,10 @@ def add_collection_info_to_data(
 def add_image_uris_to_data(
     pk: int, image: str, header: str, result_data: Dict[int, dict]
 ) -> Dict[int, dict]:
-    """Add absolute uri of given image path to product or variant data.
+    """Add absolute uri of given image path to room or variant data.
 
     This function based on given image path creates absolute uri and adds it to dict
-    with variant or product data. If some info about images already exists in data,
+    with variant or room data. If some info about images already exists in data,
     absolute uri of given image is added to set with other uris.
     """
     if image:
@@ -342,23 +342,23 @@ def handle_channel_data(
     return result_data, data
 
 
-def handle_warehouse_data(
+def handle_hotel_data(
     pk: int,
     data: dict,
-    warehouse_ids: Optional[List[int]],
+    hotel_ids: Optional[List[int]],
     result_data: Dict[int, dict],
-    warehouse_fields: dict,
+    hotel_fields: dict,
 ):
-    warehouse_data: dict = {}
+    hotel_data: dict = {}
 
-    warehouse_pk = str(data.pop(warehouse_fields["warehouse_pk"], ""))
-    warehouse_data = {
-        "slug": data.pop(warehouse_fields["slug"], None),
-        "qty": data.pop(warehouse_fields["quantity"], None),
+    hotel_pk = str(data.pop(hotel_fields["hotel_pk"], ""))
+    hotel_data = {
+        "slug": data.pop(hotel_fields["slug"], None),
+        "qty": data.pop(hotel_fields["quantity"], None),
     }
 
-    if warehouse_ids and warehouse_pk in warehouse_ids:
-        result_data = add_warehouse_info_to_data(pk, warehouse_data, result_data)
+    if hotel_ids and hotel_pk in hotel_ids:
+        result_data = add_hotel_info_to_data(pk, hotel_data, result_data)
 
     return result_data, data
 
@@ -369,9 +369,9 @@ def add_attribute_info_to_data(
     attribute_owner: str,
     result_data: Dict[int, dict],
 ) -> Dict[int, dict]:
-    """Add info about attribute to variant or product data.
+    """Add info about attribute to variant or room data.
 
-    This functions adds info about attribute to dict with variant or product data.
+    This functions adds info about attribute to dict with variant or room data.
     If attribute with given slug already exists in data, attribute value is added
     to set with values.
     It returns updated data.
@@ -394,9 +394,9 @@ def add_attribute_info_to_data(
     return result_data
 
 
-def add_warehouse_info_to_data(
+def add_hotel_info_to_data(
     pk: int,
-    warehouse_data: Dict[str, Union[Optional[str]]],
+    hotel_data: Dict[str, Union[Optional[str]]],
     result_data: Dict[int, dict],
 ) -> Dict[int, dict]:
     """Add info about stock quantity to variant data.
@@ -405,11 +405,11 @@ def add_warehouse_info_to_data(
     It returns updated data.
     """
 
-    slug = warehouse_data["slug"]
+    slug = hotel_data["slug"]
     if slug:
-        warehouse_qty_header = f"{slug} (warehouse quantity)"
-        if warehouse_qty_header not in result_data[pk]:
-            result_data[pk][warehouse_qty_header] = warehouse_data["qty"]
+        hotel_qty_header = f"{slug} (hotel quantity)"
+        if hotel_qty_header not in result_data[pk]:
+            result_data[pk][hotel_qty_header] = hotel_data["qty"]
 
     return result_data
 
@@ -422,7 +422,7 @@ def add_channel_info_to_data(
 ) -> Dict[int, dict]:
     """Add info about channel currency code, whether is published and publication date.
 
-    This functions adds info about channel to dict with product data.
+    This functions adds info about channel to dict with room data.
     It returns updated data.
     """
     slug = channel_data["slug"]

@@ -7,13 +7,13 @@ from markdown import markdown
 
 
 def md_to_html(apps, schema_editor):
-    Product = apps.get_model("product", "Product")
-    for product in Product.objects.all():
-        product.description = markdown(product.description)
-        product.save()
+    Room = apps.get_model("room", "Room")
+    for room in Room.objects.all():
+        room.description = markdown(room.description)
+        room.save()
 
 
 class Migration(migrations.Migration):
-    dependencies = [("product", "0044_auto_20180108_0814")]
+    dependencies = [("room", "0044_auto_20180108_0814")]
 
     operations = [migrations.RunPython(md_to_html, migrations.RunPython.noop)]

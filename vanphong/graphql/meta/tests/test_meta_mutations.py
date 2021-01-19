@@ -353,8 +353,8 @@ def test_add_public_metadata_for_draft_order(api_client, draft_order):
     )
 
 
-def test_add_public_metadata_for_product_attribute(
-    staff_api_client, permission_manage_product_types_and_attributes, color_attribute
+def test_add_public_metadata_for_room_attribute(
+    staff_api_client, permission_manage_room_types_and_attributes, color_attribute
 ):
     # given
     attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.pk)
@@ -362,7 +362,7 @@ def test_add_public_metadata_for_product_attribute(
     # when
     response = execute_update_public_metadata_for_item(
         staff_api_client,
-        permission_manage_product_types_and_attributes,
+        permission_manage_room_types_and_attributes,
         attribute_id,
         "Attribute",
     )
@@ -394,14 +394,14 @@ def test_add_public_metadata_for_page_attribute(
 
 
 def test_add_public_metadata_for_category(
-    staff_api_client, permission_manage_products, category
+    staff_api_client, permission_manage_rooms, category
 ):
     # given
     category_id = graphene.Node.to_global_id("Category", category.pk)
 
     # when
     response = execute_update_public_metadata_for_item(
-        staff_api_client, permission_manage_products, category_id, "Category"
+        staff_api_client, permission_manage_rooms, category_id, "Category"
     )
 
     # then
@@ -411,14 +411,14 @@ def test_add_public_metadata_for_category(
 
 
 def test_add_public_metadata_for_collection(
-    staff_api_client, permission_manage_products, published_collection, channel_USD
+    staff_api_client, permission_manage_rooms, published_collection, channel_USD
 ):
     # given
     collection_id = graphene.Node.to_global_id("Collection", published_collection.pk)
 
     # when
     response = execute_update_public_metadata_for_item(
-        staff_api_client, permission_manage_products, collection_id, "Collection"
+        staff_api_client, permission_manage_rooms, collection_id, "Collection"
     )
 
     # then
@@ -428,7 +428,7 @@ def test_add_public_metadata_for_collection(
 
 
 def test_add_public_metadata_for_digital_content(
-    staff_api_client, permission_manage_products, digital_content
+    staff_api_client, permission_manage_rooms, digital_content
 ):
     # given
     digital_content_id = graphene.Node.to_global_id(
@@ -438,7 +438,7 @@ def test_add_public_metadata_for_digital_content(
     # when
     response = execute_update_public_metadata_for_item(
         staff_api_client,
-        permission_manage_products,
+        permission_manage_rooms,
         digital_content_id,
         "DigitalContent",
     )
@@ -466,57 +466,57 @@ def test_add_public_metadata_for_fulfillment(
     )
 
 
-@patch("saleor.plugins.manager.PluginsManager.product_updated")
-def test_add_public_metadata_for_product(
-    updated_webhook_mock, staff_api_client, permission_manage_products, product
+@patch("saleor.plugins.manager.PluginsManager.room_updated")
+def test_add_public_metadata_for_room(
+    updated_webhook_mock, staff_api_client, permission_manage_rooms, room
 ):
     # given
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
 
     # when
     response = execute_update_public_metadata_for_item(
-        staff_api_client, permission_manage_products, product_id, "Product"
+        staff_api_client, permission_manage_rooms, room_id, "Room"
     )
 
     # then
     assert item_contains_proper_public_metadata(
-        response["data"]["updateMetadata"]["item"], product, product_id
+        response["data"]["updateMetadata"]["item"], room, room_id
     )
-    updated_webhook_mock.assert_called_once_with(product)
+    updated_webhook_mock.assert_called_once_with(room)
 
 
-def test_add_public_metadata_for_product_type(
-    staff_api_client, permission_manage_product_types_and_attributes, product_type
+def test_add_public_metadata_for_room_type(
+    staff_api_client, permission_manage_room_types_and_attributes, room_type
 ):
     # given
-    product_type_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
     # when
     response = execute_update_public_metadata_for_item(
         staff_api_client,
-        permission_manage_product_types_and_attributes,
-        product_type_id,
-        "ProductType",
+        permission_manage_room_types_and_attributes,
+        room_type_id,
+        "RoomType",
     )
 
     # then
     assert item_contains_proper_public_metadata(
-        response["data"]["updateMetadata"]["item"], product_type, product_type_id
+        response["data"]["updateMetadata"]["item"], room_type, room_type_id
     )
 
 
-def test_add_public_metadata_for_product_variant(
-    staff_api_client, permission_manage_products, variant
+def test_add_public_metadata_for_room_variant(
+    staff_api_client, permission_manage_rooms, variant
 ):
     # given
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
 
     # when
     response = execute_update_public_metadata_for_item(
         staff_api_client,
-        permission_manage_products,
+        permission_manage_rooms,
         variant_id,
-        "ProductVariant",
+        "RoomVariant",
     )
 
     # then
@@ -987,8 +987,8 @@ def test_delete_public_metadata_for_draft_order(api_client, draft_order):
     )
 
 
-def test_delete_public_metadata_for_product_attribute(
-    staff_api_client, permission_manage_product_types_and_attributes, color_attribute
+def test_delete_public_metadata_for_room_attribute(
+    staff_api_client, permission_manage_room_types_and_attributes, color_attribute
 ):
     # given
     color_attribute.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -998,7 +998,7 @@ def test_delete_public_metadata_for_product_attribute(
     # when
     response = execute_clear_public_metadata_for_item(
         staff_api_client,
-        permission_manage_product_types_and_attributes,
+        permission_manage_room_types_and_attributes,
         attribute_id,
         "Attribute",
     )
@@ -1032,7 +1032,7 @@ def test_delete_public_metadata_for_page_attribute(
 
 
 def test_delete_public_metadata_for_category(
-    staff_api_client, permission_manage_products, category
+    staff_api_client, permission_manage_rooms, category
 ):
     # given
     category.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -1041,7 +1041,7 @@ def test_delete_public_metadata_for_category(
 
     # when
     response = execute_clear_public_metadata_for_item(
-        staff_api_client, permission_manage_products, category_id, "Category"
+        staff_api_client, permission_manage_rooms, category_id, "Category"
     )
 
     # then
@@ -1051,7 +1051,7 @@ def test_delete_public_metadata_for_category(
 
 
 def test_delete_public_metadata_for_collection(
-    staff_api_client, permission_manage_products, published_collection, channel_USD
+    staff_api_client, permission_manage_rooms, published_collection, channel_USD
 ):
     # given
     collection = published_collection
@@ -1061,7 +1061,7 @@ def test_delete_public_metadata_for_collection(
 
     # when
     response = execute_clear_public_metadata_for_item(
-        staff_api_client, permission_manage_products, collection_id, "Collection"
+        staff_api_client, permission_manage_rooms, collection_id, "Collection"
     )
 
     # then
@@ -1071,7 +1071,7 @@ def test_delete_public_metadata_for_collection(
 
 
 def test_delete_public_metadata_for_digital_content(
-    staff_api_client, permission_manage_products, digital_content
+    staff_api_client, permission_manage_rooms, digital_content
 ):
     # given
     digital_content.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -1083,7 +1083,7 @@ def test_delete_public_metadata_for_digital_content(
     # when
     response = execute_clear_public_metadata_for_item(
         staff_api_client,
-        permission_manage_products,
+        permission_manage_rooms,
         digital_content_id,
         "DigitalContent",
     )
@@ -1113,60 +1113,60 @@ def test_delete_public_metadata_for_fulfillment(
     )
 
 
-@patch("saleor.plugins.manager.PluginsManager.product_updated")
-def test_delete_public_metadata_for_product(
-    updated_webhook_mock, staff_api_client, permission_manage_products, product
+@patch("saleor.plugins.manager.PluginsManager.room_updated")
+def test_delete_public_metadata_for_room(
+    updated_webhook_mock, staff_api_client, permission_manage_rooms, room
 ):
     # given
-    product.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product.save(update_fields=["metadata"])
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room.save(update_fields=["metadata"])
+    room_id = graphene.Node.to_global_id("Room", room.pk)
 
     # when
     response = execute_clear_public_metadata_for_item(
-        staff_api_client, permission_manage_products, product_id, "Product"
+        staff_api_client, permission_manage_rooms, room_id, "Room"
     )
 
     # then
     assert item_without_public_metadata(
-        response["data"]["deleteMetadata"]["item"], product, product_id
+        response["data"]["deleteMetadata"]["item"], room, room_id
     )
-    updated_webhook_mock.assert_called_once_with(product)
+    updated_webhook_mock.assert_called_once_with(room)
 
 
-def test_delete_public_metadata_for_product_type(
-    staff_api_client, permission_manage_product_types_and_attributes, product_type
+def test_delete_public_metadata_for_room_type(
+    staff_api_client, permission_manage_room_types_and_attributes, room_type
 ):
     # given
-    product_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product_type.save(update_fields=["metadata"])
-    product_type_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room_type.save(update_fields=["metadata"])
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
     # when
     response = execute_clear_public_metadata_for_item(
         staff_api_client,
-        permission_manage_product_types_and_attributes,
-        product_type_id,
-        "ProductType",
+        permission_manage_room_types_and_attributes,
+        room_type_id,
+        "RoomType",
     )
 
     # then
     assert item_without_public_metadata(
-        response["data"]["deleteMetadata"]["item"], product_type, product_type_id
+        response["data"]["deleteMetadata"]["item"], room_type, room_type_id
     )
 
 
-def test_delete_public_metadata_for_product_variant(
-    staff_api_client, permission_manage_products, variant
+def test_delete_public_metadata_for_room_variant(
+    staff_api_client, permission_manage_rooms, variant
 ):
     # given
     variant.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
     variant.save(update_fields=["metadata"])
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
 
     # when
     response = execute_clear_public_metadata_for_item(
-        staff_api_client, permission_manage_products, variant_id, "ProductVariant"
+        staff_api_client, permission_manage_rooms, variant_id, "RoomVariant"
     )
 
     # then
@@ -1703,8 +1703,8 @@ def test_add_private_metadata_for_draft_order(
     )
 
 
-def test_add_private_metadata_for_product_attribute(
-    staff_api_client, permission_manage_product_types_and_attributes, color_attribute
+def test_add_private_metadata_for_room_attribute(
+    staff_api_client, permission_manage_room_types_and_attributes, color_attribute
 ):
     # given
     attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.pk)
@@ -1712,7 +1712,7 @@ def test_add_private_metadata_for_product_attribute(
     # when
     response = execute_update_private_metadata_for_item(
         staff_api_client,
-        permission_manage_product_types_and_attributes,
+        permission_manage_room_types_and_attributes,
         attribute_id,
         "Attribute",
     )
@@ -1746,14 +1746,14 @@ def test_add_private_metadata_for_page_attribute(
 
 
 def test_add_private_metadata_for_category(
-    staff_api_client, permission_manage_products, category
+    staff_api_client, permission_manage_rooms, category
 ):
     # given
     category_id = graphene.Node.to_global_id("Category", category.pk)
 
     # when
     response = execute_update_private_metadata_for_item(
-        staff_api_client, permission_manage_products, category_id, "Category"
+        staff_api_client, permission_manage_rooms, category_id, "Category"
     )
 
     # then
@@ -1763,7 +1763,7 @@ def test_add_private_metadata_for_category(
 
 
 def test_add_private_metadata_for_collection(
-    staff_api_client, permission_manage_products, published_collection, channel_USD
+    staff_api_client, permission_manage_rooms, published_collection, channel_USD
 ):
     # given
     collection = published_collection
@@ -1771,7 +1771,7 @@ def test_add_private_metadata_for_collection(
 
     # when
     response = execute_update_private_metadata_for_item(
-        staff_api_client, permission_manage_products, collection_id, "Collection"
+        staff_api_client, permission_manage_rooms, collection_id, "Collection"
     )
 
     # then
@@ -1781,7 +1781,7 @@ def test_add_private_metadata_for_collection(
 
 
 def test_add_private_metadata_for_digital_content(
-    staff_api_client, permission_manage_products, digital_content
+    staff_api_client, permission_manage_rooms, digital_content
 ):
     # given
     digital_content_id = graphene.Node.to_global_id(
@@ -1791,7 +1791,7 @@ def test_add_private_metadata_for_digital_content(
     # when
     response = execute_update_private_metadata_for_item(
         staff_api_client,
-        permission_manage_products,
+        permission_manage_rooms,
         digital_content_id,
         "DigitalContent",
     )
@@ -1821,57 +1821,57 @@ def test_add_private_metadata_for_fulfillment(
     )
 
 
-@patch("saleor.plugins.manager.PluginsManager.product_updated")
-def test_add_private_metadata_for_product(
-    updated_webhook_mock, staff_api_client, permission_manage_products, product
+@patch("saleor.plugins.manager.PluginsManager.room_updated")
+def test_add_private_metadata_for_room(
+    updated_webhook_mock, staff_api_client, permission_manage_rooms, room
 ):
     # given
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
 
     # when
     response = execute_update_private_metadata_for_item(
-        staff_api_client, permission_manage_products, product_id, "Product"
+        staff_api_client, permission_manage_rooms, room_id, "Room"
     )
 
     # then
     assert item_contains_proper_private_metadata(
-        response["data"]["updatePrivateMetadata"]["item"], product, product_id
+        response["data"]["updatePrivateMetadata"]["item"], room, room_id
     )
-    updated_webhook_mock.assert_called_once_with(product)
+    updated_webhook_mock.assert_called_once_with(room)
 
 
-def test_add_private_metadata_for_product_type(
-    staff_api_client, permission_manage_product_types_and_attributes, product_type
+def test_add_private_metadata_for_room_type(
+    staff_api_client, permission_manage_room_types_and_attributes, room_type
 ):
     # given
-    product_type_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
     # when
     response = execute_update_private_metadata_for_item(
         staff_api_client,
-        permission_manage_product_types_and_attributes,
-        product_type_id,
-        "ProductType",
+        permission_manage_room_types_and_attributes,
+        room_type_id,
+        "RoomType",
     )
 
     # then
     assert item_contains_proper_private_metadata(
-        response["data"]["updatePrivateMetadata"]["item"], product_type, product_type_id
+        response["data"]["updatePrivateMetadata"]["item"], room_type, room_type_id
     )
 
 
-def test_add_private_metadata_for_product_variant(
-    staff_api_client, permission_manage_products, variant
+def test_add_private_metadata_for_room_variant(
+    staff_api_client, permission_manage_rooms, variant
 ):
     # given
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
 
     # when
     response = execute_update_private_metadata_for_item(
         staff_api_client,
-        permission_manage_products,
+        permission_manage_rooms,
         variant_id,
-        "ProductVariant",
+        "RoomVariant",
     )
 
     # then
@@ -2366,8 +2366,8 @@ def test_delete_private_metadata_for_draft_order(
     )
 
 
-def test_delete_private_metadata_for_product_attribute(
-    staff_api_client, permission_manage_product_types_and_attributes, color_attribute
+def test_delete_private_metadata_for_room_attribute(
+    staff_api_client, permission_manage_room_types_and_attributes, color_attribute
 ):
     # given
     color_attribute.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
@@ -2377,7 +2377,7 @@ def test_delete_private_metadata_for_product_attribute(
     # when
     response = execute_clear_private_metadata_for_item(
         staff_api_client,
-        permission_manage_product_types_and_attributes,
+        permission_manage_room_types_and_attributes,
         attribute_id,
         "Attribute",
     )
@@ -2413,7 +2413,7 @@ def test_delete_private_metadata_for_page_attribute(
 
 
 def test_delete_private_metadata_for_category(
-    staff_api_client, permission_manage_products, category
+    staff_api_client, permission_manage_rooms, category
 ):
     # given
     category.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
@@ -2422,7 +2422,7 @@ def test_delete_private_metadata_for_category(
 
     # when
     response = execute_clear_private_metadata_for_item(
-        staff_api_client, permission_manage_products, category_id, "Category"
+        staff_api_client, permission_manage_rooms, category_id, "Category"
     )
 
     # then
@@ -2432,7 +2432,7 @@ def test_delete_private_metadata_for_category(
 
 
 def test_delete_private_metadata_for_collection(
-    staff_api_client, permission_manage_products, published_collection, channel_USD
+    staff_api_client, permission_manage_rooms, published_collection, channel_USD
 ):
     # given
     collection = published_collection
@@ -2442,7 +2442,7 @@ def test_delete_private_metadata_for_collection(
 
     # when
     response = execute_clear_private_metadata_for_item(
-        staff_api_client, permission_manage_products, collection_id, "Collection"
+        staff_api_client, permission_manage_rooms, collection_id, "Collection"
     )
 
     # then
@@ -2452,7 +2452,7 @@ def test_delete_private_metadata_for_collection(
 
 
 def test_delete_private_metadata_for_digital_content(
-    staff_api_client, permission_manage_products, digital_content
+    staff_api_client, permission_manage_rooms, digital_content
 ):
     # given
     digital_content.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
@@ -2464,7 +2464,7 @@ def test_delete_private_metadata_for_digital_content(
     # when
     response = execute_clear_private_metadata_for_item(
         staff_api_client,
-        permission_manage_products,
+        permission_manage_rooms,
         digital_content_id,
         "DigitalContent",
     )
@@ -2496,60 +2496,60 @@ def test_delete_private_metadata_for_fulfillment(
     )
 
 
-@patch("saleor.plugins.manager.PluginsManager.product_updated")
-def test_delete_private_metadata_for_product(
-    updated_webhook_mock, staff_api_client, permission_manage_products, product
+@patch("saleor.plugins.manager.PluginsManager.room_updated")
+def test_delete_private_metadata_for_room(
+    updated_webhook_mock, staff_api_client, permission_manage_rooms, room
 ):
     # given
-    product.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
-    product.save(update_fields=["private_metadata"])
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
+    room.save(update_fields=["private_metadata"])
+    room_id = graphene.Node.to_global_id("Room", room.pk)
 
     # when
     response = execute_clear_private_metadata_for_item(
-        staff_api_client, permission_manage_products, product_id, "Product"
+        staff_api_client, permission_manage_rooms, room_id, "Room"
     )
 
     # then
     assert item_without_private_metadata(
-        response["data"]["deletePrivateMetadata"]["item"], product, product_id
+        response["data"]["deletePrivateMetadata"]["item"], room, room_id
     )
-    updated_webhook_mock.assert_called_once_with(product)
+    updated_webhook_mock.assert_called_once_with(room)
 
 
-def test_delete_private_metadata_for_product_type(
-    staff_api_client, permission_manage_product_types_and_attributes, product_type
+def test_delete_private_metadata_for_room_type(
+    staff_api_client, permission_manage_room_types_and_attributes, room_type
 ):
     # given
-    product_type.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
-    product_type.save(update_fields=["private_metadata"])
-    product_type_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
+    room_type.save(update_fields=["private_metadata"])
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
     # when
     response = execute_clear_private_metadata_for_item(
         staff_api_client,
-        permission_manage_product_types_and_attributes,
-        product_type_id,
-        "ProductType",
+        permission_manage_room_types_and_attributes,
+        room_type_id,
+        "RoomType",
     )
 
     # then
     assert item_without_private_metadata(
-        response["data"]["deletePrivateMetadata"]["item"], product_type, product_type_id
+        response["data"]["deletePrivateMetadata"]["item"], room_type, room_type_id
     )
 
 
-def test_delete_private_metadata_for_product_variant(
-    staff_api_client, permission_manage_products, variant
+def test_delete_private_metadata_for_room_variant(
+    staff_api_client, permission_manage_rooms, variant
 ):
     # given
     variant.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
     variant.save(update_fields=["private_metadata"])
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
 
     # when
     response = execute_clear_private_metadata_for_item(
-        staff_api_client, permission_manage_products, variant_id, "ProductVariant"
+        staff_api_client, permission_manage_rooms, variant_id, "RoomVariant"
     )
 
     # then

@@ -28,7 +28,7 @@ CREATE_ATTRIBUTE_MUTATION = """
                     name
                     slug
                 }
-                productTypes(first: 10) {
+                roomTypes(first: 10) {
                     edges {
                         node {
                             id
@@ -43,8 +43,8 @@ CREATE_ATTRIBUTE_MUTATION = """
 
 def test_create_attribute_and_attribute_values(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    permission_manage_products,
+    permission_manage_room_types_and_attributes,
+    permission_manage_rooms,
 ):
     # given
     query = CREATE_ATTRIBUTE_MUTATION
@@ -55,7 +55,7 @@ def test_create_attribute_and_attribute_values(
         "input": {
             "name": attribute_name,
             "values": [{"name": name}],
-            "type": AttributeTypeEnum.PRODUCT_TYPE.name,
+            "type": AttributeTypeEnum.ROOM_TYPE.name,
         }
     }
 
@@ -64,8 +64,8 @@ def test_create_attribute_and_attribute_values(
         query,
         variables,
         permissions=[
-            permission_manage_product_types_and_attributes,
-            permission_manage_products,
+            permission_manage_room_types_and_attributes,
+            permission_manage_rooms,
         ],
     )
 
@@ -80,20 +80,20 @@ def test_create_attribute_and_attribute_values(
         attribute_name
     ), "The default slug should be the slugified name"
     assert (
-        data["attribute"]["productTypes"]["edges"] == []
-    ), "The attribute should not have been assigned to a product type"
+        data["attribute"]["roomTypes"]["edges"] == []
+    ), "The attribute should not have been assigned to a room type"
 
     # Check if the attribute values were correctly created
     assert len(data["attribute"]["values"]) == 1
-    assert data["attribute"]["type"] == AttributeTypeEnum.PRODUCT_TYPE.name
+    assert data["attribute"]["type"] == AttributeTypeEnum.ROOM_TYPE.name
     assert data["attribute"]["values"][0]["name"] == name
     assert data["attribute"]["values"][0]["slug"] == slugify(name)
 
 
 def test_create_attribute_with_file_input_type(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    permission_manage_products,
+    permission_manage_room_types_and_attributes,
+    permission_manage_rooms,
 ):
     # given
     query = CREATE_ATTRIBUTE_MUTATION
@@ -102,7 +102,7 @@ def test_create_attribute_with_file_input_type(
     variables = {
         "input": {
             "name": attribute_name,
-            "type": AttributeTypeEnum.PRODUCT_TYPE.name,
+            "type": AttributeTypeEnum.ROOM_TYPE.name,
             "inputType": AttributeInputTypeEnum.FILE.name,
         }
     }
@@ -112,8 +112,8 @@ def test_create_attribute_with_file_input_type(
         query,
         variables,
         permissions=[
-            permission_manage_product_types_and_attributes,
-            permission_manage_products,
+            permission_manage_room_types_and_attributes,
+            permission_manage_rooms,
         ],
     )
 
@@ -128,12 +128,12 @@ def test_create_attribute_with_file_input_type(
         attribute_name
     ), "The default slug should be the slugified name"
     assert (
-        data["attribute"]["productTypes"]["edges"] == []
-    ), "The attribute should not have been assigned to a product type"
+        data["attribute"]["roomTypes"]["edges"] == []
+    ), "The attribute should not have been assigned to a room type"
 
     # Check if the attribute values were correctly created
     assert len(data["attribute"]["values"]) == 0
-    assert data["attribute"]["type"] == AttributeTypeEnum.PRODUCT_TYPE.name
+    assert data["attribute"]["type"] == AttributeTypeEnum.ROOM_TYPE.name
     assert data["attribute"]["inputType"] == AttributeInputTypeEnum.FILE.name
 
 
@@ -176,8 +176,8 @@ def test_create_page_attribute_and_attribute_values(
         attribute_name
     ), "The default slug should be the slugified name"
     assert (
-        data["attribute"]["productTypes"]["edges"] == []
-    ), "The attribute should not have been assigned to a product type"
+        data["attribute"]["roomTypes"]["edges"] == []
+    ), "The attribute should not have been assigned to a room type"
     assert data["attribute"]["filterableInStorefront"] is False
     assert data["attribute"]["filterableInDashboard"] is False
     assert data["attribute"]["availableInGrid"] is False
@@ -192,8 +192,8 @@ def test_create_page_attribute_and_attribute_values(
 
 def test_create_attribute_with_file_input_type_and_values(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    permission_manage_products,
+    permission_manage_room_types_and_attributes,
+    permission_manage_rooms,
 ):
     # given
     query = CREATE_ATTRIBUTE_MUTATION
@@ -203,7 +203,7 @@ def test_create_attribute_with_file_input_type_and_values(
     variables = {
         "input": {
             "name": attribute_name,
-            "type": AttributeTypeEnum.PRODUCT_TYPE.name,
+            "type": AttributeTypeEnum.ROOM_TYPE.name,
             "values": [{"name": name}],
             "inputType": AttributeInputTypeEnum.FILE.name,
         }
@@ -214,8 +214,8 @@ def test_create_attribute_with_file_input_type_and_values(
         query,
         variables,
         permissions=[
-            permission_manage_product_types_and_attributes,
-            permission_manage_products,
+            permission_manage_room_types_and_attributes,
+            permission_manage_rooms,
         ],
     )
 
@@ -232,8 +232,8 @@ def test_create_attribute_with_file_input_type_and_values(
 
 def test_create_attribute_with_file_input_type_correct_attribute_settings(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    permission_manage_products,
+    permission_manage_room_types_and_attributes,
+    permission_manage_rooms,
 ):
     # given
     query = CREATE_ATTRIBUTE_MUTATION
@@ -242,7 +242,7 @@ def test_create_attribute_with_file_input_type_correct_attribute_settings(
     variables = {
         "input": {
             "name": attribute_name,
-            "type": AttributeTypeEnum.PRODUCT_TYPE.name,
+            "type": AttributeTypeEnum.ROOM_TYPE.name,
             "inputType": AttributeInputTypeEnum.FILE.name,
             "filterableInStorefront": False,
             "filterableInDashboard": False,
@@ -256,8 +256,8 @@ def test_create_attribute_with_file_input_type_correct_attribute_settings(
         query,
         variables,
         permissions=[
-            permission_manage_product_types_and_attributes,
-            permission_manage_products,
+            permission_manage_room_types_and_attributes,
+            permission_manage_rooms,
         ],
     )
 
@@ -272,19 +272,19 @@ def test_create_attribute_with_file_input_type_correct_attribute_settings(
         attribute_name
     ), "The default slug should be the slugified name"
     assert (
-        data["attribute"]["productTypes"]["edges"] == []
-    ), "The attribute should not have been assigned to a product type"
+        data["attribute"]["roomTypes"]["edges"] == []
+    ), "The attribute should not have been assigned to a room type"
 
     # Check if the attribute values were correctly created
     assert len(data["attribute"]["values"]) == 0
-    assert data["attribute"]["type"] == AttributeTypeEnum.PRODUCT_TYPE.name
+    assert data["attribute"]["type"] == AttributeTypeEnum.ROOM_TYPE.name
     assert data["attribute"]["inputType"] == AttributeInputTypeEnum.FILE.name
 
 
 def test_create_attribute_with_file_input_type_and_invalid_settings(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    permission_manage_products,
+    permission_manage_room_types_and_attributes,
+    permission_manage_rooms,
 ):
     # given
     query = CREATE_ATTRIBUTE_MUTATION
@@ -293,7 +293,7 @@ def test_create_attribute_with_file_input_type_and_invalid_settings(
     variables = {
         "input": {
             "name": attribute_name,
-            "type": AttributeTypeEnum.PRODUCT_TYPE.name,
+            "type": AttributeTypeEnum.ROOM_TYPE.name,
             "inputType": AttributeInputTypeEnum.FILE.name,
             "filterableInStorefront": True,
             "filterableInDashboard": True,
@@ -307,8 +307,8 @@ def test_create_attribute_with_file_input_type_and_invalid_settings(
         query,
         variables,
         permissions=[
-            permission_manage_product_types_and_attributes,
-            permission_manage_products,
+            permission_manage_room_types_and_attributes,
+            permission_manage_rooms,
         ],
     )
 
@@ -341,8 +341,8 @@ def test_create_attribute_with_file_input_type_and_invalid_one_settings_value(
     field,
     value,
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    permission_manage_products,
+    permission_manage_room_types_and_attributes,
+    permission_manage_rooms,
 ):
     # given
     query = CREATE_ATTRIBUTE_MUTATION
@@ -351,7 +351,7 @@ def test_create_attribute_with_file_input_type_and_invalid_one_settings_value(
     variables = {
         "input": {
             "name": attribute_name,
-            "type": AttributeTypeEnum.PRODUCT_TYPE.name,
+            "type": AttributeTypeEnum.ROOM_TYPE.name,
             "inputType": AttributeInputTypeEnum.FILE.name,
             field: value,
         }
@@ -362,8 +362,8 @@ def test_create_attribute_with_file_input_type_and_invalid_one_settings_value(
         query,
         variables,
         permissions=[
-            permission_manage_product_types_and_attributes,
-            permission_manage_products,
+            permission_manage_room_types_and_attributes,
+            permission_manage_rooms,
         ],
     )
 
@@ -389,14 +389,14 @@ def test_create_attribute_with_file_input_type_and_invalid_one_settings_value(
 )
 def test_create_attribute_with_given_slug(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    permission_manage_products,
+    permission_manage_room_types_and_attributes,
+    permission_manage_rooms,
     input_slug,
     expected_slug,
 ):
     # given
     staff_api_client.user.user_permissions.add(
-        permission_manage_product_types_and_attributes
+        permission_manage_room_types_and_attributes
     )
     query = """
         mutation createAttribute(
@@ -418,7 +418,7 @@ def test_create_attribute_with_given_slug(
     variables = {
         "name": attribute_name,
         "slug": input_slug,
-        "type": AttributeTypeEnum.PRODUCT_TYPE.name,
+        "type": AttributeTypeEnum.ROOM_TYPE.name,
     }
 
     # when
@@ -431,8 +431,8 @@ def test_create_attribute_with_given_slug(
 
 def test_create_attribute_value_name_and_slug_with_unicode(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    permission_manage_products,
+    permission_manage_room_types_and_attributes,
+    permission_manage_rooms,
 ):
     # given
     query = CREATE_ATTRIBUTE_MUTATION
@@ -442,7 +442,7 @@ def test_create_attribute_value_name_and_slug_with_unicode(
         "input": {
             "name": name,
             "slug": slug,
-            "type": AttributeTypeEnum.PRODUCT_TYPE.name,
+            "type": AttributeTypeEnum.ROOM_TYPE.name,
         }
     }
 
@@ -451,8 +451,8 @@ def test_create_attribute_value_name_and_slug_with_unicode(
         query,
         variables,
         permissions=[
-            permission_manage_product_types_and_attributes,
-            permission_manage_products,
+            permission_manage_room_types_and_attributes,
+            permission_manage_rooms,
         ],
     )
 
@@ -487,16 +487,16 @@ def test_create_attribute_and_attribute_values_errors(
     name_2,
     error_msg,
     error_code,
-    permission_manage_product_types_and_attributes,
-    permission_manage_products,
-    product_type,
+    permission_manage_room_types_and_attributes,
+    permission_manage_rooms,
+    room_type,
 ):
     # given
     query = CREATE_ATTRIBUTE_MUTATION
     variables = {
         "input": {
             "name": "Example name",
-            "type": AttributeTypeEnum.PRODUCT_TYPE.name,
+            "type": AttributeTypeEnum.ROOM_TYPE.name,
             "values": [{"name": name_1}, {"name": name_2}],
         }
     }
@@ -506,8 +506,8 @@ def test_create_attribute_and_attribute_values_errors(
         query,
         variables,
         permissions=[
-            permission_manage_product_types_and_attributes,
-            permission_manage_products,
+            permission_manage_room_types_and_attributes,
+            permission_manage_rooms,
         ],
     )
 

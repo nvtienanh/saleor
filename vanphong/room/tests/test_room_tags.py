@@ -4,9 +4,9 @@ import pytest
 from django.templatetags.static import static
 from django.test import override_settings
 
-from ..templatetags.product_images import (
+from ..templatetags.room_images import (
     choose_placeholder,
-    get_product_image_thumbnail,
+    get_room_image_thumbnail,
     get_thumbnail,
 )
 
@@ -26,26 +26,26 @@ def test_get_thumbnail():
 
 def test_get_thumbnail_no_instance(monkeypatch):
     monkeypatch.setattr(
-        "saleor.product.templatetags.product_images.choose_placeholder",
+        "saleor.room.templatetags.room_images.choose_placeholder",
         lambda x: "placeholder",
     )
     output = get_thumbnail(image_file=None, size=10, method="crop")
     assert output == static("placeholder")
 
 
-def test_get_product_image_thumbnail_no_instance(monkeypatch):
+def test_get_room_image_thumbnail_no_instance(monkeypatch):
     monkeypatch.setattr(
-        "saleor.product.templatetags.product_images.choose_placeholder",
+        "saleor.room.templatetags.room_images.choose_placeholder",
         lambda x: "placeholder",
     )
-    output = get_product_image_thumbnail(instance=None, size=10, method="crop")
+    output = get_room_image_thumbnail(instance=None, size=10, method="crop")
     assert output == static("placeholder")
 
 
 @patch(
-    "saleor.product.templatetags.product_images.AVAILABLE_SIZES",
+    "saleor.room.templatetags.room_images.AVAILABLE_SIZES",
     {
-        "products": (
+        "rooms": (
             "thumbnail__800x800",
             "crop__100x100",
             "crop__1000x1000",
@@ -63,9 +63,9 @@ def test_get_thumbnail_to_larger():
 
 
 @patch(
-    "saleor.product.templatetags.product_images.AVAILABLE_SIZES",
+    "saleor.room.templatetags.room_images.AVAILABLE_SIZES",
     {
-        "products": (
+        "rooms": (
             "crop__10x10",
             "crop__100x100",
             "crop__1000x1000",
@@ -83,8 +83,8 @@ def test_get_thumbnail_to_smaller():
 
 
 @patch(
-    "saleor.product.templatetags.product_images.AVAILABLE_SIZES",
-    {"products": ("thumbnail__800x800",)},
+    "saleor.room.templatetags.room_images.AVAILABLE_SIZES",
+    {"rooms": ("thumbnail__800x800",)},
 )
 @override_settings(
     VERSATILEIMAGEFIELD_SETTINGS={"create_images_on_demand": False},

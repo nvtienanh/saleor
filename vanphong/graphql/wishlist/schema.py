@@ -1,10 +1,10 @@
 import graphene
 
 from .mutations import (
-    WishlistAddProductMutation,
-    WishlistAddProductVariantMutation,
-    WishlistRemoveProductMutation,
-    WishlistRemoveProductVariantMutation,
+    WishlistAddRoomMutation,
+    WishlistAddRoomVariantMutation,
+    WishlistRemoveRoomMutation,
+    WishlistRemoveRoomVariantMutation,
 )
 
 # User's wishlist queries are located in the "saleor.graphql.account" module:
@@ -15,7 +15,7 @@ from .mutations import (
 
 
 class WishlistMutations(graphene.ObjectType):
-    wishlist_add_product = WishlistAddProductMutation.Field()
-    wishlist_remove_product = WishlistRemoveProductMutation.Field()
-    wishlist_add_variant = WishlistAddProductVariantMutation.Field()
-    wishlist_remove_variant = WishlistRemoveProductVariantMutation.Field()
+    wishlist_add_room = WishlistAddRoomMutation.Field()
+    wishlist_remove_room = WishlistRemoveRoomMutation.Field()
+    wishlist_add_variant = WishlistAddRoomVariantMutation.Field()
+    wishlist_remove_variant = WishlistRemoveRoomVariantMutation.Field()

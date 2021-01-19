@@ -8,7 +8,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0012_auto_20160218_0812")]
+    dependencies = [("room", "0012_auto_20160218_0812")]
 
     operations = [
         migrations.CreateModel(
@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to="product.StockLocation",
+                to="room.StockLocation",
             ),
         ),
     ]

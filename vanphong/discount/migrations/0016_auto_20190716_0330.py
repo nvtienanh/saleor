@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("discount", "0015_voucher_min_quantity_of_products")]
+    dependencies = [("discount", "0015_voucher_min_quantity_of_rooms")]
 
     operations = [
         migrations.AddField(

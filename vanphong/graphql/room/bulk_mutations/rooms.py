@@ -5,37 +5,37 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from graphene.types import InputObjectType
 
-from ....core.permissions import ProductPermissions, ProductTypePermissions
+from ....core.permissions import RoomPermissions, RoomTypePermissions
 from ....order import OrderStatus
 from ....order import models as order_models
-from ....product import models
-from ....product.error_codes import ProductErrorCode
-from ....product.tasks import update_product_discounted_price_task
-from ....product.utils import delete_categories
-from ....product.utils.variants import generate_and_set_variant_name
-from ....warehouse import models as warehouse_models
-from ....warehouse.error_codes import StockErrorCode
+from ....room import models
+from ....room.error_codes import RoomErrorCode
+from ....room.tasks import update_room_discounted_price_task
+from ....room.utils import delete_categories
+from ....room.utils.variants import generate_and_set_variant_name
+from ....hotel import models as hotel_models
+from ....hotel.error_codes import StockErrorCode
 from ...channel import ChannelContext
 from ...channel.types import Channel
 from ...core.mutations import BaseMutation, ModelBulkDeleteMutation, ModelMutation
 from ...core.types.common import (
-    BulkProductError,
+    BulkRoomError,
     BulkStockError,
-    ProductError,
+    RoomError,
     StockError,
 )
 from ...core.utils import get_duplicated_values
 from ...core.validators import validate_price_precision
 from ...utils import resolve_global_ids_to_primary_keys
-from ...warehouse.types import Warehouse
-from ..mutations.channels import ProductVariantChannelListingAddInput
-from ..mutations.products import (
+from ...hotel.types import Hotel
+from ..mutations.channels import RoomVariantChannelListingAddInput
+from ..mutations.rooms import (
     AttributeAssignmentMixin,
-    ProductVariantCreate,
-    ProductVariantInput,
+    RoomVariantCreate,
+    RoomVariantInput,
     StockInput,
 )
-from ..types import Product, ProductVariant
+from ..types import Room, RoomVariant
 from ..utils import create_stocks, get_used_variants_attribute_values
 
 
@@ -48,9 +48,9 @@ class CategoryBulkDelete(ModelBulkDeleteMutation):
     class Meta:
         description = "Deletes categories."
         model = models.Category
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def bulk_action(cls, queryset):
@@ -66,29 +66,29 @@ class CollectionBulkDelete(ModelBulkDeleteMutation):
     class Meta:
         description = "Deletes collections."
         model = models.Collection
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
 
-class ProductBulkDelete(ModelBulkDeleteMutation):
+class RoomBulkDelete(ModelBulkDeleteMutation):
     class Arguments:
         ids = graphene.List(
-            graphene.ID, required=True, description="List of product IDs to delete."
+            graphene.ID, required=True, description="List of room IDs to delete."
         )
 
     class Meta:
-        description = "Deletes products."
-        model = models.Product
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Deletes rooms."
+        model = models.Room
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def perform_mutation(cls, _root, info, ids, **data):
-        _, pks = resolve_global_ids_to_primary_keys(ids, Product)
-        variants = models.ProductVariant.objects.filter(product__pk__in=pks)
-        # get draft order lines for products
+        _, pks = resolve_global_ids_to_primary_keys(ids, Room)
+        variants = models.RoomVariant.objects.filter(room__pk__in=pks)
+        # get draft order lines for rooms
         order_line_pks = list(
             order_models.OrderLine.objects.filter(
                 variant__in=variants, order__status=OrderStatus.DRAFT
@@ -115,7 +115,7 @@ class BulkAttributeValueInput(InputObjectType):
     )
 
 
-class ProductVariantBulkCreateInput(ProductVariantInput):
+class RoomVariantBulkCreateInput(RoomVariantInput):
     attributes = graphene.List(
         BulkAttributeValueInput,
         required=True,
@@ -123,25 +123,25 @@ class ProductVariantBulkCreateInput(ProductVariantInput):
     )
     stocks = graphene.List(
         graphene.NonNull(StockInput),
-        description=("Stocks of a product available for sale."),
+        description=("Stocks of a room available for sale."),
         required=False,
     )
     channel_listings = graphene.List(
-        graphene.NonNull(ProductVariantChannelListingAddInput),
+        graphene.NonNull(RoomVariantChannelListingAddInput),
         description="List of prices assigned to channels.",
         required=False,
     )
     sku = graphene.String(required=True, description="Stock keeping unit.")
 
 
-class ProductVariantBulkCreate(BaseMutation):
+class RoomVariantBulkCreate(BaseMutation):
     count = graphene.Int(
         required=True,
         default_value=0,
         description="Returns how many objects were created.",
     )
-    product_variants = graphene.List(
-        graphene.NonNull(ProductVariant),
+    room_variants = graphene.List(
+        graphene.NonNull(RoomVariant),
         required=True,
         default_value=[],
         description="List of the created variants.",
@@ -149,40 +149,40 @@ class ProductVariantBulkCreate(BaseMutation):
 
     class Arguments:
         variants = graphene.List(
-            ProductVariantBulkCreateInput,
+            RoomVariantBulkCreateInput,
             required=True,
-            description="Input list of product variants to create.",
+            description="Input list of room variants to create.",
         )
-        product_id = graphene.ID(
-            description="ID of the product to create the variants for.",
-            name="product",
+        room_id = graphene.ID(
+            description="ID of the room to create the variants for.",
+            name="room",
             required=True,
         )
 
     class Meta:
-        description = "Creates product variants for a given product."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = BulkProductError
-        error_type_field = "bulk_product_errors"
+        description = "Creates room variants for a given room."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = BulkRoomError
+        error_type_field = "bulk_room_errors"
 
     @classmethod
     def clean_variant_input(
         cls,
         info,
-        instance: models.ProductVariant,
+        instance: models.RoomVariant,
         data: dict,
         errors: dict,
         variant_index: int,
     ):
         cleaned_input = ModelMutation.clean_input(
-            info, instance, data, input_cls=ProductVariantBulkCreateInput
+            info, instance, data, input_cls=RoomVariantBulkCreateInput
         )
 
         attributes = cleaned_input.get("attributes")
         if attributes:
             try:
-                cleaned_input["attributes"] = ProductVariantCreate.clean_attributes(
-                    attributes, data["product_type"]
+                cleaned_input["attributes"] = RoomVariantCreate.clean_attributes(
+                    attributes, data["room_type"]
                 )
             except ValidationError as exc:
                 exc.params = {"index": variant_index}
@@ -191,7 +191,7 @@ class ProductVariantBulkCreate(BaseMutation):
         channel_listings = cleaned_input.get("channel_listings")
         if channel_listings:
             cleaned_input["channel_listings"] = cls.clean_channel_listings(
-                channel_listings, errors, data["product"], variant_index
+                channel_listings, errors, data["room"], variant_index
             )
 
         stocks = cleaned_input.get("stocks")
@@ -207,7 +207,7 @@ class ProductVariantBulkCreate(BaseMutation):
         try:
             validate_price_precision(price, currency)
         except ValidationError as error:
-            error.code = ProductErrorCode.INVALID.value
+            error.code = RoomErrorCode.INVALID.value
             error.params = {
                 "channels": [channel_id],
                 "index": variant_index,
@@ -215,7 +215,7 @@ class ProductVariantBulkCreate(BaseMutation):
             errors[field_name].append(error)
 
     @classmethod
-    def clean_channel_listings(cls, channels_data, errors, product, variant_index):
+    def clean_channel_listings(cls, channels_data, errors, room, variant_index):
         channel_ids = [
             channel_listing["channel_id"] for channel_listing in channels_data
         ]
@@ -223,7 +223,7 @@ class ProductVariantBulkCreate(BaseMutation):
         if duplicates:
             errors["channel_listings"] = ValidationError(
                 "Duplicated channel ID.",
-                code=ProductErrorCode.DUPLICATED_INPUT_ITEM.value,
+                code=RoomErrorCode.DUPLICATED_INPUT_ITEM.value,
                 params={"channels": duplicates, "index": variant_index},
             )
             return channels_data
@@ -250,25 +250,25 @@ class ProductVariantBulkCreate(BaseMutation):
                 errors,
             )
 
-        channels_not_assigned_to_product = []
-        channels_assigned_to_product = list(
-            models.ProductChannelListing.objects.filter(product=product.id).values_list(
+        channels_not_assigned_to_room = []
+        channels_assigned_to_room = list(
+            models.RoomChannelListing.objects.filter(room=room.id).values_list(
                 "channel_id", flat=True
             )
         )
         for channel_listing_data in channels_data:
-            if not channel_listing_data["channel"].id in channels_assigned_to_product:
-                channels_not_assigned_to_product.append(
+            if not channel_listing_data["channel"].id in channels_assigned_to_room:
+                channels_not_assigned_to_room.append(
                     channel_listing_data["channel_id"]
                 )
-        if channels_not_assigned_to_product:
+        if channels_not_assigned_to_room:
             errors["channel_id"].append(
                 ValidationError(
-                    "Product not available in channels.",
-                    code=ProductErrorCode.PRODUCT_NOT_ASSIGNED_TO_CHANNEL.value,
+                    "Room not available in channels.",
+                    code=RoomErrorCode.ROOM_NOT_ASSIGNED_TO_CHANNEL.value,
                     params={
                         "index": variant_index,
-                        "channels": channels_not_assigned_to_product,
+                        "channels": channels_not_assigned_to_room,
                     },
                 )
             )
@@ -276,13 +276,13 @@ class ProductVariantBulkCreate(BaseMutation):
 
     @classmethod
     def clean_stocks(cls, stocks_data, errors, variant_index):
-        warehouse_ids = [stock["warehouse"] for stock in stocks_data]
-        duplicates = get_duplicated_values(warehouse_ids)
+        hotel_ids = [stock["hotel"] for stock in stocks_data]
+        duplicates = get_duplicated_values(hotel_ids)
         if duplicates:
             errors["stocks"] = ValidationError(
-                "Duplicated warehouse ID.",
-                code=ProductErrorCode.DUPLICATED_INPUT_ITEM.value,
-                params={"warehouses": duplicates, "index": variant_index},
+                "Duplicated hotel ID.",
+                code=RoomErrorCode.DUPLICATED_INPUT_ITEM.value,
+                params={"hotels": duplicates, "index": variant_index},
             )
 
     @classmethod
@@ -306,14 +306,14 @@ class ProductVariantBulkCreate(BaseMutation):
             generate_and_set_variant_name(instance, cleaned_input.get("sku"))
 
     @classmethod
-    def create_variants(cls, info, cleaned_inputs, product, errors):
+    def create_variants(cls, info, cleaned_inputs, room, errors):
         instances = []
         for index, cleaned_input in enumerate(cleaned_inputs):
             if not cleaned_input:
                 continue
             try:
-                instance = models.ProductVariant()
-                cleaned_input["product"] = product
+                instance = models.RoomVariant()
+                cleaned_input["room"] = room
                 instance = cls.construct_instance(instance, cleaned_input)
                 cls.clean_instance(info, instance)
                 instances.append(instance)
@@ -326,7 +326,7 @@ class ProductVariantBulkCreate(BaseMutation):
         if sku in sku_list:
             errors["sku"].append(
                 ValidationError(
-                    "Duplicated SKU.", ProductErrorCode.UNIQUE, params={"index": index}
+                    "Duplicated SKU.", RoomErrorCode.UNIQUE, params={"index": index}
                 )
             )
         sku_list.append(sku)
@@ -340,16 +340,16 @@ class ProductVariantBulkCreate(BaseMutation):
             attribute_values[attr.id].extend(attr.values)
         if attribute_values in used_attribute_values:
             raise ValidationError(
-                "Duplicated attribute values for product variant.",
-                ProductErrorCode.DUPLICATED_INPUT_ITEM,
+                "Duplicated attribute values for room variant.",
+                RoomErrorCode.DUPLICATED_INPUT_ITEM,
             )
         used_attribute_values.append(attribute_values)
 
     @classmethod
-    def clean_variants(cls, info, variants, product, errors):
+    def clean_variants(cls, info, variants, room, errors):
         cleaned_inputs = []
         sku_list = []
-        used_attribute_values = get_used_variants_attribute_values(product)
+        used_attribute_values = get_used_variants_attribute_values(room)
         for index, variant_data in enumerate(variants):
             try:
                 cls.validate_duplicated_attribute_values(
@@ -361,8 +361,8 @@ class ProductVariantBulkCreate(BaseMutation):
                 )
 
             cleaned_input = None
-            variant_data["product_type"] = product.product_type
-            variant_data["product"] = product
+            variant_data["room_type"] = room.room_type
+            variant_data["room"] = room
             cleaned_input = cls.clean_variant_input(
                 info, None, variant_data, errors, index
             )
@@ -385,7 +385,7 @@ class ProductVariantBulkCreate(BaseMutation):
             price = channel_listing_data["price"]
             cost_price = channel_listing_data.get("cost_price")
             variant_channel_listings.append(
-                models.ProductVariantChannelListing(
+                models.RoomVariantChannelListing(
                     channel=channel,
                     variant=variant,
                     price_amount=price,
@@ -393,13 +393,13 @@ class ProductVariantBulkCreate(BaseMutation):
                     currency=channel.currency_code,
                 )
             )
-        models.ProductVariantChannelListing.objects.bulk_create(
+        models.RoomVariantChannelListing.objects.bulk_create(
             variant_channel_listings
         )
 
     @classmethod
     @transaction.atomic
-    def save_variants(cls, info, instances, product, cleaned_inputs):
+    def save_variants(cls, info, instances, room, cleaned_inputs):
         assert len(instances) == len(
             cleaned_inputs
         ), "There should be the same number of instances and cleaned inputs."
@@ -407,62 +407,62 @@ class ProductVariantBulkCreate(BaseMutation):
             cls.save(info, instance, cleaned_input)
             cls.create_variant_stocks(instance, cleaned_input)
             cls.create_variant_channel_listings(instance, cleaned_input)
-        if not product.default_variant:
-            product.default_variant = instances[0]
-            product.save(update_fields=["default_variant", "updated_at"])
+        if not room.default_variant:
+            room.default_variant = instances[0]
+            room.save(update_fields=["default_variant", "updated_at"])
 
     @classmethod
     def create_variant_stocks(cls, variant, cleaned_input):
         stocks = cleaned_input.get("stocks")
         if not stocks:
             return
-        warehouse_ids = [stock["warehouse"] for stock in stocks]
-        warehouses = cls.get_nodes_or_error(
-            warehouse_ids, "warehouse", only_type=Warehouse
+        hotel_ids = [stock["hotel"] for stock in stocks]
+        hotels = cls.get_nodes_or_error(
+            hotel_ids, "hotel", only_type=Hotel
         )
-        create_stocks(variant, stocks, warehouses)
+        create_stocks(variant, stocks, hotels)
 
     @classmethod
     def perform_mutation(cls, root, info, **data):
-        product = cls.get_node_or_error(info, data["product_id"], models.Product)
+        room = cls.get_node_or_error(info, data["room_id"], models.Room)
         errors = defaultdict(list)
 
-        cleaned_inputs = cls.clean_variants(info, data["variants"], product, errors)
-        instances = cls.create_variants(info, cleaned_inputs, product, errors)
+        cleaned_inputs = cls.clean_variants(info, data["variants"], room, errors)
+        instances = cls.create_variants(info, cleaned_inputs, room, errors)
         if errors:
             raise ValidationError(errors)
-        cls.save_variants(info, instances, product, cleaned_inputs)
+        cls.save_variants(info, instances, room, cleaned_inputs)
 
-        # Recalculate the "discounted price" for the parent product
-        update_product_discounted_price_task.delay(product.pk)
+        # Recalculate the "discounted price" for the parent room
+        update_room_discounted_price_task.delay(room.pk)
 
         instances = [
             ChannelContext(node=instance, channel_slug=None) for instance in instances
         ]
-        return ProductVariantBulkCreate(
-            count=len(instances), product_variants=instances
+        return RoomVariantBulkCreate(
+            count=len(instances), room_variants=instances
         )
 
 
-class ProductVariantBulkDelete(ModelBulkDeleteMutation):
+class RoomVariantBulkDelete(ModelBulkDeleteMutation):
     class Arguments:
         ids = graphene.List(
             graphene.ID,
             required=True,
-            description="List of product variant IDs to delete.",
+            description="List of room variant IDs to delete.",
         )
 
     class Meta:
-        description = "Deletes product variants."
-        model = models.ProductVariant
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Deletes room variants."
+        model = models.RoomVariant
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     @transaction.atomic
     def perform_mutation(cls, _root, info, ids, **data):
-        _, pks = resolve_global_ids_to_primary_keys(ids, ProductVariant)
+        _, pks = resolve_global_ids_to_primary_keys(ids, RoomVariant)
         # get draft order lines for variants
         order_line_pks = list(
             order_models.OrderLine.objects.filter(
@@ -470,8 +470,8 @@ class ProductVariantBulkDelete(ModelBulkDeleteMutation):
             ).values_list("pk", flat=True)
         )
 
-        product_pks = list(
-            models.Product.objects.filter(variants__in=pks)
+        room_pks = list(
+            models.Room.objects.filter(variants__in=pks)
             .distinct()
             .values_list("pk", flat=True)
         )
@@ -481,26 +481,26 @@ class ProductVariantBulkDelete(ModelBulkDeleteMutation):
         # delete order lines for deleted variants
         order_models.OrderLine.objects.filter(pk__in=order_line_pks).delete()
 
-        # set new product default variant if any has been removed
-        products = models.Product.objects.filter(
-            pk__in=product_pks, default_variant__isnull=True
+        # set new room default variant if any has been removed
+        rooms = models.Room.objects.filter(
+            pk__in=room_pks, default_variant__isnull=True
         )
-        for product in products:
-            product.default_variant = product.variants.first()
-            product.save(update_fields=["default_variant"])
+        for room in rooms:
+            room.default_variant = room.variants.first()
+            room.save(update_fields=["default_variant"])
 
         return response
 
 
-class ProductVariantStocksCreate(BaseMutation):
-    product_variant = graphene.Field(
-        ProductVariant, description="Updated product variant."
+class RoomVariantStocksCreate(BaseMutation):
+    room_variant = graphene.Field(
+        RoomVariant, description="Updated room variant."
     )
 
     class Arguments:
         variant_id = graphene.ID(
             required=True,
-            description="ID of a product variant for which stocks will be created.",
+            description="ID of a room variant for which stocks will be created.",
         )
         stocks = graphene.List(
             graphene.NonNull(StockInput),
@@ -509,8 +509,8 @@ class ProductVariantStocksCreate(BaseMutation):
         )
 
     class Meta:
-        description = "Creates stocks for product variant."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        description = "Creates stocks for room variant."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = BulkStockError
         error_type_field = "bulk_stock_errors"
 
@@ -519,51 +519,51 @@ class ProductVariantStocksCreate(BaseMutation):
         errors = defaultdict(list)
         stocks = data["stocks"]
         variant = cls.get_node_or_error(
-            info, data["variant_id"], only_type=ProductVariant
+            info, data["variant_id"], only_type=RoomVariant
         )
         if stocks:
-            warehouses = cls.clean_stocks_input(variant, stocks, errors)
+            hotels = cls.clean_stocks_input(variant, stocks, errors)
             if errors:
                 raise ValidationError(errors)
-            create_stocks(variant, stocks, warehouses)
+            create_stocks(variant, stocks, hotels)
 
         variant = ChannelContext(node=variant, channel_slug=None)
-        return cls(product_variant=variant)
+        return cls(room_variant=variant)
 
     @classmethod
     def clean_stocks_input(cls, variant, stocks_data, errors):
-        warehouse_ids = [stock["warehouse"] for stock in stocks_data]
-        cls.check_for_duplicates(warehouse_ids, errors)
-        warehouses = cls.get_nodes_or_error(
-            warehouse_ids, "warehouse", only_type=Warehouse
+        hotel_ids = [stock["hotel"] for stock in stocks_data]
+        cls.check_for_duplicates(hotel_ids, errors)
+        hotels = cls.get_nodes_or_error(
+            hotel_ids, "hotel", only_type=Hotel
         )
-        existing_stocks = variant.stocks.filter(warehouse__in=warehouses).values_list(
-            "warehouse__pk", flat=True
+        existing_stocks = variant.stocks.filter(hotel__in=hotels).values_list(
+            "hotel__pk", flat=True
         )
-        error_msg = "Stock for this warehouse already exists for this product variant."
+        error_msg = "Stock for this hotel already exists for this room variant."
         indexes = []
-        for warehouse_pk in existing_stocks:
-            warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse_pk)
+        for hotel_pk in existing_stocks:
+            hotel_id = graphene.Node.to_global_id("Hotel", hotel_pk)
             indexes.extend(
-                [i for i, id in enumerate(warehouse_ids) if id == warehouse_id]
+                [i for i, id in enumerate(hotel_ids) if id == hotel_id]
             )
         cls.update_errors(
-            errors, error_msg, "warehouse", StockErrorCode.UNIQUE, indexes
+            errors, error_msg, "hotel", StockErrorCode.UNIQUE, indexes
         )
 
-        return warehouses
+        return hotels
 
     @classmethod
-    def check_for_duplicates(cls, warehouse_ids, errors):
-        duplicates = {id for id in warehouse_ids if warehouse_ids.count(id) > 1}
-        error_msg = "Duplicated warehouse ID."
+    def check_for_duplicates(cls, hotel_ids, errors):
+        duplicates = {id for id in hotel_ids if hotel_ids.count(id) > 1}
+        error_msg = "Duplicated hotel ID."
         indexes = []
         for duplicated_id in duplicates:
             indexes.append(
-                [i for i, id in enumerate(warehouse_ids) if id == duplicated_id][-1]
+                [i for i, id in enumerate(hotel_ids) if id == duplicated_id][-1]
             )
         cls.update_errors(
-            errors, error_msg, "warehouse", StockErrorCode.UNIQUE, indexes
+            errors, error_msg, "hotel", StockErrorCode.UNIQUE, indexes
         )
 
     @classmethod
@@ -573,10 +573,10 @@ class ProductVariantStocksCreate(BaseMutation):
             errors[field].append(error)
 
 
-class ProductVariantStocksUpdate(ProductVariantStocksCreate):
+class RoomVariantStocksUpdate(RoomVariantStocksCreate):
     class Meta:
-        description = "Update stocks for product variant."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        description = "Update stocks for room variant."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = BulkStockError
         error_type_field = "bulk_stock_errors"
 
@@ -585,97 +585,97 @@ class ProductVariantStocksUpdate(ProductVariantStocksCreate):
         errors = defaultdict(list)
         stocks = data["stocks"]
         variant = cls.get_node_or_error(
-            info, data["variant_id"], only_type=ProductVariant
+            info, data["variant_id"], only_type=RoomVariant
         )
         if stocks:
-            warehouse_ids = [stock["warehouse"] for stock in stocks]
-            cls.check_for_duplicates(warehouse_ids, errors)
+            hotel_ids = [stock["hotel"] for stock in stocks]
+            cls.check_for_duplicates(hotel_ids, errors)
             if errors:
                 raise ValidationError(errors)
-            warehouses = cls.get_nodes_or_error(
-                warehouse_ids, "warehouse", only_type=Warehouse
+            hotels = cls.get_nodes_or_error(
+                hotel_ids, "hotel", only_type=Hotel
             )
-            cls.update_or_create_variant_stocks(variant, stocks, warehouses)
+            cls.update_or_create_variant_stocks(variant, stocks, hotels)
 
         variant = ChannelContext(node=variant, channel_slug=None)
-        return cls(product_variant=variant)
+        return cls(room_variant=variant)
 
     @classmethod
     @transaction.atomic
-    def update_or_create_variant_stocks(cls, variant, stocks_data, warehouses):
+    def update_or_create_variant_stocks(cls, variant, stocks_data, hotels):
         stocks = []
-        for stock_data, warehouse in zip(stocks_data, warehouses):
-            stock, _ = warehouse_models.Stock.objects.get_or_create(
-                product_variant=variant, warehouse=warehouse
+        for stock_data, hotel in zip(stocks_data, hotels):
+            stock, _ = hotel_models.Stock.objects.get_or_create(
+                room_variant=variant, hotel=hotel
             )
             stock.quantity = stock_data["quantity"]
             stocks.append(stock)
-        warehouse_models.Stock.objects.bulk_update(stocks, ["quantity"])
+        hotel_models.Stock.objects.bulk_update(stocks, ["quantity"])
 
 
-class ProductVariantStocksDelete(BaseMutation):
-    product_variant = graphene.Field(
-        ProductVariant, description="Updated product variant."
+class RoomVariantStocksDelete(BaseMutation):
+    room_variant = graphene.Field(
+        RoomVariant, description="Updated room variant."
     )
 
     class Arguments:
         variant_id = graphene.ID(
             required=True,
-            description="ID of product variant for which stocks will be deleted.",
+            description="ID of room variant for which stocks will be deleted.",
         )
-        warehouse_ids = graphene.List(
+        hotel_ids = graphene.List(
             graphene.NonNull(graphene.ID),
         )
 
     class Meta:
-        description = "Delete stocks from product variant."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        description = "Delete stocks from room variant."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = StockError
         error_type_field = "stock_errors"
 
     @classmethod
     def perform_mutation(cls, root, info, **data):
         variant = cls.get_node_or_error(
-            info, data["variant_id"], only_type=ProductVariant
+            info, data["variant_id"], only_type=RoomVariant
         )
-        _, warehouses_pks = resolve_global_ids_to_primary_keys(
-            data["warehouse_ids"], Warehouse
+        _, hotels_pks = resolve_global_ids_to_primary_keys(
+            data["hotel_ids"], Hotel
         )
-        warehouse_models.Stock.objects.filter(
-            product_variant=variant, warehouse__pk__in=warehouses_pks
+        hotel_models.Stock.objects.filter(
+            room_variant=variant, hotel__pk__in=hotels_pks
         ).delete()
 
         variant = ChannelContext(node=variant, channel_slug=None)
-        return cls(product_variant=variant)
+        return cls(room_variant=variant)
 
 
-class ProductTypeBulkDelete(ModelBulkDeleteMutation):
+class RoomTypeBulkDelete(ModelBulkDeleteMutation):
     class Arguments:
         ids = graphene.List(
             graphene.ID,
             required=True,
-            description="List of product type IDs to delete.",
+            description="List of room type IDs to delete.",
         )
 
     class Meta:
-        description = "Deletes product types."
-        model = models.ProductType
-        permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Deletes room types."
+        model = models.RoomType
+        permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
 
-class ProductImageBulkDelete(ModelBulkDeleteMutation):
+class RoomImageBulkDelete(ModelBulkDeleteMutation):
     class Arguments:
         ids = graphene.List(
             graphene.ID,
             required=True,
-            description="List of product image IDs to delete.",
+            description="List of room image IDs to delete.",
         )
 
     class Meta:
-        description = "Deletes product images."
-        model = models.ProductImage
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Deletes room images."
+        model = models.RoomImage
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"

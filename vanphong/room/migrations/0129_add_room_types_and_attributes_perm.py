@@ -4,7 +4,7 @@ from django.core.management.sql import emit_post_migrate_signal
 from django.db import migrations
 
 
-def update_groups_with_manage_products_with_new_permission(apps, schema_editor):
+def update_groups_with_manage_rooms_with_new_permission(apps, schema_editor):
     # force post signal as permissions are created in post migrate signals
     # related Django issue https://code.djangoproject.com/ticket/23422
     emit_post_migrate_signal(2, False, "default")
@@ -12,40 +12,40 @@ def update_groups_with_manage_products_with_new_permission(apps, schema_editor):
     Group = apps.get_model("auth", "Group")
     Permission = apps.get_model("auth", "Permission")
 
-    product_type_and_attribute_permission = Permission.objects.filter(
-        codename="manage_product_types_and_attributes",
-        content_type__app_label="product",
+    room_type_and_attribute_permission = Permission.objects.filter(
+        codename="manage_room_types_and_attributes",
+        content_type__app_label="room",
     ).first()
 
     groups = Group.objects.filter(
-        permissions__content_type__app_label="product",
-        permissions__codename="manage_products",
+        permissions__content_type__app_label="room",
+        permissions__codename="manage_rooms",
     )
     for group in groups:
-        group.permissions.add(product_type_and_attribute_permission)
+        group.permissions.add(room_type_and_attribute_permission)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0128_update_publication_date"),
+        ("room", "0128_update_publication_date"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="producttype",
+            name="roomtype",
             options={
                 "ordering": ("slug",),
                 "permissions": (
                     (
-                        "manage_product_types_and_attributes",
-                        "Manage product types and attributes.",
+                        "manage_room_types_and_attributes",
+                        "Manage room types and attributes.",
                     ),
                 ),
             },
         ),
         migrations.RunPython(
-            update_groups_with_manage_products_with_new_permission,
+            update_groups_with_manage_rooms_with_new_permission,
             migrations.RunPython.noop,
         ),
     ]

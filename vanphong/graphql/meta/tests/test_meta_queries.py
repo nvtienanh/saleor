@@ -666,7 +666,7 @@ def test_query_public_meta_for_attribute_as_customer(user_api_client, color_attr
 
 
 def test_query_public_meta_for_attribute_as_staff(
-    staff_api_client, color_attribute, permission_manage_products
+    staff_api_client, color_attribute, permission_manage_rooms
 ):
     # given
     color_attribute.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -677,7 +677,7 @@ def test_query_public_meta_for_attribute_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_ATTRIBUTE_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -689,7 +689,7 @@ def test_query_public_meta_for_attribute_as_staff(
 
 
 def test_query_public_meta_for_attribute_as_app(
-    app_api_client, color_attribute, permission_manage_products
+    app_api_client, color_attribute, permission_manage_rooms
 ):
     # given
     color_attribute.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -700,7 +700,7 @@ def test_query_public_meta_for_attribute_as_app(
     response = app_api_client.post_graphql(
         QUERY_ATTRIBUTE_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -756,7 +756,7 @@ def test_query_public_meta_for_category_as_customer(user_api_client, category):
 
 
 def test_query_public_meta_for_category_as_staff(
-    staff_api_client, category, permission_manage_products
+    staff_api_client, category, permission_manage_rooms
 ):
     # given
     category.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -767,7 +767,7 @@ def test_query_public_meta_for_category_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_CATEGORY_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -779,7 +779,7 @@ def test_query_public_meta_for_category_as_staff(
 
 
 def test_query_public_meta_for_category_as_app(
-    app_api_client, category, permission_manage_products
+    app_api_client, category, permission_manage_rooms
 ):
     # given
     category.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -790,7 +790,7 @@ def test_query_public_meta_for_category_as_app(
     response = app_api_client.post_graphql(
         QUERY_CATEGORY_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -857,7 +857,7 @@ def test_query_public_meta_for_collection_as_customer(
 
 
 def test_query_public_meta_for_collection_as_staff(
-    staff_api_client, published_collection, permission_manage_products, channel_USD
+    staff_api_client, published_collection, permission_manage_rooms, channel_USD
 ):
     # given
     collection = published_collection
@@ -872,7 +872,7 @@ def test_query_public_meta_for_collection_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTION_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -884,7 +884,7 @@ def test_query_public_meta_for_collection_as_staff(
 
 
 def test_query_public_meta_for_collection_as_app(
-    app_api_client, published_collection, permission_manage_products, channel_USD
+    app_api_client, published_collection, permission_manage_rooms, channel_USD
 ):
     # given
     collection = published_collection
@@ -898,7 +898,7 @@ def test_query_public_meta_for_collection_as_app(
     response = app_api_client.post_graphql(
         QUERY_COLLECTION_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -952,7 +952,7 @@ def test_query_public_meta_for_digital_content_as_customer(
 
 
 def test_query_public_meta_for_digital_content_as_staff(
-    staff_api_client, digital_content, permission_manage_products
+    staff_api_client, digital_content, permission_manage_rooms
 ):
     # given
     digital_content.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -963,7 +963,7 @@ def test_query_public_meta_for_digital_content_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_DIGITAL_CONTENT_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -975,7 +975,7 @@ def test_query_public_meta_for_digital_content_as_staff(
 
 
 def test_query_public_meta_for_digital_content_as_app(
-    app_api_client, digital_content, permission_manage_products
+    app_api_client, digital_content, permission_manage_rooms
 ):
     # given
     digital_content.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -986,7 +986,7 @@ def test_query_public_meta_for_digital_content_as_app(
     response = app_api_client.post_graphql(
         QUERY_DIGITAL_CONTENT_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -997,9 +997,9 @@ def test_query_public_meta_for_digital_content_as_app(
     assert metadata["value"] == PUBLIC_VALUE
 
 
-QUERY_PRODUCT_PUBLIC_META = """
-    query productsMeta($id: ID!, $channel: String){
-        product(id: $id, channel: $channel){
+QUERY_ROOM_PUBLIC_META = """
+    query roomsMeta($id: ID!, $channel: String){
+        room(id: $id, channel: $channel){
             metadata{
                 key
                 value
@@ -1009,97 +1009,97 @@ QUERY_PRODUCT_PUBLIC_META = """
 """
 
 
-def test_query_public_meta_for_product_as_anonymous_user(
-    api_client, product, channel_USD
+def test_query_public_meta_for_room_as_anonymous_user(
+    api_client, room, channel_USD
 ):
     # given
-    product.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product.save(update_fields=["metadata"])
+    room.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room.save(update_fields=["metadata"])
     variables = {
-        "id": graphene.Node.to_global_id("Product", product.pk),
+        "id": graphene.Node.to_global_id("Room", room.pk),
         "channel": channel_USD.slug,
     }
 
     # when
-    response = api_client.post_graphql(QUERY_PRODUCT_PUBLIC_META, variables)
+    response = api_client.post_graphql(QUERY_ROOM_PUBLIC_META, variables)
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["product"]["metadata"][0]
+    metadata = content["data"]["room"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-def test_query_public_meta_for_product_as_customer(
-    user_api_client, product, channel_USD
+def test_query_public_meta_for_room_as_customer(
+    user_api_client, room, channel_USD
 ):
     # given
-    product.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product.save(update_fields=["metadata"])
+    room.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room.save(update_fields=["metadata"])
     variables = {
-        "id": graphene.Node.to_global_id("Product", product.pk),
+        "id": graphene.Node.to_global_id("Room", room.pk),
         "channel": channel_USD.slug,
     }
 
     # when
-    response = user_api_client.post_graphql(QUERY_PRODUCT_PUBLIC_META, variables)
+    response = user_api_client.post_graphql(QUERY_ROOM_PUBLIC_META, variables)
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["product"]["metadata"][0]
+    metadata = content["data"]["room"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-def test_query_public_meta_for_product_as_staff(
-    staff_api_client, product, permission_manage_products
+def test_query_public_meta_for_room_as_staff(
+    staff_api_client, room, permission_manage_rooms
 ):
     # given
-    product.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product.save(update_fields=["metadata"])
-    variables = {"id": graphene.Node.to_global_id("Product", product.pk)}
+    room.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room.save(update_fields=["metadata"])
+    variables = {"id": graphene.Node.to_global_id("Room", room.pk)}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCT_PUBLIC_META,
+        QUERY_ROOM_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["product"]["metadata"][0]
+    metadata = content["data"]["room"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-def test_query_public_meta_for_product_as_app(
-    app_api_client, product, permission_manage_products
+def test_query_public_meta_for_room_as_app(
+    app_api_client, room, permission_manage_rooms
 ):
     # given
-    product.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product.save(update_fields=["metadata"])
-    variables = {"id": graphene.Node.to_global_id("Product", product.pk)}
+    room.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room.save(update_fields=["metadata"])
+    variables = {"id": graphene.Node.to_global_id("Room", room.pk)}
 
     # when
     response = app_api_client.post_graphql(
-        QUERY_PRODUCT_PUBLIC_META,
+        QUERY_ROOM_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["product"]["metadata"][0]
+    metadata = content["data"]["room"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-QUERY_PRODUCT_TYPE_PUBLIC_META = """
-    query productTypeMeta($id: ID!){
-        productType(id: $id){
+QUERY_ROOM_TYPE_PUBLIC_META = """
+    query roomTypeMeta($id: ID!){
+        roomType(id: $id){
             metadata{
                 key
                 value
@@ -1109,87 +1109,87 @@ QUERY_PRODUCT_TYPE_PUBLIC_META = """
 """
 
 
-def test_query_public_meta_for_product_type_as_anonymous_user(api_client, product_type):
+def test_query_public_meta_for_room_type_as_anonymous_user(api_client, room_type):
     # given
-    product_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product_type.save(update_fields=["metadata"])
-    variables = {"id": graphene.Node.to_global_id("ProductType", product_type.pk)}
+    room_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room_type.save(update_fields=["metadata"])
+    variables = {"id": graphene.Node.to_global_id("RoomType", room_type.pk)}
 
     # when
-    response = api_client.post_graphql(QUERY_PRODUCT_TYPE_PUBLIC_META, variables)
+    response = api_client.post_graphql(QUERY_ROOM_TYPE_PUBLIC_META, variables)
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productType"]["metadata"][0]
+    metadata = content["data"]["roomType"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-def test_query_public_meta_for_product_type_as_customer(user_api_client, product_type):
+def test_query_public_meta_for_room_type_as_customer(user_api_client, room_type):
     # given
-    product_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product_type.save(update_fields=["metadata"])
-    variables = {"id": graphene.Node.to_global_id("ProductType", product_type.pk)}
+    room_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room_type.save(update_fields=["metadata"])
+    variables = {"id": graphene.Node.to_global_id("RoomType", room_type.pk)}
 
     # when
-    response = user_api_client.post_graphql(QUERY_PRODUCT_TYPE_PUBLIC_META, variables)
+    response = user_api_client.post_graphql(QUERY_ROOM_TYPE_PUBLIC_META, variables)
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productType"]["metadata"][0]
+    metadata = content["data"]["roomType"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-def test_query_public_meta_for_product_type_as_staff(
-    staff_api_client, product_type, permission_manage_products
+def test_query_public_meta_for_room_type_as_staff(
+    staff_api_client, room_type, permission_manage_rooms
 ):
     # given
-    product_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product_type.save(update_fields=["metadata"])
-    variables = {"id": graphene.Node.to_global_id("ProductType", product_type.pk)}
+    room_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room_type.save(update_fields=["metadata"])
+    variables = {"id": graphene.Node.to_global_id("RoomType", room_type.pk)}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCT_TYPE_PUBLIC_META,
+        QUERY_ROOM_TYPE_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productType"]["metadata"][0]
+    metadata = content["data"]["roomType"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-def test_query_public_meta_for_product_type_as_app(
-    app_api_client, product_type, permission_manage_products
+def test_query_public_meta_for_room_type_as_app(
+    app_api_client, room_type, permission_manage_rooms
 ):
     # given
-    product_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
-    product_type.save(update_fields=["metadata"])
-    variables = {"id": graphene.Node.to_global_id("ProductType", product_type.pk)}
+    room_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    room_type.save(update_fields=["metadata"])
+    variables = {"id": graphene.Node.to_global_id("RoomType", room_type.pk)}
 
     # when
     response = app_api_client.post_graphql(
-        QUERY_PRODUCT_TYPE_PUBLIC_META,
+        QUERY_ROOM_TYPE_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productType"]["metadata"][0]
+    metadata = content["data"]["roomType"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-QUERY_PRODUCT_VARIANT_PUBLIC_META = """
-    query productVariantMeta($id: ID!, $channel: String){
-        productVariant(id: $id, channel: $channel){
+QUERY_ROOM_VARIANT_PUBLIC_META = """
+    query roomVariantMeta($id: ID!, $channel: String){
+        roomVariant(id: $id, channel: $channel){
             metadata{
                 key
                 value
@@ -1199,94 +1199,94 @@ QUERY_PRODUCT_VARIANT_PUBLIC_META = """
 """
 
 
-def test_query_public_meta_for_product_variant_as_anonymous_user(
+def test_query_public_meta_for_room_variant_as_anonymous_user(
     api_client, variant, channel_USD
 ):
     # given
     variant.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
     variant.save(update_fields=["metadata"])
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant.pk),
         "channel": channel_USD.slug,
     }
 
     # when
-    response = api_client.post_graphql(QUERY_PRODUCT_VARIANT_PUBLIC_META, variables)
+    response = api_client.post_graphql(QUERY_ROOM_VARIANT_PUBLIC_META, variables)
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productVariant"]["metadata"][0]
+    metadata = content["data"]["roomVariant"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-def test_query_public_meta_for_product_variant_as_customer(
+def test_query_public_meta_for_room_variant_as_customer(
     user_api_client, variant, channel_USD
 ):
     # given
     variant.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
     variant.save(update_fields=["metadata"])
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant.pk),
         "channel": channel_USD.slug,
     }
 
     # when
     response = user_api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_PUBLIC_META, variables
+        QUERY_ROOM_VARIANT_PUBLIC_META, variables
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productVariant"]["metadata"][0]
+    metadata = content["data"]["roomVariant"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-def test_query_public_meta_for_product_variant_as_staff(
-    staff_api_client, variant, permission_manage_products
+def test_query_public_meta_for_room_variant_as_staff(
+    staff_api_client, variant, permission_manage_rooms
 ):
     # given
     variant.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
     variant.save(update_fields=["metadata"])
-    variables = {"id": graphene.Node.to_global_id("ProductVariant", variant.pk)}
+    variables = {"id": graphene.Node.to_global_id("RoomVariant", variant.pk)}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_PUBLIC_META,
+        QUERY_ROOM_VARIANT_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productVariant"]["metadata"][0]
+    metadata = content["data"]["roomVariant"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
 
-def test_query_public_meta_for_product_variant_as_app(
-    app_api_client, variant, permission_manage_products
+def test_query_public_meta_for_room_variant_as_app(
+    app_api_client, variant, permission_manage_rooms
 ):
     # given
     variant.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
     variant.save(update_fields=["metadata"])
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant.pk),
     }
 
     # when
     response = app_api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_PUBLIC_META,
+        QUERY_ROOM_VARIANT_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productVariant"]["metadata"][0]
+    metadata = content["data"]["roomVariant"]["metadata"][0]
     assert metadata["key"] == PUBLIC_KEY
     assert metadata["value"] == PUBLIC_VALUE
 
@@ -1414,7 +1414,7 @@ def test_query_public_meta_for_page_type_as_customer(user_api_client, page_type)
 
 
 def test_query_public_meta_for_page_type_as_staff(
-    staff_api_client, page_type, permission_manage_products
+    staff_api_client, page_type, permission_manage_rooms
 ):
     # given
     page_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -1425,7 +1425,7 @@ def test_query_public_meta_for_page_type_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_PAGE_TYPE_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -1437,7 +1437,7 @@ def test_query_public_meta_for_page_type_as_staff(
 
 
 def test_query_public_meta_for_page_type_as_app(
-    app_api_client, page_type, permission_manage_products
+    app_api_client, page_type, permission_manage_rooms
 ):
     # given
     page_type.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
@@ -1448,7 +1448,7 @@ def test_query_public_meta_for_page_type_as_app(
     response = app_api_client.post_graphql(
         QUERY_PAGE_TYPE_PUBLIC_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -2090,7 +2090,7 @@ def test_query_private_meta_for_attribute_as_customer(user_api_client, color_att
 
 
 def test_query_private_meta_for_attribute_as_staff(
-    staff_api_client, color_attribute, permission_manage_product_types_and_attributes
+    staff_api_client, color_attribute, permission_manage_room_types_and_attributes
 ):
     # given
     color_attribute.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
@@ -2101,7 +2101,7 @@ def test_query_private_meta_for_attribute_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_ATTRIBUTE_PRIVATE_META,
         variables,
-        [permission_manage_product_types_and_attributes],
+        [permission_manage_room_types_and_attributes],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -2113,7 +2113,7 @@ def test_query_private_meta_for_attribute_as_staff(
 
 
 def test_query_private_meta_for_attribute_as_app(
-    app_api_client, color_attribute, permission_manage_product_types_and_attributes
+    app_api_client, color_attribute, permission_manage_room_types_and_attributes
 ):
     # given
     color_attribute.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
@@ -2124,7 +2124,7 @@ def test_query_private_meta_for_attribute_as_app(
     response = app_api_client.post_graphql(
         QUERY_ATTRIBUTE_PRIVATE_META,
         variables,
-        [permission_manage_product_types_and_attributes],
+        [permission_manage_room_types_and_attributes],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -2170,7 +2170,7 @@ def test_query_private_meta_for_category_as_customer(user_api_client, category):
 
 
 def test_query_private_meta_for_category_as_staff(
-    staff_api_client, category, permission_manage_products
+    staff_api_client, category, permission_manage_rooms
 ):
     # given
     category.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
@@ -2181,7 +2181,7 @@ def test_query_private_meta_for_category_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_CATEGORY_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -2193,7 +2193,7 @@ def test_query_private_meta_for_category_as_staff(
 
 
 def test_query_private_meta_for_category_as_app(
-    app_api_client, category, permission_manage_products
+    app_api_client, category, permission_manage_rooms
 ):
     # given
     category.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
@@ -2204,7 +2204,7 @@ def test_query_private_meta_for_category_as_app(
     response = app_api_client.post_graphql(
         QUERY_CATEGORY_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -2260,7 +2260,7 @@ def test_query_private_meta_for_collection_as_customer(
 
 
 def test_query_private_meta_for_collection_as_staff(
-    staff_api_client, published_collection, permission_manage_products, channel_USD
+    staff_api_client, published_collection, permission_manage_rooms, channel_USD
 ):
     # given
     collection = published_collection
@@ -2275,7 +2275,7 @@ def test_query_private_meta_for_collection_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTION_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -2287,7 +2287,7 @@ def test_query_private_meta_for_collection_as_staff(
 
 
 def test_query_private_meta_for_collection_as_app(
-    app_api_client, published_collection, permission_manage_products, channel_USD
+    app_api_client, published_collection, permission_manage_rooms, channel_USD
 ):
     # given
     collection = published_collection
@@ -2302,7 +2302,7 @@ def test_query_private_meta_for_collection_as_app(
     response = app_api_client.post_graphql(
         QUERY_COLLECTION_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -2356,7 +2356,7 @@ def test_query_private_meta_for_digital_content_as_customer(
 
 
 def test_query_private_meta_for_digital_content_as_staff(
-    staff_api_client, digital_content, permission_manage_products
+    staff_api_client, digital_content, permission_manage_rooms
 ):
     # given
     digital_content.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
@@ -2367,7 +2367,7 @@ def test_query_private_meta_for_digital_content_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_DIGITAL_CONTENT_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -2379,7 +2379,7 @@ def test_query_private_meta_for_digital_content_as_staff(
 
 
 def test_query_private_meta_for_digital_content_as_app(
-    app_api_client, digital_content, permission_manage_products
+    app_api_client, digital_content, permission_manage_rooms
 ):
     # given
     digital_content.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
@@ -2390,7 +2390,7 @@ def test_query_private_meta_for_digital_content_as_app(
     response = app_api_client.post_graphql(
         QUERY_DIGITAL_CONTENT_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -2401,9 +2401,9 @@ def test_query_private_meta_for_digital_content_as_app(
     assert metadata["value"] == PRIVATE_VALUE
 
 
-QUERY_PRODUCT_PRIVATE_META = """
-    query productsMeta($id: ID!, $channel: String){
-        product(id: $id, channel: $channel){
+QUERY_ROOM_PRIVATE_META = """
+    query roomsMeta($id: ID!, $channel: String){
+        room(id: $id, channel: $channel){
             privateMetadata{
                 key
                 value
@@ -2413,89 +2413,89 @@ QUERY_PRODUCT_PRIVATE_META = """
 """
 
 
-def test_query_private_meta_for_product_as_anonymous_user(
-    api_client, product, channel_USD
+def test_query_private_meta_for_room_as_anonymous_user(
+    api_client, room, channel_USD
 ):
     # given
     variables = {
-        "id": graphene.Node.to_global_id("Product", product.pk),
+        "id": graphene.Node.to_global_id("Room", room.pk),
         "channel": channel_USD.slug,
     }
 
     # when
-    response = api_client.post_graphql(QUERY_PRODUCT_PRIVATE_META, variables)
+    response = api_client.post_graphql(QUERY_ROOM_PRIVATE_META, variables)
 
     # then
     assert_no_permission(response)
 
 
-def test_query_private_meta_for_product_as_customer(
-    user_api_client, product, channel_USD
+def test_query_private_meta_for_room_as_customer(
+    user_api_client, room, channel_USD
 ):
     # given
     variables = {
-        "id": graphene.Node.to_global_id("Product", product.pk),
+        "id": graphene.Node.to_global_id("Room", room.pk),
         "channel": channel_USD.slug,
     }
 
     # when
-    response = user_api_client.post_graphql(QUERY_PRODUCT_PRIVATE_META, variables)
+    response = user_api_client.post_graphql(QUERY_ROOM_PRIVATE_META, variables)
 
     # then
     assert_no_permission(response)
 
 
-def test_query_private_meta_for_product_as_staff(
-    staff_api_client, product, permission_manage_products
+def test_query_private_meta_for_room_as_staff(
+    staff_api_client, room, permission_manage_rooms
 ):
     # given
-    product.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
-    product.save(update_fields=["private_metadata"])
-    variables = {"id": graphene.Node.to_global_id("Product", product.pk)}
+    room.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
+    room.save(update_fields=["private_metadata"])
+    variables = {"id": graphene.Node.to_global_id("Room", room.pk)}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCT_PRIVATE_META,
+        QUERY_ROOM_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["product"]["privateMetadata"][0]
+    metadata = content["data"]["room"]["privateMetadata"][0]
     assert metadata["key"] == PRIVATE_KEY
     assert metadata["value"] == PRIVATE_VALUE
 
 
-def test_query_private_meta_for_product_as_app(
-    app_api_client, product, permission_manage_products
+def test_query_private_meta_for_room_as_app(
+    app_api_client, room, permission_manage_rooms
 ):
     # given
-    product.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
-    product.save(update_fields=["private_metadata"])
+    room.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
+    room.save(update_fields=["private_metadata"])
     variables = {
-        "id": graphene.Node.to_global_id("Product", product.pk),
+        "id": graphene.Node.to_global_id("Room", room.pk),
     }
 
     # when
     response = app_api_client.post_graphql(
-        QUERY_PRODUCT_PRIVATE_META,
+        QUERY_ROOM_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["product"]["privateMetadata"][0]
+    metadata = content["data"]["room"]["privateMetadata"][0]
     assert metadata["key"] == PRIVATE_KEY
     assert metadata["value"] == PRIVATE_VALUE
 
 
-QUERY_PRODUCT_TYPE_PRIVATE_META = """
-    query productTypeMeta($id: ID!){
-        productType(id: $id){
+QUERY_ROOM_TYPE_PRIVATE_META = """
+    query roomTypeMeta($id: ID!){
+        roomType(id: $id){
             privateMetadata{
                 key
                 value
@@ -2505,79 +2505,79 @@ QUERY_PRODUCT_TYPE_PRIVATE_META = """
 """
 
 
-def test_query_private_meta_for_product_type_as_anonymous_user(
-    api_client, product_type
+def test_query_private_meta_for_room_type_as_anonymous_user(
+    api_client, room_type
 ):
     # given
-    variables = {"id": graphene.Node.to_global_id("ProductType", product_type.pk)}
+    variables = {"id": graphene.Node.to_global_id("RoomType", room_type.pk)}
 
     # when
-    response = api_client.post_graphql(QUERY_PRODUCT_TYPE_PRIVATE_META, variables)
+    response = api_client.post_graphql(QUERY_ROOM_TYPE_PRIVATE_META, variables)
 
     # then
     assert_no_permission(response)
 
 
-def test_query_private_meta_for_product_type_as_customer(user_api_client, product_type):
+def test_query_private_meta_for_room_type_as_customer(user_api_client, room_type):
     # given
-    variables = {"id": graphene.Node.to_global_id("ProductType", product_type.pk)}
+    variables = {"id": graphene.Node.to_global_id("RoomType", room_type.pk)}
 
     # when
-    response = user_api_client.post_graphql(QUERY_PRODUCT_TYPE_PRIVATE_META, variables)
+    response = user_api_client.post_graphql(QUERY_ROOM_TYPE_PRIVATE_META, variables)
 
     # then
     assert_no_permission(response)
 
 
-def test_query_private_meta_for_product_type_as_staff(
-    staff_api_client, product_type, permission_manage_product_types_and_attributes
+def test_query_private_meta_for_room_type_as_staff(
+    staff_api_client, room_type, permission_manage_room_types_and_attributes
 ):
     # given
-    product_type.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
-    product_type.save(update_fields=["private_metadata"])
-    variables = {"id": graphene.Node.to_global_id("ProductType", product_type.pk)}
+    room_type.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
+    room_type.save(update_fields=["private_metadata"])
+    variables = {"id": graphene.Node.to_global_id("RoomType", room_type.pk)}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCT_TYPE_PRIVATE_META,
+        QUERY_ROOM_TYPE_PRIVATE_META,
         variables,
-        [permission_manage_product_types_and_attributes],
+        [permission_manage_room_types_and_attributes],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productType"]["privateMetadata"][0]
+    metadata = content["data"]["roomType"]["privateMetadata"][0]
     assert metadata["key"] == PRIVATE_KEY
     assert metadata["value"] == PRIVATE_VALUE
 
 
-def test_query_private_meta_for_product_type_as_app(
-    app_api_client, product_type, permission_manage_product_types_and_attributes
+def test_query_private_meta_for_room_type_as_app(
+    app_api_client, room_type, permission_manage_room_types_and_attributes
 ):
     # given
-    product_type.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
-    product_type.save(update_fields=["private_metadata"])
-    variables = {"id": graphene.Node.to_global_id("ProductType", product_type.pk)}
+    room_type.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
+    room_type.save(update_fields=["private_metadata"])
+    variables = {"id": graphene.Node.to_global_id("RoomType", room_type.pk)}
 
     # when
     response = app_api_client.post_graphql(
-        QUERY_PRODUCT_TYPE_PRIVATE_META,
+        QUERY_ROOM_TYPE_PRIVATE_META,
         variables,
-        [permission_manage_product_types_and_attributes],
+        [permission_manage_room_types_and_attributes],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productType"]["privateMetadata"][0]
+    metadata = content["data"]["roomType"]["privateMetadata"][0]
     assert metadata["key"] == PRIVATE_KEY
     assert metadata["value"] == PRIVATE_VALUE
 
 
-QUERY_PRODUCT_VARIANT_PRIVATE_META = """
-    query productVariantMeta($id: ID!, $channel: String){
-        productVariant(id: $id, channel: $channel){
+QUERY_ROOM_VARIANT_PRIVATE_META = """
+    query roomVariantMeta($id: ID!, $channel: String){
+        roomVariant(id: $id, channel: $channel){
             privateMetadata{
                 key
                 value
@@ -2587,88 +2587,88 @@ QUERY_PRODUCT_VARIANT_PRIVATE_META = """
 """
 
 
-def test_query_private_meta_for_product_variant_as_anonymous_user(
+def test_query_private_meta_for_room_variant_as_anonymous_user(
     api_client, variant, channel_USD
 ):
     # given
     variant.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
     variant.save(update_fields=["private_metadata"])
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant.pk),
         "channel": channel_USD.slug,
     }
 
     # when
-    response = api_client.post_graphql(QUERY_PRODUCT_VARIANT_PRIVATE_META, variables)
+    response = api_client.post_graphql(QUERY_ROOM_VARIANT_PRIVATE_META, variables)
 
     # then
     assert_no_permission(response)
 
 
-def test_query_private_meta_for_product_variant_as_customer(
+def test_query_private_meta_for_room_variant_as_customer(
     user_api_client, variant, channel_USD
 ):
     # given
     variant.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
     variant.save(update_fields=["private_metadata"])
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant.pk),
         "channel": channel_USD.slug,
     }
 
     # when
     response = user_api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_PRIVATE_META, variables
+        QUERY_ROOM_VARIANT_PRIVATE_META, variables
     )
 
     # then
     assert_no_permission(response)
 
 
-def test_query_private_meta_for_product_variant_as_staff(
-    staff_api_client, variant, permission_manage_products
+def test_query_private_meta_for_room_variant_as_staff(
+    staff_api_client, variant, permission_manage_rooms
 ):
     # given
     variant.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
     variant.save(update_fields=["private_metadata"])
-    variables = {"id": graphene.Node.to_global_id("ProductVariant", variant.pk)}
+    variables = {"id": graphene.Node.to_global_id("RoomVariant", variant.pk)}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_PRIVATE_META,
+        QUERY_ROOM_VARIANT_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productVariant"]["privateMetadata"][0]
+    metadata = content["data"]["roomVariant"]["privateMetadata"][0]
     assert metadata["key"] == PRIVATE_KEY
     assert metadata["value"] == PRIVATE_VALUE
 
 
-def test_query_private_meta_for_product_variant_as_app(
-    app_api_client, variant, permission_manage_products
+def test_query_private_meta_for_room_variant_as_app(
+    app_api_client, variant, permission_manage_rooms
 ):
     # given
     variant.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
     variant.save(update_fields=["private_metadata"])
     variables = {
-        "id": graphene.Node.to_global_id("ProductVariant", variant.pk),
+        "id": graphene.Node.to_global_id("RoomVariant", variant.pk),
     }
 
     # when
     response = app_api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_PRIVATE_META,
+        QUERY_ROOM_VARIANT_PRIVATE_META,
         variables,
-        [permission_manage_products],
+        [permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
 
     # then
-    metadata = content["data"]["productVariant"]["privateMetadata"][0]
+    metadata = content["data"]["roomVariant"]["privateMetadata"][0]
     assert metadata["key"] == PRIVATE_KEY
     assert metadata["value"] == PRIVATE_VALUE
 

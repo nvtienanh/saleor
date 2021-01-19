@@ -3,7 +3,7 @@ from collections import defaultdict
 from django.db.models import F
 
 from ...order.models import Order, OrderLine
-from ...warehouse.models import Allocation
+from ...hotel.models import Allocation
 from ..core.dataloaders import DataLoader
 
 

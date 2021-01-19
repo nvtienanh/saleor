@@ -6,18 +6,18 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0069_auto_20180912_0326")]
+    dependencies = [("room", "0069_auto_20180912_0326")]
 
     operations = [
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="attributes",
             field=django.contrib.postgres.fields.hstore.HStoreField(
                 blank=True, default=dict
             ),
         ),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="attributes",
             field=django.contrib.postgres.fields.hstore.HStoreField(
                 blank=True, default=dict

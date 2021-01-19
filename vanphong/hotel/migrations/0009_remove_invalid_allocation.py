@@ -7,7 +7,7 @@ CANCELED = "canceled"
 
 
 def remove_invalid_allocations(apps, schema_editor):
-    Allocation = apps.get_model("warehouse", "Allocation")
+    Allocation = apps.get_model("hotel", "Allocation")
     invalid_allocation = Allocation.objects.filter(
         order_line__order__status__in=[DRAFT, CANCELED]
     )
@@ -17,7 +17,7 @@ def remove_invalid_allocations(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("warehouse", "0008_auto_20200430_0239"),
+        ("hotel", "0008_auto_20200430_0239"),
     ]
 
     operations = [

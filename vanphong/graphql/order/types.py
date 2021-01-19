@@ -5,16 +5,16 @@ from promise import Promise
 
 from ...core.anonymize import obfuscate_address, obfuscate_email
 from ...core.exceptions import PermissionDenied
-from ...core.permissions import AccountPermissions, OrderPermissions, ProductPermissions
+from ...core.permissions import AccountPermissions, OrderPermissions, RoomPermissions
 from ...core.taxes import display_gross_prices
 from ...graphql.utils import get_user_or_app_from_context
 from ...order import OrderStatus, models
 from ...order.models import FulfillmentStatus
 from ...order.utils import get_order_country, get_valid_shipping_methods_for_order
 from ...plugins.manager import get_plugins_manager
-from ...product.models import Product
-from ...product.templatetags.product_images import get_product_image_thumbnail
-from ...warehouse import models as warehouse_models
+from ...room.models import Room
+from ...room.templatetags.room_images import get_room_image_thumbnail
+from ...hotel import models as hotel_models
 from ..account.types import User
 from ..account.utils import requestor_has_access
 from ..channel import ChannelContext
@@ -28,14 +28,14 @@ from ..giftcard.types import GiftCard
 from ..invoice.types import Invoice
 from ..meta.types import ObjectWithMetadata
 from ..payment.types import OrderAction, Payment, PaymentChargeStatusEnum
-from ..product.dataloaders import (
-    ProductChannelListingByProductIdAndChannelSlugLoader,
-    ProductVariantByIdLoader,
+from ..room.dataloaders import (
+    RoomChannelListingByRoomIdAndChannelSlugLoader,
+    RoomVariantByIdLoader,
 )
-from ..product.types import ProductVariant
+from ..room.types import RoomVariant
 from ..shipping.dataloaders import ShippingMethodByIdLoader
 from ..shipping.types import ShippingMethod
-from ..warehouse.types import Allocation, Warehouse
+from ..hotel.types import Allocation, Hotel
 from .dataloaders import AllocationsByOrderLineIdLoader, OrderLinesByOrderIdLoader
 from .enums import OrderEventsEmailsEnum, OrderEventsEnum
 from .utils import validate_draft_order
@@ -74,8 +74,8 @@ class OrderEvent(CountableDjangoObjectType):
     fulfilled_items = graphene.List(
         lambda: FulfillmentLine, description="The lines fulfilled."
     )
-    warehouse = graphene.Field(
-        Warehouse, description="The warehouse were items were restocked."
+    hotel = graphene.Field(
+        Hotel, description="The hotel were items were restocked."
     )
     transaction_reference = graphene.String(
         description="The transaction reference of captured payment."
@@ -182,9 +182,9 @@ class OrderEvent(CountableDjangoObjectType):
         return models.FulfillmentLine.objects.filter(pk__in=lines)
 
     @staticmethod
-    def resolve_warehouse(root: models.OrderEvent, _info):
-        warehouse = root.parameters.get("warehouse")
-        return warehouse_models.Warehouse.objects.filter(pk=warehouse).first()
+    def resolve_hotel(root: models.OrderEvent, _info):
+        hotel = root.parameters.get("hotel")
+        return hotel_models.Hotel.objects.filter(pk=hotel).first()
 
     @staticmethod
     def resolve_transaction_reference(root: models.OrderEvent, _info):
@@ -214,10 +214,10 @@ class Fulfillment(CountableDjangoObjectType):
         FulfillmentLine, description="List of lines for the fulfillment."
     )
     status_display = graphene.String(description="User-friendly fulfillment status.")
-    warehouse = graphene.Field(
-        Warehouse,
+    hotel = graphene.Field(
+        Hotel,
         required=False,
-        description=("Warehouse from fulfillment was fulfilled."),
+        description=("Hotel from fulfillment was fulfilled."),
     )
 
     class Meta:
@@ -241,15 +241,15 @@ class Fulfillment(CountableDjangoObjectType):
         return root.get_status_display()
 
     @staticmethod
-    def resolve_warehouse(root: models.Fulfillment, _info):
+    def resolve_hotel(root: models.Fulfillment, _info):
         line = root.lines.first()
-        return line.stock.warehouse if line and line.stock else None
+        return line.stock.hotel if line and line.stock else None
 
 
 class OrderLine(CountableDjangoObjectType):
     thumbnail = graphene.Field(
         Image,
-        description="The main thumbnail for the ordered product.",
+        description="The main thumbnail for the ordered room.",
         size=graphene.Argument(graphene.Int, description="Size of thumbnail."),
     )
     unit_price = graphene.Field(
@@ -260,22 +260,22 @@ class OrderLine(CountableDjangoObjectType):
         description="Price of the order line.",
     )
     variant = graphene.Field(
-        ProductVariant,
+        RoomVariant,
         required=False,
         description=(
-            "A purchased product variant. Note: this field may be null if the variant "
+            "A purchased room variant. Note: this field may be null if the variant "
             "has been removed from stock at all."
         ),
     )
-    translated_product_name = graphene.String(
-        required=True, description="Product name in the customer's language"
+    translated_room_name = graphene.String(
+        required=True, description="Room name in the customer's language"
     )
     translated_variant_name = graphene.String(
         required=True, description="Variant name in the customer's language"
     )
     allocations = graphene.List(
         graphene.NonNull(Allocation),
-        description="List of allocations across warehouses.",
+        description="List of allocations across hotels.",
     )
 
     class Meta:
@@ -286,9 +286,9 @@ class OrderLine(CountableDjangoObjectType):
             "digital_content_url",
             "id",
             "is_shipping_required",
-            "product_name",
+            "room_name",
             "variant_name",
-            "product_sku",
+            "room_sku",
             "quantity",
             "quantity_fulfilled",
             "tax_rate",
@@ -300,7 +300,7 @@ class OrderLine(CountableDjangoObjectType):
             return None
         image = root.variant.get_first_image()
         if image:
-            url = get_product_image_thumbnail(image, size, method="thumbnail")
+            url = get_room_image_thumbnail(image, size, method="thumbnail")
             alt = image.alt
             return Image(alt=alt, url=info.context.build_absolute_uri(url))
         return None
@@ -314,8 +314,8 @@ class OrderLine(CountableDjangoObjectType):
         return root.total_price
 
     @staticmethod
-    def resolve_translated_product_name(root: models.OrderLine, _info):
-        return root.translated_product_name
+    def resolve_translated_room_name(root: models.OrderLine, _info):
+        return root.translated_room_name
 
     @staticmethod
     def resolve_translated_variant_name(root: models.OrderLine, _info):
@@ -331,31 +331,31 @@ class OrderLine(CountableDjangoObjectType):
             variant, channel = data
 
             requester = get_user_or_app_from_context(context)
-            requestor_has_access_to_all = Product.objects.user_has_access_to_all(
+            requestor_has_access_to_all = Room.objects.user_has_access_to_all(
                 requester
             )
             if requestor_has_access_to_all:
                 return ChannelContext(node=variant, channel_slug=channel.slug)
 
-            def product_is_available(product_channel_listing):
-                if product_channel_listing and product_channel_listing.is_visible:
+            def room_is_available(room_channel_listing):
+                if room_channel_listing and room_channel_listing.is_visible:
                     return ChannelContext(node=variant, channel_slug=channel.slug)
                 return None
 
             return (
-                ProductChannelListingByProductIdAndChannelSlugLoader(context)
-                .load((variant.product_id, channel.slug))
-                .then(product_is_available)
+                RoomChannelListingByRoomIdAndChannelSlugLoader(context)
+                .load((variant.room_id, channel.slug))
+                .then(room_is_available)
             )
 
-        variant = ProductVariantByIdLoader(context).load(root.variant_id)
+        variant = RoomVariantByIdLoader(context).load(root.variant_id)
         channel = ChannelByOrderLineIdLoader(context).load(root.id)
 
         return Promise.all([variant, channel]).then(requestor_has_access_to_variant)
 
     @staticmethod
     @one_of_permissions_required(
-        [ProductPermissions.MANAGE_PRODUCTS, OrderPermissions.MANAGE_ORDERS]
+        [RoomPermissions.MANAGE_ROOMS, OrderPermissions.MANAGE_ORDERS]
     )
     def resolve_allocations(root: models.OrderLine, info):
         return AllocationsByOrderLineIdLoader(info.context).load(root.id)

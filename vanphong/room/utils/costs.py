@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple
 from prices import MoneyRange
 
 from ...core.taxes import zero_money
-from ..models import ProductVariantChannelListing
+from ..models import RoomVariantChannelListing
 
 if TYPE_CHECKING:
     from prices import Money
@@ -20,8 +20,8 @@ class CostsData:
         self.margins = sorted(self.margins)
 
 
-def get_product_costs_data(
-    variant_channel_listings: Iterable[ProductVariantChannelListing],
+def get_room_costs_data(
+    variant_channel_listings: Iterable[RoomVariantChannelListing],
     has_variants: bool,
     currency: str,
 ) -> Tuple[MoneyRange, Tuple[float, float]]:
@@ -43,7 +43,7 @@ def get_product_costs_data(
 
 
 def get_cost_data_from_variant_channel_listing(
-    variant_channel_listings: Iterable["ProductVariantChannelListing"],
+    variant_channel_listings: Iterable["RoomVariantChannelListing"],
 ) -> CostsData:
     costs: List[CostsData] = []
     margins: List[float] = []
@@ -55,7 +55,7 @@ def get_cost_data_from_variant_channel_listing(
 
 
 def get_variant_costs_data(
-    variant_channel_listing: "ProductVariantChannelListing",
+    variant_channel_listing: "RoomVariantChannelListing",
 ) -> CostsData:
     costs = []
     margins = []
@@ -66,14 +66,14 @@ def get_variant_costs_data(
     return CostsData(costs, margins)
 
 
-def get_cost_price(variant_channel_listing: "ProductVariantChannelListing") -> "Money":
+def get_cost_price(variant_channel_listing: "RoomVariantChannelListing") -> "Money":
     if not variant_channel_listing.cost_price:
         return zero_money(variant_channel_listing.currency)
     return variant_channel_listing.cost_price
 
 
 def get_margin_for_variant_channel_listing(
-    variant_channel_listing: "ProductVariantChannelListing",
+    variant_channel_listing: "RoomVariantChannelListing",
 ) -> Optional[float]:
     if variant_channel_listing.cost_price is None:
         return None

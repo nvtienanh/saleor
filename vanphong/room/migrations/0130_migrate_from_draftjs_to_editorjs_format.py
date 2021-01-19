@@ -135,18 +135,18 @@ def get_block_data(text, key, list_data, editor_js_blocks):
 
 
 def migrate_draftjs_to_editorjs_format(apps, schema_editor):
-    Category = apps.get_model("product", "Category")
-    CategoryTranslation = apps.get_model("product", "CategoryTranslation")
-    Product = apps.get_model("product", "Product")
-    ProductTranslation = apps.get_model("product", "ProductTranslation")
-    Collection = apps.get_model("product", "Collection")
-    CollectionTranslation = apps.get_model("product", "CollectionTranslation")
+    Category = apps.get_model("room", "Category")
+    CategoryTranslation = apps.get_model("room", "CategoryTranslation")
+    Room = apps.get_model("room", "Room")
+    RoomTranslation = apps.get_model("room", "RoomTranslation")
+    Collection = apps.get_model("room", "Collection")
+    CollectionTranslation = apps.get_model("room", "CollectionTranslation")
 
     for model in [
         Category,
         CategoryTranslation,
-        Product,
-        ProductTranslation,
+        Room,
+        RoomTranslation,
         Collection,
         CollectionTranslation,
     ]:
@@ -188,7 +188,7 @@ def queryset_in_batches(queryset):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0129_add_product_types_and_attributes_perm"),
+        ("room", "0129_add_room_types_and_attributes_perm"),
     ]
 
     operations = [

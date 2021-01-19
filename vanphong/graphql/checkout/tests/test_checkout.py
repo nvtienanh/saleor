@@ -27,9 +27,9 @@ from ....payment import TransactionKind
 from ....payment.interface import GatewayResponse
 from ....plugins.manager import PluginsManager, get_plugins_manager
 from ....plugins.tests.sample_plugins import ActiveDummyPaymentGateway
-from ....product.models import ProductChannelListing
+from ....room.models import RoomChannelListing
 from ....shipping import models as shipping_models
-from ....warehouse.models import Stock
+from ....hotel.models import Stock
 from ...tests.utils import assert_no_permission, get_graphql_content
 from ..mutations import (
     clean_shipping_method,
@@ -125,8 +125,8 @@ def test_checkout_create_triggers_webhooks(
 ):
     """Create checkout object using GraphQL API."""
     settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     shipping_address = graphql_address_data
     variables = {
         "checkoutInput": {
@@ -146,8 +146,8 @@ def test_checkout_create_triggers_webhooks(
 def test_checkout_create_with_default_channel(
     api_client, stock, graphql_address_data, channel_USD
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -180,8 +180,8 @@ def test_checkout_create_with_inactive_channel(
     channel.is_active = False
     channel.save()
 
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -207,8 +207,8 @@ def test_checkout_create_with_inactive_default_channel(
     channel_USD.is_active = False
     channel_USD.save()
 
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -241,8 +241,8 @@ def test_checkout_create_with_inactive_and_active_default_channel(
     channel_PLN.is_active = False
     channel_PLN.save()
 
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -275,8 +275,8 @@ def test_checkout_create_with_inactive_and_two_active_default_channel(
     channel_USD.is_active = False
     channel_USD.save()
 
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -298,8 +298,8 @@ def test_checkout_create_with_inactive_and_two_active_default_channel(
 def test_checkout_create_with_many_active_default_channel(
     api_client, stock, graphql_address_data, channel_USD, channel_PLN
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -325,8 +325,8 @@ def test_checkout_create_with_many_inactive_default_channel(
     channel_USD.save()
     channel_PLN.is_active = False
     channel_PLN.save()
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -348,8 +348,8 @@ def test_checkout_create_with_many_inactive_default_channel(
 def test_checkout_create_with_multiple_channel_without_channel_slug(
     api_client, stock, graphql_address_data, channel_USD, channel_PLN
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -371,8 +371,8 @@ def test_checkout_create_with_multiple_channel_without_channel_slug(
 def test_checkout_create_with_multiple_channel_with_channel_slug(
     api_client, stock, graphql_address_data, channel_USD, channel_PLN
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -405,8 +405,8 @@ def test_checkout_create_with_multiple_channel_with_channel_slug(
 def test_checkout_create_with_existing_checkout_in_other_channel(
     user_api_client, stock, graphql_address_data, channel_USD, user_checkout_PLN
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     old_checkout = Checkout.objects.first()
@@ -435,8 +435,8 @@ def test_checkout_create_with_inactive_channel_slug(
     channel = channel_USD
     channel.is_active = False
     channel.save()
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -457,8 +457,8 @@ def test_checkout_create_with_inactive_channel_slug(
 
 def test_checkout_create(api_client, stock, graphql_address_data, channel_USD):
     """Create checkout object using GraphQL API."""
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -503,8 +503,8 @@ def test_checkout_create(api_client, stock, graphql_address_data, channel_USD):
 def test_checkout_create_with_invalid_channel_slug(
     api_client, stock, graphql_address_data, channel_USD
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     invalid_slug = "invalid-slug"
     shipping_address = graphql_address_data
@@ -524,11 +524,11 @@ def test_checkout_create_with_invalid_channel_slug(
     assert error["field"] == "channel"
 
 
-def test_checkout_create_multiple_warehouse(
+def test_checkout_create_multiple_hotel(
     api_client, variant_with_many_stocks, graphql_address_data, channel_USD
 ):
     variant = variant_with_many_stocks
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -558,8 +558,8 @@ def test_checkout_create_multiple_warehouse(
 
 def test_checkout_create_with_null_as_addresses(api_client, stock, channel_USD):
     """Create checkout object using GraphQL API."""
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     variables = {
         "checkoutInput": {
@@ -594,7 +594,7 @@ def test_checkout_create_with_variant_without_inventory_tracking(
 ):
     """Create checkout object using GraphQL API."""
     variant = variant_without_inventory_tracking
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     variables = {
         "checkoutInput": {
@@ -648,8 +648,8 @@ def test_checkout_create_cannot_add_invalid_quantities(
     expected_error_message,
     error_code,
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -678,9 +678,9 @@ def test_checkout_create_reuse_checkout(checkout, user_api_client, stock):
     # assign user to the checkout
     checkout.user = user_api_client.user
     checkout.save()
-    variant = stock.product_variant
+    variant = stock.room_variant
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     variables = {
         "checkoutInput": {
             "lines": [{"quantity": 1, "variantId": variant_id}],
@@ -703,8 +703,8 @@ def test_checkout_create_reuse_checkout(checkout, user_api_client, stock):
 
 
 def test_checkout_create_required_email(api_client, stock, channel_USD):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     variables = {
         "checkoutInput": {
             "channel": channel_USD.slug,
@@ -728,8 +728,8 @@ def test_checkout_create_required_email(api_client, stock, channel_USD):
 def test_checkout_create_required_country_shipping_address(
     api_client, stock, graphql_address_data, channel_USD
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     shipping_address = graphql_address_data
     del shipping_address["country"]
     variables = {
@@ -752,8 +752,8 @@ def test_checkout_create_required_country_shipping_address(
 def test_checkout_create_required_country_billing_address(
     api_client, stock, graphql_address_data, channel_USD
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     billing_address = graphql_address_data
     del billing_address["country"]
     variables = {
@@ -776,8 +776,8 @@ def test_checkout_create_required_country_billing_address(
 def test_checkout_create_default_email_for_logged_in_customer(
     user_api_client, stock, channel_USD
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     variables = {
         "checkoutInput": {
             "lines": [{"quantity": 1, "variantId": variant_id}],
@@ -796,8 +796,8 @@ def test_checkout_create_default_email_for_logged_in_customer(
 
 
 def test_checkout_create_logged_in_customer(user_api_client, stock, channel_USD):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     variables = {
         "checkoutInput": {
             "channel": channel_USD.slug,
@@ -831,8 +831,8 @@ def test_checkout_create_logged_in_customer(user_api_client, stock, channel_USD)
 def test_checkout_create_logged_in_customer_custom_email(
     user_api_client, stock, channel_USD
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     customer = user_api_client.user
     custom_email = "custom@example.com"
     variables = {
@@ -858,8 +858,8 @@ def test_checkout_create_logged_in_customer_custom_email(
 def test_checkout_create_logged_in_customer_custom_addresses(
     user_api_client, stock, graphql_address_data, channel_USD
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     shipping_address = graphql_address_data
     billing_address = graphql_address_data
     variables = {
@@ -889,12 +889,12 @@ def test_checkout_create_logged_in_customer_custom_addresses(
     assert new_checkout.billing_address.first_name == billing_address["firstName"]
 
 
-def test_checkout_create_check_lines_quantity_multiple_warehouse(
+def test_checkout_create_check_lines_quantity_multiple_hotel(
     user_api_client, variant_with_many_stocks, graphql_address_data, channel_USD
 ):
     variant = variant_with_many_stocks
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -910,7 +910,7 @@ def test_checkout_create_check_lines_quantity_multiple_warehouse(
     content = get_graphql_content(response)
     data = content["data"]["checkoutCreate"]
     assert data["checkoutErrors"][0]["message"] == (
-        "Could not add item Test product (SKU_A). Only 7 remaining in stock."
+        "Could not add item Test room (SKU_A). Only 7 remaining in stock."
     )
     assert data["checkoutErrors"][0]["field"] == "quantity"
 
@@ -923,7 +923,7 @@ def test_checkout_create_sets_country_from_shipping_address_country(
     channel_USD,
 ):
     variant = variant_with_many_stocks_different_shipping_zones
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     shipping_address["country"] = "US"
@@ -958,9 +958,9 @@ def test_checkout_create_check_lines_quantity_for_zone_insufficient_stocks(
     shipping address INSUFICIENT_STOCK checkout error should be raised."""
     variant = variant_with_many_stocks_different_shipping_zones
     Stock.objects.filter(
-        warehouse__shipping_zones__countries__contains="US", product_variant=variant
+        hotel__shipping_zones__countries__contains="US", room_variant=variant
     ).update(quantity=0)
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     shipping_address["country"] = "US"
@@ -987,8 +987,8 @@ def test_checkout_create_check_lines_quantity_for_zone_insufficient_stocks(
 def test_checkout_create_check_lines_quantity(
     user_api_client, stock, graphql_address_data, channel_USD
 ):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -1004,21 +1004,21 @@ def test_checkout_create_check_lines_quantity(
     content = get_graphql_content(response)
     data = content["data"]["checkoutCreate"]
     assert data["checkoutErrors"][0]["message"] == (
-        "Could not add item Test product (SKU_A). Only 15 remaining in stock."
+        "Could not add item Test room (SKU_A). Only 15 remaining in stock."
     )
     assert data["checkoutErrors"][0]["field"] == "quantity"
 
 
-def test_checkout_create_unavailable_for_purchase_product(
+def test_checkout_create_unavailable_for_purchase_room(
     user_api_client, stock, graphql_address_data, channel_USD
 ):
     # given
-    variant = stock.product_variant
-    product = variant.product
+    variant = stock.room_variant
+    room = variant.room
 
-    product.channel_listings.update(available_for_purchase=None)
+    room.channel_listings.update(available_for_purchase=None)
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -1041,22 +1041,22 @@ def test_checkout_create_unavailable_for_purchase_product(
     errors = data["checkoutErrors"]
     assert len(errors) == 1
     assert errors[0]["field"] == "lines"
-    assert errors[0]["code"] == CheckoutErrorCode.PRODUCT_UNAVAILABLE_FOR_PURCHASE.name
+    assert errors[0]["code"] == CheckoutErrorCode.ROOM_UNAVAILABLE_FOR_PURCHASE.name
     assert errors[0]["variants"] == [variant_id]
 
 
-def test_checkout_create_available_for_purchase_from_tomorrow_product(
+def test_checkout_create_available_for_purchase_from_tomorrow_room(
     user_api_client, stock, graphql_address_data, channel_USD
 ):
     # given
-    variant = stock.product_variant
-    product = variant.product
+    variant = stock.room_variant
+    room = variant.room
 
-    product.channel_listings.update(
+    room.channel_listings.update(
         available_for_purchase=datetime.date.today() + datetime.timedelta(days=1)
     )
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     test_email = "test@example.com"
     shipping_address = graphql_address_data
     variables = {
@@ -1079,7 +1079,7 @@ def test_checkout_create_available_for_purchase_from_tomorrow_product(
     errors = data["checkoutErrors"]
     assert len(errors) == 1
     assert errors[0]["field"] == "lines"
-    assert errors[0]["code"] == CheckoutErrorCode.PRODUCT_UNAVAILABLE_FOR_PURCHASE.name
+    assert errors[0]["code"] == CheckoutErrorCode.ROOM_UNAVAILABLE_FOR_PURCHASE.name
     assert errors[0]["variants"] == [variant_id]
 
 
@@ -1310,11 +1310,11 @@ MUTATION_CHECKOUT_LINES_ADD = """
 def test_checkout_lines_add(
     mocked_update_shipping_method, user_api_client, checkout_with_item, stock
 ):
-    variant = stock.product_variant
+    variant = stock.room_variant
     checkout = checkout_with_item
     line = checkout.lines.first()
     assert line.quantity == 3
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -1335,16 +1335,16 @@ def test_checkout_lines_add(
     mocked_update_shipping_method.assert_called_once_with(checkout, lines, mock.ANY)
 
 
-def test_checkout_lines_add_with_unpublished_product(
+def test_checkout_lines_add_with_unpublished_room(
     user_api_client, checkout_with_item, stock, channel_USD
 ):
-    variant = stock.product_variant
-    product = variant.product
-    ProductChannelListing.objects.filter(product=product, channel=channel_USD).update(
+    variant = stock.room_variant
+    room = variant.room
+    RoomChannelListing.objects.filter(room=room, channel=channel_USD).update(
         is_published=False
     )
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout_with_item.pk)
 
     variables = {
@@ -1357,18 +1357,18 @@ def test_checkout_lines_add_with_unpublished_product(
 
     content = get_graphql_content(response)
     error = content["data"]["checkoutLinesAdd"]["checkoutErrors"][0]
-    assert error["code"] == CheckoutErrorCode.PRODUCT_NOT_PUBLISHED.name
+    assert error["code"] == CheckoutErrorCode.ROOM_NOT_PUBLISHED.name
 
 
-def test_checkout_lines_add_with_unavailable_for_purchase_product(
+def test_checkout_lines_add_with_unavailable_for_purchase_room(
     user_api_client, checkout_with_item, stock
 ):
     # given
-    variant = stock.product_variant
-    product = stock.product_variant.product
-    product.channel_listings.update(available_for_purchase=None)
+    variant = stock.room_variant
+    room = stock.room_variant.room
+    room.channel_listings.update(available_for_purchase=None)
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout_with_item.pk)
 
     variables = {
@@ -1383,21 +1383,21 @@ def test_checkout_lines_add_with_unavailable_for_purchase_product(
     content = get_graphql_content(response)
     error = content["data"]["checkoutLinesAdd"]["checkoutErrors"][0]
     assert error["field"] == "lines"
-    assert error["code"] == CheckoutErrorCode.PRODUCT_UNAVAILABLE_FOR_PURCHASE.name
+    assert error["code"] == CheckoutErrorCode.ROOM_UNAVAILABLE_FOR_PURCHASE.name
     assert error["variants"] == [variant_id]
 
 
-def test_checkout_lines_add_with_available_for_purchase_from_tomorrow_product(
+def test_checkout_lines_add_with_available_for_purchase_from_tomorrow_room(
     user_api_client, checkout_with_item, stock
 ):
     # given
-    variant = stock.product_variant
-    product = stock.product_variant.product
-    product.channel_listings.update(
+    variant = stock.room_variant
+    room = stock.room_variant.room
+    room.channel_listings.update(
         available_for_purchase=datetime.date.today() + datetime.timedelta(days=1)
     )
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout_with_item.pk)
 
     variables = {
@@ -1412,13 +1412,13 @@ def test_checkout_lines_add_with_available_for_purchase_from_tomorrow_product(
     content = get_graphql_content(response)
     error = content["data"]["checkoutLinesAdd"]["checkoutErrors"][0]
     assert error["field"] == "lines"
-    assert error["code"] == CheckoutErrorCode.PRODUCT_UNAVAILABLE_FOR_PURCHASE.name
+    assert error["code"] == CheckoutErrorCode.ROOM_UNAVAILABLE_FOR_PURCHASE.name
     assert error["variants"] == [variant_id]
 
 
 def test_checkout_lines_add_too_many(user_api_client, checkout_with_item, stock):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout_with_item.pk)
 
     variables = {
@@ -1441,8 +1441,8 @@ def test_checkout_lines_add_too_many(user_api_client, checkout_with_item, stock)
 
 
 def test_checkout_lines_add_empty_checkout(user_api_client, checkout, stock):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -1463,7 +1463,7 @@ def test_checkout_lines_add_variant_without_inventory_tracking(
     user_api_client, checkout, variant_without_inventory_tracking
 ):
     variant = variant_without_inventory_tracking
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -1481,8 +1481,8 @@ def test_checkout_lines_add_variant_without_inventory_tracking(
 
 
 def test_checkout_lines_add_check_lines_quantity(user_api_client, checkout, stock):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -1493,14 +1493,14 @@ def test_checkout_lines_add_check_lines_quantity(user_api_client, checkout, stoc
     content = get_graphql_content(response)
     data = content["data"]["checkoutLinesAdd"]
     assert data["checkoutErrors"][0]["message"] == (
-        "Could not add item Test product (SKU_A). Only 15 remaining in stock."
+        "Could not add item Test room (SKU_A). Only 15 remaining in stock."
     )
     assert data["checkoutErrors"][0]["field"] == "quantity"
 
 
 def test_checkout_lines_invalid_variant_id(user_api_client, checkout, stock):
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     invalid_variant_id = "InvalidId"
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
@@ -1555,7 +1555,7 @@ def test_checkout_lines_update(
     variant = line.variant
     assert line.quantity == 3
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -1577,15 +1577,15 @@ def test_checkout_lines_update(
     mocked_update_shipping_method.assert_called_once_with(checkout, lines, mock.ANY)
 
 
-def test_create_checkout_with_unpublished_product(
+def test_create_checkout_with_unpublished_room(
     user_api_client, checkout_with_item, stock, channel_USD
 ):
-    variant = stock.product_variant
-    product = variant.product
-    ProductChannelListing.objects.filter(product=product, channel=channel_USD).update(
+    variant = stock.room_variant
+    room = variant.room
+    RoomChannelListing.objects.filter(room=room, channel=channel_USD).update(
         is_published=False
     )
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
 
     query = """
             mutation CreateCheckout($checkoutInput: CheckoutCreateInput!) {
@@ -1609,21 +1609,21 @@ def test_create_checkout_with_unpublished_product(
     }
     response = get_graphql_content(user_api_client.post_graphql(query, variables))
     error = response["data"]["checkoutCreate"]["checkoutErrors"][0]
-    assert error["code"] == CheckoutErrorCode.PRODUCT_NOT_PUBLISHED.name
+    assert error["code"] == CheckoutErrorCode.ROOM_NOT_PUBLISHED.name
 
 
-def test_checkout_lines_update_with_unpublished_product(
+def test_checkout_lines_update_with_unpublished_room(
     user_api_client, checkout_with_item, channel_USD
 ):
     checkout = checkout_with_item
     line = checkout.lines.first()
     variant = line.variant
-    product = variant.product
-    ProductChannelListing.objects.filter(product=product, channel=channel_USD).update(
+    room = variant.room
+    RoomChannelListing.objects.filter(room=room, channel=channel_USD).update(
         is_published=False
     )
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -1634,7 +1634,7 @@ def test_checkout_lines_update_with_unpublished_product(
 
     content = get_graphql_content(response)
     error = content["data"]["checkoutLinesUpdate"]["checkoutErrors"][0]
-    assert error["code"] == CheckoutErrorCode.PRODUCT_NOT_PUBLISHED.name
+    assert error["code"] == CheckoutErrorCode.ROOM_NOT_PUBLISHED.name
 
 
 def test_checkout_lines_update_invalid_checkout_id(user_api_client):
@@ -1652,7 +1652,7 @@ def test_checkout_lines_update_check_lines_quantity(
     line = checkout.lines.first()
     variant = line.variant
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -1664,7 +1664,7 @@ def test_checkout_lines_update_check_lines_quantity(
 
     data = content["data"]["checkoutLinesUpdate"]
     assert data["checkoutErrors"][0]["message"] == (
-        "Could not add item Test product (123). Only 10 remaining in stock."
+        "Could not add item Test room (123). Only 10 remaining in stock."
     )
     assert data["checkoutErrors"][0]["field"] == "quantity"
 
@@ -1676,8 +1676,8 @@ def test_checkout_lines_update_with_chosen_shipping(
     checkout.shipping_method = shipping_method
     checkout.save()
 
-    variant = stock.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = stock.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -1754,7 +1754,7 @@ def test_checkout_line_delete_by_zero_quantity(
     variant = line.variant
     assert line.quantity == 3
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -1986,7 +1986,7 @@ def test_checkout_shipping_address_update_insufficient_stocks(
     checkout.set_country("PL", commit=True)
     add_variant_to_checkout(checkout, variant, 1)
     Stock.objects.filter(
-        warehouse__shipping_zones__countries__contains="US", product_variant=variant
+        hotel__shipping_zones__countries__contains="US", room_variant=variant
     ).update(quantity=0)
     assert checkout.shipping_address is None
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
@@ -2211,7 +2211,7 @@ def test_fetch_checkout_by_token(user_api_client, checkout_with_item):
            token,
            lines {
                 variant {
-                    product {
+                    room {
                         name
                     }
                 }
@@ -2859,7 +2859,7 @@ def test_get_variant_data_from_checkout_line_variant_hidden_in_listings(
     """
     checkout = checkout_with_item
     variant = checkout.lines.get().variant
-    variant.product.channel_listings.update(visible_in_listings=False)
+    variant.room.channel_listings.update(visible_in_listings=False)
     variables = {"token": checkout.token}
 
     # when

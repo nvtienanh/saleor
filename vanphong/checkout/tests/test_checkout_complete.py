@@ -9,7 +9,7 @@ from ...core.taxes import zero_money, zero_taxed_money
 from ...order import OrderEvents, OrderEventsEmails
 from ...order.models import OrderEvent
 from ...plugins.manager import get_plugins_manager
-from ...product.models import ProductTranslation, ProductVariantTranslation
+from ...room.models import RoomTranslation, RoomVariantTranslation
 from ...tests.utils import flush_post_commit_hooks
 from .. import calculations
 from ..complete_checkout import _create_order, _prepare_order_data
@@ -499,9 +499,9 @@ def test_create_order_preauth_payment_creates_expected_events_anonymous_user(
 
 
 def test_create_order_insufficient_stock(
-    checkout, customer_user, product_without_shipping
+    checkout, customer_user, room_without_shipping
 ):
-    variant = product_without_shipping.variants.get()
+    variant = room_without_shipping.variants.get()
     add_variant_to_checkout(checkout, variant, 10, check_quantity=False)
     checkout.user = customer_user
     checkout.billing_address = customer_user.default_billing_address
@@ -759,7 +759,7 @@ def test_create_order_with_variant_tracking_false(
 def test_create_order_use_tanslations(
     checkout_with_item, customer_user, shipping_method
 ):
-    translated_product_name = "French name"
+    translated_room_name = "French name"
     translated_variant_name = "French variant name"
 
     checkout = checkout_with_item
@@ -775,16 +775,16 @@ def test_create_order_use_tanslations(
     lines = fetch_checkout_lines(checkout)
 
     variant = lines[0].variant
-    product = lines[0].product
+    room = lines[0].room
 
-    ProductTranslation.objects.create(
+    RoomTranslation.objects.create(
         language_code="fr",
-        product=product,
-        name=translated_product_name,
+        room=room,
+        name=translated_room_name,
     )
-    ProductVariantTranslation.objects.create(
+    RoomVariantTranslation.objects.create(
         language_code="fr",
-        product_variant=variant,
+        room_variant=variant,
         name=translated_variant_name,
     )
 
@@ -793,5 +793,5 @@ def test_create_order_use_tanslations(
     )
     order_line = order_data["lines"][0]
 
-    assert order_line.translated_product_name == translated_product_name
+    assert order_line.translated_room_name == translated_room_name
     assert order_line.translated_variant_name == translated_variant_name

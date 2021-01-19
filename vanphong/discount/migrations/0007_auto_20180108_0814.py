@@ -17,15 +17,15 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="sale",
             name="categories",
-            field=models.ManyToManyField(blank=True, to="product.Category"),
+            field=models.ManyToManyField(blank=True, to="room.Category"),
         ),
         migrations.AlterField(
             model_name="sale", name="name", field=models.CharField(max_length=255)
         ),
         migrations.AlterField(
             model_name="sale",
-            name="products",
-            field=models.ManyToManyField(blank=True, to="product.Product"),
+            name="rooms",
+            field=models.ManyToManyField(blank=True, to="room.Room"),
         ),
         migrations.AlterField(
             model_name="sale",
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to="product.Category",
+                to="room.Category",
             ),
         ),
         migrations.AlterField(
@@ -100,12 +100,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name="voucher",
-            name="product",
+            name="room",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to="product.Product",
+                to="room.Room",
             ),
         ),
         migrations.AlterField(
@@ -119,8 +119,8 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("value", "All purchases"),
-                    ("product", "One product"),
-                    ("category", "A category of products"),
+                    ("room", "One room"),
+                    ("category", "A category of rooms"),
                     ("shipping", "Shipping"),
                 ],
                 default="value",

@@ -4,10 +4,10 @@ from django.db import models
 from django.db.models import F, Q
 
 from ..core.models import ModelWithMetadata, SortableModel
-from ..core.permissions import ProductPermissions
+from ..core.permissions import RoomPermissions
 from ..core.utils.translations import TranslationProxy
 from ..page.models import Page, PageType
-from ..product.models import Product, ProductType, ProductVariant
+from ..room.models import Room, RoomType, RoomVariant
 from . import AttributeInputType, AttributeType
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class BaseAttributeQuerySet(models.QuerySet):
     @staticmethod
     def user_has_access_to_all(user: "User") -> bool:
-        return user.is_active and user.has_perm(ProductPermissions.MANAGE_PRODUCTS)
+        return user.is_active and user.has_perm(RoomPermissions.MANAGE_ROOMS)
 
     def get_public_attributes(self):
         raise NotImplementedError
@@ -46,25 +46,25 @@ class BaseAssignedAttribute(models.Model):
         return self.assignment.attribute_id
 
 
-class AssignedProductAttribute(BaseAssignedAttribute):
-    """Associate a product type attribute and selected values to a given product."""
+class AssignedRoomAttribute(BaseAssignedAttribute):
+    """Associate a room type attribute and selected values to a given room."""
 
-    product = models.ForeignKey(
-        Product, related_name="attributes", on_delete=models.CASCADE
+    room = models.ForeignKey(
+        Room, related_name="attributes", on_delete=models.CASCADE
     )
     assignment = models.ForeignKey(
-        "AttributeProduct", on_delete=models.CASCADE, related_name="productassignments"
+        "AttributeRoom", on_delete=models.CASCADE, related_name="roomassignments"
     )
 
     class Meta:
-        unique_together = (("product", "assignment"),)
+        unique_together = (("room", "assignment"),)
 
 
 class AssignedVariantAttribute(BaseAssignedAttribute):
-    """Associate a product type attribute and selected values to a given variant."""
+    """Associate a room type attribute and selected values to a given variant."""
 
     variant = models.ForeignKey(
-        ProductVariant, related_name="attributes", on_delete=models.CASCADE
+        RoomVariant, related_name="attributes", on_delete=models.CASCADE
     )
     assignment = models.ForeignKey(
         "AttributeVariant", on_delete=models.CASCADE, related_name="variantassignments"
@@ -91,40 +91,40 @@ class AssociatedAttributeQuerySet(BaseAttributeQuerySet):
         return self.filter(attribute__visible_in_storefront=True)
 
 
-class AttributeProduct(SortableModel):
+class AttributeRoom(SortableModel):
     attribute = models.ForeignKey(
-        "Attribute", related_name="attributeproduct", on_delete=models.CASCADE
+        "Attribute", related_name="attributeroom", on_delete=models.CASCADE
     )
-    product_type = models.ForeignKey(
-        ProductType, related_name="attributeproduct", on_delete=models.CASCADE
+    room_type = models.ForeignKey(
+        RoomType, related_name="attributeroom", on_delete=models.CASCADE
     )
-    assigned_products = models.ManyToManyField(
-        Product,
+    assigned_rooms = models.ManyToManyField(
+        Room,
         blank=True,
-        through=AssignedProductAttribute,
-        through_fields=("assignment", "product"),
+        through=AssignedRoomAttribute,
+        through_fields=("assignment", "room"),
         related_name="attributesrelated",
     )
 
     objects = AssociatedAttributeQuerySet.as_manager()
 
     class Meta:
-        unique_together = (("attribute", "product_type"),)
+        unique_together = (("attribute", "room_type"),)
         ordering = ("sort_order", "pk")
 
     def get_ordering_queryset(self):
-        return self.product_type.attributeproduct.all()
+        return self.room_type.attributeroom.all()
 
 
 class AttributeVariant(SortableModel):
     attribute = models.ForeignKey(
         "Attribute", related_name="attributevariant", on_delete=models.CASCADE
     )
-    product_type = models.ForeignKey(
-        ProductType, related_name="attributevariant", on_delete=models.CASCADE
+    room_type = models.ForeignKey(
+        RoomType, related_name="attributevariant", on_delete=models.CASCADE
     )
     assigned_variants = models.ManyToManyField(
-        ProductVariant,
+        RoomVariant,
         blank=True,
         through=AssignedVariantAttribute,
         through_fields=("assignment", "variant"),
@@ -134,11 +134,11 @@ class AttributeVariant(SortableModel):
     objects = AssociatedAttributeQuerySet.as_manager()
 
     class Meta:
-        unique_together = (("attribute", "product_type"),)
+        unique_together = (("attribute", "room_type"),)
         ordering = ("sort_order", "pk")
 
     def get_ordering_queryset(self):
-        return self.product_type.attributevariant.all()
+        return self.room_type.attributevariant.all()
 
 
 class AttributePage(SortableModel):
@@ -167,10 +167,10 @@ class AttributePage(SortableModel):
 
 
 class AttributeQuerySet(BaseAttributeQuerySet):
-    def get_unassigned_product_type_attributes(self, product_type_pk: int):
-        return self.product_type_attributes().exclude(
-            Q(attributeproduct__product_type_id=product_type_pk)
-            | Q(attributevariant__product_type_id=product_type_pk)
+    def get_unassigned_room_type_attributes(self, room_type_pk: int):
+        return self.room_type_attributes().exclude(
+            Q(attributeroom__room_type_id=room_type_pk)
+            | Q(attributevariant__room_type_id=room_type_pk)
         )
 
     def get_unassigned_page_type_attributes(self, page_type_pk: int):
@@ -178,15 +178,15 @@ class AttributeQuerySet(BaseAttributeQuerySet):
             attributepage__page_type_id=page_type_pk
         )
 
-    def get_assigned_product_type_attributes(self, product_type_pk: int):
-        return self.product_type_attributes().filter(
-            Q(attributeproduct__product_type_id=product_type_pk)
-            | Q(attributevariant__product_type_id=product_type_pk)
+    def get_assigned_room_type_attributes(self, room_type_pk: int):
+        return self.room_type_attributes().filter(
+            Q(attributeroom__room_type_id=room_type_pk)
+            | Q(attributevariant__room_type_id=room_type_pk)
         )
 
-    def get_assigned_page_type_attributes(self, product_type_pk: int):
+    def get_assigned_page_type_attributes(self, room_type_pk: int):
         return self.page_type_attributes().filter(
-            Q(attributepage__page_type_id=product_type_pk)
+            Q(attributepage__page_type_id=room_type_pk)
         )
 
     def get_public_attributes(self):
@@ -204,14 +204,14 @@ class AttributeQuerySet(BaseAttributeQuerySet):
 
         return self.order_by(sort_method, id_sort)
 
-    def product_attributes_sorted(self, asc=True):
-        return self._get_sorted_m2m_field("attributeproduct", asc)
+    def room_attributes_sorted(self, asc=True):
+        return self._get_sorted_m2m_field("attributeroom", asc)
 
     def variant_attributes_sorted(self, asc=True):
         return self._get_sorted_m2m_field("attributevariant", asc)
 
-    def product_type_attributes(self):
-        return self.filter(type=AttributeType.PRODUCT_TYPE)
+    def room_type_attributes(self):
+        return self.filter(type=AttributeType.ROOM_TYPE)
 
     def page_type_attributes(self):
         return self.filter(type=AttributeType.PAGE_TYPE)
@@ -228,19 +228,19 @@ class Attribute(ModelWithMetadata):
         default=AttributeInputType.DROPDOWN,
     )
 
-    product_types = models.ManyToManyField(
-        ProductType,
+    room_types = models.ManyToManyField(
+        RoomType,
         blank=True,
-        related_name="product_attributes",
-        through=AttributeProduct,
-        through_fields=("attribute", "product_type"),
+        related_name="room_attributes",
+        through=AttributeRoom,
+        through_fields=("attribute", "room_type"),
     )
-    product_variant_types = models.ManyToManyField(
-        ProductType,
+    room_variant_types = models.ManyToManyField(
+        RoomType,
         blank=True,
         related_name="variant_attributes",
         through=AttributeVariant,
-        through_fields=("attribute", "product_type"),
+        through_fields=("attribute", "room_type"),
     )
     page_types = models.ManyToManyField(
         PageType,

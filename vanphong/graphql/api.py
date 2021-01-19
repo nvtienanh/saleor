@@ -16,11 +16,11 @@ from .order.schema import OrderMutations, OrderQueries
 from .page.schema import PageMutations, PageQueries
 from .payment.schema import PaymentMutations, PaymentQueries
 from .plugins.schema import PluginsMutations, PluginsQueries
-from .product.schema import ProductMutations, ProductQueries
+from .room.schema import RoomMutations, RoomQueries
 from .shipping.schema import ShippingMutations, ShippingQueries
 from .shop.schema import ShopMutations, ShopQueries
 from .translations.schema import TranslationQueries
-from .warehouse.schema import StockQueries, WarehouseMutations, WarehouseQueries
+from .hotel.schema import StockQueries, HotelMutations, HotelQueries
 from .webhook.schema import WebhookMutations, WebhookQueries
 
 
@@ -39,12 +39,12 @@ class Query(
     OrderQueries,
     PageQueries,
     PaymentQueries,
-    ProductQueries,
+    RoomQueries,
     ShippingQueries,
     ShopQueries,
     StockQueries,
     TranslationQueries,
-    WarehouseQueries,
+    HotelQueries,
     WebhookQueries,
 ):
     pass
@@ -67,10 +67,10 @@ class Mutation(
     OrderMutations,
     PageMutations,
     PaymentMutations,
-    ProductMutations,
+    RoomMutations,
     ShippingMutations,
     ShopMutations,
-    WarehouseMutations,
+    HotelMutations,
     WebhookMutations,
 ):
     pass

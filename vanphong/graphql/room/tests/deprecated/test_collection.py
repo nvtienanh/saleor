@@ -8,7 +8,7 @@ def test_collections_query_with_default_channel_slug(
     user_api_client,
     published_collection,
     unpublished_collection,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     query = """
@@ -19,7 +19,7 @@ def test_collections_query_with_default_channel_slug(
                         name
                         slug
                         description
-                        products {
+                        rooms {
                             totalCount
                         }
                     }
@@ -39,8 +39,8 @@ def test_collections_query_with_default_channel_slug(
     assert collection_data["slug"] == published_collection.slug
     assert collection_data["description"] == published_collection.description
     assert (
-        collection_data["products"]["totalCount"]
-        == published_collection.products.count()
+        collection_data["rooms"]["totalCount"]
+        == published_collection.rooms.count()
     )
     assert any(
         [str(warning.message) == DEPRECATION_WARNING_MESSAGE for warning in warns]

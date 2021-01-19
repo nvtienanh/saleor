@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0088_auto_20190220_1928")]
+    dependencies = [("room", "0088_auto_20190220_1928")]
 
     operations = [
         migrations.AddField(
@@ -38,24 +38,24 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="description_json",
             field=django.contrib.postgres.fields.jsonb.JSONField(
                 blank=True, default=dict
             ),
         ),
         migrations.AddField(
-            model_name="producttranslation",
+            model_name="roomtranslation",
             name="description_json",
             field=django.contrib.postgres.fields.jsonb.JSONField(
                 blank=True, default=dict
             ),
         ),
         migrations.AlterField(
-            model_name="product", name="description", field=models.TextField(blank=True)
+            model_name="room", name="description", field=models.TextField(blank=True)
         ),
         migrations.AlterField(
-            model_name="producttranslation",
+            model_name="roomtranslation",
             name="description",
             field=models.TextField(blank=True),
         ),

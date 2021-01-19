@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("order", "0045_auto_20180329_0142"),
-        ("product", "0057_auto_20180403_0852"),
+        ("room", "0057_auto_20180403_0852"),
     ]
 
     operations = [
@@ -18,14 +18,14 @@ class Migration(migrations.Migration):
         migrations.RemoveField(model_name="stock", name="location"),
         migrations.RemoveField(model_name="stock", name="variant"),
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="cost_price",
             field=models.DecimalField(
                 blank=True, decimal_places=2, max_digits=12, null=True
             ),
         ),
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="quantity",
             field=models.IntegerField(
                 default=Decimal("1"),
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="quantity_allocated",
             field=models.IntegerField(
                 default=Decimal("0"),

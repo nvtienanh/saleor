@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0065_auto_20180719_0520")]
+    dependencies = [("room", "0065_auto_20180719_0520")]
 
     operations = [
         migrations.CreateModel(
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="translations",
-                        to="product.AttributeChoiceValue",
+                        to="room.AttributeChoiceValue",
                     ),
                 ),
             ],
@@ -72,7 +72,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="translations",
-                        to="product.Category",
+                        to="room.Category",
                     ),
                 ),
             ],
@@ -114,13 +114,13 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="translations",
-                        to="product.Collection",
+                        to="room.Collection",
                     ),
                 ),
             ],
         ),
         migrations.CreateModel(
-            name="ProductAttributeTranslation",
+            name="RoomAttributeTranslation",
             fields=[
                 (
                     "id",
@@ -134,17 +134,17 @@ class Migration(migrations.Migration):
                 ("language_code", models.CharField(max_length=10)),
                 ("name", models.CharField(max_length=100)),
                 (
-                    "product_attribute",
+                    "room_attribute",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="translations",
-                        to="product.ProductAttribute",
+                        to="room.RoomAttribute",
                     ),
                 ),
             ],
         ),
         migrations.CreateModel(
-            name="ProductTranslation",
+            name="RoomTranslation",
             fields=[
                 (
                     "id",
@@ -177,17 +177,17 @@ class Migration(migrations.Migration):
                 ("name", models.CharField(max_length=128)),
                 ("description", models.TextField()),
                 (
-                    "product",
+                    "room",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="translations",
-                        to="product.Product",
+                        to="room.Room",
                     ),
                 ),
             ],
         ),
         migrations.CreateModel(
-            name="ProductVariantTranslation",
+            name="RoomVariantTranslation",
             fields=[
                 (
                     "id",
@@ -201,25 +201,25 @@ class Migration(migrations.Migration):
                 ("language_code", models.CharField(max_length=10)),
                 ("name", models.CharField(blank=True, max_length=255)),
                 (
-                    "product_variant",
+                    "room_variant",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="translations",
-                        to="product.ProductVariant",
+                        to="room.RoomVariant",
                     ),
                 ),
             ],
         ),
         migrations.AlterUniqueTogether(
-            name="productvarianttranslation",
-            unique_together={("language_code", "product_variant")},
+            name="roomvarianttranslation",
+            unique_together={("language_code", "room_variant")},
         ),
         migrations.AlterUniqueTogether(
-            name="producttranslation", unique_together={("language_code", "product")}
+            name="roomtranslation", unique_together={("language_code", "room")}
         ),
         migrations.AlterUniqueTogether(
-            name="productattributetranslation",
-            unique_together={("language_code", "product_attribute")},
+            name="roomattributetranslation",
+            unique_together={("language_code", "room_attribute")},
         ),
         migrations.AlterUniqueTogether(
             name="collectiontranslation",

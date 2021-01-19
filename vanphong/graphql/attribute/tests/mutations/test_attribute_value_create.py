@@ -51,7 +51,7 @@ CREATE_ATTRIBUTE_VALUE_MUTATION = """
 
 
 def test_create_attribute_value(
-    staff_api_client, color_attribute, permission_manage_products
+    staff_api_client, color_attribute, permission_manage_rooms
 ):
     # given
     attribute = color_attribute
@@ -62,7 +62,7 @@ def test_create_attribute_value(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
@@ -78,7 +78,7 @@ def test_create_attribute_value(
 
 
 def test_create_attribute_value_not_unique_name(
-    staff_api_client, color_attribute, permission_manage_products
+    staff_api_client, color_attribute, permission_manage_rooms
 ):
     # given
     attribute = color_attribute
@@ -89,7 +89,7 @@ def test_create_attribute_value_not_unique_name(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
@@ -101,7 +101,7 @@ def test_create_attribute_value_not_unique_name(
 
 
 def test_create_attribute_value_capitalized_name(
-    staff_api_client, color_attribute, permission_manage_products
+    staff_api_client, color_attribute, permission_manage_rooms
 ):
     # given
     attribute = color_attribute
@@ -112,7 +112,7 @@ def test_create_attribute_value_capitalized_name(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then

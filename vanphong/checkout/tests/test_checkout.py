@@ -209,9 +209,9 @@ def test_get_discount_for_checkout_entire_order_voucher_not_applicable(
         (10, DiscountValueType.PERCENTAGE, False, 6),
     ],
 )
-def test_get_discount_for_checkout_specific_products_voucher(
+def test_get_discount_for_checkout_specific_rooms_voucher(
     checkout_with_items,
-    product_list,
+    room_list,
     discount_value,
     discount_type,
     apply_once_per_order,
@@ -220,7 +220,7 @@ def test_get_discount_for_checkout_specific_products_voucher(
 ):
     voucher = Voucher.objects.create(
         code="unique",
-        type=VoucherType.SPECIFIC_PRODUCT,
+        type=VoucherType.SPECIFIC_ROOM,
         discount_value_type=discount_type,
         apply_once_per_order=apply_once_per_order,
     )
@@ -229,8 +229,8 @@ def test_get_discount_for_checkout_specific_products_voucher(
         channel=channel_USD,
         discount=Money(discount_value, channel_USD.currency_code),
     )
-    for product in product_list:
-        voucher.products.add(product)
+    for room in room_list:
+        voucher.rooms.add(room)
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout_with_items)
     discount = get_voucher_discount_for_checkout(
@@ -250,7 +250,7 @@ def test_get_discount_for_checkout_specific_products_voucher(
         ("99", 9, 10, DiscountValueType.PERCENTAGE, 100, 10),
     ],
 )
-def test_get_discount_for_checkout_specific_products_voucher_not_applicable(
+def test_get_discount_for_checkout_specific_rooms_voucher_not_applicable(
     monkeypatch,
     total,
     total_quantity,
@@ -262,8 +262,8 @@ def test_get_discount_for_checkout_specific_products_voucher_not_applicable(
 ):
     discounts = []
     monkeypatch.setattr(
-        "saleor.checkout.utils.get_prices_of_discounted_specific_product",
-        lambda checkout, discounts, product: [],
+        "saleor.checkout.utils.get_prices_of_discounted_specific_room",
+        lambda checkout, discounts, room: [],
     )
     monkeypatch.setattr(
         "saleor.checkout.calculations.checkout_shipping_price",
@@ -285,7 +285,7 @@ def test_get_discount_for_checkout_specific_products_voucher_not_applicable(
     manager = get_plugins_manager()
     voucher = Voucher.objects.create(
         code="unique",
-        type=VoucherType.SPECIFIC_PRODUCT,
+        type=VoucherType.SPECIFIC_ROOM,
         discount_value_type=discount_type,
         min_checkout_items_quantity=min_checkout_items_quantity,
     )

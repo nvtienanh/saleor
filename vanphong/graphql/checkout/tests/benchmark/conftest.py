@@ -22,15 +22,15 @@ def customer_checkout(customer_user, checkout_with_voucher_percentage_and_shippi
 def checkout_with_variants(
     checkout,
     stock,
-    product_with_default_variant,
-    product_with_single_variant,
-    product_with_two_variants,
+    room_with_default_variant,
+    room_with_single_variant,
+    room_with_two_variants,
 ):
 
-    add_variant_to_checkout(checkout, product_with_default_variant.variants.get(), 1)
-    add_variant_to_checkout(checkout, product_with_single_variant.variants.get(), 10)
-    add_variant_to_checkout(checkout, product_with_two_variants.variants.first(), 3)
-    add_variant_to_checkout(checkout, product_with_two_variants.variants.last(), 5)
+    add_variant_to_checkout(checkout, room_with_default_variant.variants.get(), 1)
+    add_variant_to_checkout(checkout, room_with_single_variant.variants.get(), 10)
+    add_variant_to_checkout(checkout, room_with_two_variants.variants.first(), 3)
+    add_variant_to_checkout(checkout, room_with_two_variants.variants.last(), 5)
 
     checkout.save()
     return checkout

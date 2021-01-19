@@ -13,8 +13,8 @@ from ...attribute.utils import associate_attribute_values_to_instance
 from ...core.utils import generate_unique_slug
 from ...page import models as page_models
 from ...page.error_codes import PageErrorCode
-from ...product import models as product_models
-from ...product.error_codes import ProductErrorCode
+from ...room import models as room_models
+from ...room.error_codes import RoomErrorCode
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -26,7 +26,7 @@ AttrValuesInput = namedtuple(
     "AttrValuesInput", ["global_id", "values", "file_url", "content_type"]
 )
 T_INSTANCE = Union[
-    product_models.Product, product_models.ProductVariant, page_models.Page
+    room_models.Room, room_models.RoomVariant, page_models.Page
 ]
 T_INPUT_MAP = List[Tuple[attribute_models.Attribute, AttrValuesInput]]
 
@@ -66,7 +66,7 @@ class AttributeAssignmentMixin:
                     f"Could not resolve to a node: ids={global_ids}"
                     f" and slugs={list(slugs)}"
                 ),
-                code=ProductErrorCode.NOT_FOUND.value,
+                code=RoomErrorCode.NOT_FOUND.value,
             )
 
         nodes_pk_list = set()
@@ -79,14 +79,14 @@ class AttributeAssignmentMixin:
             if pk not in nodes_pk_list:
                 raise ValidationError(
                     f"Could not resolve {global_id!r} to Attribute",
-                    code=ProductErrorCode.NOT_FOUND.value,
+                    code=RoomErrorCode.NOT_FOUND.value,
                 )
 
         for slug in slugs:
             if slug not in nodes_slug_list:
                 raise ValidationError(
                     f"Could not resolve slug {slug!r} to Attribute",
-                    code=ProductErrorCode.NOT_FOUND.value,
+                    code=RoomErrorCode.NOT_FOUND.value,
                 )
 
         return nodes
@@ -98,12 +98,12 @@ class AttributeAssignmentMixin:
         if graphene_type != "Attribute":
             raise ValidationError(
                 f"Must receive an Attribute id, got {graphene_type}.",
-                code=ProductErrorCode.INVALID.value,
+                code=RoomErrorCode.INVALID.value,
             )
         if not internal_id.isnumeric():
             raise ValidationError(
                 f"An invalid ID value was passed: {global_id}",
-                code=ProductErrorCode.INVALID.value,
+                code=RoomErrorCode.INVALID.value,
             )
         return int(internal_id)
 
@@ -190,7 +190,7 @@ class AttributeAssignmentMixin:
             if len(cleaned_input) < qs.count():
                 raise ValidationError(
                     "All variant selection attributes must take a value.",
-                    code=ProductErrorCode.REQUIRED.value,
+                    code=RoomErrorCode.REQUIRED.value,
                 )
             variant_validation = True
 
@@ -219,7 +219,7 @@ class AttributeAssignmentMixin:
             A queryset of attributes, the attribute values must be prefetched.
             Prefetch is needed by ``_pre_save_values`` during save.
         :param page_attributes: Whether the input is for page type or not.
-        :param is_variant: Whether the input is for a variant or a product.
+        :param is_variant: Whether the input is for a variant or a room.
 
         :raises ValidationError: contain the message.
         :return: The resolved data
@@ -251,7 +251,7 @@ class AttributeAssignmentMixin:
             else:
                 raise ValidationError(
                     "You must whether supply an ID or a slug",
-                    code=ProductErrorCode.REQUIRED.value,
+                    code=RoomErrorCode.REQUIRED.value,
                 )
 
         attributes = cls._resolve_attribute_nodes(
@@ -282,7 +282,7 @@ class AttributeAssignmentMixin:
 
         Note: this should always be ran inside a transaction.
 
-        :param instance: the product or variant to associate the attribute against.
+        :param instance: the room or variant to associate the attribute against.
         :param cleaned_input: the cleaned user input (refer to clean_attributes)
         """
         for attribute, attr_values in cleaned_input:
@@ -300,11 +300,11 @@ class AttributeAssignmentMixin:
 def get_variant_selection_attributes(qs: "QuerySet"):
     return qs.filter(
         input_type__in=AttributeInputType.ALLOWED_IN_VARIANT_SELECTION,
-        type=AttributeType.PRODUCT_TYPE,
+        type=AttributeType.ROOM_TYPE,
     )
 
 
-class ProductAttributeInputErrors:
+class RoomAttributeInputErrors:
     ERROR_NO_VALUE_GIVEN = ValidationError(
         "Attribute expects a value but none were given",
         code=PageErrorCode.REQUIRED.value,
@@ -332,25 +332,25 @@ class ProductAttributeInputErrors:
 class PageAttributeInputErrors:
     ERROR_NO_VALUE_GIVEN = ValidationError(
         "Attribute expects a value but none were given",
-        code=ProductErrorCode.REQUIRED.value,
+        code=RoomErrorCode.REQUIRED.value,
     )
     ERROR_DROPDOWN_GET_MORE_THAN_ONE_VALUE = ValidationError(
         "Attribute must take only one value",
-        code=ProductErrorCode.INVALID.value,
+        code=RoomErrorCode.INVALID.value,
     )
     ERROR_BLANK_VALUE = ValidationError(
         "Attribute values cannot be blank",
-        code=ProductErrorCode.REQUIRED.value,
+        code=RoomErrorCode.REQUIRED.value,
     )
 
     # file errors
     ERROR_NO_FILE_GIVEN = ValidationError(
         "Attribute file url cannot be blank",
-        code=ProductErrorCode.REQUIRED.value,
+        code=RoomErrorCode.REQUIRED.value,
     )
     ERROR_BLANK_FILE_VALUE = ValidationError(
         "Attribute expects a file url but none were given",
-        code=ProductErrorCode.REQUIRED.value,
+        code=RoomErrorCode.REQUIRED.value,
     )
 
 
@@ -364,11 +364,11 @@ def validate_attributes_input(
     """Validate attribute input.
 
     - ensure all required attributes are passed
-    - ensure the values are correct for a products or a page
+    - ensure the values are correct for a rooms or a page
     """
 
     errors_data_structure = (
-        PageAttributeInputErrors if is_page_attributes else ProductAttributeInputErrors
+        PageAttributeInputErrors if is_page_attributes else RoomAttributeInputErrors
     )
     attribute_errors: Dict[ValidationError, List[str]] = defaultdict(list)
     for attribute, attr_values in input_data:
@@ -464,7 +464,7 @@ def validate_required_attributes(
     """Ensure all required attributes are supplied."""
 
     supplied_attribute_pk = [attribute.pk for attribute, _ in input_data]
-    error_code_enum = PageErrorCode if is_page_attributes else ProductErrorCode
+    error_code_enum = PageErrorCode if is_page_attributes else RoomErrorCode
 
     missing_required_attributes = attribute_qs.filter(
         Q(value_required=True) & ~Q(pk__in=supplied_attribute_pk)

@@ -194,13 +194,13 @@ def test_applicable_shipping_methods(shipping_zone, channel_USD):
     assert weight_method in result
 
 
-def test_applicable_shipping_methods_with_excluded_products(
-    shipping_zone, channel_USD, product, product_with_single_variant
+def test_applicable_shipping_methods_with_excluded_rooms(
+    shipping_zone, channel_USD, room, room_with_single_variant
 ):
     excluded_method = shipping_zone.shipping_methods.create(
         type=ShippingMethodType.PRICE_BASED,
     )
-    excluded_method.excluded_products.add(product)
+    excluded_method.excluded_rooms.add(room)
     weight_method = shipping_zone.shipping_methods.create(
         minimum_order_weight=Weight(kg=1),
         maximum_order_weight=Weight(kg=10),
@@ -227,7 +227,7 @@ def test_applicable_shipping_methods_with_excluded_products(
         weight=Weight(kg=5),
         country_code="PL",
         channel_id=channel_USD.id,
-        product_ids=[product.id, product_with_single_variant.id],
+        room_ids=[room.id, room_with_single_variant.id],
     )
     assert excluded_method not in result
     assert weight_method in result

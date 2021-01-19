@@ -180,7 +180,7 @@ def append_klarna_data(payment_information: "PaymentData", payment_data: dict):
     )
 
     if not checkout:
-        raise PaymentError("Unable to calculate products for klarna.")
+        raise PaymentError("Unable to calculate rooms for klarna.")
 
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout)
@@ -201,7 +201,7 @@ def append_klarna_data(payment_information: "PaymentData", payment_data: dict):
             checkout=checkout,
             line=line_info.line,
             variant=line_info.variant,
-            product=line_info.product,
+            room=line_info.room,
             collections=line_info.collections,
             address=address,
             channel=checkout.channel,
@@ -220,7 +220,7 @@ def append_klarna_data(payment_information: "PaymentData", payment_data: dict):
             "amountExcludingTax": to_adyen_price(total_net, currency),
             "taxPercentage": tax_percentage_in_adyen_format,
             "description": (
-                f"{line_info.variant.product.name}, {line_info.variant.name}"
+                f"{line_info.variant.room.name}, {line_info.variant.name}"
             ),
             "id": line_info.variant.sku,
             "taxAmount": to_adyen_price(tax_amount, currency),

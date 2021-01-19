@@ -30,13 +30,13 @@ def flatten_metadata(metadata):
 
 
 def flatten_attributes_metadata(apps, _schema_editor):
-    Attribute = apps.get_model("product", "Attribute")
+    Attribute = apps.get_model("room", "Attribute")
     for attribute in Attribute.objects.iterator():
         flatten_model_metadata(attribute)
 
 
 def flatten_categories_metadata(apps, _schema_editor):
-    Category = apps.get_model("product", "Category")
+    Category = apps.get_model("room", "Category")
     for category in Category.objects.iterator():
         flatten_model_metadata(category)
 
@@ -48,13 +48,13 @@ def flatten_checkouts_metadata(apps, _schema_editor):
 
 
 def flatten_collections_metadata(apps, _schema_editor):
-    Collection = apps.get_model("product", "Collection")
+    Collection = apps.get_model("room", "Collection")
     for collection in Collection.objects.iterator():
         flatten_model_metadata(collection)
 
 
 def flatten_digital_contents_metadata(apps, _schema_editor):
-    DigitalContent = apps.get_model("product", "DigitalContent")
+    DigitalContent = apps.get_model("room", "DigitalContent")
     for digital_content in DigitalContent.objects.iterator():
         flatten_model_metadata(digital_content)
 
@@ -71,22 +71,22 @@ def flatten_orders_metadata(apps, _schema_editor):
         flatten_model_metadata(order)
 
 
-def flatten_products_metadata(apps, _schema_editor):
-    Product = apps.get_model("product", "Product")
-    for product in Product.objects.iterator():
-        flatten_model_metadata(product)
+def flatten_rooms_metadata(apps, _schema_editor):
+    Room = apps.get_model("room", "Room")
+    for room in Room.objects.iterator():
+        flatten_model_metadata(room)
 
 
-def flatten_product_types_metadata(apps, _schema_editor):
-    ProductType = apps.get_model("product", "ProductType")
-    for product_type in ProductType.objects.iterator():
-        flatten_model_metadata(product_type)
+def flatten_room_types_metadata(apps, _schema_editor):
+    RoomType = apps.get_model("room", "RoomType")
+    for room_type in RoomType.objects.iterator():
+        flatten_model_metadata(room_type)
 
 
-def flatten_product_variants_metadata(apps, _schema_editor):
-    ProductVariant = apps.get_model("product", "ProductVariant")
-    for product_variant in ProductVariant.objects.iterator():
-        flatten_model_metadata(product_variant)
+def flatten_room_variants_metadata(apps, _schema_editor):
+    RoomVariant = apps.get_model("room", "RoomVariant")
+    for room_variant in RoomVariant.objects.iterator():
+        flatten_model_metadata(room_variant)
 
 
 def flatten_service_accounts_metadata(apps, _schema_editor):
@@ -107,7 +107,7 @@ class Migration(migrations.Migration):
         ("account", "0039_auto_20200221_0257"),
         ("checkout", "0025_auto_20200221_0257"),
         ("order", "0078_auto_20200221_0257"),
-        ("product", "0115_auto_20200221_0257"),
+        ("room", "0115_auto_20200221_0257"),
     ]
 
     operations = [
@@ -118,9 +118,9 @@ class Migration(migrations.Migration):
         migrations.RunPython(flatten_digital_contents_metadata),
         migrations.RunPython(flatten_fulfillments_metadata),
         migrations.RunPython(flatten_orders_metadata),
-        migrations.RunPython(flatten_products_metadata),
-        migrations.RunPython(flatten_product_types_metadata),
-        migrations.RunPython(flatten_product_variants_metadata),
+        migrations.RunPython(flatten_rooms_metadata),
+        migrations.RunPython(flatten_room_types_metadata),
+        migrations.RunPython(flatten_room_variants_metadata),
         migrations.RunPython(flatten_service_accounts_metadata),
         migrations.RunPython(flatten_users_metadata),
     ]

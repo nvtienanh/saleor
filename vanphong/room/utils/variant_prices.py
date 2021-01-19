@@ -7,26 +7,26 @@ from django.db.models.query_utils import Q
 from prices import Money
 
 from ...discount.utils import calculate_discounted_price, fetch_active_discounts
-from ..models import Product, ProductChannelListing, ProductVariantChannelListing
+from ..models import Room, RoomChannelListing, RoomVariantChannelListing
 
 
-def _get_variant_prices_in_channels_dict(product):
+def _get_variant_prices_in_channels_dict(room):
     prices_dict = defaultdict(list)
-    for variant_channel_listing in ProductVariantChannelListing.objects.filter(
-        variant__product_id=product
+    for variant_channel_listing in RoomVariantChannelListing.objects.filter(
+        variant__room_id=room
     ):
         channel_id = variant_channel_listing.channel_id
         prices_dict[channel_id].append(variant_channel_listing.price)
     return prices_dict
 
 
-def _get_product_discounted_price(
-    variant_prices, product, collections, discounts, channel
+def _get_room_discounted_price(
+    variant_prices, room, collections, discounts, channel
 ) -> Optional[Money]:
     discounted_variants_price = []
     for variant_price in variant_prices:
         discounted_variant_price = calculate_discounted_price(
-            product=product,
+            room=room,
             price=variant_price,
             collections=collections,
             discounts=discounts,
@@ -36,63 +36,63 @@ def _get_product_discounted_price(
     return min(discounted_variants_price)
 
 
-def update_product_discounted_price(product, discounts=None):
+def update_room_discounted_price(room, discounts=None):
     if discounts is None:
         discounts = fetch_active_discounts()
-    collections = list(product.collections.all())
-    variant_prices_in_channels_dict = _get_variant_prices_in_channels_dict(product)
-    changed_products_channels_to_update = []
-    for product_channel_listing in product.channel_listings.all():
-        channel_id = product_channel_listing.channel_id
+    collections = list(room.collections.all())
+    variant_prices_in_channels_dict = _get_variant_prices_in_channels_dict(room)
+    changed_rooms_channels_to_update = []
+    for room_channel_listing in room.channel_listings.all():
+        channel_id = room_channel_listing.channel_id
         variant_prices_dict = variant_prices_in_channels_dict[channel_id]
-        product_discounted_price = _get_product_discounted_price(
+        room_discounted_price = _get_room_discounted_price(
             variant_prices_dict,
-            product,
+            room,
             collections,
             discounts,
-            product_channel_listing.channel,
+            room_channel_listing.channel,
         )
-        if product_channel_listing.discounted_price != product_discounted_price:
-            product_channel_listing.discounted_price_amount = (
-                product_discounted_price.amount
+        if room_channel_listing.discounted_price != room_discounted_price:
+            room_channel_listing.discounted_price_amount = (
+                room_discounted_price.amount
             )
-            changed_products_channels_to_update.append(product_channel_listing)
-    ProductChannelListing.objects.bulk_update(
-        changed_products_channels_to_update, ["discounted_price_amount"]
+            changed_rooms_channels_to_update.append(room_channel_listing)
+    RoomChannelListing.objects.bulk_update(
+        changed_rooms_channels_to_update, ["discounted_price_amount"]
     )
 
 
-def update_products_discounted_prices(products, discounts=None):
+def update_rooms_discounted_prices(rooms, discounts=None):
     if discounts is None:
         discounts = fetch_active_discounts()
 
-    for product in products.prefetch_related("channel_listings"):
-        update_product_discounted_price(product, discounts)
+    for room in rooms.prefetch_related("channel_listings"):
+        update_room_discounted_price(room, discounts)
 
 
-def update_products_discounted_prices_of_catalogues(
-    product_ids=None, category_ids=None, collection_ids=None
+def update_rooms_discounted_prices_of_catalogues(
+    room_ids=None, category_ids=None, collection_ids=None
 ):
-    # Building the matching products query
+    # Building the matching rooms query
     q_list = []
-    if product_ids:
-        q_list.append(Q(pk__in=product_ids))
+    if room_ids:
+        q_list.append(Q(pk__in=room_ids))
     if category_ids:
         q_list.append(Q(category_id__in=category_ids))
     if collection_ids:
-        q_list.append(Q(collectionproduct__collection_id__in=collection_ids))
+        q_list.append(Q(collectionroom__collection_id__in=collection_ids))
     # Asserting that the function was called with some ids
     if q_list:
-        # Querying the products
+        # Querying the rooms
         q_or = reduce(operator.or_, q_list)
-        products = Product.objects.filter(q_or).distinct()
+        rooms = Room.objects.filter(q_or).distinct()
 
-        update_products_discounted_prices(products)
+        update_rooms_discounted_prices(rooms)
 
 
-def update_products_discounted_prices_of_discount(discount):
-    update_products_discounted_prices_of_catalogues(
-        product_ids=discount.products.all().values_list("id", flat=True),
+def update_rooms_discounted_prices_of_discount(discount):
+    update_rooms_discounted_prices_of_catalogues(
+        room_ids=discount.rooms.all().values_list("id", flat=True),
         category_ids=discount.categories.all().values_list("id", flat=True),
         collection_ids=discount.collections.all().values_list("id", flat=True),
     )

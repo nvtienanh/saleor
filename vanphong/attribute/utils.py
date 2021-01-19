@@ -1,39 +1,39 @@
 from typing import TYPE_CHECKING, Set, Union
 
 from ..page.models import Page
-from ..product.models import Product, ProductVariant
+from ..room.models import Room, RoomVariant
 from .models import (
     AssignedPageAttribute,
-    AssignedProductAttribute,
+    AssignedRoomAttribute,
     AssignedVariantAttribute,
     Attribute,
     AttributeValue,
 )
 
 AttributeAssignmentType = Union[
-    AssignedProductAttribute, AssignedVariantAttribute, AssignedPageAttribute
+    AssignedRoomAttribute, AssignedVariantAttribute, AssignedPageAttribute
 ]
 
 
 if TYPE_CHECKING:
-    from .models import AttributePage, AttributeProduct, AttributeVariant
+    from .models import AttributePage, AttributeRoom, AttributeVariant
 
 
 def _associate_attribute_to_instance(
-    instance: Union[Product, ProductVariant, Page], attribute_pk: int
+    instance: Union[Room, RoomVariant, Page], attribute_pk: int
 ) -> AttributeAssignmentType:
     """Associate a given attribute to an instance."""
     assignment: AttributeAssignmentType
-    if isinstance(instance, Product):
+    if isinstance(instance, Room):
         attribute_rel: Union[
-            "AttributeProduct", "AttributeVariant", "AttributePage"
-        ] = instance.product_type.attributeproduct.get(attribute_id=attribute_pk)
+            "AttributeRoom", "AttributeVariant", "AttributePage"
+        ] = instance.room_type.attributeroom.get(attribute_id=attribute_pk)
 
-        assignment, _ = AssignedProductAttribute.objects.get_or_create(
-            product=instance, assignment=attribute_rel
+        assignment, _ = AssignedRoomAttribute.objects.get_or_create(
+            room=instance, assignment=attribute_rel
         )
-    elif isinstance(instance, ProductVariant):
-        attribute_rel = instance.product.product_type.attributevariant.get(
+    elif isinstance(instance, RoomVariant):
+        attribute_rel = instance.room.room_type.attributevariant.get(
             attribute_id=attribute_pk
         )
 
@@ -63,11 +63,11 @@ def validate_attribute_owns_values(attribute: Attribute, value_ids: Set[int]) ->
 
 
 def associate_attribute_values_to_instance(
-    instance: Union[Product, ProductVariant, Page],
+    instance: Union[Room, RoomVariant, Page],
     attribute: Attribute,
     *values: AttributeValue,
 ) -> AttributeAssignmentType:
-    """Assign given attribute values to a product or variant.
+    """Assign given attribute values to a room or variant.
 
     Note: be award this function invokes the ``set`` method on the instance's
     attribute association. Meaning any values already assigned or concurrently

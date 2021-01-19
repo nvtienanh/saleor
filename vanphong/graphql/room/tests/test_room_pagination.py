@@ -5,22 +5,22 @@ import graphene
 import pytest
 
 from ....attribute.utils import associate_attribute_values_to_instance
-from ....product.models import (
+from ....room.models import (
     Category,
     Collection,
     CollectionChannelListing,
-    Product,
-    ProductChannelListing,
-    ProductType,
-    ProductVariant,
-    ProductVariantChannelListing,
+    Room,
+    RoomChannelListing,
+    RoomType,
+    RoomVariant,
+    RoomVariantChannelListing,
 )
-from ....warehouse.models import Stock
+from ....hotel.models import Stock
 from ...tests.utils import get_graphql_content
 
 
 @pytest.fixture
-def categories_for_pagination(product_type):
+def categories_for_pagination(room_type):
     categories = Category.tree.build_tree_nodes(
         {
             "id": 1,
@@ -35,24 +35,24 @@ def categories_for_pagination(product_type):
         }
     )
     categories = Category.objects.bulk_create(categories)
-    Product.objects.bulk_create(
+    Room.objects.bulk_create(
         [
-            Product(
+            Room(
                 name="Prod1",
                 slug="prod1",
-                product_type=product_type,
+                room_type=room_type,
                 category=categories[4],
             ),
-            Product(
+            Room(
                 name="Prod2",
                 slug="prod2",
-                product_type=product_type,
+                room_type=room_type,
                 category=categories[4],
             ),
-            Product(
+            Room(
                 name="Prod3",
                 slug="prod3",
-                product_type=product_type,
+                room_type=room_type,
                 category=categories[2],
             ),
         ]
@@ -103,7 +103,7 @@ QUERY_CATEGORIES_PAGINATION = """
             ["Category1", "Category3", "CategoryCategory1"],
         ),
         (
-            {"field": "PRODUCT_COUNT", "direction": "ASC"},
+            {"field": "ROOM_COUNT", "direction": "ASC"},
             ["Category1", "CategoryCategory1", "CategoryCategory2"],
         ),
     ],
@@ -158,7 +158,7 @@ def test_categories_pagination_with_filtering(
 
 
 @pytest.fixture
-def collections_for_pagination(product, product_with_single_variant, channel_USD):
+def collections_for_pagination(room, room_with_single_variant, channel_USD):
     collections = Collection.objects.bulk_create(
         [
             Collection(name="Collection1", slug="col1"),
@@ -168,8 +168,8 @@ def collections_for_pagination(product, product_with_single_variant, channel_USD
             Collection(name="Collection3", slug="col3"),
         ]
     )
-    collections[2].products.add(product)
-    collections[4].products.add(product_with_single_variant)
+    collections[2].rooms.add(room)
+    collections[4].rooms.add(room_with_single_variant)
     published = (True, True, False, False, True)
     CollectionChannelListing.objects.bulk_create(
         [
@@ -194,7 +194,7 @@ QUERY_COLLECTIONS_PAGINATION = """
             edges {
                 node {
                     name
-                    products{
+                    rooms{
                         totalCount
                     }
                 }
@@ -226,7 +226,7 @@ QUERY_COLLECTIONS_PAGINATION = """
             ["Collection2", "CollectionCollection2", "Collection1"],
         ),
         (
-            {"field": "PRODUCT_COUNT", "direction": "DESC"},
+            {"field": "ROOM_COUNT", "direction": "DESC"},
             ["CollectionCollection2", "Collection3", "CollectionCollection1"],
         ),
     ],
@@ -235,7 +235,7 @@ def test_collections_pagination_with_sorting(
     sort_by,
     collections_order,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     collections_for_pagination,
     channel_USD,
 ):
@@ -245,7 +245,7 @@ def test_collections_pagination_with_sorting(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -272,7 +272,7 @@ def test_collections_pagination_with_filtering(
     filter_by,
     collections_order,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     collections_for_pagination,
     channel_USD,
 ):
@@ -282,7 +282,7 @@ def test_collections_pagination_with_filtering(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
@@ -293,69 +293,69 @@ def test_collections_pagination_with_filtering(
 
 
 @pytest.fixture
-def products_for_pagination(
-    product_type, color_attribute, category, warehouse, channel_USD
+def rooms_for_pagination(
+    room_type, color_attribute, category, hotel, channel_USD
 ):
-    product_type2 = ProductType.objects.create(name="Apple")
-    products = Product.objects.bulk_create(
+    room_type2 = RoomType.objects.create(name="Apple")
+    rooms = Room.objects.bulk_create(
         [
-            Product(
-                name="Product1",
+            Room(
+                name="Room1",
                 slug="prod1",
                 category=category,
-                product_type=product_type2,
+                room_type=room_type2,
                 description="desc1",
             ),
-            Product(
-                name="ProductProduct1",
+            Room(
+                name="RoomRoom1",
                 slug="prod_prod1",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
             ),
-            Product(
-                name="ProductProduct2",
+            Room(
+                name="RoomRoom2",
                 slug="prod_prod2",
                 category=category,
-                product_type=product_type2,
+                room_type=room_type2,
             ),
-            Product(
-                name="Product2",
+            Room(
+                name="Room2",
                 slug="prod2",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
                 description="desc2",
             ),
-            Product(
-                name="Product3",
+            Room(
+                name="Room3",
                 slug="prod3",
                 category=category,
-                product_type=product_type2,
+                room_type=room_type2,
                 description="desc3",
             ),
         ]
     )
-    ProductChannelListing.objects.bulk_create(
+    RoomChannelListing.objects.bulk_create(
         [
-            ProductChannelListing(
-                product=products[0],
+            RoomChannelListing(
+                room=rooms[0],
                 channel=channel_USD,
                 is_published=True,
                 discounted_price_amount=Decimal(5),
             ),
-            ProductChannelListing(
-                product=products[1],
+            RoomChannelListing(
+                room=rooms[1],
                 channel=channel_USD,
                 is_published=True,
                 discounted_price_amount=Decimal(15),
             ),
-            ProductChannelListing(
-                product=products[2],
+            RoomChannelListing(
+                room=rooms[2],
                 channel=channel_USD,
                 is_published=False,
                 discounted_price_amount=Decimal(4),
             ),
-            ProductChannelListing(
-                product=products[3],
+            RoomChannelListing(
+                room=rooms[3],
                 channel=channel_USD,
                 is_published=True,
                 discounted_price_amount=Decimal(7),
@@ -363,64 +363,64 @@ def products_for_pagination(
         ]
     )
 
-    product_attrib_values = color_attribute.values.all()
+    room_attrib_values = color_attribute.values.all()
     associate_attribute_values_to_instance(
-        products[1], color_attribute, product_attrib_values[0]
+        rooms[1], color_attribute, room_attrib_values[0]
     )
     associate_attribute_values_to_instance(
-        products[3], color_attribute, product_attrib_values[1]
+        rooms[3], color_attribute, room_attrib_values[1]
     )
 
-    variants = ProductVariant.objects.bulk_create(
+    variants = RoomVariant.objects.bulk_create(
         [
-            ProductVariant(
-                product=products[0],
+            RoomVariant(
+                room=rooms[0],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
-            ProductVariant(
-                product=products[1],
+            RoomVariant(
+                room=rooms[1],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
-            ProductVariant(
-                product=products[2],
+            RoomVariant(
+                room=rooms[2],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
-            ProductVariant(
-                product=products[3],
+            RoomVariant(
+                room=rooms[3],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
-            ProductVariant(
-                product=products[4],
+            RoomVariant(
+                room=rooms[4],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
         ]
     )
-    ProductVariantChannelListing.objects.bulk_create(
+    RoomVariantChannelListing.objects.bulk_create(
         [
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[0],
                 channel=channel_USD,
                 price_amount=Decimal(10),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[1],
                 channel=channel_USD,
                 price_amount=Decimal(15),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[2],
                 channel=channel_USD,
                 price_amount=Decimal(8),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[3],
                 channel=channel_USD,
                 price_amount=Decimal(7),
@@ -430,21 +430,21 @@ def products_for_pagination(
     )
     Stock.objects.bulk_create(
         [
-            Stock(warehouse=warehouse, product_variant=variants[0], quantity=100),
-            Stock(warehouse=warehouse, product_variant=variants[1], quantity=0),
-            Stock(warehouse=warehouse, product_variant=variants[2], quantity=0),
+            Stock(hotel=hotel, room_variant=variants[0], quantity=100),
+            Stock(hotel=hotel, room_variant=variants[1], quantity=0),
+            Stock(hotel=hotel, room_variant=variants[2], quantity=0),
         ]
     )
 
-    return products
+    return rooms
 
 
-QUERY_PRODUCTS_PAGINATION = """
+QUERY_ROOMS_PAGINATION = """
     query (
         $first: Int, $last: Int, $after: String, $before: String,
-        $sortBy: ProductOrder, $filter: ProductFilterInput
+        $sortBy: RoomOrder, $filter: RoomFilterInput
     ){
-        products (
+        rooms (
             first: $first, last: $last, after: $after, before: $before,
             sortBy: $sortBy, filter: $filter
         ) {
@@ -466,66 +466,66 @@ QUERY_PRODUCTS_PAGINATION = """
 
 
 @pytest.mark.parametrize(
-    "sort_by, products_order",
+    "sort_by, rooms_order",
     [
-        ({"field": "NAME", "direction": "ASC"}, ["Product1", "Product2", "Product3"]),
+        ({"field": "NAME", "direction": "ASC"}, ["Room1", "Room2", "Room3"]),
         (
             {"field": "NAME", "direction": "DESC"},
-            ["ProductProduct2", "ProductProduct1", "Product3"],
+            ["RoomRoom2", "RoomRoom1", "Room3"],
         ),
         (
             {"field": "TYPE", "direction": "ASC"},
-            ["Product1", "Product3", "ProductProduct2"],
+            ["Room1", "Room3", "RoomRoom2"],
         ),
     ],
 )
-def test_products_pagination_with_sorting(
+def test_rooms_pagination_with_sorting(
     sort_by,
-    products_order,
+    rooms_order,
     staff_api_client,
-    permission_manage_products,
-    products_for_pagination,
+    permission_manage_rooms,
+    rooms_for_pagination,
 ):
     page_size = 3
 
     variables = {"first": page_size, "after": None, "sortBy": sort_by}
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert products_order[0] == products_nodes[0]["node"]["name"]
-    assert products_order[1] == products_nodes[1]["node"]["name"]
-    assert products_order[2] == products_nodes[2]["node"]["name"]
-    assert len(products_nodes) == page_size
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert rooms_order[0] == rooms_nodes[0]["node"]["name"]
+    assert rooms_order[1] == rooms_nodes[1]["node"]["name"]
+    assert rooms_order[2] == rooms_nodes[2]["node"]["name"]
+    assert len(rooms_nodes) == page_size
 
 
 @pytest.mark.parametrize(
-    "sort_by, products_order",
+    "sort_by, rooms_order",
     [
         (
             {"field": "PUBLISHED", "direction": "ASC"},
-            ["ProductProduct2", "Product1", "Product2"],
+            ["RoomRoom2", "Room1", "Room2"],
         ),
         (
             {"field": "PRICE", "direction": "ASC"},
-            ["Product2", "ProductProduct2", "Product1"],
+            ["Room2", "RoomRoom2", "Room1"],
         ),
         (
             {"field": "MINIMAL_PRICE", "direction": "ASC"},
-            ["ProductProduct2", "Product1", "Product2"],
+            ["RoomRoom2", "Room1", "Room2"],
         ),
     ],
 )
-def test_products_pagination_with_sorting_and_channel(
+def test_rooms_pagination_with_sorting_and_channel(
     sort_by,
-    products_order,
+    rooms_order,
     staff_api_client,
-    permission_manage_products,
-    products_for_pagination,
+    permission_manage_rooms,
+    rooms_for_pagination,
     channel_USD,
 ):
     page_size = 3
@@ -533,68 +533,68 @@ def test_products_pagination_with_sorting_and_channel(
     sort_by["channel"] = channel_USD.slug
     variables = {"first": page_size, "after": None, "sortBy": sort_by}
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert products_order[0] == products_nodes[0]["node"]["name"]
-    assert products_order[1] == products_nodes[1]["node"]["name"]
-    assert products_order[2] == products_nodes[2]["node"]["name"]
-    assert len(products_nodes) == page_size
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert rooms_order[0] == rooms_nodes[0]["node"]["name"]
+    assert rooms_order[1] == rooms_nodes[1]["node"]["name"]
+    assert rooms_order[2] == rooms_nodes[2]["node"]["name"]
+    assert len(rooms_nodes) == page_size
 
 
-def test_products_pagination_with_sorting_by_attribute(
+def test_rooms_pagination_with_sorting_by_attribute(
     staff_api_client,
-    permission_manage_products,
-    products_for_pagination,
+    permission_manage_rooms,
+    rooms_for_pagination,
     color_attribute,
     channel_USD,
 ):
     page_size = 3
-    products_order = ["Product2", "ProductProduct1", "Product1"]
+    rooms_order = ["Room2", "RoomRoom1", "Room1"]
     attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.id)
 
     sort_by = {"attributeId": attribute_id, "direction": "ASC"}
     variables = {"first": page_size, "after": None, "sortBy": sort_by}
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert products_order[0] == products_nodes[0]["node"]["name"]
-    assert products_order[1] == products_nodes[1]["node"]["name"]
-    assert products_order[2] == products_nodes[2]["node"]["name"]
-    assert len(products_nodes) == page_size
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert rooms_order[0] == rooms_nodes[0]["node"]["name"]
+    assert rooms_order[1] == rooms_nodes[1]["node"]["name"]
+    assert rooms_order[2] == rooms_nodes[2]["node"]["name"]
+    assert len(rooms_nodes) == page_size
 
 
-def test_products_pagination_for_products_with_the_same_names_two_pages(
-    staff_api_client, permission_manage_products, category, product_type, channel_USD
+def test_rooms_pagination_for_rooms_with_the_same_names_two_pages(
+    staff_api_client, permission_manage_rooms, category, room_type, channel_USD
 ):
-    products = Product.objects.bulk_create(
+    rooms = Room.objects.bulk_create(
         [
-            Product(
-                name="Product",
+            Room(
+                name="Room",
                 slug="prod-1",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
             ),
-            Product(
-                name="Product",
+            Room(
+                name="Room",
                 slug="prod-2",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
             ),
-            Product(
-                name="Product",
+            Room(
+                name="Room",
                 slug="prod-3",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
             ),
         ]
     )
@@ -602,61 +602,61 @@ def test_products_pagination_for_products_with_the_same_names_two_pages(
     variables = {"first": page_size, "after": None}
 
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    page_info = content["data"]["products"]["pageInfo"]
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    page_info = content["data"]["rooms"]["pageInfo"]
 
-    assert len(products_nodes) == 2
-    assert products_nodes[0]["node"]["slug"] == products[0].slug
-    assert products_nodes[1]["node"]["slug"] == products[1].slug
+    assert len(rooms_nodes) == 2
+    assert rooms_nodes[0]["node"]["slug"] == rooms[0].slug
+    assert rooms_nodes[1]["node"]["slug"] == rooms[1].slug
     assert page_info["hasNextPage"] is True
 
     end_cursor = page_info["endCursor"]
     variables["after"] = end_cursor
 
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    page_info = content["data"]["products"]["pageInfo"]
-    assert len(products_nodes) == 1
-    assert products_nodes[0]["node"]["slug"] == products[2].slug
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    page_info = content["data"]["rooms"]["pageInfo"]
+    assert len(rooms_nodes) == 1
+    assert rooms_nodes[0]["node"]["slug"] == rooms[2].slug
     assert page_info["hasNextPage"] is False
 
 
-def test_products_pagination_for_products_with_the_same_names_one_page(
-    staff_api_client, permission_manage_products, category, product_type, channel_USD
+def test_rooms_pagination_for_rooms_with_the_same_names_one_page(
+    staff_api_client, permission_manage_rooms, category, room_type, channel_USD
 ):
-    products = Product.objects.bulk_create(
+    rooms = Room.objects.bulk_create(
         [
-            Product(
-                name="Product",
+            Room(
+                name="Room",
                 slug="prod-1",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
             ),
-            Product(
-                name="Product",
+            Room(
+                name="Room",
                 slug="prod-2",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
             ),
-            Product(
-                name="Product",
+            Room(
+                name="Room",
                 slug="prod-3",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
             ),
         ]
     )
@@ -664,66 +664,66 @@ def test_products_pagination_for_products_with_the_same_names_one_page(
     variables = {"first": page_size, "after": None}
 
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    page_info = content["data"]["products"]["pageInfo"]
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    page_info = content["data"]["rooms"]["pageInfo"]
 
-    assert len(products_nodes) == 3
-    assert products_nodes[0]["node"]["slug"] == products[0].slug
-    assert products_nodes[1]["node"]["slug"] == products[1].slug
-    assert products_nodes[2]["node"]["slug"] == products[2].slug
+    assert len(rooms_nodes) == 3
+    assert rooms_nodes[0]["node"]["slug"] == rooms[0].slug
+    assert rooms_nodes[1]["node"]["slug"] == rooms[1].slug
+    assert rooms_nodes[2]["node"]["slug"] == rooms[2].slug
     assert page_info["hasNextPage"] is False
 
 
 @pytest.mark.parametrize(
-    "filter_by, products_order",
+    "filter_by, rooms_order",
     [
-        ({"hasCategory": True}, ["Product1", "Product2"]),
-        ({"stockAvailability": "OUT_OF_STOCK"}, ["ProductProduct1", "ProductProduct2"]),
+        ({"hasCategory": True}, ["Room1", "Room2"]),
+        ({"stockAvailability": "OUT_OF_STOCK"}, ["RoomRoom1", "RoomRoom2"]),
     ],
 )
-def test_products_pagination_with_filtering(
+def test_rooms_pagination_with_filtering(
     filter_by,
-    products_order,
+    rooms_order,
     staff_api_client,
-    permission_manage_products,
-    products_for_pagination,
+    permission_manage_rooms,
+    rooms_for_pagination,
 ):
     page_size = 2
 
     variables = {"first": page_size, "after": None, "filter": filter_by}
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert products_order[0] == products_nodes[0]["node"]["name"]
-    assert products_order[1] == products_nodes[1]["node"]["name"]
-    assert len(products_nodes) == page_size
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert rooms_order[0] == rooms_nodes[0]["node"]["name"]
+    assert rooms_order[1] == rooms_nodes[1]["node"]["name"]
+    assert len(rooms_nodes) == page_size
 
 
 @pytest.mark.parametrize(
-    "filter_by, products_order",
+    "filter_by, rooms_order",
     [
-        ({"isPublished": True}, ["Product1", "Product2"]),
-        ({"price": {"gte": 8, "lte": 12}}, ["Product1", "ProductProduct2"]),
+        ({"isPublished": True}, ["Room1", "Room2"]),
+        ({"price": {"gte": 8, "lte": 12}}, ["Room1", "RoomRoom2"]),
     ],
 )
-def test_products_pagination_with_filtering_and_channel(
+def test_rooms_pagination_with_filtering_and_channel(
     filter_by,
-    products_order,
+    rooms_order,
     staff_api_client,
-    permission_manage_products,
-    products_for_pagination,
+    permission_manage_rooms,
+    rooms_for_pagination,
     channel_USD,
 ):
     page_size = 2
@@ -731,122 +731,122 @@ def test_products_pagination_with_filtering_and_channel(
     filter_by["channel"] = channel_USD.slug
     variables = {"first": page_size, "after": None, "filter": filter_by}
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert products_order[0] == products_nodes[0]["node"]["name"]
-    assert products_order[1] == products_nodes[1]["node"]["name"]
-    assert len(products_nodes) == page_size
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert rooms_order[0] == rooms_nodes[0]["node"]["name"]
+    assert rooms_order[1] == rooms_nodes[1]["node"]["name"]
+    assert len(rooms_nodes) == page_size
 
 
-def test_products_pagination_with_filtering_by_attribute(
-    staff_api_client, permission_manage_products, products_for_pagination, channel_USD
+def test_rooms_pagination_with_filtering_by_attribute(
+    staff_api_client, permission_manage_rooms, rooms_for_pagination, channel_USD
 ):
     page_size = 2
-    products_order = ["Product2", "ProductProduct1"]
+    rooms_order = ["Room2", "RoomRoom1"]
     filter_by = {"attributes": [{"slug": "color", "values": ["red", "blue"]}]}
 
     variables = {"first": page_size, "after": None, "filter": filter_by}
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert products_order[0] == products_nodes[0]["node"]["name"]
-    assert products_order[1] == products_nodes[1]["node"]["name"]
-    assert len(products_nodes) == page_size
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert rooms_order[0] == rooms_nodes[0]["node"]["name"]
+    assert rooms_order[1] == rooms_nodes[1]["node"]["name"]
+    assert len(rooms_nodes) == page_size
 
 
-def test_products_pagination_with_filtering_by_product_types(
+def test_rooms_pagination_with_filtering_by_room_types(
     staff_api_client,
-    permission_manage_products,
-    products_for_pagination,
-    product_type,
+    permission_manage_rooms,
+    rooms_for_pagination,
+    room_type,
     channel_USD,
 ):
     page_size = 2
-    products_order = ["Product2", "ProductProduct1"]
-    product_type_id = graphene.Node.to_global_id("ProductType", product_type.id)
-    filter_by = {"productTypes": [product_type_id]}
+    rooms_order = ["Room2", "RoomRoom1"]
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.id)
+    filter_by = {"roomTypes": [room_type_id]}
 
     variables = {"first": page_size, "after": None, "filter": filter_by}
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert products_order[0] == products_nodes[0]["node"]["name"]
-    assert products_order[1] == products_nodes[1]["node"]["name"]
-    assert len(products_nodes) == page_size
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert rooms_order[0] == rooms_nodes[0]["node"]["name"]
+    assert rooms_order[1] == rooms_nodes[1]["node"]["name"]
+    assert len(rooms_nodes) == page_size
 
 
-def test_products_pagination_with_filtering_by_stocks(
+def test_rooms_pagination_with_filtering_by_stocks(
     staff_api_client,
-    permission_manage_products,
-    products_for_pagination,
-    warehouse,
+    permission_manage_rooms,
+    rooms_for_pagination,
+    hotel,
     channel_USD,
 ):
     page_size = 2
-    products_order = ["ProductProduct1", "ProductProduct2"]
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.id)
-    filter_by = {"stocks": {"warehouseIds": [warehouse_id], "quantity": {"lte": 10}}}
+    rooms_order = ["RoomRoom1", "RoomRoom2"]
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.id)
+    filter_by = {"stocks": {"hotelIds": [hotel_id], "quantity": {"lte": 10}}}
 
     variables = {"first": page_size, "after": None, "filter": filter_by}
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_PAGINATION,
+        QUERY_ROOMS_PAGINATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert products_order[0] == products_nodes[0]["node"]["name"]
-    assert products_order[1] == products_nodes[1]["node"]["name"]
-    assert len(products_nodes) == page_size
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert rooms_order[0] == rooms_nodes[0]["node"]["name"]
+    assert rooms_order[1] == rooms_nodes[1]["node"]["name"]
+    assert len(rooms_nodes) == page_size
 
 
 @pytest.fixture
-def product_types_for_pagination(db):
-    return ProductType.objects.bulk_create(
+def room_types_for_pagination(db):
+    return RoomType.objects.bulk_create(
         [
-            ProductType(
-                name="ProductType1",
+            RoomType(
+                name="RoomType1",
                 slug="pt1",
                 is_digital=True,
                 is_shipping_required=False,
             ),
-            ProductType(
-                name="ProductTypeProductType1",
+            RoomType(
+                name="RoomTypeRoomType1",
                 slug="pt_pt1",
                 is_digital=False,
                 is_shipping_required=False,
             ),
-            ProductType(
-                name="ProductTypeProductType2",
+            RoomType(
+                name="RoomTypeRoomType2",
                 slug="pt_pt2",
                 is_digital=False,
                 is_shipping_required=True,
             ),
-            ProductType(
-                name="ProductType2",
+            RoomType(
+                name="RoomType2",
                 slug="pt2",
                 is_digital=False,
                 is_shipping_required=True,
                 has_variants=False,
             ),
-            ProductType(
-                name="ProductType3",
+            RoomType(
+                name="RoomType3",
                 slug="pt3",
                 is_digital=True,
                 is_shipping_required=False,
@@ -856,12 +856,12 @@ def product_types_for_pagination(db):
     )
 
 
-QUERY_PRODUCT_TYPES_PAGINATION = """
+QUERY_ROOM_TYPES_PAGINATION = """
     query (
         $first: Int, $last: Int, $after: String, $before: String,
-        $sortBy: ProductTypeSortingInput, $filter: ProductTypeFilterInput
+        $sortBy: RoomTypeSortingInput, $filter: RoomTypeFilterInput
     ){
-        productTypes (
+        roomTypes (
             first: $first, last: $last, after: $after, before: $before,
             sortBy: $sortBy, filter: $filter
         ) {
@@ -882,77 +882,77 @@ QUERY_PRODUCT_TYPES_PAGINATION = """
 
 
 @pytest.mark.parametrize(
-    "sort_by, product_types_order",
+    "sort_by, room_types_order",
     [
         (
             {"field": "NAME", "direction": "ASC"},
-            ["ProductType1", "ProductType2", "ProductType3"],
+            ["RoomType1", "RoomType2", "RoomType3"],
         ),
         (
             {"field": "NAME", "direction": "DESC"},
-            ["ProductTypeProductType2", "ProductTypeProductType1", "ProductType3"],
+            ["RoomTypeRoomType2", "RoomTypeRoomType1", "RoomType3"],
         ),
         (
             {"field": "DIGITAL", "direction": "ASC"},
-            ["ProductType2", "ProductTypeProductType1", "ProductTypeProductType2"],
+            ["RoomType2", "RoomTypeRoomType1", "RoomTypeRoomType2"],
         ),
         (
             {"field": "SHIPPING_REQUIRED", "direction": "ASC"},
-            ["ProductType1", "ProductType3", "ProductTypeProductType1"],
+            ["RoomType1", "RoomType3", "RoomTypeRoomType1"],
         ),
     ],
 )
-def test_product_types_pagination_with_sorting(
+def test_room_types_pagination_with_sorting(
     sort_by,
-    product_types_order,
+    room_types_order,
     staff_api_client,
-    product_types_for_pagination,
+    room_types_for_pagination,
 ):
     page_size = 3
 
     variables = {"first": page_size, "after": None, "sortBy": sort_by}
-    response = staff_api_client.post_graphql(QUERY_PRODUCT_TYPES_PAGINATION, variables)
+    response = staff_api_client.post_graphql(QUERY_ROOM_TYPES_PAGINATION, variables)
     content = get_graphql_content(response)
-    product_types_nodes = content["data"]["productTypes"]["edges"]
-    assert product_types_order[0] == product_types_nodes[0]["node"]["name"]
-    assert product_types_order[1] == product_types_nodes[1]["node"]["name"]
-    assert product_types_order[2] == product_types_nodes[2]["node"]["name"]
-    assert len(product_types_nodes) == page_size
+    room_types_nodes = content["data"]["roomTypes"]["edges"]
+    assert room_types_order[0] == room_types_nodes[0]["node"]["name"]
+    assert room_types_order[1] == room_types_nodes[1]["node"]["name"]
+    assert room_types_order[2] == room_types_nodes[2]["node"]["name"]
+    assert len(room_types_nodes) == page_size
 
 
 @pytest.mark.parametrize(
-    "filter_by, product_types_order",
+    "filter_by, room_types_order",
     [
         (
-            {"search": "ProductTypeProductType"},
-            ["ProductTypeProductType1", "ProductTypeProductType2"],
+            {"search": "RoomTypeRoomType"},
+            ["RoomTypeRoomType1", "RoomTypeRoomType2"],
         ),
-        ({"search": "ProductType1"}, ["ProductType1", "ProductTypeProductType1"]),
-        ({"search": "pt_pt"}, ["ProductTypeProductType1", "ProductTypeProductType2"]),
+        ({"search": "RoomType1"}, ["RoomType1", "RoomTypeRoomType1"]),
+        ({"search": "pt_pt"}, ["RoomTypeRoomType1", "RoomTypeRoomType2"]),
         (
-            {"productType": "DIGITAL"},
-            ["ProductType1", "ProductType3"],
+            {"roomType": "DIGITAL"},
+            ["RoomType1", "RoomType3"],
         ),
-        ({"productType": "SHIPPABLE"}, ["ProductType2", "ProductTypeProductType2"]),
-        ({"configurable": "CONFIGURABLE"}, ["ProductType1", "ProductTypeProductType1"]),
-        ({"configurable": "SIMPLE"}, ["ProductType2", "ProductType3"]),
+        ({"roomType": "SHIPPABLE"}, ["RoomType2", "RoomTypeRoomType2"]),
+        ({"configurable": "CONFIGURABLE"}, ["RoomType1", "RoomTypeRoomType1"]),
+        ({"configurable": "SIMPLE"}, ["RoomType2", "RoomType3"]),
     ],
 )
-def test_product_types_pagination_with_filtering(
+def test_room_types_pagination_with_filtering(
     filter_by,
-    product_types_order,
+    room_types_order,
     staff_api_client,
-    product_types_for_pagination,
+    room_types_for_pagination,
 ):
     page_size = 2
 
     variables = {"first": page_size, "after": None, "filter": filter_by}
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCT_TYPES_PAGINATION,
+        QUERY_ROOM_TYPES_PAGINATION,
         variables,
     )
     content = get_graphql_content(response)
-    product_types_nodes = content["data"]["productTypes"]["edges"]
-    assert product_types_order[0] == product_types_nodes[0]["node"]["name"]
-    assert product_types_order[1] == product_types_nodes[1]["node"]["name"]
-    assert len(product_types_nodes) == page_size
+    room_types_nodes = content["data"]["roomTypes"]["edges"]
+    assert room_types_order[0] == room_types_nodes[0]["node"]["name"]
+    assert room_types_order[1] == room_types_nodes[1]["node"]["name"]
+    assert len(room_types_nodes) == page_size

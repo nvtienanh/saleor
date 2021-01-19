@@ -8,25 +8,25 @@ import saleor.core.weight
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0067_remove_product_is_featured")]
+    dependencies = [("room", "0067_remove_room_is_featured")]
 
     operations = [
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="weight",
             field=django_measurement.models.MeasurementField(
                 blank=True, measurement_class="Mass", null=True
             ),
         ),
         migrations.AddField(
-            model_name="producttype",
+            model_name="roomtype",
             name="weight",
             field=django_measurement.models.MeasurementField(
                 default=saleor.core.weight.zero_weight, measurement_class="Mass"
             ),
         ),
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="weight",
             field=django_measurement.models.MeasurementField(
                 blank=True, measurement_class="Mass", null=True

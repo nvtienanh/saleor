@@ -19,9 +19,9 @@ from ...page import error_codes as page_error_codes
 from ...payment import error_codes as payment_error_codes
 from ...plugins import error_codes as plugin_error_codes
 from ...plugins.vatlayer import TaxRateType as CoreTaxRateType
-from ...product import error_codes as product_error_codes
+from ...room import error_codes as room_error_codes
 from ...shipping import error_codes as shipping_error_codes
-from ...warehouse import error_codes as warehouse_error_codes
+from ...hotel import error_codes as hotel_error_codes
 from ...webhook import error_codes as webhook_error_codes
 from ...wishlist import error_codes as wishlist_error_codes
 from ..shop import error_codes as shop_error_codes
@@ -110,13 +110,13 @@ PaymentErrorCode = graphene.Enum.from_enum(payment_error_codes.PaymentErrorCode)
 PermissionGroupErrorCode = graphene.Enum.from_enum(
     account_error_codes.PermissionGroupErrorCode
 )
-ProductErrorCode = graphene.Enum.from_enum(product_error_codes.ProductErrorCode)
-CollectionErrorCode = graphene.Enum.from_enum(product_error_codes.CollectionErrorCode)
+RoomErrorCode = graphene.Enum.from_enum(room_error_codes.RoomErrorCode)
+CollectionErrorCode = graphene.Enum.from_enum(room_error_codes.CollectionErrorCode)
 ShopErrorCode = graphene.Enum.from_enum(core_error_codes.ShopErrorCode)
 ShippingErrorCode = graphene.Enum.from_enum(shipping_error_codes.ShippingErrorCode)
-StockErrorCode = graphene.Enum.from_enum(warehouse_error_codes.StockErrorCode)
+StockErrorCode = graphene.Enum.from_enum(hotel_error_codes.StockErrorCode)
 UploadErrorCode = graphene.Enum.from_enum(core_error_codes.UploadErrorCode)
-WarehouseErrorCode = graphene.Enum.from_enum(warehouse_error_codes.WarehouseErrorCode)
+HotelErrorCode = graphene.Enum.from_enum(hotel_error_codes.HotelErrorCode)
 WebhookErrorCode = graphene.Enum.from_enum(webhook_error_codes.WebhookErrorCode)
 WishlistErrorCode = graphene.Enum.from_enum(wishlist_error_codes.WishlistErrorCode)
 TranslationErrorCode = graphene.Enum.from_enum(core_error_codes.TranslationErrorCode)

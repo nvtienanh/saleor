@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0109_auto_20191006_1433")]
+    dependencies = [("room", "0109_auto_20191006_1433")]
 
     operations = [
         migrations.AlterField(
@@ -15,18 +15,18 @@ class Migration(migrations.Migration):
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="category",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name="products",
-                to="product.Category",
+                related_name="rooms",
+                to="room.Category",
             ),
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="is_published",
             field=models.BooleanField(default=False),
         ),

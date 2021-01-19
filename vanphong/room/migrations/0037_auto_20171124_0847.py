@@ -8,6 +8,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0036_auto_20171115_0608")]
+    dependencies = [("room", "0036_auto_20171115_0608")]
 
     operations = [TrigramExtension()]

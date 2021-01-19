@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from ...core.exceptions import InsufficientStock
-from ...warehouse.models import Allocation, Stock
+from ...hotel.models import Allocation, Stock
 from ..actions import create_fulfillments
 from ..models import FulfillmentLine, OrderStatus
 
@@ -13,19 +13,19 @@ def test_create_fulfillments(
     mock_email_fulfillment,
     staff_user,
     order_with_lines,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     order_line1, order_line2 = order.lines.all()
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [
             {"order_line": order_line1, "quantity": 3},
             {"order_line": order_line2, "quantity": 2},
         ]
     }
 
     [fulfillment] = create_fulfillments(
-        staff_user, order, fulfillment_lines_for_warehouses, True
+        staff_user, order, fulfillment_lines_for_hotels, True
     )
 
     order.refresh_from_db()
@@ -61,19 +61,19 @@ def test_create_fulfillments_without_notification(
     mock_email_fulfillment,
     staff_user,
     order_with_lines,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     order_line1, order_line2 = order.lines.all()
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [
             {"order_line": order_line1, "quantity": 3},
             {"order_line": order_line2, "quantity": 2},
         ]
     }
 
     [fulfillment] = create_fulfillments(
-        staff_user, order, fulfillment_lines_for_warehouses, False
+        staff_user, order, fulfillment_lines_for_hotels, False
     )
 
     order.refresh_from_db()
@@ -102,35 +102,35 @@ def test_create_fulfillments_without_notification(
     mock_email_fulfillment.assert_not_called()
 
 
-def test_create_fulfillments_many_warehouses(
+def test_create_fulfillments_many_hotels(
     staff_user,
     order_with_lines,
-    warehouses,
+    hotels,
 ):
     order = order_with_lines
-    warehouse1, warehouse2 = warehouses
+    hotel1, hotel2 = hotels
     order_line1, order_line2 = order.lines.all()
 
     stock_w1_l1 = Stock(
-        warehouse=warehouse1, product_variant=order_line1.variant, quantity=3
+        hotel=hotel1, room_variant=order_line1.variant, quantity=3
     )
     stock_w1_l2 = Stock(
-        warehouse=warehouse1, product_variant=order_line2.variant, quantity=1
+        hotel=hotel1, room_variant=order_line2.variant, quantity=1
     )
     stock_w2_l2 = Stock(
-        warehouse=warehouse2, product_variant=order_line2.variant, quantity=1
+        hotel=hotel2, room_variant=order_line2.variant, quantity=1
     )
     Stock.objects.bulk_create([stock_w1_l1, stock_w1_l2, stock_w2_l2])
-    fulfillment_lines_for_warehouses = {
-        str(warehouse1.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel1.pk): [
             {"order_line": order_line1, "quantity": 3},
             {"order_line": order_line2, "quantity": 1},
         ],
-        str(warehouse2.pk): [{"order_line": order_line2, "quantity": 1}],
+        str(hotel2.pk): [{"order_line": order_line2, "quantity": 1}],
     }
 
     [fulfillment1, fulfillment2] = create_fulfillments(
-        staff_user, order, fulfillment_lines_for_warehouses, False
+        staff_user, order, fulfillment_lines_for_hotels, False
     )
 
     order.refresh_from_db()
@@ -165,19 +165,19 @@ def test_create_fulfillments_with_one_line_empty_quantity(
     mock_email_fulfillment,
     staff_user,
     order_with_lines,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     order_line1, order_line2 = order.lines.all()
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [
             {"order_line": order_line1, "quantity": 0},
             {"order_line": order_line2, "quantity": 2},
         ]
     }
 
     [fulfillment] = create_fulfillments(
-        staff_user, order, fulfillment_lines_for_warehouses, True
+        staff_user, order, fulfillment_lines_for_hotels, True
     )
 
     order.refresh_from_db()
@@ -211,18 +211,18 @@ def test_create_fulfillments_with_variant_without_inventory_tracking(
     mock_email_fulfillment,
     staff_user,
     order_with_line_without_inventory_tracking,
-    warehouse,
+    hotel,
 ):
     order = order_with_line_without_inventory_tracking
     order_line = order.lines.get()
     stock = order_line.variant.stocks.get()
     stock_quantity_before = stock.quantity
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [{"order_line": order_line, "quantity": 2}]
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [{"order_line": order_line, "quantity": 2}]
     }
 
     [fulfillment] = create_fulfillments(
-        staff_user, order, fulfillment_lines_for_warehouses, True
+        staff_user, order, fulfillment_lines_for_hotels, True
     )
 
     order.refresh_from_db()
@@ -251,20 +251,20 @@ def test_create_fulfillments_without_allocations(
     mock_email_fulfillment,
     staff_user,
     order_with_lines,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     order_line1, order_line2 = order.lines.all()
     Allocation.objects.filter(order_line__order=order).delete()
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [
             {"order_line": order_line1, "quantity": 3},
             {"order_line": order_line2, "quantity": 2},
         ]
     }
 
     [fulfillment] = create_fulfillments(
-        staff_user, order, fulfillment_lines_for_warehouses, True
+        staff_user, order, fulfillment_lines_for_hotels, True
     )
 
     order.refresh_from_db()
@@ -296,32 +296,32 @@ def test_create_fulfillments_without_allocations(
 
 
 @patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
-def test_create_fulfillments_warehouse_with_out_of_stock(
+def test_create_fulfillments_hotel_with_out_of_stock(
     mock_email_fulfillment,
     staff_user,
     order_with_lines,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     order_line1, order_line2 = order.lines.all()
     order_line1.allocations.all().delete()
-    stock = order_line1.variant.stocks.get(warehouse=warehouse)
+    stock = order_line1.variant.stocks.get(hotel=hotel)
     stock.quantity = 2
     stock.save(update_fields=["quantity"])
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [
             {"order_line": order_line1, "quantity": 3},
             {"order_line": order_line2, "quantity": 2},
         ]
     }
 
     with pytest.raises(InsufficientStock) as exc:
-        create_fulfillments(staff_user, order, fulfillment_lines_for_warehouses, True)
+        create_fulfillments(staff_user, order, fulfillment_lines_for_hotels, True)
 
     assert exc.value.item == order_line1.variant
     assert exc.value.context == {
         "order_line": order_line1,
-        "warehouse_pk": str(warehouse.pk),
+        "hotel_pk": str(hotel.pk),
     }
 
     order.refresh_from_db()
@@ -345,28 +345,28 @@ def test_create_fulfillments_warehouse_with_out_of_stock(
 
 
 @patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
-def test_create_fulfillments_warehouse_without_stock(
+def test_create_fulfillments_hotel_without_stock(
     mock_email_fulfillment,
     staff_user,
     order_with_lines,
-    warehouse_no_shipping_zone,
+    hotel_no_shipping_zone,
 ):
     order = order_with_lines
     order_line1, order_line2 = order.lines.all()
-    fulfillment_lines_for_warehouses = {
-        str(warehouse_no_shipping_zone.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel_no_shipping_zone.pk): [
             {"order_line": order_line1, "quantity": 3},
             {"order_line": order_line2, "quantity": 2},
         ]
     }
 
     with pytest.raises(InsufficientStock) as exc:
-        create_fulfillments(staff_user, order, fulfillment_lines_for_warehouses, True)
+        create_fulfillments(staff_user, order, fulfillment_lines_for_hotels, True)
 
     assert exc.value.item == order_line1.variant
     assert exc.value.context == {
         "order_line": order_line1,
-        "warehouse_pk": str(warehouse_no_shipping_zone.pk),
+        "hotel_pk": str(hotel_no_shipping_zone.pk),
     }
 
     order.refresh_from_db()
@@ -394,21 +394,21 @@ def test_create_fulfillments_with_variant_without_inventory_tracking_and_without
     mock_email_fulfillment,
     staff_user,
     order_with_line_without_inventory_tracking,
-    warehouse_no_shipping_zone,
+    hotel_no_shipping_zone,
 ):
     order = order_with_line_without_inventory_tracking
     order_line = order.lines.get()
-    fulfillment_lines_for_warehouses = {
-        str(warehouse_no_shipping_zone.pk): [{"order_line": order_line, "quantity": 2}]
+    fulfillment_lines_for_hotels = {
+        str(hotel_no_shipping_zone.pk): [{"order_line": order_line, "quantity": 2}]
     }
 
     with pytest.raises(InsufficientStock) as exc:
-        create_fulfillments(staff_user, order, fulfillment_lines_for_warehouses, True)
+        create_fulfillments(staff_user, order, fulfillment_lines_for_hotels, True)
 
     assert exc.value.item == order_line.variant
     assert exc.value.context == {
         "order_line": order_line,
-        "warehouse_pk": str(warehouse_no_shipping_zone.pk),
+        "hotel_pk": str(hotel_no_shipping_zone.pk),
     }
 
     order.refresh_from_db()

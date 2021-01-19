@@ -7,27 +7,27 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0047_auto_20180117_0359")]
+    dependencies = [("room", "0047_auto_20180117_0359")]
 
     operations = [
-        migrations.RenameModel(old_name="ProductClass", new_name="ProductType"),
+        migrations.RenameModel(old_name="RoomClass", new_name="RoomType"),
         migrations.RenameField(
-            model_name="product", old_name="product_class", new_name="product_type"
+            model_name="room", old_name="room_class", new_name="room_type"
         ),
         migrations.AlterField(
-            model_name="producttype",
-            name="product_attributes",
+            model_name="roomtype",
+            name="room_attributes",
             field=models.ManyToManyField(
-                blank=True, related_name="product_types", to="product.ProductAttribute"
+                blank=True, related_name="room_types", to="room.RoomAttribute"
             ),
         ),
         migrations.AlterField(
-            model_name="producttype",
+            model_name="roomtype",
             name="variant_attributes",
             field=models.ManyToManyField(
                 blank=True,
-                related_name="product_variant_types",
-                to="product.ProductAttribute",
+                related_name="room_variant_types",
+                to="room.RoomAttribute",
             ),
         ),
     ]

@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 
 from ....menu.error_codes import MenuErrorCode
 from ....menu.models import Menu, MenuItem
-from ....product.models import Category
+from ....room.models import Category
 from ...menu.mutations import NavigationType, _validate_menu_item_instance
 from ...tests.utils import assert_no_permission, get_graphql_content
 

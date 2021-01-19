@@ -20,11 +20,11 @@ def test_send_email_with_link_to_download_file(
 
     # when
     emails.send_email_with_link_to_download_file(
-        user_export_file, user_export_file.user.email, "export_products_success"
+        user_export_file, user_export_file.user.email, "export_rooms_success"
     )
 
     # then
-    template = emails.EXPORT_TEMPLATES["export_products_success"]
+    template = emails.EXPORT_TEMPLATES["export_rooms_success"]
     ctx = {
         "csv_link": f"http://mirumee.com/media/export_files/{file_mock.name}",
         "domain": "mirumee.com",

@@ -6,10 +6,10 @@ from promise import Promise
 from ...checkout import CheckoutLineInfo
 from ...checkout.models import Checkout, CheckoutLine
 from ..core.dataloaders import DataLoader
-from ..product.dataloaders import (
+from ..room.dataloaders import (
     CollectionsByVariantIdLoader,
-    ProductByVariantIdLoader,
-    ProductVariantByIdLoader,
+    RoomByVariantIdLoader,
+    RoomVariantByIdLoader,
     VariantChannelListingByVariantIdAndChannelSlugLoader,
 )
 
@@ -39,10 +39,10 @@ class CheckoutLinesInfoByCheckoutTokenLoader(DataLoader):
             )
 
             def map_variant_ids_with_channel(channel):
-                def with_variants_products_collections(results):
-                    variants, products, collections, channel_listings = results
+                def with_variants_rooms_collections(results):
+                    variants, rooms, collections, channel_listings = results
                     variants_map = dict(zip(variants_pks, variants))
-                    products_map = dict(zip(variants_pks, products))
+                    rooms_map = dict(zip(variants_pks, rooms))
                     collections_map = dict(zip(variants_pks, collections))
                     channel_listings_map = dict(zip(variants_pks, channel_listings))
 
@@ -56,7 +56,7 @@ class CheckoutLinesInfoByCheckoutTokenLoader(DataLoader):
                                     channel_listing=channel_listings_map[
                                         line.variant_id
                                     ],
-                                    product=products_map[line.variant_id],
+                                    room=rooms_map[line.variant_id],
                                     collections=collections_map[line.variant_id],
                                 )
                                 for line in lines
@@ -64,10 +64,10 @@ class CheckoutLinesInfoByCheckoutTokenLoader(DataLoader):
                         )
                     return lines_info
 
-                variants = ProductVariantByIdLoader(self.context).load_many(
+                variants = RoomVariantByIdLoader(self.context).load_many(
                     variants_pks
                 )
-                products = ProductByVariantIdLoader(self.context).load_many(
+                rooms = RoomByVariantIdLoader(self.context).load_many(
                     variants_pks
                 )
                 collections = CollectionsByVariantIdLoader(self.context).load_many(
@@ -81,8 +81,8 @@ class CheckoutLinesInfoByCheckoutTokenLoader(DataLoader):
                     self.context
                 ).load_many(variant_ids_channel_slug)
                 return Promise.all(
-                    [variants, products, collections, channel_listings]
-                ).then(with_variants_products_collections)
+                    [variants, rooms, collections, channel_listings]
+                ).then(with_variants_rooms_collections)
 
             return channel.then(map_variant_ids_with_channel)
 

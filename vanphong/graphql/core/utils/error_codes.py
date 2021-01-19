@@ -20,7 +20,7 @@ from ....order.error_codes import OrderErrorCode
 from ....page.error_codes import PageErrorCode
 from ....payment.error_codes import PaymentErrorCode
 from ....plugins.error_codes import PluginErrorCode
-from ....product.error_codes import ProductErrorCode
+from ....room.error_codes import RoomErrorCode
 from ....shipping.error_codes import ShippingErrorCode
 from ...shop.error_codes import OrderSettingsErrorCode
 
@@ -70,7 +70,7 @@ SALEOR_ERROR_CODE_ENUMS = [
     PaymentErrorCode,
     OrderSettingsErrorCode,
     PermissionGroupErrorCode,
-    ProductErrorCode,
+    RoomErrorCode,
     ShippingErrorCode,
     ShopErrorCode,
     TranslationErrorCode,

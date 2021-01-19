@@ -18,12 +18,12 @@ def test_query_staff_user(
     media_root,
     permission_group_manage_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_staff,
     count_queries,
 ):
     group = permission_group_manage_users
-    group.permissions.add(permission_manage_products)
+    group.permissions.add(permission_manage_rooms)
 
     staff_user = group.user_set.first()
     staff_user.user_permissions.add(permission_manage_orders, permission_manage_staff)
@@ -124,7 +124,7 @@ def test_staff_create(
     staff_user,
     media_root,
     permission_group_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_staff,
     permission_manage_users,
     count_queries,
@@ -166,7 +166,7 @@ def test_staff_create(
         }
     """
     group = permission_group_manage_users
-    staff_user.user_permissions.add(permission_manage_products, permission_manage_users)
+    staff_user.user_permissions.add(permission_manage_rooms, permission_manage_users)
     email = "api_user@example.com"
     variables = {
         "email": email,
@@ -195,7 +195,7 @@ def test_staff_update_groups_and_permissions(
     permission_manage_staff,
     permission_manage_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     count_queries,
 ):
     query = """
@@ -230,13 +230,13 @@ def test_staff_update_groups_and_permissions(
         [
             Group(name="manage users"),
             Group(name="manage staff"),
-            Group(name="manage orders and products"),
+            Group(name="manage orders and rooms"),
         ]
     )
     group1, group2, group3 = groups
     group1.permissions.add(permission_manage_users)
     group2.permissions.add(permission_manage_staff)
-    group3.permissions.add(permission_manage_orders, permission_manage_products)
+    group3.permissions.add(permission_manage_orders, permission_manage_rooms)
 
     staff_user, staff_user1, staff_user2 = staff_users
     group1.user_set.add(staff_user1, staff_user2)
@@ -255,7 +255,7 @@ def test_staff_update_groups_and_permissions(
     }
 
     staff_api_client.user.user_permissions.add(
-        permission_manage_users, permission_manage_orders, permission_manage_products
+        permission_manage_users, permission_manage_orders, permission_manage_rooms
     )
 
     response = staff_api_client.post_graphql(
@@ -267,7 +267,7 @@ def test_staff_update_groups_and_permissions(
     assert len(data["user"]["userPermissions"]) == 3
     assert {perm["code"].lower() for perm in data["user"]["userPermissions"]} == {
         permission_manage_orders.codename,
-        permission_manage_products.codename,
+        permission_manage_rooms.codename,
         permission_manage_staff.codename,
     }
     assert len(data["user"]["permissionGroups"]) == 2
@@ -279,7 +279,7 @@ def test_staff_update_groups_and_permissions(
     assert len(data["user"]["permissions"]) == 3
     assert {perm["code"].lower() for perm in data["user"]["permissions"]} == {
         permission_manage_orders.codename,
-        permission_manage_products.codename,
+        permission_manage_rooms.codename,
         permission_manage_staff.codename,
     }
 

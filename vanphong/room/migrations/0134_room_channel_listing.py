@@ -5,15 +5,15 @@ from django.db import migrations, models
 from django.utils.text import slugify
 
 
-def migrate_products_publishable_data(apps, schema_editor):
+def migrate_rooms_publishable_data(apps, schema_editor):
     Channel = apps.get_model("channel", "Channel")
-    Product = apps.get_model("product", "Product")
-    ProductChannelListing = apps.get_model("product", "ProductChannelListing")
+    Room = apps.get_model("room", "Room")
+    RoomChannelListing = apps.get_model("room", "RoomChannelListing")
 
     channels_dict = {}
 
-    for product in Product.objects.iterator():
-        currency = product.currency
+    for room in Room.objects.iterator():
+        currency = room.currency
         channel = channels_dict.get(currency)
         if not channel:
             name = f"Channel {currency}"
@@ -22,15 +22,15 @@ def migrate_products_publishable_data(apps, schema_editor):
                 defaults={"name": name, "slug": slugify(name)},
             )
             channels_dict[currency] = channel
-        ProductChannelListing.objects.create(
-            product=product,
+        RoomChannelListing.objects.create(
+            room=room,
             channel=channel,
-            is_published=product.is_published,
-            publication_date=product.publication_date,
+            is_published=room.is_published,
+            publication_date=room.publication_date,
             currency=currency,
-            visible_in_listings=product.visible_in_listings,
-            available_for_purchase=product.available_for_purchase,
-            discounted_price_amount=product.minimal_variant_price_amount,
+            visible_in_listings=room.visible_in_listings,
+            available_for_purchase=room.available_for_purchase,
+            discounted_price_amount=room.minimal_variant_price_amount,
         )
 
 
@@ -38,12 +38,12 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("channel", "0001_initial"),
-        ("product", "0133_product_variant_channel_listing"),
+        ("room", "0133_room_variant_channel_listing"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="ProductChannelListing",
+            name="RoomChannelListing",
             fields=[
                 (
                     "id",
@@ -60,16 +60,16 @@ class Migration(migrations.Migration):
                     "channel",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="product_listings",
+                        related_name="room_listings",
                         to="channel.channel",
                     ),
                 ),
                 (
-                    "product",
+                    "room",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="channel_listings",
-                        to="product.product",
+                        to="room.room",
                     ),
                 ),
                 (
@@ -85,31 +85,31 @@ class Migration(migrations.Migration):
                 ("visible_in_listings", models.BooleanField(default=False)),
                 ("available_for_purchase", models.DateField(blank=True, null=True)),
             ],
-            options={"ordering": ("pk",), "unique_together": {("product", "channel")}},
+            options={"ordering": ("pk",), "unique_together": {("room", "channel")}},
         ),
-        migrations.RunPython(migrate_products_publishable_data),
+        migrations.RunPython(migrate_rooms_publishable_data),
         migrations.RemoveField(
-            model_name="product",
+            model_name="room",
             name="is_published",
         ),
         migrations.RemoveField(
-            model_name="product",
+            model_name="room",
             name="publication_date",
         ),
         migrations.RemoveField(
-            model_name="product",
+            model_name="room",
             name="currency",
         ),
         migrations.RemoveField(
-            model_name="product",
+            model_name="room",
             name="minimal_variant_price_amount",
         ),
         migrations.RemoveField(
-            model_name="product",
+            model_name="room",
             name="visible_in_listings",
         ),
         migrations.RemoveField(
-            model_name="product",
+            model_name="room",
             name="available_for_purchase",
         ),
     ]

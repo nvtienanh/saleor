@@ -31,7 +31,7 @@ mutation AttributeValueUpdate(
 def test_update_attribute_value(
     staff_api_client,
     pink_attribute_value,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     query = UPDATE_ATTRIBUTE_VALUE_MUTATION
@@ -42,7 +42,7 @@ def test_update_attribute_value(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -57,7 +57,7 @@ def test_update_attribute_value(
 def test_update_attribute_value_name_not_unique(
     staff_api_client,
     pink_attribute_value,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     query = UPDATE_ATTRIBUTE_VALUE_MUTATION
@@ -69,7 +69,7 @@ def test_update_attribute_value_name_not_unique(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then

@@ -4,12 +4,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....product.models import (
-    Product,
-    ProductChannelListing,
-    ProductType,
-    ProductVariant,
-    ProductVariantChannelListing,
+from ....room.models import (
+    Room,
+    RoomChannelListing,
+    RoomType,
+    RoomVariant,
+    RoomVariantChannelListing,
 )
 from ...channel.filters import LACK_OF_CHANNEL_IN_FILTERING_MSG
 from ...channel.sorters import LACK_OF_CHANNEL_IN_SORTING_MSG
@@ -17,99 +17,99 @@ from ...tests.utils import assert_graphql_error_with_message, get_graphql_conten
 
 
 @pytest.fixture
-def products_for_sorting_with_channels(category, channel_USD, channel_PLN):
-    product_type = ProductType.objects.create(name="Apple")
-    products = Product.objects.bulk_create(
+def rooms_for_sorting_with_channels(category, channel_USD, channel_PLN):
+    room_type = RoomType.objects.create(name="Apple")
+    rooms = Room.objects.bulk_create(
         [
-            Product(
-                name="Product1",
+            Room(
+                name="Room1",
                 slug="prod1",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
                 description="desc1",
             ),
-            Product(
-                name="ProductProduct1",
+            Room(
+                name="RoomRoom1",
                 slug="prod_prod1",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
             ),
-            Product(
-                name="ProductProduct2",
+            Room(
+                name="RoomRoom2",
                 slug="prod_prod2",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
             ),
-            Product(
-                name="Product2",
+            Room(
+                name="Room2",
                 slug="prod2",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
                 description="desc2",
             ),
-            Product(
-                name="Product3",
+            Room(
+                name="Room3",
                 slug="prod3",
                 category=category,
-                product_type=product_type,
+                room_type=room_type,
                 description="desc3",
             ),
         ]
     )
-    ProductChannelListing.objects.bulk_create(
+    RoomChannelListing.objects.bulk_create(
         [
-            ProductChannelListing(
-                product=products[0],
+            RoomChannelListing(
+                room=rooms[0],
                 channel=channel_USD,
                 is_published=True,
                 discounted_price_amount=Decimal(5),
                 publication_date=datetime.date(2002, 1, 1),
             ),
-            ProductChannelListing(
-                product=products[1],
+            RoomChannelListing(
+                room=rooms[1],
                 channel=channel_USD,
                 is_published=True,
                 discounted_price_amount=Decimal(15),
                 publication_date=datetime.date(2000, 1, 1),
             ),
-            ProductChannelListing(
-                product=products[2],
+            RoomChannelListing(
+                room=rooms[2],
                 channel=channel_USD,
                 is_published=False,
                 discounted_price_amount=Decimal(4),
                 publication_date=datetime.date(1999, 1, 1),
             ),
-            ProductChannelListing(
-                product=products[3],
+            RoomChannelListing(
+                room=rooms[3],
                 channel=channel_USD,
                 is_published=True,
                 discounted_price_amount=Decimal(7),
                 publication_date=datetime.date(2001, 1, 1),
             ),
             # Second channel
-            ProductChannelListing(
-                product=products[0],
+            RoomChannelListing(
+                room=rooms[0],
                 channel=channel_PLN,
                 is_published=False,
                 discounted_price_amount=Decimal(15),
                 publication_date=datetime.date(2003, 1, 1),
             ),
-            ProductChannelListing(
-                product=products[1],
+            RoomChannelListing(
+                room=rooms[1],
                 channel=channel_PLN,
                 is_published=True,
                 discounted_price_amount=Decimal(4),
                 publication_date=datetime.date(1999, 1, 1),
             ),
-            ProductChannelListing(
-                product=products[2],
+            RoomChannelListing(
+                room=rooms[2],
                 channel=channel_PLN,
                 is_published=True,
                 discounted_price_amount=Decimal(5),
                 publication_date=datetime.date(2000, 1, 1),
             ),
-            ProductChannelListing(
-                product=products[4],
+            RoomChannelListing(
+                room=rooms[4],
                 channel=channel_PLN,
                 is_published=True,
                 discounted_price_amount=Decimal(7),
@@ -117,81 +117,81 @@ def products_for_sorting_with_channels(category, channel_USD, channel_PLN):
             ),
         ]
     )
-    variants = ProductVariant.objects.bulk_create(
+    variants = RoomVariant.objects.bulk_create(
         [
-            ProductVariant(
-                product=products[0],
+            RoomVariant(
+                room=rooms[0],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
-            ProductVariant(
-                product=products[1],
+            RoomVariant(
+                room=rooms[1],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
-            ProductVariant(
-                product=products[2],
+            RoomVariant(
+                room=rooms[2],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
-            ProductVariant(
-                product=products[3],
+            RoomVariant(
+                room=rooms[3],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
-            ProductVariant(
-                product=products[4],
+            RoomVariant(
+                room=rooms[4],
                 sku=str(uuid.uuid4()).replace("-", ""),
                 track_inventory=True,
             ),
         ]
     )
-    ProductVariantChannelListing.objects.bulk_create(
+    RoomVariantChannelListing.objects.bulk_create(
         [
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[0],
                 channel=channel_USD,
                 price_amount=Decimal(10),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[1],
                 channel=channel_USD,
                 price_amount=Decimal(15),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[2],
                 channel=channel_USD,
                 price_amount=Decimal(8),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[3],
                 channel=channel_USD,
                 price_amount=Decimal(7),
                 currency=channel_USD.currency_code,
             ),
             # Second channel
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[0],
                 channel=channel_PLN,
                 price_amount=Decimal(15),
                 currency=channel_PLN.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[1],
                 channel=channel_PLN,
                 price_amount=Decimal(8),
                 currency=channel_PLN.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[2],
                 channel=channel_PLN,
                 price_amount=Decimal(10),
                 currency=channel_PLN.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[4],
                 channel=channel_PLN,
                 price_amount=Decimal(7),
@@ -199,12 +199,12 @@ def products_for_sorting_with_channels(category, channel_USD, channel_PLN):
             ),
         ]
     )
-    return products
+    return rooms
 
 
-QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING = """
-    query ($sortBy: ProductOrder, $filter: ProductFilterInput){
-        products (
+QUERY_ROOMS_WITH_SORTING_AND_FILTERING = """
+    query ($sortBy: RoomOrder, $filter: RoomFilterInput){
+        rooms (
             first: 10, sortBy: $sortBy, filter: $filter
         ) {
             edges {
@@ -227,19 +227,19 @@ QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING = """
         {"field": "PUBLICATION_DATE", "direction": "DESC"},
     ],
 )
-def test_products_with_sorting_and_without_channel(
+def test_rooms_with_sorting_and_without_channel(
     sort_by,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     # given
     variables = {"sortBy": sort_by}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING,
+        QUERY_ROOMS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -248,48 +248,48 @@ def test_products_with_sorting_and_without_channel(
 
 
 @pytest.mark.parametrize(
-    "sort_by, products_order",
+    "sort_by, rooms_order",
     [
         (
             {"field": "PUBLISHED", "direction": "ASC"},
-            ["ProductProduct2", "Product1", "Product2", "ProductProduct1", "Product3"],
+            ["RoomRoom2", "Room1", "Room2", "RoomRoom1", "Room3"],
         ),
         (
             {"field": "PUBLISHED", "direction": "DESC"},
-            ["Product3", "ProductProduct1", "Product2", "Product1", "ProductProduct2"],
+            ["Room3", "RoomRoom1", "Room2", "Room1", "RoomRoom2"],
         ),
         (
             {"field": "PRICE", "direction": "ASC"},
-            ["Product2", "ProductProduct2", "Product1", "ProductProduct1", "Product3"],
+            ["Room2", "RoomRoom2", "Room1", "RoomRoom1", "Room3"],
         ),
         (
             {"field": "PRICE", "direction": "DESC"},
-            ["Product3", "ProductProduct1", "Product1", "ProductProduct2", "Product2"],
+            ["Room3", "RoomRoom1", "Room1", "RoomRoom2", "Room2"],
         ),
         (
             {"field": "MINIMAL_PRICE", "direction": "ASC"},
-            ["ProductProduct2", "Product1", "Product2", "ProductProduct1", "Product3"],
+            ["RoomRoom2", "Room1", "Room2", "RoomRoom1", "Room3"],
         ),
         (
             {"field": "MINIMAL_PRICE", "direction": "DESC"},
-            ["Product3", "ProductProduct1", "Product2", "Product1", "ProductProduct2"],
+            ["Room3", "RoomRoom1", "Room2", "Room1", "RoomRoom2"],
         ),
         (
             {"field": "PUBLICATION_DATE", "direction": "ASC"},
-            ["ProductProduct2", "ProductProduct1", "Product2", "Product1", "Product3"],
+            ["RoomRoom2", "RoomRoom1", "Room2", "Room1", "Room3"],
         ),
         (
             {"field": "PUBLICATION_DATE", "direction": "DESC"},
-            ["Product3", "Product1", "Product2", "ProductProduct1", "ProductProduct2"],
+            ["Room3", "Room1", "Room2", "RoomRoom1", "RoomRoom2"],
         ),
     ],
 )
-def test_products_with_sorting_and_channel_USD(
+def test_rooms_with_sorting_and_channel_USD(
     sort_by,
-    products_order,
+    rooms_order,
     staff_api_client,
-    permission_manage_products,
-    products_for_sorting_with_channels,
+    permission_manage_rooms,
+    rooms_for_sorting_with_channels,
     channel_USD,
 ):
     # given
@@ -298,54 +298,54 @@ def test_products_with_sorting_and_channel_USD(
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING,
+        QUERY_ROOMS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    for index, product_name in enumerate(products_order):
-        assert product_name == products_nodes[index]["node"]["name"]
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    for index, room_name in enumerate(rooms_order):
+        assert room_name == rooms_nodes[index]["node"]["name"]
 
 
 @pytest.mark.parametrize(
-    "sort_by, products_order",
+    "sort_by, rooms_order",
     [
         (
             {"field": "PUBLISHED", "direction": "ASC"},
-            ["Product1", "Product3", "ProductProduct1", "ProductProduct2", "Product2"],
+            ["Room1", "Room3", "RoomRoom1", "RoomRoom2", "Room2"],
         ),
         (
             {"field": "PUBLISHED", "direction": "DESC"},
-            ["Product2", "ProductProduct2", "ProductProduct1", "Product3", "Product1"],
+            ["Room2", "RoomRoom2", "RoomRoom1", "Room3", "Room1"],
         ),
         (
             {"field": "PRICE", "direction": "ASC"},
-            ["Product3", "ProductProduct1", "ProductProduct2", "Product1", "Product2"],
+            ["Room3", "RoomRoom1", "RoomRoom2", "Room1", "Room2"],
         ),
         (
             {"field": "PRICE", "direction": "DESC"},
-            ["Product2", "Product1", "ProductProduct2", "ProductProduct1", "Product3"],
+            ["Room2", "Room1", "RoomRoom2", "RoomRoom1", "Room3"],
         ),
         (
             {"field": "MINIMAL_PRICE", "direction": "ASC"},
-            ["ProductProduct1", "ProductProduct2", "Product3", "Product1", "Product2"],
+            ["RoomRoom1", "RoomRoom2", "Room3", "Room1", "Room2"],
         ),
         (
             {"field": "MINIMAL_PRICE", "direction": "DESC"},
-            ["Product2", "Product1", "Product3", "ProductProduct2", "ProductProduct1"],
+            ["Room2", "Room1", "Room3", "RoomRoom2", "RoomRoom1"],
         ),
     ],
 )
-def test_products_with_sorting_and_channel_PLN(
+def test_rooms_with_sorting_and_channel_PLN(
     sort_by,
-    products_order,
+    rooms_order,
     staff_api_client,
-    permission_manage_products,
-    products_for_sorting_with_channels,
+    permission_manage_rooms,
+    rooms_for_sorting_with_channels,
     channel_PLN,
 ):
     # given
@@ -354,17 +354,17 @@ def test_products_with_sorting_and_channel_PLN(
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING,
+        QUERY_ROOMS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    for index, product_name in enumerate(products_order):
-        assert product_name == products_nodes[index]["node"]["name"]
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    for index, room_name in enumerate(rooms_order):
+        assert room_name == rooms_nodes[index]["node"]["name"]
 
 
 @pytest.mark.parametrize(
@@ -375,37 +375,37 @@ def test_products_with_sorting_and_channel_PLN(
         {"field": "MINIMAL_PRICE", "direction": "ASC"},
     ],
 )
-def test_products_with_sorting_and_not_existing_channel_asc(
+def test_rooms_with_sorting_and_not_existing_channel_asc(
     sort_by,
     staff_api_client,
-    permission_manage_products,
-    products_for_sorting_with_channels,
+    permission_manage_rooms,
+    rooms_for_sorting_with_channels,
     channel_USD,
 ):
     # given
-    products_order = [
-        "Product1",
-        "Product2",
-        "Product3",
-        "ProductProduct1",
-        "ProductProduct2",
+    rooms_order = [
+        "Room1",
+        "Room2",
+        "Room3",
+        "RoomRoom1",
+        "RoomRoom2",
     ]
     sort_by["channel"] = "Not-existing"
     variables = {"sortBy": sort_by}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING,
+        QUERY_ROOMS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    for index, product_name in enumerate(products_order):
-        assert product_name == products_nodes[index]["node"]["name"]
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    for index, room_name in enumerate(rooms_order):
+        assert room_name == rooms_nodes[index]["node"]["name"]
 
 
 @pytest.mark.parametrize(
@@ -416,19 +416,19 @@ def test_products_with_sorting_and_not_existing_channel_asc(
         {"field": "MINIMAL_PRICE", "direction": "DESC"},
     ],
 )
-def test_products_with_sorting_and_not_existing_channel_desc(
+def test_rooms_with_sorting_and_not_existing_channel_desc(
     sort_by,
     staff_api_client,
-    permission_manage_products,
-    products_for_sorting_with_channels,
+    permission_manage_rooms,
+    rooms_for_sorting_with_channels,
     channel_USD,
 ):
-    products_order = [
-        "ProductProduct2",
-        "ProductProduct1",
-        "Product3",
-        "Product2",
-        "Product1",
+    rooms_order = [
+        "RoomRoom2",
+        "RoomRoom1",
+        "Room3",
+        "Room2",
+        "Room1",
     ]
     # given
     sort_by["channel"] = "Not-existing"
@@ -436,34 +436,34 @@ def test_products_with_sorting_and_not_existing_channel_desc(
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING,
+        QUERY_ROOMS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    for index, product_name in enumerate(products_order):
-        assert product_name == products_nodes[index]["node"]["name"]
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    for index, room_name in enumerate(rooms_order):
+        assert room_name == rooms_nodes[index]["node"]["name"]
 
 
 @pytest.mark.parametrize(
     "filter_by",
     [{"isPublished": True}, {"price": {"lte": 5}}, {"minimalPrice": {"lte": 5}}],
 )
-def test_products_with_filtering_without_channel(
-    filter_by, staff_api_client, permission_manage_products
+def test_rooms_with_filtering_without_channel(
+    filter_by, staff_api_client, permission_manage_rooms
 ):
     # given
     variables = {"filter": filter_by}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING,
+        QUERY_ROOMS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -472,7 +472,7 @@ def test_products_with_filtering_without_channel(
 
 
 @pytest.mark.parametrize(
-    "filter_by, products_count",
+    "filter_by, rooms_count",
     [
         ({"isPublished": True}, 3),
         ({"isPublished": False}, 1),
@@ -482,12 +482,12 @@ def test_products_with_filtering_without_channel(
         ({"minimalPrice": {"gte": 5}}, 3),
     ],
 )
-def test_products_with_filtering_with_channel_USD(
+def test_rooms_with_filtering_with_channel_USD(
     filter_by,
-    products_count,
+    rooms_count,
     staff_api_client,
-    permission_manage_products,
-    products_for_sorting_with_channels,
+    permission_manage_rooms,
+    rooms_for_sorting_with_channels,
     channel_USD,
 ):
     # given
@@ -496,20 +496,20 @@ def test_products_with_filtering_with_channel_USD(
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING,
+        QUERY_ROOMS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert len(products_nodes) == products_count
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert len(rooms_nodes) == rooms_count
 
 
 @pytest.mark.parametrize(
-    "filter_by, products_count",
+    "filter_by, rooms_count",
     [
         ({"isPublished": True}, 3),
         ({"isPublished": False}, 1),
@@ -519,12 +519,12 @@ def test_products_with_filtering_with_channel_USD(
         ({"minimalPrice": {"gte": 5}}, 3),
     ],
 )
-def test_products_with_filtering_with_channel_PLN(
+def test_rooms_with_filtering_with_channel_PLN(
     filter_by,
-    products_count,
+    rooms_count,
     staff_api_client,
-    permission_manage_products,
-    products_for_sorting_with_channels,
+    permission_manage_rooms,
+    rooms_for_sorting_with_channels,
     channel_PLN,
 ):
     # given
@@ -533,16 +533,16 @@ def test_products_with_filtering_with_channel_PLN(
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING,
+        QUERY_ROOMS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert len(products_nodes) == products_count
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert len(rooms_nodes) == rooms_count
 
 
 @pytest.mark.parametrize(
@@ -556,11 +556,11 @@ def test_products_with_filtering_with_channel_PLN(
         {"minimalPrice": {"gte": 5}},
     ],
 )
-def test_products_with_filtering_and_not_existing_channel(
+def test_rooms_with_filtering_and_not_existing_channel(
     filter_by,
     staff_api_client,
-    permission_manage_products,
-    products_for_sorting_with_channels,
+    permission_manage_rooms,
+    rooms_for_sorting_with_channels,
     channel_USD,
 ):
     # given
@@ -569,13 +569,13 @@ def test_products_with_filtering_and_not_existing_channel(
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCTS_WITH_SORTING_AND_FILTERING,
+        QUERY_ROOMS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
     # then
     content = get_graphql_content(response)
-    products_nodes = content["data"]["products"]["edges"]
-    assert len(products_nodes) == 0
+    rooms_nodes = content["data"]["rooms"]["edges"]
+    assert len(rooms_nodes) == 0

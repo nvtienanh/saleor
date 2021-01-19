@@ -4,28 +4,28 @@ from unittest.mock import Mock, patch
 import pytz
 
 from ....plugins.invoicing.utils import (
-    chunk_products,
+    chunk_rooms,
     generate_invoice_number,
     generate_invoice_pdf,
-    get_product_limit_first_page,
+    get_room_limit_first_page,
     make_full_invoice_number,
 )
 
 
-def test_chunk_products(product):
-    assert chunk_products([product] * 3, 3) == [[product] * 3]
-    assert chunk_products([product] * 5, 3) == [[product] * 3, [product] * 2]
-    assert chunk_products([product] * 8, 3) == [
-        [product] * 3,
-        [product] * 3,
-        [product] * 2,
+def test_chunk_rooms(room):
+    assert chunk_rooms([room] * 3, 3) == [[room] * 3]
+    assert chunk_rooms([room] * 5, 3) == [[room] * 3, [room] * 2]
+    assert chunk_rooms([room] * 8, 3) == [
+        [room] * 3,
+        [room] * 3,
+        [room] * 2,
     ]
 
 
-def test_get_product_limit_first_page(product):
-    assert get_product_limit_first_page([product] * 3) == 3
-    assert get_product_limit_first_page([product] * 4) == 4
-    assert get_product_limit_first_page([product] * 16) == 4
+def test_get_room_limit_first_page(room):
+    assert get_room_limit_first_page([room] * 3) == 3
+    assert get_room_limit_first_page([room] * 4) == 4
+    assert get_room_limit_first_page([room] * 16) == 4
 
 
 @patch("saleor.plugins.invoicing.utils.HTML")
@@ -45,8 +45,8 @@ def test_generate_invoice_pdf_for_order(
             "creation_date": datetime.now(tz=pytz.utc).strftime("%d %b %Y"),
             "order": fulfilled_order,
             "font_path": "file://test",
-            "products_first_page": list(fulfilled_order.lines.all()),
-            "rest_of_products": [],
+            "rooms_first_page": list(fulfilled_order.lines.all()),
+            "rest_of_rooms": [],
         }
     )
     HTML_mock.assert_called_once_with(

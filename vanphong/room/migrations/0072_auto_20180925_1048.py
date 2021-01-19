@@ -5,10 +5,10 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0071_attributechoicevalue_value")]
+    dependencies = [("room", "0071_attributechoicevalue_value")]
 
     operations = [
-        migrations.RenameModel(old_name="ProductAttribute", new_name="Attribute"),
+        migrations.RenameModel(old_name="RoomAttribute", new_name="Attribute"),
         migrations.RenameModel(
             old_name="AttributeChoiceValueTranslation",
             new_name="AttributeValueTranslation",
@@ -17,11 +17,11 @@ class Migration(migrations.Migration):
             old_name="AttributeChoiceValue", new_name="AttributeValue"
         ),
         migrations.RenameModel(
-            old_name="ProductAttributeTranslation", new_name="AttributeTranslation"
+            old_name="RoomAttributeTranslation", new_name="AttributeTranslation"
         ),
         migrations.RenameField(
             model_name="attributetranslation",
-            old_name="product_attribute",
+            old_name="room_attribute",
             new_name="attribute",
         ),
         migrations.RenameField(

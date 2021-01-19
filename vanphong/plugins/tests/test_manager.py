@@ -10,7 +10,7 @@ from ...checkout import CheckoutLineInfo
 from ...checkout.utils import fetch_checkout_lines
 from ...core.taxes import TaxType
 from ...payment.interface import PaymentGateway
-from ...product.models import Product
+from ...room.models import Room
 from ..manager import PluginsManager, get_plugins_manager
 from ..models import PluginConfiguration
 from ..tests.sample_plugins import (
@@ -115,7 +115,7 @@ def test_manager_calculates_checkout_line_total(
         checkout_with_item,
         line,
         line.variant,
-        line.variant.product,
+        line.variant.room,
         [],
         checkout_with_item.shipping_address,
         channel,
@@ -137,7 +137,7 @@ def test_manager_get_checkout_line_tax_rate_sample_plugin(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
 
@@ -167,7 +167,7 @@ def test_manager_get_checkout_line_tax_rate_no_plugins(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
     tax_rate = PluginsManager(plugins=[]).get_checkout_line_tax_rate(
@@ -183,12 +183,12 @@ def test_manager_get_checkout_line_tax_rate_no_plugins(
 def test_manager_get_order_line_tax_rate_sample_plugin(order_with_lines):
     order = order_with_lines
     line = order.lines.first()
-    product = Product.objects.get(name=line.product_name)
+    room = Room.objects.get(name=line.room_name)
     plugins = ["saleor.plugins.tests.sample_plugins.PluginSample"]
     unit_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
     tax_rate = PluginsManager(plugins=plugins).get_order_line_tax_rate(
         order,
-        product,
+        room,
         None,
         unit_price,
     )
@@ -207,10 +207,10 @@ def test_manager_get_order_line_tax_rate_no_plugins(
 ):
     order = order_with_lines
     line = order.lines.first()
-    product = Product.objects.get(name=line.product_name)
+    room = Room.objects.get(name=line.room_name)
     tax_rate = PluginsManager(plugins=[]).get_order_line_tax_rate(
         order,
-        product,
+        room,
         None,
         unit_price,
     )
@@ -229,7 +229,7 @@ def test_manager_get_checkout_shipping_tax_rate_sample_plugin(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
 
@@ -259,7 +259,7 @@ def test_manager_get_checkout_shipping_tax_rate_no_plugins(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
     tax_rate = PluginsManager(plugins=[]).get_checkout_shipping_tax_rate(
@@ -375,18 +375,18 @@ def test_manager_show_taxes_on_storefront(plugins, show_taxes):
     "plugins, price",
     [(["saleor.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "10.0")],
 )
-def test_manager_apply_taxes_to_product(product, plugins, price, channel_USD):
+def test_manager_apply_taxes_to_room(room, plugins, price, channel_USD):
     country = Country("PL")
-    variant = product.variants.all()[0]
+    variant = room.variants.all()[0]
     variant_channel_listing = variant.channel_listings.get(channel=channel_USD)
     currency = variant.get_price(
-        variant.product, [], channel_USD, variant_channel_listing, None
+        variant.room, [], channel_USD, variant_channel_listing, None
     ).currency
     expected_price = Money(price, currency)
-    taxed_price = PluginsManager(plugins=plugins).apply_taxes_to_product(
-        product,
+    taxed_price = PluginsManager(plugins=plugins).apply_taxes_to_room(
+        room,
         variant.get_price(
-            variant.product, [], channel_USD, variant_channel_listing, None
+            variant.room, [], channel_USD, variant_channel_listing, None
         ),
         country,
     )
@@ -414,10 +414,10 @@ def test_manager_apply_taxes_to_shipping(
     "plugins, amount",
     [(["saleor.plugins.tests.sample_plugins.PluginSample"], "15.0"), ([], "0")],
 )
-def test_manager_get_tax_rate_percentage_value(plugins, amount, product):
+def test_manager_get_tax_rate_percentage_value(plugins, amount, room):
     country = Country("PL")
     tax_rate_value = PluginsManager(plugins=plugins).get_tax_rate_percentage_value(
-        product, country
+        room, country
     )
     assert tax_rate_value == Decimal(amount)
 

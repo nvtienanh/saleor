@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0086_product_publication_date")]
+    dependencies = [("room", "0086_room_publication_date")]
 
     operations = [
         migrations.RenameField(

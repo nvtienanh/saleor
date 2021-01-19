@@ -31,9 +31,9 @@ from ..order.models import Order, OrderLine
 from ..payment import PaymentError, gateway
 from ..payment.models import Payment, Transaction
 from ..payment.utils import store_customer_id
-from ..product.models import ProductTranslation, ProductVariantTranslation
-from ..warehouse.availability import check_stock_quantity_bulk
-from ..warehouse.management import allocate_stock
+from ..room.models import RoomTranslation, RoomVariantTranslation
+from ..hotel.availability import check_stock_quantity_bulk
+from ..hotel.management import allocate_stock
 from . import AddressType, models
 from .checkout_cleaner import clean_checkout_payment, clean_checkout_shipping
 from .models import Checkout
@@ -138,7 +138,7 @@ def _create_line_for_order(
     checkout_line_info: "CheckoutLineInfo",
     discounts: Iterable[DiscountInfo],
     channel: "Channel",
-    products_translation: Dict[int, Optional[str]],
+    rooms_translation: Dict[int, Optional[str]],
     variants_translation: Dict[int, Optional[str]],
 ) -> OrderLine:
     """Create a line for the given order.
@@ -149,20 +149,20 @@ def _create_line_for_order(
     quantity = checkout_line.quantity
     variant = checkout_line_info.variant
     channel_listing = checkout_line_info.channel_listing
-    product = checkout_line_info.product
+    room = checkout_line_info.room
     collections = checkout_line_info.collections
     address = (
         checkout.shipping_address or checkout.billing_address
     )  # FIXME: check which address we need here
 
-    product_name = str(product)
+    room_name = str(room)
     variant_name = str(variant)
 
-    translated_product_name = products_translation.get(product.id, "")
+    translated_room_name = rooms_translation.get(room.id, "")
     translated_variant_name = variants_translation.get(variant.id, "")
 
-    if translated_product_name == product_name:
-        translated_product_name = ""
+    if translated_room_name == room_name:
+        translated_room_name = ""
 
     if translated_variant_name == variant_name:
         translated_variant_name = ""
@@ -171,7 +171,7 @@ def _create_line_for_order(
         checkout,
         checkout_line,
         variant,
-        product,
+        room,
         collections,
         address,
         channel,
@@ -184,11 +184,11 @@ def _create_line_for_order(
     )
 
     line = OrderLine(
-        product_name=product_name,
+        room_name=room_name,
         variant_name=variant_name,
-        translated_product_name=translated_product_name,
+        translated_room_name=translated_room_name,
         translated_variant_name=translated_variant_name,
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -215,25 +215,25 @@ def _create_lines_for_order(
     country_code = checkout.get_country()
     variants = []
     quantities = []
-    products = []
+    rooms = []
     for line_info in lines:
         variants.append(line_info.variant)
         quantities.append(line_info.line.quantity)
-        products.append(line_info.product)
+        rooms.append(line_info.room)
 
-    products_translation = ProductTranslation.objects.filter(
-        product__in=products, language_code=translation_language_code
-    ).values("product_id", "name")
-    product_translations = {
-        product_translation["product_id"]: product_translation.get("name")
-        for product_translation in products_translation
+    rooms_translation = RoomTranslation.objects.filter(
+        room__in=rooms, language_code=translation_language_code
+    ).values("room_id", "name")
+    room_translations = {
+        room_translation["room_id"]: room_translation.get("name")
+        for room_translation in rooms_translation
     }
 
-    variants_translation = ProductVariantTranslation.objects.filter(
-        product_variant__in=variants, language_code=translation_language_code
-    ).values("product_variant_id", "name")
+    variants_translation = RoomVariantTranslation.objects.filter(
+        room_variant__in=variants, language_code=translation_language_code
+    ).values("room_variant_id", "name")
     variants_translation = {
-        variant_translation["product_variant_id"]: variant_translation.get("name")
+        variant_translation["room_variant_id"]: variant_translation.get("name")
         for variant_translation in variants_translation
     }
 
@@ -246,7 +246,7 @@ def _create_lines_for_order(
             checkout_line_info,
             discounts,
             channel,
-            product_translations,
+            room_translations,
             variants_translation,
         )
         for checkout_line_info in lines
@@ -466,7 +466,7 @@ def _get_order_data(
             discounts=discounts,
         )
     except InsufficientStock as e:
-        raise ValidationError(f"Insufficient product stock: {e.item}", code=e.code)
+        raise ValidationError(f"Insufficient room stock: {e.item}", code=e.code)
     except NotApplicable:
         raise ValidationError(
             "Voucher not applicable",
@@ -569,6 +569,6 @@ def complete_checkout(
         except InsufficientStock as e:
             release_voucher_usage(order_data)
             gateway.payment_refund_or_void(payment)
-            raise ValidationError(f"Insufficient product stock: {e.item}", code=e.code)
+            raise ValidationError(f"Insufficient room stock: {e.item}", code=e.code)
 
     return order, action_required, action_data

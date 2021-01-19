@@ -35,17 +35,17 @@ APP_CREATE_MUTATION = """
 
 def test_app_create_mutation(
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     staff_api_client,
     staff_user,
 ):
     query = APP_CREATE_MUTATION
-    staff_user.user_permissions.add(permission_manage_products)
+    staff_user.user_permissions.add(permission_manage_rooms)
 
     variables = {
         "name": "New integration",
         "is_active": True,
-        "permissions": [PermissionEnum.MANAGE_PRODUCTS.name],
+        "permissions": [PermissionEnum.MANAGE_ROOMS.name],
     }
     response = staff_api_client.post_graphql(
         query, variables=variables, permissions=(permission_manage_apps,)
@@ -57,24 +57,24 @@ def test_app_create_mutation(
     app = App.objects.get()
     assert app_data["isActive"] == app.is_active
     assert app_data["name"] == app.name
-    assert list(app.permissions.all()) == [permission_manage_products]
+    assert list(app.permissions.all()) == [permission_manage_rooms]
     assert default_token == app.tokens.get().auth_token
 
 
 def test_app_create_mutation_for_app(
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     app_api_client,
     staff_user,
 ):
     query = APP_CREATE_MUTATION
     requestor = app_api_client.app
-    requestor.permissions.add(permission_manage_apps, permission_manage_products)
+    requestor.permissions.add(permission_manage_apps, permission_manage_rooms)
 
     variables = {
         "name": "New integration",
         "is_active": True,
-        "permissions": [PermissionEnum.MANAGE_PRODUCTS.name],
+        "permissions": [PermissionEnum.MANAGE_ROOMS.name],
     }
     response = app_api_client.post_graphql(query, variables=variables)
     content = get_graphql_content(response)
@@ -83,13 +83,13 @@ def test_app_create_mutation_for_app(
     app = App.objects.exclude(pk=requestor.pk).get()
     assert app_data["isActive"] == app.is_active
     assert app_data["name"] == app.name
-    assert list(app.permissions.all()) == [permission_manage_products]
+    assert list(app.permissions.all()) == [permission_manage_rooms]
     assert default_token == app.tokens.get().auth_token
 
 
 def test_app_create_mutation_out_of_scope_permissions(
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     staff_api_client,
     staff_user,
 ):
@@ -103,7 +103,7 @@ def test_app_create_mutation_out_of_scope_permissions(
     variables = {
         "name": "New integration",
         "is_active": True,
-        "permissions": [PermissionEnum.MANAGE_PRODUCTS.name],
+        "permissions": [PermissionEnum.MANAGE_ROOMS.name],
     }
 
     response = staff_api_client.post_graphql(query, variables=variables)
@@ -116,12 +116,12 @@ def test_app_create_mutation_out_of_scope_permissions(
     error = errors[0]
     assert error["field"] == "permissions"
     assert error["code"] == AppErrorCode.OUT_OF_SCOPE_PERMISSION.name
-    assert error["permissions"] == [PermissionEnum.MANAGE_PRODUCTS.name]
+    assert error["permissions"] == [PermissionEnum.MANAGE_ROOMS.name]
 
 
 def test_app_create_mutation_superuser_can_create_app_with_any_perms(
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     superuser_api_client,
 ):
     """Ensure superuser can create app with any permissions."""
@@ -130,7 +130,7 @@ def test_app_create_mutation_superuser_can_create_app_with_any_perms(
     variables = {
         "name": "New integration",
         "is_active": True,
-        "permissions": [PermissionEnum.MANAGE_PRODUCTS.name],
+        "permissions": [PermissionEnum.MANAGE_ROOMS.name],
     }
 
     response = superuser_api_client.post_graphql(query, variables=variables)
@@ -140,13 +140,13 @@ def test_app_create_mutation_superuser_can_create_app_with_any_perms(
     app = App.objects.get()
     assert app_data["isActive"] == app.is_active
     assert app_data["name"] == app.name
-    assert list(app.permissions.all()) == [permission_manage_products]
+    assert list(app.permissions.all()) == [permission_manage_rooms]
     assert default_token == app.tokens.get().auth_token
 
 
 def test_app_create_mutation_for_app_out_of_scope_permissions(
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     app_api_client,
     staff_user,
 ):
@@ -155,7 +155,7 @@ def test_app_create_mutation_for_app_out_of_scope_permissions(
     variables = {
         "name": "New integration",
         "is_active": True,
-        "permissions": [PermissionEnum.MANAGE_PRODUCTS.name],
+        "permissions": [PermissionEnum.MANAGE_ROOMS.name],
     }
     response = app_api_client.post_graphql(
         query, variables=variables, permissions=(permission_manage_apps,)
@@ -169,12 +169,12 @@ def test_app_create_mutation_for_app_out_of_scope_permissions(
     error = errors[0]
     assert error["field"] == "permissions"
     assert error["code"] == AppErrorCode.OUT_OF_SCOPE_PERMISSION.name
-    assert error["permissions"] == [PermissionEnum.MANAGE_PRODUCTS.name]
+    assert error["permissions"] == [PermissionEnum.MANAGE_ROOMS.name]
 
 
 def test_app_create_mutation_no_permissions(
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     staff_api_client,
     staff_user,
 ):
@@ -182,7 +182,7 @@ def test_app_create_mutation_no_permissions(
     variables = {
         "name": "New integration",
         "is_active": True,
-        "permissions": [PermissionEnum.MANAGE_PRODUCTS.name],
+        "permissions": [PermissionEnum.MANAGE_ROOMS.name],
     }
     response = staff_api_client.post_graphql(query, variables=variables)
     assert_no_permission(response)

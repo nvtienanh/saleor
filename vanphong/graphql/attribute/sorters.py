@@ -40,7 +40,7 @@ class AttributeSortField(graphene.Enum):
             ),
             AttributeSortField.AVAILABLE_IN_GRID.name: (
                 "Sort attributes based on whether they can be displayed "
-                "or not in a product grid."
+                "or not in a room grid."
             ),
         }
         if self.name in descriptions:

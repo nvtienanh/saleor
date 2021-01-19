@@ -15,7 +15,7 @@ from ...channel.models import Channel
 from ...discount.models import Sale, SaleChannelListing, Voucher, VoucherChannelListing
 from ...giftcard.models import GiftCard
 from ...order.models import Order
-from ...product.models import ProductImage, ProductType
+from ...room.models import RoomImage, RoomType
 from ...shipping.models import ShippingZone
 from ..storages import S3MediaStorage
 from ..templatetags.placeholder import placeholder
@@ -33,7 +33,7 @@ from ..utils import (
 type_schema = {
     "Vegetable": {
         "category": {"name": "Food", "image_name": "books.jpg"},
-        "product_attributes": {
+        "room_attributes": {
             "Sweetness": ["Sweet", "Sour"],
             "Healthiness": ["Healthy", "Not really"],
         },
@@ -151,7 +151,7 @@ def test_create_address(db):
     assert Address.objects.all().count() == 1
 
 
-def test_create_fake_order(db, monkeypatch, image, media_root, warehouse):
+def test_create_fake_order(db, monkeypatch, image, media_root, hotel):
     # Tests shouldn't depend on images present in placeholder folder
     monkeypatch.setattr(
         "saleor.core.utils.random_data.get_image", Mock(return_value=image)
@@ -166,19 +166,19 @@ def test_create_fake_order(db, monkeypatch, image, media_root, warehouse):
         pass
     for msg in random_data.create_page():
         pass
-    random_data.create_products_by_schema("/", False)
+    random_data.create_rooms_by_schema("/", False)
     how_many = 2
     for _ in random_data.create_orders(how_many):
         pass
     assert Order.objects.all().count() == 2
 
 
-def test_create_product_sales(db):
+def test_create_room_sales(db):
     how_many = 5
     channel_count = 0
     for _ in random_data.create_channels():
         channel_count += 1
-    for _ in random_data.create_product_sales(how_many):
+    for _ in random_data.create_room_sales(how_many):
         pass
     assert Sale.objects.all().count() == how_many
     assert SaleChannelListing.objects.all().count() == how_many * channel_count
@@ -204,33 +204,33 @@ def test_create_gift_card(db):
 
 
 @override_settings(VERSATILEIMAGEFIELD_SETTINGS={"create_images_on_demand": False})
-def test_create_thumbnails(product_with_image, settings, monkeypatch):
+def test_create_thumbnails(room_with_image, settings, monkeypatch):
     monkeypatch.setattr("django.core.cache.cache.get", Mock(return_value=None))
-    sizeset = settings.VERSATILEIMAGEFIELD_RENDITION_KEY_SETS["products"]
-    product_image = product_with_image.images.first()
+    sizeset = settings.VERSATILEIMAGEFIELD_RENDITION_KEY_SETS["rooms"]
+    room_image = room_with_image.images.first()
 
     # There's no way to list images created by versatile prewarmer
     # So we delete all created thumbnails/crops and count them
     log_deleted_images = io.StringIO()
     with redirect_stdout(log_deleted_images):
-        product_image.image.delete_all_created_images()
+        room_image.image.delete_all_created_images()
     log_deleted_images = log_deleted_images.getvalue()
     # Image didn't have any thumbnails/crops created, so there's no log
     assert not log_deleted_images
 
-    create_thumbnails(product_image.pk, ProductImage, "products")
+    create_thumbnails(room_image.pk, RoomImage, "rooms")
     log_deleted_images = io.StringIO()
     with redirect_stdout(log_deleted_images):
-        product_image.image.delete_all_created_images()
+        room_image.image.delete_all_created_images()
     log_deleted_images = log_deleted_images.getvalue()
 
     for image_name, method_size in sizeset:
         method, size = method_size.split("__")
         if method == "crop":
-            assert product_image.image.crop[size].name in log_deleted_images
+            assert room_image.image.crop[size].name in log_deleted_images
         elif method == "thumbnail":
             assert (
-                product_image.image.thumbnail[size].name in log_deleted_images
+                room_image.image.thumbnail[size].name in log_deleted_images
             )  # noqa
 
 
@@ -282,7 +282,7 @@ def test_placeholder(settings):
 
 
 @pytest.mark.parametrize(
-    "product_name, slug_result",
+    "room_name, slug_result",
     [
         ("Paint", "paint"),
         ("paint", "paint-3"),
@@ -296,9 +296,9 @@ def test_placeholder(settings):
     ],
 )
 def test_generate_unique_slug_with_slugable_field(
-    product_type, product_name, slug_result
+    room_type, room_name, slug_result
 ):
-    product_names_and_slugs = [
+    room_names_and_slugs = [
         ("Paint", "paint"),
         ("Paint blue", "paint-blue"),
         ("Paint test", "paint-2"),
@@ -306,10 +306,10 @@ def test_generate_unique_slug_with_slugable_field(
         ("FM1", "fm1"),
         ("わたし わ にっぽん です", "わたし-わ-にっぽん-です"),
     ]
-    for name, slug in product_names_and_slugs:
-        ProductType.objects.create(name=name, slug=slug)
+    for name, slug in room_names_and_slugs:
+        RoomType.objects.create(name=name, slug=slug)
 
-    instance, _ = ProductType.objects.get_or_create(name=product_name)
+    instance, _ = RoomType.objects.get_or_create(name=room_name)
     result = generate_unique_slug(instance, instance.name)
     assert result == slug_result
 

@@ -3,12 +3,12 @@ import warnings
 import graphene
 
 from .....channel.utils import DEPRECATION_WARNING_MESSAGE
-from .....product.models import Product
+from .....room.models import Room
 from ....tests.utils import get_graphql_content
 
-QUERY_PRODUCT = """
+QUERY_ROOM = """
     query ($id: ID, $slug: String){
-        product(
+        room(
             id: $id,
             slug: $slug,
         ) {
@@ -18,9 +18,9 @@ QUERY_PRODUCT = """
     }
     """
 
-QUERY_FETCH_ALL_PRODUCTS = """
+QUERY_FETCH_ALL_ROOMS = """
     query {
-        products(first: 1) {
+        rooms(first: 1) {
             totalCount
             edges {
                 node {
@@ -35,56 +35,56 @@ QUERY_FETCH_ALL_PRODUCTS = """
 """
 
 
-def test_product_query_by_id_with_default_channel(user_api_client, product):
-    variables = {"id": graphene.Node.to_global_id("Product", product.pk)}
+def test_room_query_by_id_with_default_channel(user_api_client, room):
+    variables = {"id": graphene.Node.to_global_id("Room", room.pk)}
 
     with warnings.catch_warnings(record=True) as warns:
-        response = user_api_client.post_graphql(QUERY_PRODUCT, variables=variables)
+        response = user_api_client.post_graphql(QUERY_ROOM, variables=variables)
         content = get_graphql_content(response)
-    collection_data = content["data"]["product"]
+    collection_data = content["data"]["room"]
     assert collection_data is not None
-    assert collection_data["name"] == product.name
+    assert collection_data["name"] == room.name
     assert any(
         [str(warning.message) == DEPRECATION_WARNING_MESSAGE for warning in warns]
     )
 
 
-def test_product_query_by_slug_with_default_channel(user_api_client, product):
-    variables = {"slug": product.slug}
+def test_room_query_by_slug_with_default_channel(user_api_client, room):
+    variables = {"slug": room.slug}
     with warnings.catch_warnings(record=True) as warns:
-        response = user_api_client.post_graphql(QUERY_PRODUCT, variables=variables)
+        response = user_api_client.post_graphql(QUERY_ROOM, variables=variables)
         content = get_graphql_content(response)
-    collection_data = content["data"]["product"]
+    collection_data = content["data"]["room"]
     assert collection_data is not None
-    assert collection_data["name"] == product.name
+    assert collection_data["name"] == room.name
     assert any(
         [str(warning.message) == DEPRECATION_WARNING_MESSAGE for warning in warns]
     )
 
 
-def test_fetch_all_products(user_api_client, product):
+def test_fetch_all_rooms(user_api_client, room):
     with warnings.catch_warnings(record=True) as warns:
-        response = user_api_client.post_graphql(QUERY_FETCH_ALL_PRODUCTS)
+        response = user_api_client.post_graphql(QUERY_FETCH_ALL_ROOMS)
         content = get_graphql_content(response)
-    product_channel_listing = product.channel_listings.get()
-    num_products = Product.objects.count()
-    data = content["data"]["products"]
-    product_data = data["edges"][0]["node"]
-    assert data["totalCount"] == num_products
-    assert product_data["isAvailable"] is True
-    assert product_data["isAvailableForPurchase"] is True
-    assert product_data["availableForPurchase"] == str(
-        product_channel_listing.available_for_purchase
+    room_channel_listing = room.channel_listings.get()
+    num_rooms = Room.objects.count()
+    data = content["data"]["rooms"]
+    room_data = data["edges"][0]["node"]
+    assert data["totalCount"] == num_rooms
+    assert room_data["isAvailable"] is True
+    assert room_data["isAvailableForPurchase"] is True
+    assert room_data["availableForPurchase"] == str(
+        room_channel_listing.available_for_purchase
     )
-    assert len(content["data"]["products"]["edges"]) == num_products
+    assert len(content["data"]["rooms"]["edges"]) == num_rooms
     assert any(
         [str(warning.message) == DEPRECATION_WARNING_MESSAGE for warning in warns]
     )
 
 
-QUERY_COLLECTION_FROM_PRODUCT = """
+QUERY_COLLECTION_FROM_ROOM = """
     query ($id: ID, $channel:String){
-        product(
+        room(
             id: $id,
             channel: $channel
         ) {
@@ -96,17 +96,17 @@ QUERY_COLLECTION_FROM_PRODUCT = """
     """
 
 
-def test_get_collections_from_product_as_customer(
-    user_api_client, product_with_collections, channel_USD, published_collection
+def test_get_collections_from_room_as_customer(
+    user_api_client, room_with_collections, channel_USD, published_collection
 ):
     # given
-    product = product_with_collections
-    variables = {"id": graphene.Node.to_global_id("Product", product.pk)}
+    room = room_with_collections
+    variables = {"id": graphene.Node.to_global_id("Room", room.pk)}
 
     # when
     with warnings.catch_warnings(record=True) as warns:
         response = user_api_client.post_graphql(
-            QUERY_COLLECTION_FROM_PRODUCT,
+            QUERY_COLLECTION_FROM_ROOM,
             variables=variables,
             permissions=(),
             check_no_permissions=False,
@@ -114,7 +114,7 @@ def test_get_collections_from_product_as_customer(
 
     # then
     content = get_graphql_content(response)
-    collections = content["data"]["product"]["collections"]
+    collections = content["data"]["room"]["collections"]
     assert len(collections) == 1
     assert {"name": published_collection.name} in collections
     assert any(
@@ -122,17 +122,17 @@ def test_get_collections_from_product_as_customer(
     )
 
 
-def test_get_collections_from_product_as_anonymous(
-    api_client, product_with_collections, channel_USD, published_collection
+def test_get_collections_from_room_as_anonymous(
+    api_client, room_with_collections, channel_USD, published_collection
 ):
     # given
-    product = product_with_collections
-    variables = {"id": graphene.Node.to_global_id("Product", product.pk)}
+    room = room_with_collections
+    variables = {"id": graphene.Node.to_global_id("Room", room.pk)}
 
     # when
     with warnings.catch_warnings(record=True) as warns:
         response = api_client.post_graphql(
-            QUERY_COLLECTION_FROM_PRODUCT,
+            QUERY_COLLECTION_FROM_ROOM,
             variables=variables,
             permissions=(),
             check_no_permissions=False,
@@ -140,7 +140,7 @@ def test_get_collections_from_product_as_anonymous(
 
     # then
     content = get_graphql_content(response)
-    collections = content["data"]["product"]["collections"]
+    collections = content["data"]["room"]["collections"]
     assert len(collections) == 1
     assert {"name": published_collection.name} in collections
     assert any(

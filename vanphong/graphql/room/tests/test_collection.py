@@ -5,9 +5,9 @@ import graphene
 import pytest
 from graphql_relay import to_global_id
 
-from ....product.error_codes import CollectionErrorCode, ProductErrorCode
-from ....product.models import Collection, Product
-from ....product.tests.utils import create_image, create_pdf_file_with_image_ext
+from ....room.error_codes import CollectionErrorCode, RoomErrorCode
+from ....room.models import Collection, Room
+from ....room.tests.utils import create_image, create_pdf_file_with_image_ext
 from ...tests.utils import get_graphql_content, get_multipart_request_body
 
 QUERY_COLLECTION = """
@@ -38,7 +38,7 @@ def test_collection_query_by_id(user_api_client, published_collection, channel_U
 
 
 def test_collection_query_unpublished_collection_by_id_as_app(
-    app_api_client, unpublished_collection, permission_manage_products, channel_USD
+    app_api_client, unpublished_collection, permission_manage_rooms, channel_USD
 ):
     # given
     variables = {
@@ -50,7 +50,7 @@ def test_collection_query_unpublished_collection_by_id_as_app(
     response = app_api_client.post_graphql(
         QUERY_COLLECTION,
         variables=variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -74,11 +74,11 @@ def test_collection_query_by_slug(user_api_client, published_collection, channel
 
 
 def test_collection_query_unpublished_collection_by_slug_as_staff(
-    staff_api_client, unpublished_collection, permission_manage_products, channel_USD
+    staff_api_client, unpublished_collection, permission_manage_rooms, channel_USD
 ):
     # given
     user = staff_api_client.user
-    user.user_permissions.add(permission_manage_products)
+    user.user_permissions.add(permission_manage_rooms)
 
     variables = {"slug": unpublished_collection.slug, "channel": channel_USD.slug}
 
@@ -142,7 +142,7 @@ def test_collections_query(
     user_api_client,
     published_collection,
     unpublished_collection,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     query = """
@@ -153,7 +153,7 @@ def test_collections_query(
                         name
                         slug
                         description
-                        products {
+                        rooms {
                             totalCount
                         }
                     }
@@ -173,8 +173,8 @@ def test_collections_query(
     assert collection_data["slug"] == published_collection.slug
     assert collection_data["description"] == published_collection.description
     assert (
-        collection_data["products"]["totalCount"]
-        == published_collection.products.count()
+        collection_data["rooms"]["totalCount"]
+        == published_collection.rooms.count()
     )
 
 
@@ -182,7 +182,7 @@ def test_collections_query_as_staff(
     staff_api_client,
     published_collection,
     unpublished_collection_PLN,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     query = """
@@ -193,7 +193,7 @@ def test_collections_query_as_staff(
                         name
                         slug
                         description
-                        products {
+                        rooms {
                             totalCount
                         }
                     }
@@ -203,7 +203,7 @@ def test_collections_query_as_staff(
     """
     # query all collections only as a staff user with proper permissions
     variables = {"channel": channel_USD.slug}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(query, variables)
     content = get_graphql_content(response)
     edges = content["data"]["collections"]["edges"]
@@ -214,7 +214,7 @@ def test_collections_query_as_staff_without_channel(
     staff_api_client,
     published_collection,
     unpublished_collection_PLN,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     query = """
@@ -225,7 +225,7 @@ def test_collections_query_as_staff_without_channel(
                         name
                         slug
                         description
-                        products {
+                        rooms {
                             totalCount
                         }
                     }
@@ -234,17 +234,17 @@ def test_collections_query_as_staff_without_channel(
         }
     """
     # query all collections only as a staff user with proper permissions
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(query)
     content = get_graphql_content(response)
     edges = content["data"]["collections"]["edges"]
     assert len(edges) == 2
 
 
-GET_FILTERED_PRODUCTS_COLLECTION_QUERY = """
-query CollectionProducts($id: ID!,$channel: String, $filters: ProductFilterInput) {
+GET_FILTERED_ROOMS_COLLECTION_QUERY = """
+query CollectionRooms($id: ID!,$channel: String, $filters: RoomFilterInput) {
   collection(id: $id, channel: $channel) {
-    products(first: 10, filter: $filters) {
+    rooms(first: 10, filter: $filters) {
       edges {
         node {
           id
@@ -263,20 +263,20 @@ query CollectionProducts($id: ID!,$channel: String, $filters: ProductFilterInput
 """
 
 
-def test_filter_collection_products(
-    user_api_client, product_list, published_collection, channel_USD
+def test_filter_collection_rooms(
+    user_api_client, room_list, published_collection, channel_USD
 ):
     # given
-    query = GET_FILTERED_PRODUCTS_COLLECTION_QUERY
+    query = GET_FILTERED_ROOMS_COLLECTION_QUERY
 
-    for product in product_list:
-        published_collection.products.add(product)
+    for room in room_list:
+        published_collection.rooms.add(room)
 
-    product = product_list[0]
+    room = room_list[0]
 
     variables = {
         "id": graphene.Node.to_global_id("Collection", published_collection.pk),
-        "filters": {"search": product.name},
+        "filters": {"search": room.name},
         "channel": channel_USD.slug,
     }
 
@@ -285,23 +285,23 @@ def test_filter_collection_products(
 
     # then
     content = get_graphql_content(response)
-    product_data = content["data"]["collection"]["products"]["edges"][0]["node"]
+    room_data = content["data"]["collection"]["rooms"]["edges"][0]["node"]
 
-    assert product_data["id"] == graphene.Node.to_global_id("Product", product.pk)
+    assert room_data["id"] == graphene.Node.to_global_id("Room", room.pk)
 
 
-def test_filter_collection_products_by_multiple_attributes(
+def test_filter_collection_rooms_by_multiple_attributes(
     user_api_client,
     published_collection,
-    product_with_two_variants,
-    product_with_multiple_values_attributes,
+    room_with_two_variants,
+    room_with_multiple_values_attributes,
     channel_USD,
 ):
     # given
-    published_collection.products.set(
-        [product_with_two_variants, product_with_multiple_values_attributes]
+    published_collection.rooms.set(
+        [room_with_two_variants, room_with_multiple_values_attributes]
     )
-    assert published_collection.products.count() == 2
+    assert published_collection.rooms.count() == 2
 
     filters = {
         "attributes": [{"slug": "modes", "values": ["eco"]}],
@@ -314,21 +314,21 @@ def test_filter_collection_products_by_multiple_attributes(
 
     # when
     response = user_api_client.post_graphql(
-        GET_FILTERED_PRODUCTS_COLLECTION_QUERY, variables
+        GET_FILTERED_ROOMS_COLLECTION_QUERY, variables
     )
 
     # then
     content = get_graphql_content(response)
-    products_data = content["data"]["collection"]["products"]["edges"]
-    product = products_data[0]["node"]
+    rooms_data = content["data"]["collection"]["rooms"]["edges"]
+    room = rooms_data[0]["node"]
 
-    _, _id = graphene.Node.from_global_id(product["id"])
+    _, _id = graphene.Node.from_global_id(room["id"])
 
-    assert len(products_data) == 1
-    assert product["id"] == graphene.Node.to_global_id(
-        "Product", product_with_multiple_values_attributes.pk
+    assert len(rooms_data) == 1
+    assert room["id"] == graphene.Node.to_global_id(
+        "Room", room_with_multiple_values_attributes.pk
     )
-    assert product["attributes"] == [
+    assert room["attributes"] == [
         {"attribute": {"values": [{"slug": "eco"}, {"slug": "power"}]}}
     ]
 
@@ -336,7 +336,7 @@ def test_filter_collection_products_by_multiple_attributes(
 CREATE_COLLECTION_MUTATION = """
         mutation createCollection(
                 $name: String!, $slug: String, $description: String,
-                $descriptionJson: JSONString, $products: [ID],
+                $descriptionJson: JSONString, $rooms: [ID],
                 $backgroundImage: Upload, $backgroundImageAlt: String) {
             collectionCreate(
                 input: {
@@ -344,7 +344,7 @@ CREATE_COLLECTION_MUTATION = """
                     slug: $slug,
                     description: $description,
                     descriptionJson: $descriptionJson,
-                    products: $products,
+                    rooms: $rooms,
                     backgroundImage: $backgroundImage,
                     backgroundImageAlt: $backgroundImageAlt}) {
                 collection {
@@ -352,7 +352,7 @@ CREATE_COLLECTION_MUTATION = """
                     slug
                     description
                     descriptionJson
-                    products {
+                    rooms {
                         totalCount
                     }
                     backgroundImage{
@@ -370,20 +370,20 @@ CREATE_COLLECTION_MUTATION = """
 
 
 def test_create_collection(
-    monkeypatch, staff_api_client, product_list, media_root, permission_manage_products
+    monkeypatch, staff_api_client, room_list, media_root, permission_manage_rooms
 ):
     query = CREATE_COLLECTION_MUTATION
 
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.product.thumbnails."
+            "saleor.room.thumbnails."
             "create_collection_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
     )
 
-    product_ids = [to_global_id("Product", product.pk) for product in product_list]
+    room_ids = [to_global_id("Room", room.pk) for room in room_list]
     image_file, image_name = create_image()
     image_alt = "Alt text for an image."
     name = "test-name"
@@ -395,13 +395,13 @@ def test_create_collection(
         "slug": slug,
         "description": description,
         "descriptionJson": description_json,
-        "products": product_ids,
+        "rooms": room_ids,
         "backgroundImage": image_name,
         "backgroundImageAlt": image_alt,
     }
     body = get_multipart_request_body(query, variables, image_file, image_name)
     response = staff_api_client.post_multipart(
-        body, permissions=[permission_manage_products]
+        body, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionCreate"]["collection"]
@@ -409,7 +409,7 @@ def test_create_collection(
     assert data["slug"] == slug
     assert data["description"] == description
     assert data["descriptionJson"] == description_json
-    assert data["products"]["totalCount"] == len(product_ids)
+    assert data["rooms"]["totalCount"] == len(room_ids)
     collection = Collection.objects.get(slug=slug)
     assert collection.background_image.file
     mock_create_thumbnails.assert_called_once_with(collection.pk)
@@ -417,14 +417,14 @@ def test_create_collection(
 
 
 def test_create_collection_without_background_image(
-    monkeypatch, staff_api_client, product_list, permission_manage_products
+    monkeypatch, staff_api_client, room_list, permission_manage_rooms
 ):
     query = CREATE_COLLECTION_MUTATION
 
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.product.thumbnails."
+            "saleor.room.thumbnails."
             "create_collection_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -432,7 +432,7 @@ def test_create_collection_without_background_image(
 
     variables = {"name": "test-name", "slug": "test-slug"}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     get_graphql_content(response)
     assert mock_create_thumbnails.call_count == 0
@@ -448,13 +448,13 @@ def test_create_collection_without_background_image(
     ),
 )
 def test_create_collection_with_given_slug(
-    staff_api_client, permission_manage_products, input_slug, expected_slug, channel_USD
+    staff_api_client, permission_manage_rooms, input_slug, expected_slug, channel_USD
 ):
     query = CREATE_COLLECTION_MUTATION
     name = "Test collection"
     variables = {"name": name, "slug": input_slug}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionCreate"]
@@ -463,13 +463,13 @@ def test_create_collection_with_given_slug(
 
 
 def test_create_collection_name_with_unicode(
-    staff_api_client, permission_manage_products, channel_USD
+    staff_api_client, permission_manage_rooms, channel_USD
 ):
     query = CREATE_COLLECTION_MUTATION
     name = "わたし わ にっぽん です"
     variables = {"name": name}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionCreate"]
@@ -479,7 +479,7 @@ def test_create_collection_name_with_unicode(
 
 
 def test_update_collection(
-    monkeypatch, staff_api_client, collection, permission_manage_products
+    monkeypatch, staff_api_client, collection, permission_manage_rooms
 ):
     query = """
         mutation updateCollection(
@@ -500,7 +500,7 @@ def test_update_collection(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.product.thumbnails."
+            "saleor.room.thumbnails."
             "create_collection_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -516,7 +516,7 @@ def test_update_collection(
         "id": to_global_id("Collection", collection.id),
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionUpdate"]["collection"]
@@ -551,12 +551,12 @@ MUTATION_UPDATE_COLLECTION_WITH_BACKGROUND_IMAGE = """
 
 
 def test_update_collection_with_background_image(
-    monkeypatch, staff_api_client, collection, permission_manage_products, media_root
+    monkeypatch, staff_api_client, collection, permission_manage_rooms, media_root
 ):
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.product.thumbnails."
+            "saleor.room.thumbnails."
             "create_collection_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -578,7 +578,7 @@ def test_update_collection_with_background_image(
         image_name,
     )
     response = staff_api_client.post_multipart(
-        body, permissions=[permission_manage_products]
+        body, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionUpdate"]
@@ -591,7 +591,7 @@ def test_update_collection_with_background_image(
 
 
 def test_update_collection_invalid_background_image(
-    staff_api_client, collection, permission_manage_products
+    staff_api_client, collection, permission_manage_rooms
 ):
     image_file, image_name = create_pdf_file_with_image_ext()
     image_alt = "Alt text for an image."
@@ -609,7 +609,7 @@ def test_update_collection_invalid_background_image(
         image_name,
     )
     response = staff_api_client.post_multipart(
-        body, permissions=[permission_manage_products]
+        body, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionUpdate"]
@@ -650,7 +650,7 @@ UPDATE_COLLECTION_SLUG_MUTATION = """
 def test_update_collection_slug(
     staff_api_client,
     collection,
-    permission_manage_products,
+    permission_manage_rooms,
     input_slug,
     expected_slug,
     error_message,
@@ -663,7 +663,7 @@ def test_update_collection_slug(
     node_id = graphene.Node.to_global_id("Collection", collection.id)
     variables = {"slug": input_slug, "id": node_id}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionUpdate"]
@@ -674,11 +674,11 @@ def test_update_collection_slug(
     else:
         assert errors
         assert errors[0]["field"] == "slug"
-        assert errors[0]["code"] == ProductErrorCode.REQUIRED.name
+        assert errors[0]["code"] == RoomErrorCode.REQUIRED.name
 
 
 def test_update_collection_slug_exists(
-    staff_api_client, collection, permission_manage_products
+    staff_api_client, collection, permission_manage_rooms
 ):
     query = UPDATE_COLLECTION_SLUG_MUTATION
     input_slug = "test-slug"
@@ -694,14 +694,14 @@ def test_update_collection_slug_exists(
     node_id = graphene.Node.to_global_id("Collection", collection.id)
     variables = {"slug": input_slug, "id": node_id}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionUpdate"]
     errors = data["collectionErrors"]
     assert errors
     assert errors[0]["field"] == "slug"
-    assert errors[0]["code"] == ProductErrorCode.UNIQUE.name
+    assert errors[0]["code"] == RoomErrorCode.UNIQUE.name
 
 
 @pytest.mark.parametrize(
@@ -718,7 +718,7 @@ def test_update_collection_slug_exists(
 def test_update_collection_slug_and_name(
     staff_api_client,
     collection,
-    permission_manage_products,
+    permission_manage_rooms,
     input_slug,
     expected_slug,
     input_name,
@@ -756,7 +756,7 @@ def test_update_collection_slug_and_name(
     node_id = graphene.Node.to_global_id("Collection", collection.id)
     variables = {"slug": input_slug, "name": input_name, "id": node_id}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     collection.refresh_from_db()
@@ -768,10 +768,10 @@ def test_update_collection_slug_and_name(
     else:
         assert errors
         assert errors[0]["field"] == error_field
-        assert errors[0]["code"] == ProductErrorCode.REQUIRED.name
+        assert errors[0]["code"] == RoomErrorCode.REQUIRED.name
 
 
-def test_delete_collection(staff_api_client, collection, permission_manage_products):
+def test_delete_collection(staff_api_client, collection, permission_manage_rooms):
     query = """
         mutation deleteCollection($id: ID!) {
             collectionDelete(id: $id) {
@@ -784,7 +784,7 @@ def test_delete_collection(staff_api_client, collection, permission_manage_produ
     collection_id = to_global_id("Collection", collection.id)
     variables = {"id": collection_id}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionDelete"]["collection"]
@@ -793,15 +793,15 @@ def test_delete_collection(staff_api_client, collection, permission_manage_produ
         collection.refresh_from_db()
 
 
-def test_add_products_to_collection(
-    staff_api_client, collection, product_list, permission_manage_products
+def test_add_rooms_to_collection(
+    staff_api_client, collection, room_list, permission_manage_rooms
 ):
     query = """
-        mutation collectionAddProducts(
-            $id: ID!, $products: [ID]!) {
-            collectionAddProducts(collectionId: $id, products: $products) {
+        mutation collectionAddRooms(
+            $id: ID!, $rooms: [ID]!) {
+            collectionAddRooms(collectionId: $id, rooms: $rooms) {
                 collection {
-                    products {
+                    rooms {
                         totalCount
                     }
                 }
@@ -809,26 +809,26 @@ def test_add_products_to_collection(
         }
     """
     collection_id = to_global_id("Collection", collection.id)
-    product_ids = [to_global_id("Product", product.pk) for product in product_list]
-    no_products_before = collection.products.count()
-    variables = {"id": collection_id, "products": product_ids}
+    room_ids = [to_global_id("Room", room.pk) for room in room_list]
+    no_rooms_before = collection.rooms.count()
+    variables = {"id": collection_id, "rooms": room_ids}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
-    data = content["data"]["collectionAddProducts"]["collection"]
-    assert data["products"]["totalCount"] == no_products_before + len(product_ids)
+    data = content["data"]["collectionAddRooms"]["collection"]
+    assert data["rooms"]["totalCount"] == no_rooms_before + len(room_ids)
 
 
-def test_add_products_to_collection_with_product_without_variants(
-    staff_api_client, collection, product_list, permission_manage_products
+def test_add_rooms_to_collection_with_room_without_variants(
+    staff_api_client, collection, room_list, permission_manage_rooms
 ):
     query = """
-        mutation collectionAddProducts(
-            $id: ID!, $products: [ID]!) {
-            collectionAddProducts(collectionId: $id, products: $products) {
+        mutation collectionAddRooms(
+            $id: ID!, $rooms: [ID]!) {
+            collectionAddRooms(collectionId: $id, rooms: $rooms) {
                 collection {
-                    products {
+                    rooms {
                         totalCount
                     }
                 }
@@ -840,48 +840,48 @@ def test_add_products_to_collection_with_product_without_variants(
             }
         }
     """
-    product_list[0].variants.all().delete()
+    room_list[0].variants.all().delete()
     collection_id = to_global_id("Collection", collection.id)
-    product_ids = [to_global_id("Product", product.pk) for product in product_list]
-    variables = {"id": collection_id, "products": product_ids}
+    room_ids = [to_global_id("Room", room.pk) for room in room_list]
+    variables = {"id": collection_id, "rooms": room_ids}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
-    error = content["data"]["collectionAddProducts"]["collectionErrors"][0]
+    error = content["data"]["collectionAddRooms"]["collectionErrors"][0]
 
     assert (
-        error["code"] == CollectionErrorCode.CANNOT_MANAGE_PRODUCT_WITHOUT_VARIANT.name
+        error["code"] == CollectionErrorCode.CANNOT_MANAGE_ROOM_WITHOUT_VARIANT.name
     )
-    assert error["message"] == "Cannot manage products without variants."
+    assert error["message"] == "Cannot manage rooms without variants."
 
 
-def test_remove_products_from_collection(
-    staff_api_client, collection, product_list, permission_manage_products
+def test_remove_rooms_from_collection(
+    staff_api_client, collection, room_list, permission_manage_rooms
 ):
     query = """
-        mutation collectionRemoveProducts(
-            $id: ID!, $products: [ID]!) {
-            collectionRemoveProducts(collectionId: $id, products: $products) {
+        mutation collectionRemoveRooms(
+            $id: ID!, $rooms: [ID]!) {
+            collectionRemoveRooms(collectionId: $id, rooms: $rooms) {
                 collection {
-                    products {
+                    rooms {
                         totalCount
                     }
                 }
             }
         }
     """
-    collection.products.add(*product_list)
+    collection.rooms.add(*room_list)
     collection_id = to_global_id("Collection", collection.id)
-    product_ids = [to_global_id("Product", product.pk) for product in product_list]
-    no_products_before = collection.products.count()
-    variables = {"id": collection_id, "products": product_ids}
+    room_ids = [to_global_id("Room", room.pk) for room in room_list]
+    no_rooms_before = collection.rooms.count()
+    variables = {"id": collection_id, "rooms": room_ids}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
-    data = content["data"]["collectionRemoveProducts"]["collection"]
-    assert data["products"]["totalCount"] == no_products_before - len(product_ids)
+    data = content["data"]["collectionRemoveRooms"]["collection"]
+    assert data["rooms"]["totalCount"] == no_rooms_before - len(room_ids)
 
 
 NOT_EXISTS_IDS_COLLECTIONS_QUERY = """
@@ -965,7 +965,7 @@ def test_collection_image_query_without_associated_file(
 
 
 def test_update_collection_mutation_remove_background_image(
-    staff_api_client, collection_with_image, permission_manage_products
+    staff_api_client, collection_with_image, permission_manage_rooms
 ):
     query = """
         mutation updateCollection($id: ID!, $backgroundImage: Upload) {
@@ -992,7 +992,7 @@ def test_update_collection_mutation_remove_background_image(
         "backgroundImage": None,
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["collectionUpdate"]["collection"]
@@ -1024,13 +1024,13 @@ def _fetch_collection(client, collection, channel_slug, permissions=None):
 
 
 def test_fetch_unpublished_collection_staff_user(
-    staff_api_client, unpublished_collection, permission_manage_products, channel_USD
+    staff_api_client, unpublished_collection, permission_manage_rooms, channel_USD
 ):
     collection_data = _fetch_collection(
         staff_api_client,
         unpublished_collection,
         channel_USD.slug,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     assert collection_data["name"] == unpublished_collection.name
     assert collection_data["channelListings"][0]["isPublished"] is False
@@ -1054,10 +1054,10 @@ def test_fetch_unpublished_collection_anonymous_user(
     assert collection_data is None
 
 
-GET_SORTED_PRODUCTS_COLLECTION_QUERY = """
-query CollectionProducts($id: ID!, $channel: String, $sortBy: ProductOrder) {
+GET_SORTED_ROOMS_COLLECTION_QUERY = """
+query CollectionRooms($id: ID!, $channel: String, $sortBy: RoomOrder) {
   collection(id: $id, channel: $channel) {
-    products(first: 10, sortBy: $sortBy) {
+    rooms(first: 10, sortBy: $sortBy) {
       edges {
         node {
           id
@@ -1069,12 +1069,12 @@ query CollectionProducts($id: ID!, $channel: String, $sortBy: ProductOrder) {
 """
 
 
-def test_sort_collection_products_by_name(
-    staff_api_client, published_collection, product_list, channel_USD
+def test_sort_collection_rooms_by_name(
+    staff_api_client, published_collection, room_list, channel_USD
 ):
     # given
-    for product in product_list:
-        published_collection.products.add(product)
+    for room in room_list:
+        published_collection.rooms.add(room)
 
     variables = {
         "id": graphene.Node.to_global_id("Collection", published_collection.pk),
@@ -1084,16 +1084,16 @@ def test_sort_collection_products_by_name(
 
     # when
     response = staff_api_client.post_graphql(
-        GET_SORTED_PRODUCTS_COLLECTION_QUERY, variables
+        GET_SORTED_ROOMS_COLLECTION_QUERY, variables
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["collection"]["products"]["edges"]
+    data = content["data"]["collection"]["rooms"]["edges"]
 
     assert [node["node"]["id"] for node in data] == [
-        graphene.Node.to_global_id("Product", product.pk)
-        for product in Product.objects.order_by("-name")
+        graphene.Node.to_global_id("Room", room.pk)
+        for room in Room.objects.order_by("-name")
     ]
 
 

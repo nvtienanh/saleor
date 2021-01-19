@@ -9,10 +9,10 @@ EXAMPLE_QUERY = """# Welcome to Saleor GraphQL API!
 # intelligent typeaheads aware of the current GraphQL type schema
 # and live syntax and validation errors highlighted within the text.
 #
-# Here is an example query to fetch a list of products:
+# Here is an example query to fetch a list of rooms:
 #
 {
-  products(first: 5, channel: "%(channel_slug)s") {
+  rooms(first: 5, channel: "%(channel_slug)s") {
     edges {
       node {
         id

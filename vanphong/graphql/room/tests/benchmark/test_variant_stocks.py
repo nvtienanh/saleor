@@ -1,24 +1,24 @@
 import graphene
 import pytest
 
-from .....warehouse.models import Stock, Warehouse
+from .....hotel.models import Stock, Hotel
 from ....tests.utils import get_graphql_content
 
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_product_variants_stocks_create(
-    staff_api_client, variant, warehouse, permission_manage_products, count_queries
+def test_room_variants_stocks_create(
+    staff_api_client, variant, hotel, permission_manage_rooms, count_queries
 ):
     query = """
-    mutation ProductVariantStocksCreate($variantId: ID!, $stocks: [StockInput!]!){
-        productVariantStocksCreate(variantId: $variantId, stocks: $stocks){
-            productVariant{
+    mutation RoomVariantStocksCreate($variantId: ID!, $stocks: [StockInput!]!){
+        roomVariantStocksCreate(variantId: $variantId, stocks: $stocks){
+            roomVariant{
                 stocks {
                     quantity
                     quantityAllocated
                     id
-                    warehouse{
+                    hotel{
                         slug
                     }
                 }
@@ -32,21 +32,21 @@ def test_product_variants_stocks_create(
         }
     }
     """
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
     stocks_count = variant.stocks.count()
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.id),
             "quantity": 20,
         },
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", second_warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", second_hotel.id),
             "quantity": 100,
         },
     ]
@@ -54,13 +54,13 @@ def test_product_variants_stocks_create(
     response = staff_api_client.post_graphql(
         query,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksCreate"]
+    data = content["data"]["roomVariantStocksCreate"]
     assert not data["bulkStockErrors"]
     assert (
-        len(data["productVariant"]["stocks"])
+        len(data["roomVariant"]["stocks"])
         == variant.stocks.count()
         == stocks_count + len(stocks)
     )
@@ -68,18 +68,18 @@ def test_product_variants_stocks_create(
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_product_variants_stocks_update(
-    staff_api_client, variant, warehouse, permission_manage_products, count_queries
+def test_room_variants_stocks_update(
+    staff_api_client, variant, hotel, permission_manage_rooms, count_queries
 ):
     query = """
-    mutation ProductVariantStocksUpdate($variantId: ID!, $stocks: [StockInput!]!){
-            productVariantStocksUpdate(variantId: $variantId, stocks: $stocks){
-                productVariant{
+    mutation RoomVariantStocksUpdate($variantId: ID!, $stocks: [StockInput!]!){
+            roomVariantStocksUpdate(variantId: $variantId, stocks: $stocks){
+                roomVariant{
                     stocks{
                         quantity
                         quantityAllocated
                         id
-                        warehouse{
+                        hotel{
                             slug
                         }
                     }
@@ -93,23 +93,23 @@ def test_product_variants_stocks_update(
             }
         }
     """
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
-    Stock.objects.create(product_variant=variant, warehouse=warehouse, quantity=10)
+    Stock.objects.create(room_variant=variant, hotel=hotel, quantity=10)
 
     stocks_count = variant.stocks.count()
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.id),
             "quantity": 20,
         },
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", second_warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", second_hotel.id),
             "quantity": 100,
         },
     ]
@@ -117,31 +117,31 @@ def test_product_variants_stocks_update(
     response = staff_api_client.post_graphql(
         query,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksUpdate"]
+    data = content["data"]["roomVariantStocksUpdate"]
 
     assert not data["bulkStockErrors"]
-    assert len(data["productVariant"]["stocks"]) == len(stocks)
+    assert len(data["roomVariant"]["stocks"]) == len(stocks)
     assert variant.stocks.count() == stocks_count + 1
 
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_product_variants_stocks_delete(
-    staff_api_client, variant, warehouse, permission_manage_products, count_queries
+def test_room_variants_stocks_delete(
+    staff_api_client, variant, hotel, permission_manage_rooms, count_queries
 ):
     query = """
-    mutation ProductVariantStocksDelete($variantId: ID!, $warehouseIds: [ID!]!){
-            productVariantStocksDelete(
-                variantId: $variantId, warehouseIds: $warehouseIds
+    mutation RoomVariantStocksDelete($variantId: ID!, $hotelIds: [ID!]!){
+            roomVariantStocksDelete(
+                variantId: $variantId, hotelIds: $hotelIds
             ){
-                productVariant{
+                roomVariant{
                     stocks{
                         id
                         quantity
-                        warehouse{
+                        hotel{
                             slug
                         }
                     }
@@ -155,34 +155,34 @@ def test_product_variants_stocks_delete(
         }
     """
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
     Stock.objects.bulk_create(
         [
-            Stock(product_variant=variant, warehouse=warehouse, quantity=10),
-            Stock(product_variant=variant, warehouse=second_warehouse, quantity=140),
+            Stock(room_variant=variant, hotel=hotel, quantity=10),
+            Stock(room_variant=variant, hotel=second_hotel, quantity=140),
         ]
     )
     stocks_count = variant.stocks.count()
 
-    warehouse_ids = [graphene.Node.to_global_id("Warehouse", second_warehouse.id)]
+    hotel_ids = [graphene.Node.to_global_id("Hotel", second_hotel.id)]
 
-    variables = {"variantId": variant_id, "warehouseIds": warehouse_ids}
+    variables = {"variantId": variant_id, "hotelIds": hotel_ids}
     response = staff_api_client.post_graphql(
         query,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksDelete"]
+    data = content["data"]["roomVariantStocksDelete"]
 
     assert not data["stockErrors"]
     assert (
-        len(data["productVariant"]["stocks"])
+        len(data["roomVariant"]["stocks"])
         == variant.stocks.count()
         == stocks_count - 1
     )

@@ -8,11 +8,11 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0018_auto_20161207_0844")]
+    dependencies = [("room", "0018_auto_20161207_0844")]
 
     operations = [
         migrations.CreateModel(
-            name="ProductClass",
+            name="RoomClass",
             fields=[
                 (
                     "id",
@@ -26,32 +26,32 @@ class Migration(migrations.Migration):
                 ("name", models.CharField(max_length=128, verbose_name="name")),
                 ("has_variants", models.BooleanField(default=True)),
                 (
-                    "product_attributes",
+                    "room_attributes",
                     models.ManyToManyField(
                         blank=True,
-                        related_name="products_class",
-                        to="product.ProductAttribute",
+                        related_name="rooms_class",
+                        to="room.RoomAttribute",
                     ),
                 ),
                 (
                     "variant_attributes",
                     models.ManyToManyField(
                         blank=True,
-                        related_name="product_variants_class",
-                        to="product.ProductAttribute",
+                        related_name="room_variants_class",
+                        to="room.RoomAttribute",
                     ),
                 ),
             ],
         ),
         migrations.AddField(
-            model_name="product",
-            name="product_class",
+            model_name="room",
+            name="room_class",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="products",
-                to="product.ProductClass",
+                related_name="rooms",
+                to="room.RoomClass",
             ),
         ),
     ]

@@ -36,20 +36,20 @@ mutation AppUpdate($id: ID!, $is_active: Boolean,
 def test_app_update_mutation(
     app,
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_users,
     staff_api_client,
     staff_user,
 ):
     query = APP_UPDATE_MUTATION
-    staff_user.user_permissions.add(permission_manage_products, permission_manage_users)
+    staff_user.user_permissions.add(permission_manage_rooms, permission_manage_users)
     id = graphene.Node.to_global_id("App", app.id)
 
     variables = {
         "id": id,
         "is_active": False,
         "permissions": [
-            PermissionEnum.MANAGE_PRODUCTS.name,
+            PermissionEnum.MANAGE_ROOMS.name,
             PermissionEnum.MANAGE_USERS.name,
         ],
     }
@@ -68,14 +68,14 @@ def test_app_update_mutation(
     assert len(tokens_data) == 1
     assert tokens_data[0]["authToken"] == tokens.get().auth_token[-4:]
     assert set(app.permissions.all()) == {
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_users,
     }
 
 
 def test_app_update_mutation_for_app(
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_orders,
     permission_manage_users,
     app_api_client,
@@ -89,7 +89,7 @@ def test_app_update_mutation_for_app(
     requestor = app_api_client.app
     requestor.permissions.add(
         permission_manage_apps,
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_users,
         permission_manage_orders,
     )
@@ -99,7 +99,7 @@ def test_app_update_mutation_for_app(
         "id": id,
         "is_active": False,
         "permissions": [
-            PermissionEnum.MANAGE_PRODUCTS.name,
+            PermissionEnum.MANAGE_ROOMS.name,
             PermissionEnum.MANAGE_USERS.name,
         ],
     }
@@ -116,7 +116,7 @@ def test_app_update_mutation_for_app(
     assert len(tokens_data) == 1
     assert tokens_data[0]["authToken"] == tokens.get().auth_token[-4:]
     assert set(app.permissions.all()) == {
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_users,
     }
 
@@ -124,21 +124,21 @@ def test_app_update_mutation_for_app(
 def test_app_update_mutation_out_of_scope_permissions(
     app,
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_users,
     staff_api_client,
     staff_user,
 ):
     """Ensure user cannot add permissions to app witch he doesn't have."""
     query = APP_UPDATE_MUTATION
-    staff_user.user_permissions.add(permission_manage_apps, permission_manage_products)
+    staff_user.user_permissions.add(permission_manage_apps, permission_manage_rooms)
     id = graphene.Node.to_global_id("App", app.id)
 
     variables = {
         "id": id,
         "is_active": False,
         "permissions": [
-            PermissionEnum.MANAGE_PRODUCTS.name,
+            PermissionEnum.MANAGE_ROOMS.name,
             PermissionEnum.MANAGE_USERS.name,
         ],
     }
@@ -159,7 +159,7 @@ def test_app_update_mutation_out_of_scope_permissions(
 def test_app_update_mutation_superuser_can_add_any_permissions_to_app(
     app,
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_users,
     superuser_api_client,
 ):
@@ -171,7 +171,7 @@ def test_app_update_mutation_superuser_can_add_any_permissions_to_app(
         "id": id,
         "is_active": False,
         "permissions": [
-            PermissionEnum.MANAGE_PRODUCTS.name,
+            PermissionEnum.MANAGE_ROOMS.name,
             PermissionEnum.MANAGE_USERS.name,
         ],
     }
@@ -190,14 +190,14 @@ def test_app_update_mutation_superuser_can_add_any_permissions_to_app(
     assert len(tokens_data) == 1
     assert tokens_data[0]["authToken"] == tokens.get().auth_token[-4:]
     assert set(app.permissions.all()) == {
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_users,
     }
 
 
 def test_app_update_mutation_for_app_out_of_scope_permissions(
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_orders,
     permission_manage_users,
     app_api_client,
@@ -207,7 +207,7 @@ def test_app_update_mutation_for_app_out_of_scope_permissions(
     requestor = app_api_client.app
     requestor.permissions.add(
         permission_manage_apps,
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_orders,
     )
     app.permissions.add(permission_manage_orders)
@@ -217,7 +217,7 @@ def test_app_update_mutation_for_app_out_of_scope_permissions(
         "id": id,
         "is_active": False,
         "permissions": [
-            PermissionEnum.MANAGE_PRODUCTS.name,
+            PermissionEnum.MANAGE_ROOMS.name,
             PermissionEnum.MANAGE_USERS.name,
         ],
     }
@@ -237,7 +237,7 @@ def test_app_update_mutation_for_app_out_of_scope_permissions(
 def test_app_update_mutation_out_of_scope_app(
     app,
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_orders,
     permission_manage_users,
     staff_api_client,
@@ -247,7 +247,7 @@ def test_app_update_mutation_out_of_scope_app(
     query = APP_UPDATE_MUTATION
     staff_user.user_permissions.add(
         permission_manage_apps,
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_users,
     )
     app.permissions.add(permission_manage_orders)
@@ -257,7 +257,7 @@ def test_app_update_mutation_out_of_scope_app(
         "id": id,
         "is_active": False,
         "permissions": [
-            PermissionEnum.MANAGE_PRODUCTS.name,
+            PermissionEnum.MANAGE_ROOMS.name,
             PermissionEnum.MANAGE_USERS.name,
         ],
     }
@@ -277,7 +277,7 @@ def test_app_update_mutation_out_of_scope_app(
 def test_app_update_mutation_superuser_can_update_any_app(
     app,
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_orders,
     permission_manage_users,
     superuser_api_client,
@@ -291,7 +291,7 @@ def test_app_update_mutation_superuser_can_update_any_app(
         "id": id,
         "is_active": False,
         "permissions": [
-            PermissionEnum.MANAGE_PRODUCTS.name,
+            PermissionEnum.MANAGE_ROOMS.name,
             PermissionEnum.MANAGE_USERS.name,
         ],
     }
@@ -310,14 +310,14 @@ def test_app_update_mutation_superuser_can_update_any_app(
     assert len(tokens_data) == 1
     assert tokens_data[0]["authToken"] == tokens.get().auth_token[-4:]
     assert set(app.permissions.all()) == {
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_users,
     }
 
 
 def test_app_update_mutation_for_app_out_of_scope_app(
     permission_manage_apps,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_orders,
     permission_manage_users,
     app_api_client,
@@ -327,7 +327,7 @@ def test_app_update_mutation_for_app_out_of_scope_app(
     requestor = app_api_client.app
     requestor.permissions.add(
         permission_manage_apps,
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_users,
     )
     app.permissions.add(permission_manage_orders)
@@ -337,7 +337,7 @@ def test_app_update_mutation_for_app_out_of_scope_app(
         "id": id,
         "is_active": False,
         "permissions": [
-            PermissionEnum.MANAGE_PRODUCTS.name,
+            PermissionEnum.MANAGE_ROOMS.name,
             PermissionEnum.MANAGE_USERS.name,
         ],
     }
@@ -359,7 +359,7 @@ def test_app_update_no_permission(app, staff_api_client, staff_user):
     variables = {
         "id": id,
         "is_active": False,
-        "permissions": [PermissionEnum.MANAGE_PRODUCTS.name],
+        "permissions": [PermissionEnum.MANAGE_ROOMS.name],
     }
     response = staff_api_client.post_graphql(query, variables=variables)
     assert_no_permission(response)

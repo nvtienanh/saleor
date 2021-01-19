@@ -7,13 +7,13 @@ from .....attribute.models import Attribute
 from .....channel.models import Channel
 from .....csv import ExportEvents
 from .....csv.models import ExportEvent
-from .....warehouse.models import Warehouse
+from .....hotel.models import Hotel
 from ....tests.utils import get_graphql_content
-from ...enums import ExportScope, FileTypeEnum, ProductFieldEnum
+from ...enums import ExportScope, FileTypeEnum, RoomFieldEnum
 
-EXPORT_PRODUCTS_MUTATION = """
-    mutation ExportProducts($input: ExportProductsInput!){
-        exportProducts(input: $input){
+EXPORT_ROOMS_MUTATION = """
+    mutation ExportRooms($input: ExportRoomsInput!){
+        exportRooms(input: $input){
             exportFile {
                 id
                 status
@@ -59,30 +59,30 @@ EXPORT_PRODUCTS_MUTATION = """
         ),
     ],
 )
-@patch("saleor.graphql.csv.mutations.export_products_task.delay")
-def test_export_products_mutation(
-    export_products_mock,
+@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+def test_export_rooms_mutation(
+    export_rooms_mock,
     staff_api_client,
-    product_list,
-    permission_manage_products,
+    room_list,
+    permission_manage_rooms,
     permission_manage_apps,
     input,
     called_data,
 ):
-    query = EXPORT_PRODUCTS_MUTATION
+    query = EXPORT_ROOMS_MUTATION
     user = staff_api_client.user
     variables = {"input": input}
 
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
-    data = content["data"]["exportProducts"]
+    data = content["data"]["exportRooms"]
     export_file_data = data["exportFile"]
 
-    export_products_mock.assert_called_once_with(
+    export_rooms_mock.assert_called_once_with(
         ANY, called_data, {}, FileTypeEnum.CSV.value
     )
 
@@ -96,16 +96,16 @@ def test_export_products_mutation(
     ).exists()
 
 
-@patch("saleor.graphql.csv.mutations.export_products_task.delay")
-def test_export_products_mutation_by_app(
-    export_products_mock,
+@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+def test_export_rooms_mutation_by_app(
+    export_rooms_mock,
     app_api_client,
-    product_list,
-    permission_manage_products,
+    room_list,
+    permission_manage_rooms,
     permission_manage_apps,
     permission_manage_staff,
 ):
-    query = EXPORT_PRODUCTS_MUTATION
+    query = EXPORT_ROOMS_MUTATION
     app = app_api_client.app
     variables = {
         "input": {
@@ -119,16 +119,16 @@ def test_export_products_mutation_by_app(
         query,
         variables=variables,
         permissions=[
-            permission_manage_products,
+            permission_manage_rooms,
             permission_manage_apps,
             permission_manage_staff,
         ],
     )
     content = get_graphql_content(response)
-    data = content["data"]["exportProducts"]
+    data = content["data"]["exportRooms"]
     export_file_data = data["exportFile"]
 
-    export_products_mock.assert_called_once_with(
+    export_rooms_mock.assert_called_once_with(
         ANY, {"all": ""}, {}, FileTypeEnum.CSV.value
     )
 
@@ -142,32 +142,32 @@ def test_export_products_mutation_by_app(
     ).exists()
 
 
-@patch("saleor.graphql.csv.mutations.export_products_task.delay")
-def test_export_products_mutation_ids_scope(
-    export_products_mock,
+@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+def test_export_rooms_mutation_ids_scope(
+    export_rooms_mock,
     staff_api_client,
-    product_list,
-    permission_manage_products,
+    room_list,
+    permission_manage_rooms,
     permission_manage_apps,
 ):
-    query = EXPORT_PRODUCTS_MUTATION
+    query = EXPORT_ROOMS_MUTATION
     user = staff_api_client.user
 
-    products = product_list[:2]
+    rooms = room_list[:2]
 
     ids = []
     pks = set()
-    for product in products:
-        pks.add(str(product.pk))
-        ids.append(graphene.Node.to_global_id("Product", product.pk))
+    for room in rooms:
+        pks.add(str(room.pk))
+        ids.append(graphene.Node.to_global_id("Room", room.pk))
 
     variables = {
         "input": {
             "scope": ExportScope.IDS.name,
             "ids": ids,
             "exportInfo": {
-                "fields": [ProductFieldEnum.NAME.name],
-                "warehouses": [],
+                "fields": [RoomFieldEnum.NAME.name],
+                "hotels": [],
                 "attributes": [],
             },
             "fileType": FileTypeEnum.XLSX.name,
@@ -177,20 +177,20 @@ def test_export_products_mutation_ids_scope(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
-    data = content["data"]["exportProducts"]
+    data = content["data"]["exportRooms"]
     export_file_data = data["exportFile"]
 
-    export_products_mock.assert_called_once()
+    export_rooms_mock.assert_called_once()
     (
         call_args,
         call_kwargs,
-    ) = export_products_mock.call_args
+    ) = export_rooms_mock.call_args
 
     assert set(call_args[1]["ids"]) == pks
-    assert call_args[2] == {"fields": [ProductFieldEnum.NAME.value]}
+    assert call_args[2] == {"fields": [RoomFieldEnum.NAME.value]}
     assert call_args[3] == FileTypeEnum.XLSX.value
 
     assert not data["exportErrors"]
@@ -203,36 +203,36 @@ def test_export_products_mutation_ids_scope(
     ).exists()
 
 
-@patch("saleor.graphql.csv.mutations.export_products_task.delay")
-def test_export_products_mutation_with_warehouse_and_attribute_ids(
-    export_products_mock,
+@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+def test_export_rooms_mutation_with_hotel_and_attribute_ids(
+    export_rooms_mock,
     staff_api_client,
-    product_list,
+    room_list,
     channel_USD,
     channel_PLN,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
 ):
-    query = EXPORT_PRODUCTS_MUTATION
+    query = EXPORT_ROOMS_MUTATION
     user = staff_api_client.user
 
-    products = product_list[:2]
+    rooms = room_list[:2]
 
     ids = []
     pks = set()
-    for product in products:
-        pks.add(str(product.pk))
-        ids.append(graphene.Node.to_global_id("Product", product.pk))
+    for room in rooms:
+        pks.add(str(room.pk))
+        ids.append(graphene.Node.to_global_id("Room", room.pk))
 
     attribute_pks = [str(attr.pk) for attr in Attribute.objects.all()]
-    warehouse_pks = [str(warehouse.pk) for warehouse in Warehouse.objects.all()]
+    hotel_pks = [str(hotel.pk) for hotel in Hotel.objects.all()]
     channel_pks = [str(channel.pk) for channel in Channel.objects.all()]
 
     attribute_ids = [
         graphene.Node.to_global_id("Attribute", pk) for pk in attribute_pks
     ]
-    warehouse_ids = [
-        graphene.Node.to_global_id("Warehouse", pk) for pk in warehouse_pks
+    hotel_ids = [
+        graphene.Node.to_global_id("Hotel", pk) for pk in hotel_pks
     ]
     channel_ids = [graphene.Node.to_global_id("Channel", pk) for pk in channel_pks]
 
@@ -241,8 +241,8 @@ def test_export_products_mutation_with_warehouse_and_attribute_ids(
             "scope": ExportScope.IDS.name,
             "ids": ids,
             "exportInfo": {
-                "fields": [ProductFieldEnum.NAME.name],
-                "warehouses": warehouse_ids,
+                "fields": [RoomFieldEnum.NAME.name],
+                "hotels": hotel_ids,
                 "attributes": attribute_ids,
                 "channels": channel_ids,
             },
@@ -253,22 +253,22 @@ def test_export_products_mutation_with_warehouse_and_attribute_ids(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
-    data = content["data"]["exportProducts"]
+    data = content["data"]["exportRooms"]
     export_file_data = data["exportFile"]
 
-    export_products_mock.assert_called_once()
+    export_rooms_mock.assert_called_once()
     (
         call_args,
         call_kwargs,
-    ) = export_products_mock.call_args
+    ) = export_rooms_mock.call_args
 
     assert set(call_args[1]["ids"]) == pks
     assert call_args[2] == {
-        "fields": [ProductFieldEnum.NAME.value],
-        "warehouses": warehouse_pks,
+        "fields": [RoomFieldEnum.NAME.value],
+        "hotels": hotel_pks,
         "attributes": attribute_pks,
         "channels": channel_pks,
     }
@@ -305,27 +305,27 @@ def test_export_products_mutation_with_warehouse_and_attribute_ids(
         ),
     ],
 )
-@patch("saleor.graphql.csv.mutations.export_products_task.delay")
-def test_export_products_mutation_failed(
-    export_products_mock,
+@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+def test_export_rooms_mutation_failed(
+    export_rooms_mock,
     staff_api_client,
-    product_list,
-    permission_manage_products,
+    room_list,
+    permission_manage_rooms,
     input,
     error_field,
 ):
-    query = EXPORT_PRODUCTS_MUTATION
+    query = EXPORT_ROOMS_MUTATION
     user = staff_api_client.user
     variables = {"input": input}
 
     response = staff_api_client.post_graphql(
-        query, variables=variables, permissions=[permission_manage_products]
+        query, variables=variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
-    data = content["data"]["exportProducts"]
+    data = content["data"]["exportRooms"]
     errors = data["exportErrors"]
 
-    export_products_mock.assert_not_called()
+    export_rooms_mock.assert_not_called()
 
     assert data["exportErrors"]
     assert errors[0]["field"] == error_field

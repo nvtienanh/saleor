@@ -7,8 +7,8 @@ from ....tests.utils import get_graphql_content
 def test_delete_attribute(
     staff_api_client,
     color_attribute,
-    permission_manage_product_types_and_attributes,
-    product_type,
+    permission_manage_room_types_and_attributes,
+    room_type,
 ):
     # given
     attribute = color_attribute
@@ -30,7 +30,7 @@ def test_delete_attribute(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then

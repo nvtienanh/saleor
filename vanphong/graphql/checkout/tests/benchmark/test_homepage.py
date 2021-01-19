@@ -18,7 +18,7 @@ def test_user_checkout_details(user_api_client, customer_checkout, count_queries
           }
         }
 
-        fragment ProductVariant on ProductVariant {
+        fragment RoomVariant on RoomVariant {
           id
           name
           pricing {
@@ -30,7 +30,7 @@ def test_user_checkout_details(user_api_client, customer_checkout, count_queries
               ...Price
             }
           }
-          product {
+          room {
             id
             name
             thumbnail {
@@ -50,7 +50,7 @@ def test_user_checkout_details(user_api_client, customer_checkout, count_queries
             ...Price
           }
           variant {
-            ...ProductVariant
+            ...RoomVariant
           }
           quantity
         }

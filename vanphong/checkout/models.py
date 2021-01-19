@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
     from ..checkout.utils import CheckoutLineInfo
     from ..payment.models import Payment
-    from ..product.models import ProductVariant
+    from ..room.models import RoomVariant
 
 
 def get_default_country():
@@ -132,7 +132,7 @@ class Checkout(ModelWithMetadata):
                 weights += line.variant.get_weight() * line.quantity
         return weights
 
-    def get_line(self, variant: "ProductVariant") -> Optional["CheckoutLine"]:
+    def get_line(self, variant: "RoomVariant") -> Optional["CheckoutLine"]:
         """Return a line matching the given variant and data if any."""
         matching_lines = (line for line in self if line.variant.pk == variant.pk)
         return next(matching_lines, None)
@@ -166,7 +166,7 @@ class Checkout(ModelWithMetadata):
 class CheckoutLine(models.Model):
     """A single checkout line.
 
-    Multiple lines in the same checkout can refer to the same product variant if
+    Multiple lines in the same checkout can refer to the same room variant if
     their `data` field is different.
     """
 
@@ -174,7 +174,7 @@ class CheckoutLine(models.Model):
         Checkout, related_name="lines", on_delete=models.CASCADE
     )
     variant = models.ForeignKey(
-        "product.ProductVariant", related_name="+", on_delete=models.CASCADE
+        "room.RoomVariant", related_name="+", on_delete=models.CASCADE
     )
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     data = JSONField(blank=True, default=dict)
@@ -207,5 +207,5 @@ class CheckoutLine(models.Model):
         self.variant, self.quantity = data
 
     def is_shipping_required(self) -> bool:
-        """Return `True` if the related product variant requires shipping."""
+        """Return `True` if the related room variant requires shipping."""
         return self.variant.is_shipping_required()

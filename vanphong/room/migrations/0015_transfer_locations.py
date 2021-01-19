@@ -6,8 +6,8 @@ from django.db import migrations
 
 
 def forward_transfer_locations(apps, schema_editor):
-    Stock = apps.get_model("product", "Stock")
-    StockLocation = apps.get_model("product", "StockLocation")
+    Stock = apps.get_model("room", "Stock")
+    StockLocation = apps.get_model("room", "StockLocation")
     for stock in Stock.objects.all():
         location = StockLocation.objects.get_or_create(name=stock.location)[0]
         stock.location_link = location
@@ -15,7 +15,7 @@ def forward_transfer_locations(apps, schema_editor):
 
 
 def reverse_transfer_locations(apps, schema_editor):
-    Stock = apps.get_model("product", "Stock")
+    Stock = apps.get_model("room", "Stock")
     for stock in Stock.objects.all():
         if stock.location_link:
             location = stock.location_link.name
@@ -25,7 +25,7 @@ def reverse_transfer_locations(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0014_auto_20161207_0840")]
+    dependencies = [("room", "0014_auto_20161207_0840")]
 
     operations = [
         migrations.RunPython(forward_transfer_locations, reverse_transfer_locations)

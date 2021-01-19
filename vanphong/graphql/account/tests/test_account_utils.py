@@ -5,7 +5,7 @@ from ....app.models import App
 from ....core.permissions import (
     AccountPermissions,
     OrderPermissions,
-    ProductPermissions,
+    RoomPermissions,
 )
 from ..utils import (
     can_manage_app,
@@ -183,18 +183,18 @@ def test_get_groups_which_user_can_manage(
     permission_group_manage_users,
     permission_manage_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     staff_user.user_permissions.add(permission_manage_users, permission_manage_orders)
 
     manage_orders_group = Group.objects.create(name="manage orders")
     manage_orders_group.permissions.add(permission_manage_orders)
 
-    manage_orders_products_and_orders = Group.objects.create(
-        name="manage orders and products"
+    manage_orders_rooms_and_orders = Group.objects.create(
+        name="manage orders and rooms"
     )
-    manage_orders_products_and_orders.permissions.add(
-        permission_manage_orders, permission_manage_products
+    manage_orders_rooms_and_orders.permissions.add(
+        permission_manage_orders, permission_manage_rooms
     )
 
     no_permissions_group = Group.objects.create(name="empty group")
@@ -213,16 +213,16 @@ def test_get_groups_which_user_can_manage_admin_user(
     permission_group_manage_users,
     permission_manage_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     manage_orders_group = Group.objects.create(name="manage orders")
     manage_orders_group.permissions.add(permission_manage_orders)
 
-    manage_orders_products_and_orders = Group.objects.create(
-        name="manage orders and products"
+    manage_orders_rooms_and_orders = Group.objects.create(
+        name="manage orders and rooms"
     )
-    manage_orders_products_and_orders.permissions.add(
-        permission_manage_orders, permission_manage_products
+    manage_orders_rooms_and_orders.permissions.add(
+        permission_manage_orders, permission_manage_rooms
     )
 
     Group.objects.create(name="empty group")
@@ -247,7 +247,7 @@ def test_get_out_of_scope_users_user_has_rights_to_manage_all_users(
     staff_users,
     permission_group_manage_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     staff_user1 = staff_users[0]
     staff_user2 = staff_users[1]
@@ -260,7 +260,7 @@ def test_get_out_of_scope_users_user_has_rights_to_manage_all_users(
 
     permission_group_manage_users.user_set.add(staff_user1, staff_user2)
     staff_user1.user_permissions.add(
-        permission_manage_products, permission_manage_orders
+        permission_manage_rooms, permission_manage_orders
     )
 
     staff_user3.user_permissions.add(permission_manage_orders)
@@ -276,14 +276,14 @@ def test_get_out_of_scope_users_for_admin_user(
     staff_users,
     permission_group_manage_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     staff_user1 = staff_users[0]
     staff_user2 = staff_users[1]
 
     permission_group_manage_users.user_set.add(staff_user1, staff_user2)
     staff_user1.user_permissions.add(
-        permission_manage_products, permission_manage_orders
+        permission_manage_rooms, permission_manage_orders
     )
 
     staff_user2.user_permissions.add(permission_manage_orders)
@@ -299,7 +299,7 @@ def test_get_out_of_scope_users_return_some_users(
     staff_users,
     permission_group_manage_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     staff_user1 = staff_users[0]
     staff_user2 = staff_users[1]
@@ -313,7 +313,7 @@ def test_get_out_of_scope_users_return_some_users(
     permission_group_manage_users.user_set.add(staff_user1, staff_user2)
 
     staff_user3.user_permissions.add(
-        permission_manage_products, permission_manage_orders
+        permission_manage_rooms, permission_manage_orders
     )
     staff_user2.user_permissions.add(permission_manage_orders)
 
@@ -326,7 +326,7 @@ def test_get_out_of_scope_users_return_some_users(
 def test_get_group_to_permissions_and_users_mapping(
     staff_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_users,
 ):
     staff_user1, staff_user2, staff_user3_not_active = staff_users
@@ -336,14 +336,14 @@ def test_get_group_to_permissions_and_users_mapping(
     groups = Group.objects.bulk_create(
         [
             Group(name="manage users"),
-            Group(name="manage orders and products"),
+            Group(name="manage orders and rooms"),
             Group(name="empty group"),
         ]
     )
     group1, group2, group3 = groups
 
     group1.permissions.add(permission_manage_users)
-    group2.permissions.add(permission_manage_products, permission_manage_orders)
+    group2.permissions.add(permission_manage_rooms, permission_manage_orders)
 
     group1.user_set.add(staff_user1, staff_user2)
     group2.user_set.add(staff_user3_not_active)
@@ -357,7 +357,7 @@ def test_get_group_to_permissions_and_users_mapping(
         },
         group2.pk: {
             "permissions": {
-                ProductPermissions.MANAGE_PRODUCTS.value,
+                RoomPermissions.MANAGE_ROOMS.value,
                 OrderPermissions.MANAGE_ORDERS.value,
             },
             "users": set(),
@@ -376,7 +376,7 @@ def test_get_users_and_look_for_permissions_in_groups_with_manage_staff():
             "permissions": {
                 "account.manage_staff",
                 "order.manage_orders",
-                "product.manage_products",
+                "room.manage_rooms",
                 "checkout.manage_checkouts",
             },
             "users": {1, 2},
@@ -390,7 +390,7 @@ def test_get_users_and_look_for_permissions_in_groups_with_manage_staff():
             "users": set(),
         },
         3: {
-            "permissions": {"account.manage_staff", "product.manage_products"},
+            "permissions": {"account.manage_staff", "room.manage_rooms"},
             "users": {3, 2},
         },
         4: {"permissions": {"checkout.manage_checkouts"}, "users": {2}},
@@ -412,7 +412,7 @@ def test_look_for_permission_in_users_with_manage_staff():
             "permissions": {
                 "account.manage_staff",
                 "order.manage_orders",
-                "product.manage_products",
+                "room.manage_rooms",
                 "checkout.manage_checkouts",
             },
             "users": {1, 2},
@@ -426,7 +426,7 @@ def test_look_for_permission_in_users_with_manage_staff():
             "users": set(),
         },
         3: {
-            "permissions": {"account.manage_staff", "product.manage_products"},
+            "permissions": {"account.manage_staff", "room.manage_rooms"},
             "users": {3, 2},
         },
         4: {
@@ -449,7 +449,7 @@ def test_look_for_permission_in_users_with_manage_staff():
 def test_get_not_manageable_permissions_after_group_deleting(
     staff_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_checkouts,
     permission_manage_staff,
     permission_manage_discounts,
@@ -468,12 +468,12 @@ def test_get_not_manageable_permissions_after_group_deleting(
 
     group1.permissions.add(
         permission_manage_orders,
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_checkouts,
         permission_manage_staff,
     )
     group2.permissions.add(permission_manage_orders, permission_manage_checkouts)
-    group3.permissions.add(permission_manage_products, permission_manage_staff)
+    group3.permissions.add(permission_manage_rooms, permission_manage_staff)
     group4.permissions.add(permission_manage_staff, permission_manage_discounts)
 
     group1.user_set.add(staff_user1, staff_user2)
@@ -490,7 +490,7 @@ def test_get_not_manageable_permissions_after_group_deleting(
 def test_get_not_manageable_permissions_after_group_deleting_some_cannot_be_manage(
     staff_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_checkouts,
     permission_manage_staff,
     permission_manage_discounts,
@@ -509,14 +509,14 @@ def test_get_not_manageable_permissions_after_group_deleting_some_cannot_be_mana
 
     group1.permissions.add(
         permission_manage_orders,
-        permission_manage_products,
+        permission_manage_rooms,
         permission_manage_checkouts,
         permission_manage_staff,
     )
     group2.permissions.add(
         permission_manage_staff, permission_manage_orders, permission_manage_checkouts
     )
-    group3.permissions.add(permission_manage_products, permission_manage_staff)
+    group3.permissions.add(permission_manage_rooms, permission_manage_staff)
     group4.permissions.add(permission_manage_checkouts, permission_manage_discounts)
 
     group1.user_set.add(staff_user1, staff_user2)
@@ -734,7 +734,7 @@ def test_get_not_manageable_permissions_deactivate_or_remove_user_cant_manage_st
 def test_get_not_manageable_permissions_after_removing_perms_from_group_no_perms(
     staff_users,
     permission_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_staff,
     permission_manage_orders,
 ):
@@ -742,14 +742,14 @@ def test_get_not_manageable_permissions_after_removing_perms_from_group_no_perms
     permissions from group."""
     groups = Group.objects.bulk_create(
         [
-            Group(name="manage users and products"),
+            Group(name="manage users and rooms"),
             Group(name="manage staff"),
             Group(name="manage orders and users"),
         ]
     )
     group1, group2, group3 = groups
 
-    group1.permissions.add(permission_manage_users, permission_manage_products)
+    group1.permissions.add(permission_manage_users, permission_manage_rooms)
     group2.permissions.add(permission_manage_staff)
     group3.permissions.add(permission_manage_orders, permission_manage_users)
 
@@ -768,7 +768,7 @@ def test_get_not_manageable_permissions_after_removing_perms_from_group_no_perms
 def test_get_not_manageable_permissions_after_removing_perms_from_group_some_cannot(
     staff_users,
     permission_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_staff,
     permission_manage_orders,
 ):
@@ -776,16 +776,16 @@ def test_get_not_manageable_permissions_after_removing_perms_from_group_some_can
     removing permissions from group."""
     groups = Group.objects.bulk_create(
         [
-            Group(name="manage users and products"),
+            Group(name="manage users and rooms"),
             Group(name="manage staff"),
-            Group(name="manage orders and products"),
+            Group(name="manage orders and rooms"),
         ]
     )
     group1, group2, group3 = groups
 
-    group1.permissions.add(permission_manage_users, permission_manage_products)
+    group1.permissions.add(permission_manage_users, permission_manage_rooms)
     group2.permissions.add(permission_manage_staff)
-    group3.permissions.add(permission_manage_orders, permission_manage_products)
+    group3.permissions.add(permission_manage_orders, permission_manage_rooms)
 
     staff_user1, staff_user2, staff_user3 = staff_users
     group1.user_set.add(staff_user1)
@@ -796,7 +796,7 @@ def test_get_not_manageable_permissions_after_removing_perms_from_group_some_can
         group1,
         [
             AccountPermissions.MANAGE_USERS.value,
-            ProductPermissions.MANAGE_PRODUCTS.value,
+            RoomPermissions.MANAGE_ROOMS.value,
         ],
     )
 
@@ -806,10 +806,10 @@ def test_get_not_manageable_permissions_after_removing_perms_from_group_some_can
 def test_can_manage_app_no_permission(
     app,
     staff_user,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
 ):
-    app.permissions.add(permission_manage_products)
+    app.permissions.add(permission_manage_rooms)
     staff_user.user_permissions.add(permission_manage_apps)
 
     result = can_manage_app(staff_user, app)
@@ -819,22 +819,22 @@ def test_can_manage_app_no_permission(
 def test_can_manage_app_account(
     app,
     staff_user,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
 ):
-    app.permissions.add(permission_manage_products)
-    staff_user.user_permissions.add(permission_manage_apps, permission_manage_products)
+    app.permissions.add(permission_manage_rooms)
+    staff_user.user_permissions.add(permission_manage_apps, permission_manage_rooms)
 
     result = can_manage_app(staff_user, app)
     assert result is True
 
 
 def test_can_manage_app_for_app_no_permission(
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
 ):
     apps = App.objects.bulk_create([App(name="sa1"), App(name="sa2")])
-    apps[1].permissions.add(permission_manage_products)
+    apps[1].permissions.add(permission_manage_rooms)
     apps[0].permissions.add(permission_manage_apps)
 
     result = can_manage_app(apps[0], apps[1])
@@ -842,12 +842,12 @@ def test_can_manage_app_for_app_no_permission(
 
 
 def test_can_manage_app_for_app(
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
 ):
     apps = App.objects.bulk_create([App(name="sa1"), App(name="sa2")])
-    apps[1].permissions.add(permission_manage_products)
-    apps[0].permissions.add(permission_manage_apps, permission_manage_products)
+    apps[1].permissions.add(permission_manage_rooms)
+    apps[0].permissions.add(permission_manage_apps, permission_manage_rooms)
 
     result = can_manage_app(apps[0], apps[1])
     assert result is True
@@ -890,10 +890,10 @@ def test_requestor_has_access_access_by_staff(
 
 
 def test_requestor_has_access_no_access_by_staff(
-    customer_user, staff_user, permission_manage_products
+    customer_user, staff_user, permission_manage_rooms
 ):
     # given
-    staff_user.user_permissions.add(permission_manage_products)
+    staff_user.user_permissions.add(permission_manage_rooms)
     staff_user.save()
 
     # when

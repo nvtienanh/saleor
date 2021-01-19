@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0054_merge_20180320_1108"),
+        ("room", "0054_merge_20180320_1108"),
         ("order", "0044_auto_20180326_1055"),
     ]
 
@@ -22,10 +22,10 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="+",
-                to="product.ProductVariant",
+                to="room.RoomVariant",
             ),
         ),
-        migrations.RemoveField(model_name="orderline", name="product"),
+        migrations.RemoveField(model_name="orderline", name="room"),
         migrations.AlterField(
             model_name="orderline",
             name="unit_price_gross",

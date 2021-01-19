@@ -5,40 +5,40 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0092_auto_20190507_0309")]
+    dependencies = [("room", "0092_auto_20190507_0309")]
 
     operations = [
         migrations.AddField(
-            model_name="collectionproduct",
+            model_name="collectionroom",
             name="sort_order",
             field=models.PositiveIntegerField(db_index=True, editable=False, null=True),
         ),
         migrations.AlterField(
-            model_name="collectionproduct",
-            name="product",
+            model_name="collectionroom",
+            name="room",
             field=models.ForeignKey(
                 on_delete=models.deletion.CASCADE,
-                related_name="collectionproduct",
-                to="product.Product",
+                related_name="collectionroom",
+                to="room.Room",
             ),
         ),
         migrations.AlterField(
-            model_name="collectionproduct",
+            model_name="collectionroom",
             name="collection",
             field=models.ForeignKey(
                 on_delete=models.deletion.CASCADE,
-                related_name="collectionproduct",
-                to="product.Collection",
+                related_name="collectionroom",
+                to="room.Collection",
             ),
         ),
-        migrations.AlterModelTable(name="collectionproduct", table=None),
+        migrations.AlterModelTable(name="collectionroom", table=None),
         migrations.AlterField(
             model_name="attributevalue",
             name="sort_order",
             field=models.PositiveIntegerField(db_index=True, editable=False, null=True),
         ),
         migrations.AlterField(
-            model_name="productimage",
+            model_name="roomimage",
             name="sort_order",
             field=models.PositiveIntegerField(db_index=True, editable=False, null=True),
         ),

@@ -8,8 +8,8 @@ from saleor.discount import VoucherType
 def replace_removed_vocucher_type(apps, schema_editor):
     cls = apps.get_model("discount", "Voucher")
     cls.objects.filter(type="value").update(type=VoucherType.ENTIRE_ORDER)
-    cls.objects.filter(type__in=["category", "product", "collection"]).update(
-        type=VoucherType.SPECIFIC_PRODUCT
+    cls.objects.filter(type__in=["category", "room", "collection"]).update(
+        type=VoucherType.SPECIFIC_ROOM
     )
 
 
@@ -27,8 +27,8 @@ class Migration(migrations.Migration):
                     ("entire_order", "Entire order"),
                     ("shipping", "Shipping"),
                     (
-                        "specific_product",
-                        "Specific products, collections and categories",
+                        "specific_room",
+                        "Specific rooms, collections and categories",
                     ),
                 ],
                 default="entire_order",

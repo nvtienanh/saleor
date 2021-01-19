@@ -67,7 +67,7 @@ SORT_EXPORT_FILES_QUERY = """
 def test_filter_export_files_by_status(
     staff_api_client,
     export_file_list,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     status_filter,
     count,
@@ -78,7 +78,7 @@ def test_filter_export_files_by_status(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
     nodes = content["data"]["exportFiles"]["edges"]
@@ -96,7 +96,7 @@ def test_filter_export_files_by_status(
 def test_filter_export_files_by_created_at_date(
     staff_api_client,
     export_file_list,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     created_at_filter,
     count,
@@ -107,7 +107,7 @@ def test_filter_export_files_by_created_at_date(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
     nodes = content["data"]["exportFiles"]["edges"]
@@ -125,7 +125,7 @@ def test_filter_export_files_by_created_at_date(
 def test_filter_export_files_by_ended_at_date(
     staff_api_client,
     export_file_list,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     ended_at_filter,
     count,
@@ -136,7 +136,7 @@ def test_filter_export_files_by_ended_at_date(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
     nodes = content["data"]["exportFiles"]["edges"]
@@ -147,7 +147,7 @@ def test_filter_export_files_by_ended_at_date(
 def test_filter_export_files_by_user(
     staff_api_client,
     export_file_list,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     staff_user,
 ):
@@ -167,7 +167,7 @@ def test_filter_export_files_by_user(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
     nodes = content["data"]["exportFiles"]["edges"]
@@ -178,7 +178,7 @@ def test_filter_export_files_by_user(
 def test_filter_export_files_by_app(
     staff_api_client,
     export_file_list,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     permission_manage_staff,
     app,
@@ -204,7 +204,7 @@ def test_filter_export_files_by_app(
         query,
         variables=variables,
         permissions=[
-            permission_manage_products,
+            permission_manage_rooms,
             permission_manage_apps,
             permission_manage_staff,
         ],
@@ -218,7 +218,7 @@ def test_filter_export_files_by_app(
 def test_sort_export_files_query_by_created_at_date(
     staff_api_client,
     user_export_file,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     staff_user,
 ):
@@ -234,7 +234,7 @@ def test_sort_export_files_query_by_created_at_date(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
     nodes = content["data"]["exportFiles"]["edges"]
@@ -248,7 +248,7 @@ def test_sort_export_files_query_by_created_at_date(
 def test_sort_export_files_query_by_updated_at_date(
     staff_api_client,
     user_export_file,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     staff_user,
 ):
@@ -269,7 +269,7 @@ def test_sort_export_files_query_by_updated_at_date(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
     nodes = content["data"]["exportFiles"]["edges"]
@@ -283,7 +283,7 @@ def test_sort_export_files_query_by_updated_at_date(
 def test_sort_export_files_query_by_status(
     staff_api_client,
     export_file_list,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     staff_user,
 ):
@@ -293,7 +293,7 @@ def test_sort_export_files_query_by_status(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
     content = get_graphql_content(response)
     nodes = content["data"]["exportFiles"]["edges"]

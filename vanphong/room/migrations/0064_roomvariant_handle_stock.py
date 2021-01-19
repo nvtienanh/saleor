@@ -5,11 +5,11 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0063_required_attr_value_order")]
+    dependencies = [("room", "0063_required_attr_value_order")]
 
     operations = [
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="track_inventory",
             field=models.BooleanField(default=True),
         )

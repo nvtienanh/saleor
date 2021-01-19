@@ -20,10 +20,10 @@ FRAGMENT_PRICE = """
     }
 """
 
-FRAGMENT_PRODUCT_VARIANT = (
+FRAGMENT_ROOM_VARIANT = (
     FRAGMENT_PRICE
     + """
-        fragment ProductVariant on ProductVariant {
+        fragment RoomVariant on RoomVariant {
           id
           name
           pricing {
@@ -35,7 +35,7 @@ FRAGMENT_PRODUCT_VARIANT = (
               ...Price
             }
           }
-          product {
+          room {
             id
             name
             thumbnail {
@@ -51,7 +51,7 @@ FRAGMENT_PRODUCT_VARIANT = (
 )
 
 FRAGMENT_CHECKOUT_LINE = (
-    FRAGMENT_PRODUCT_VARIANT
+    FRAGMENT_ROOM_VARIANT
     + """
         fragment CheckoutLine on CheckoutLine {
           id
@@ -60,7 +60,7 @@ FRAGMENT_CHECKOUT_LINE = (
             ...Price
           }
           variant {
-            ...ProductVariant
+            ...RoomVariant
           }
           quantity
         }
@@ -161,9 +161,9 @@ def test_create_checkout(
     graphql_address_data,
     stock,
     channel_USD,
-    product_with_default_variant,
-    product_with_single_variant,
-    product_with_two_variants,
+    room_with_default_variant,
+    room_with_single_variant,
+    room_with_two_variants,
     count_queries,
 ):
     query = (
@@ -192,35 +192,35 @@ def test_create_checkout(
                 {
                     "quantity": 1,
                     "variantId": Node.to_global_id(
-                        "ProductVariant", stock.product_variant.pk
+                        "RoomVariant", stock.room_variant.pk
                     ),
                 },
                 {
                     "quantity": 2,
                     "variantId": Node.to_global_id(
-                        "ProductVariant",
-                        product_with_default_variant.variants.first().pk,
+                        "RoomVariant",
+                        room_with_default_variant.variants.first().pk,
                     ),
                 },
                 {
                     "quantity": 10,
                     "variantId": Node.to_global_id(
-                        "ProductVariant",
-                        product_with_single_variant.variants.first().pk,
+                        "RoomVariant",
+                        room_with_single_variant.variants.first().pk,
                     ),
                 },
                 {
                     "quantity": 3,
                     "variantId": Node.to_global_id(
-                        "ProductVariant",
-                        product_with_two_variants.variants.first().pk,
+                        "RoomVariant",
+                        room_with_two_variants.variants.first().pk,
                     ),
                 },
                 {
                     "quantity": 2,
                     "variantId": Node.to_global_id(
-                        "ProductVariant",
-                        product_with_two_variants.variants.last().pk,
+                        "RoomVariant",
+                        room_with_two_variants.variants.last().pk,
                     ),
                 },
             ],
@@ -305,9 +305,9 @@ def test_update_checkout_lines(
     api_client,
     checkout_with_items,
     stock,
-    product_with_default_variant,
-    product_with_single_variant,
-    product_with_two_variants,
+    room_with_default_variant,
+    room_with_single_variant,
+    room_with_two_variants,
     count_queries,
 ):
     query = (
@@ -342,35 +342,35 @@ def test_update_checkout_lines(
             {
                 "quantity": 1,
                 "variantId": Node.to_global_id(
-                    "ProductVariant", stock.product_variant.pk
+                    "RoomVariant", stock.room_variant.pk
                 ),
             },
             {
                 "quantity": 2,
                 "variantId": Node.to_global_id(
-                    "ProductVariant",
-                    product_with_default_variant.variants.first().pk,
+                    "RoomVariant",
+                    room_with_default_variant.variants.first().pk,
                 ),
             },
             {
                 "quantity": 10,
                 "variantId": Node.to_global_id(
-                    "ProductVariant",
-                    product_with_single_variant.variants.first().pk,
+                    "RoomVariant",
+                    room_with_single_variant.variants.first().pk,
                 ),
             },
             {
                 "quantity": 3,
                 "variantId": Node.to_global_id(
-                    "ProductVariant",
-                    product_with_two_variants.variants.first().pk,
+                    "RoomVariant",
+                    room_with_two_variants.variants.first().pk,
                 ),
             },
             {
                 "quantity": 2,
                 "variantId": Node.to_global_id(
-                    "ProductVariant",
-                    product_with_two_variants.variants.last().pk,
+                    "RoomVariant",
+                    room_with_two_variants.variants.last().pk,
                 ),
             },
         ],

@@ -6,14 +6,14 @@ from ....tests.utils import get_graphql_content
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_retrieve_product_list(
+def test_retrieve_room_list(
     api_client,
     category,
     categories_tree,
     count_queries,
 ):
     query = """
-        query ProductsList {
+        query RoomsList {
           shop {
             description
             name
@@ -36,18 +36,18 @@ def test_retrieve_product_list(
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_report_product_sales(
+def test_report_room_sales(
     staff_api_client,
     order_with_lines,
     order_with_lines_channel_PLN,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_orders,
     channel_USD,
     count_queries,
 ):
     query = """
-        query TopProducts($period: ReportingPeriod!, $channel: String!) {
-          reportProductSales(period: $period, first: 20, channel: $channel) {
+        query TopRooms($period: ReportingPeriod!, $channel: String!) {
+          reportRoomSales(period: $period, first: 20, channel: $channel) {
             edges {
               node {
                 revenue(period: $period) {
@@ -63,6 +63,6 @@ def test_report_product_sales(
         }
     """
     variables = {"period": ReportingPeriod.TODAY.name, "channel": channel_USD.slug}
-    permissions = [permission_manage_orders, permission_manage_products]
+    permissions = [permission_manage_orders, permission_manage_rooms]
     response = staff_api_client.post_graphql(query, variables, permissions)
     get_graphql_content(response)

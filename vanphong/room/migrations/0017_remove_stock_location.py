@@ -7,6 +7,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0016_auto_20161207_0843")]
+    dependencies = [("room", "0016_auto_20161207_0843")]
 
     operations = [migrations.RemoveField(model_name="stock", name="location")]

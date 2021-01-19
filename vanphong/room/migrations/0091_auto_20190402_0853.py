@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("order", "0069_auto_20190225_2305"),
-        ("product", "0090_auto_20190328_0608"),
+        ("room", "0090_auto_20190328_0608"),
     ]
 
     operations = [
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 (
                     "content_type",
                     models.CharField(
-                        choices=[("file", "digital_product")],
+                        choices=[("file", "digital_room")],
                         default="file",
                         max_length=128,
                     ),
@@ -41,11 +41,11 @@ class Migration(migrations.Migration):
                 ("max_downloads", models.IntegerField(blank=True, null=True)),
                 ("url_valid_days", models.IntegerField(blank=True, null=True)),
                 (
-                    "product_variant",
+                    "room_variant",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="digital_content",
-                        to="product.ProductVariant",
+                        to="room.RoomVariant",
                     ),
                 ),
             ],
@@ -70,7 +70,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="urls",
-                        to="product.DigitalContent",
+                        to="room.DigitalContent",
                     ),
                 ),
                 (
@@ -86,7 +86,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.AddField(
-            model_name="producttype",
+            model_name="roomtype",
             name="is_digital",
             field=models.BooleanField(default=False),
         ),

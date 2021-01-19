@@ -8,8 +8,8 @@ from django.utils.text import slugify
 
 
 def create_collection_channel_listing(apps, schema_editor):
-    CollectionChannelListing = apps.get_model("product", "CollectionChannelListing")
-    Collection = apps.get_model("product", "Collection")
+    CollectionChannelListing = apps.get_model("room", "CollectionChannelListing")
+    Collection = apps.get_model("room", "Collection")
     Channel = apps.get_model("channel", "Channel")
 
     if Collection.objects.exists():
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("channel", "0001_initial"),
-        ("product", "0134_product_channel_listing"),
+        ("room", "0134_room_channel_listing"),
     ]
 
     operations = [
@@ -64,7 +64,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="channel_listings",
-                        to="product.collection",
+                        to="room.collection",
                     ),
                 ),
             ],

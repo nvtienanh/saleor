@@ -3,47 +3,47 @@
 from django.db import migrations, models
 
 
-def populate_product_variant_price(apps, schema_editor):
-    ProductVariant = apps.get_model("product", "ProductVariant")
-    for product_variant in ProductVariant.objects.iterator():
-        price_override_amount = product_variant.price_override_amount
+def populate_room_variant_price(apps, schema_editor):
+    RoomVariant = apps.get_model("room", "RoomVariant")
+    for room_variant in RoomVariant.objects.iterator():
+        price_override_amount = room_variant.price_override_amount
         if price_override_amount:
-            product_variant.price_amount = price_override_amount
+            room_variant.price_amount = price_override_amount
         else:
-            product_price = product_variant.product.price_amount
-            product_variant.price_amount = product_price
+            room_price = room_variant.room.price_amount
+            room_variant.price_amount = room_price
 
-        product_variant.save(update_fields=["price_amount"])
+        room_variant.save(update_fields=["price_amount"])
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0117_auto_20200423_0737"),
+        ("room", "0117_auto_20200423_0737"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="price_amount",
             field=models.DecimalField(decimal_places=2, max_digits=12, null=True),
         ),
-        migrations.RunPython(populate_product_variant_price),
+        migrations.RunPython(populate_room_variant_price),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="price_amount",
             field=models.DecimalField(decimal_places=2, max_digits=12),
         ),
         migrations.RemoveField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="price_override_amount",
         ),
         migrations.RemoveField(
-            model_name="product",
+            model_name="room",
             name="price_amount",
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="minimal_variant_price_amount",
             field=models.DecimalField(
                 blank=True, decimal_places=2, max_digits=12, null=True

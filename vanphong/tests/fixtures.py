@@ -63,7 +63,7 @@ from ..payment.interface import GatewayConfig, PaymentData
 from ..payment.models import Payment
 from ..plugins.models import PluginConfiguration
 from ..plugins.vatlayer.plugin import VatlayerPlugin
-from ..product.models import (
+from ..room.models import (
     Category,
     CategoryTranslation,
     Collection,
@@ -71,17 +71,17 @@ from ..product.models import (
     CollectionTranslation,
     DigitalContent,
     DigitalContentUrl,
-    Product,
-    ProductChannelListing,
-    ProductImage,
-    ProductTranslation,
-    ProductType,
-    ProductVariant,
-    ProductVariantChannelListing,
-    ProductVariantTranslation,
+    Room,
+    RoomChannelListing,
+    RoomImage,
+    RoomTranslation,
+    RoomType,
+    RoomVariant,
+    RoomVariantChannelListing,
+    RoomVariantTranslation,
     VariantImage,
 )
-from ..product.tests.utils import create_image
+from ..room.tests.utils import create_image
 from ..shipping.models import (
     ShippingMethod,
     ShippingMethodChannelListing,
@@ -90,7 +90,7 @@ from ..shipping.models import (
     ShippingZone,
 )
 from ..site.models import SiteSettings
-from ..warehouse.models import Allocation, Stock, Warehouse
+from ..hotel.models import Allocation, Stock, Hotel
 from ..webhook.event_types import WebhookEventType
 from ..webhook.models import Webhook
 from ..wishlist.models import Wishlist
@@ -250,8 +250,8 @@ def checkout(db, channel_USD):
 
 
 @pytest.fixture
-def checkout_with_item(checkout, product):
-    variant = product.variants.get()
+def checkout_with_item(checkout, room):
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, 3)
     checkout.save()
     return checkout
@@ -309,7 +309,7 @@ def checkout_ready_to_complete(checkout_with_item, address, shipping_method, gif
 @pytest.fixture
 def checkout_with_digital_item(checkout, digital_content):
     """Create a checkout with a digital line."""
-    variant = digital_content.product_variant
+    variant = digital_content.room_variant
     add_variant_to_checkout(checkout, variant, 1)
     checkout.email = "customer@example.com"
     checkout.save()
@@ -317,9 +317,9 @@ def checkout_with_digital_item(checkout, digital_content):
 
 
 @pytest.fixture
-def checkout_with_shipping_required(checkout_with_item, product):
+def checkout_with_shipping_required(checkout_with_item, room):
     checkout = checkout_with_item
-    variant = product.variants.get()
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, 3)
     checkout.save()
     return checkout
@@ -342,16 +342,16 @@ def other_shipping_method(shipping_zone, channel_USD):
 
 
 @pytest.fixture
-def checkout_without_shipping_required(checkout, product_without_shipping):
-    variant = product_without_shipping.variants.get()
+def checkout_without_shipping_required(checkout, room_without_shipping):
+    variant = room_without_shipping.variants.get()
     add_variant_to_checkout(checkout, variant, 1)
     checkout.save()
     return checkout
 
 
 @pytest.fixture
-def checkout_with_single_item(checkout, product):
-    variant = product.variants.get()
+def checkout_with_single_item(checkout, room):
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, 1)
     checkout.save()
     return checkout
@@ -373,10 +373,10 @@ def checkout_with_variant_without_inventory_tracking(
 
 
 @pytest.fixture
-def checkout_with_items(checkout, product_list, product):
-    variant = product.variants.get()
+def checkout_with_items(checkout, room_list, room):
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, 1)
-    for prod in product_list:
+    for prod in room_list:
         variant = prod.variants.get()
         add_variant_to_checkout(checkout, variant, 1)
     checkout.refresh_from_db()
@@ -384,8 +384,8 @@ def checkout_with_items(checkout, product_list, product):
 
 
 @pytest.fixture
-def checkout_with_voucher(checkout, product, voucher):
-    variant = product.variants.get()
+def checkout_with_voucher(checkout, room, voucher):
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, 3)
     checkout.voucher_code = voucher.code
     checkout.discount = Money("20.00", "USD")
@@ -394,8 +394,8 @@ def checkout_with_voucher(checkout, product, voucher):
 
 
 @pytest.fixture
-def checkout_with_voucher_percentage(checkout, product, voucher_percentage):
-    variant = product.variants.get()
+def checkout_with_voucher_percentage(checkout, room, voucher_percentage):
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, 3)
     checkout.voucher_code = voucher_percentage.code
     checkout.discount = Money("3.00", "USD")
@@ -536,9 +536,9 @@ def user_checkout_PLN(customer_user, channel_PLN):
 
 
 @pytest.fixture
-def user_checkout_with_items(user_checkout, product_list):
-    for product in product_list:
-        variant = product.variants.get()
+def user_checkout_with_items(user_checkout, room_list):
+    for room in room_list:
+        variant = room.variants.get()
         add_variant_to_checkout(user_checkout, variant, 1)
     user_checkout.refresh_from_db()
     return user_checkout
@@ -737,7 +737,7 @@ def color_attribute(db):  # pylint: disable=W0613
     attribute = Attribute.objects.create(
         slug="color",
         name="Color",
-        type=AttributeType.PRODUCT_TYPE,
+        type=AttributeType.ROOM_TYPE,
         filterable_in_storefront=True,
         filterable_in_dashboard=True,
         available_in_grid=True,
@@ -752,7 +752,7 @@ def color_attribute_without_values(db):  # pylint: disable=W0613
     return Attribute.objects.create(
         slug="color",
         name="Color",
-        type=AttributeType.PRODUCT_TYPE,
+        type=AttributeType.ROOM_TYPE,
         filterable_in_storefront=True,
         filterable_in_dashboard=True,
         available_in_grid=True,
@@ -772,7 +772,7 @@ def size_attribute(db):  # pylint: disable=W0613
     attribute = Attribute.objects.create(
         slug="size",
         name="Size",
-        type=AttributeType.PRODUCT_TYPE,
+        type=AttributeType.ROOM_TYPE,
         filterable_in_storefront=True,
         filterable_in_dashboard=True,
         available_in_grid=True,
@@ -787,7 +787,7 @@ def weight_attribute(db):
     attribute = Attribute.objects.create(
         slug="material",
         name="Material",
-        type=AttributeType.PRODUCT_TYPE,
+        type=AttributeType.ROOM_TYPE,
         filterable_in_storefront=True,
         filterable_in_dashboard=True,
         available_in_grid=True,
@@ -804,7 +804,7 @@ def file_attribute(db):
     attribute = Attribute.objects.create(
         slug="image",
         name="Image",
-        type=AttributeType.PRODUCT_TYPE,
+        type=AttributeType.ROOM_TYPE,
         input_type=AttributeInputType.FILE,
     )
     AttributeValue.objects.create(
@@ -829,7 +829,7 @@ def file_attribute_with_file_input_type_without_values(db):
     return Attribute.objects.create(
         slug="image",
         name="Image",
-        type=AttributeType.PRODUCT_TYPE,
+        type=AttributeType.ROOM_TYPE,
         input_type=AttributeInputType.FILE,
     )
 
@@ -904,16 +904,16 @@ def page_file_attribute(db):
 
 
 @pytest.fixture
-def product_type_attribute_list() -> List[Attribute]:
+def room_type_attribute_list() -> List[Attribute]:
     return list(
         Attribute.objects.bulk_create(
             [
-                Attribute(slug="size", name="Size", type=AttributeType.PRODUCT_TYPE),
+                Attribute(slug="size", name="Size", type=AttributeType.ROOM_TYPE),
                 Attribute(
-                    slug="weight", name="Weight", type=AttributeType.PRODUCT_TYPE
+                    slug="weight", name="Weight", type=AttributeType.ROOM_TYPE
                 ),
                 Attribute(
-                    slug="thickness", name="Thickness", type=AttributeType.PRODUCT_TYPE
+                    slug="thickness", name="Thickness", type=AttributeType.ROOM_TYPE
                 ),
             ]
         )
@@ -940,7 +940,7 @@ def image():
     img_data = BytesIO()
     image = Image.new("RGB", size=(1, 1))
     image.save(img_data, format="JPEG")
-    return SimpleUploadedFile("product.jpg", img_data.getvalue())
+    return SimpleUploadedFile("room.jpg", img_data.getvalue())
 
 
 @pytest.fixture
@@ -956,65 +956,65 @@ def category_with_image(db, image, media_root):  # pylint: disable=W0613
 
 
 @pytest.fixture
-def categories_tree(db, product_type, channel_USD):  # pylint: disable=W0613
+def categories_tree(db, room_type, channel_USD):  # pylint: disable=W0613
     parent = Category.objects.create(name="Parent", slug="parent")
     parent.children.create(name="Child", slug="child")
     child = parent.children.first()
 
-    product_attr = product_type.product_attributes.first()
-    attr_value = product_attr.values.first()
+    room_attr = room_type.room_attributes.first()
+    attr_value = room_attr.values.first()
 
-    product = Product.objects.create(
-        name="Test product",
-        slug="test-product-10",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room",
+        slug="test-room-10",
+        room_type=room_type,
         category=child,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
     )
 
-    associate_attribute_values_to_instance(product, product_attr, attr_value)
+    associate_attribute_values_to_instance(room, room_attr, attr_value)
     return parent
 
 
 @pytest.fixture
-def categories_tree_with_published_products(
-    categories_tree, product, channel_USD, channel_PLN
+def categories_tree_with_published_rooms(
+    categories_tree, room, channel_USD, channel_PLN
 ):
     parent = categories_tree
-    parent_product = product
-    parent_product.category = parent
+    parent_room = room
+    parent_room.category = parent
 
     child = parent.children.first()
-    child_product = child.products.first()
+    child_room = child.rooms.first()
 
-    product_list = [child_product, parent_product]
+    room_list = [child_room, parent_room]
 
-    ProductChannelListing.objects.filter(product__in=product_list).delete()
-    product_channel_listings = []
-    for product in product_list:
-        product.save()
-        product_channel_listings.append(
-            ProductChannelListing(
-                product=product,
+    RoomChannelListing.objects.filter(room__in=room_list).delete()
+    room_channel_listings = []
+    for room in room_list:
+        room.save()
+        room_channel_listings.append(
+            RoomChannelListing(
+                room=room,
                 channel=channel_USD,
                 publication_date=datetime.date.today(),
                 is_published=True,
             )
         )
-        product_channel_listings.append(
-            ProductChannelListing(
-                product=product,
+        room_channel_listings.append(
+            RoomChannelListing(
+                room=room,
                 channel=channel_PLN,
                 publication_date=datetime.date.today(),
                 is_published=True,
             )
         )
-    ProductChannelListing.objects.bulk_create(product_channel_listings)
+    RoomChannelListing.objects.bulk_create(room_channel_listings)
     return parent
 
 
@@ -1054,39 +1054,39 @@ def permission_manage_apps():
 
 
 @pytest.fixture
-def product_type(color_attribute, size_attribute):
-    product_type = ProductType.objects.create(
+def room_type(color_attribute, size_attribute):
+    room_type = RoomType.objects.create(
         name="Default Type",
         slug="default-type",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(color_attribute)
-    product_type.variant_attributes.add(size_attribute)
-    return product_type
+    room_type.room_attributes.add(color_attribute)
+    room_type.variant_attributes.add(size_attribute)
+    return room_type
 
 
 @pytest.fixture
-def product_type_without_variant():
-    product_type = ProductType.objects.create(
+def room_type_without_variant():
+    room_type = RoomType.objects.create(
         name="Type", slug="type", has_variants=False, is_shipping_required=True
     )
-    return product_type
+    return room_type
 
 
 @pytest.fixture
-def product(product_type, category, warehouse, channel_USD):
-    product_attr = product_type.product_attributes.first()
-    product_attr_value = product_attr.values.first()
+def room(room_type, category, hotel, channel_USD):
+    room_attr = room_type.room_attributes.first()
+    room_attr_value = room_attr.values.first()
 
-    product = Product.objects.create(
-        name="Test product",
-        slug="test-product-11",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room",
+        slug="test-room-11",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         discounted_price_amount="10.00",
@@ -1095,89 +1095,89 @@ def product(product_type, category, warehouse, channel_USD):
         available_for_purchase=datetime.date(1999, 1, 1),
     )
 
-    associate_attribute_values_to_instance(product, product_attr, product_attr_value)
+    associate_attribute_values_to_instance(room, room_attr, room_attr_value)
 
-    variant_attr = product_type.variant_attributes.first()
+    variant_attr = room_type.variant_attributes.first()
     variant_attr_value = variant_attr.values.first()
 
-    variant = ProductVariant.objects.create(product=product, sku="123")
-    ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="123")
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
         cost_price_amount=Decimal(1),
         currency=channel_USD.currency_code,
     )
-    Stock.objects.create(warehouse=warehouse, product_variant=variant, quantity=10)
+    Stock.objects.create(hotel=hotel, room_variant=variant, quantity=10)
 
     associate_attribute_values_to_instance(variant, variant_attr, variant_attr_value)
-    return product
+    return room
 
 
 @pytest.fixture
-def product_with_collections(
-    product, published_collection, unpublished_collection, collection
+def room_with_collections(
+    room, published_collection, unpublished_collection, collection
 ):
-    product.collections.add(*[published_collection, unpublished_collection, collection])
-    return product
+    room.collections.add(*[published_collection, unpublished_collection, collection])
+    return room
 
 
 @pytest.fixture
-def product_available_in_many_channels(product, channel_PLN):
-    ProductChannelListing.objects.create(
-        product=product,
+def room_available_in_many_channels(room, channel_PLN):
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_PLN,
         is_published=True,
     )
-    variant = product.variants.get()
-    ProductVariantChannelListing.objects.create(
+    variant = room.variants.get()
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_PLN,
         price_amount=Decimal(50),
         cost_price_amount=Decimal(1),
         currency=channel_PLN.currency_code,
     )
-    return product
+    return room
 
 
 @pytest.fixture
-def product_with_single_variant(product_type, category, warehouse, channel_USD):
-    product = Product.objects.create(
-        name="Test product with single variant",
-        slug="test-product-with-single-variant",
-        product_type=product_type,
+def room_with_single_variant(room_type, category, hotel, channel_USD):
+    room = Room.objects.create(
+        name="Test room with single variant",
+        slug="test-room-with-single-variant",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
         available_for_purchase=datetime.date(1999, 1, 1),
     )
-    variant = ProductVariant.objects.create(product=product, sku="SKU_SINGLE_VARIANT")
-    ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="SKU_SINGLE_VARIANT")
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(1.99),
         cost_price_amount=Decimal(1),
         currency=channel_USD.currency_code,
     )
-    Stock.objects.create(product_variant=variant, warehouse=warehouse, quantity=101)
-    return product
+    Stock.objects.create(room_variant=variant, hotel=hotel, quantity=101)
+    return room
 
 
 @pytest.fixture
-def product_with_two_variants(product_type, category, warehouse, channel_USD):
-    product = Product.objects.create(
-        name="Test product with two variants",
-        slug="test-product-with-two-variant",
-        product_type=product_type,
+def room_with_two_variants(room_type, category, hotel, channel_USD):
+    room = Room.objects.create(
+        name="Test room with two variants",
+        slug="test-room-with-two-variant",
+        room_type=room_type,
         category=category,
     )
 
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
@@ -1185,15 +1185,15 @@ def product_with_two_variants(product_type, category, warehouse, channel_USD):
     )
 
     variants = [
-        ProductVariant(
-            product=product,
-            sku=f"Product variant #{i}",
+        RoomVariant(
+            room=room,
+            sku=f"Room variant #{i}",
         )
         for i in (1, 2)
     ]
-    ProductVariant.objects.bulk_create(variants)
+    RoomVariant.objects.bulk_create(variants)
     variants_channel_listing = [
-        ProductVariantChannelListing(
+        RoomVariantChannelListing(
             variant=variant,
             channel=channel_USD,
             price_amount=Decimal(10),
@@ -1202,42 +1202,42 @@ def product_with_two_variants(product_type, category, warehouse, channel_USD):
         )
         for variant in variants
     ]
-    ProductVariantChannelListing.objects.bulk_create(variants_channel_listing)
+    RoomVariantChannelListing.objects.bulk_create(variants_channel_listing)
     Stock.objects.bulk_create(
         [
             Stock(
-                warehouse=warehouse,
-                product_variant=variant,
+                hotel=hotel,
+                room_variant=variant,
                 quantity=10,
             )
             for variant in variants
         ]
     )
 
-    return product
+    return room
 
 
 @pytest.fixture
-def product_with_variant_with_two_attributes(
-    color_attribute, size_attribute, category, warehouse, channel_USD
+def room_with_variant_with_two_attributes(
+    color_attribute, size_attribute, category, hotel, channel_USD
 ):
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Type with two variants",
         slug="two-variants",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.variant_attributes.add(color_attribute)
-    product_type.variant_attributes.add(size_attribute)
+    room_type.variant_attributes.add(color_attribute)
+    room_type.variant_attributes.add(size_attribute)
 
-    product = Product.objects.create(
-        name="Test product with two variants",
-        slug="test-product-with-two-variant",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room with two variants",
+        slug="test-room-with-two-variant",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         currency=channel_USD.currency_code,
@@ -1245,8 +1245,8 @@ def product_with_variant_with_two_attributes(
         available_for_purchase=datetime.date(1999, 1, 1),
     )
 
-    variant = ProductVariant.objects.create(product=product, sku="prodVar1")
-    ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="prodVar1")
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
@@ -1261,29 +1261,29 @@ def product_with_variant_with_two_attributes(
         variant, size_attribute, size_attribute.values.first()
     )
 
-    return product
+    return room
 
 
 @pytest.fixture
-def product_with_variant_with_file_attribute(
-    color_attribute, file_attribute, category, warehouse, channel_USD
+def room_with_variant_with_file_attribute(
+    color_attribute, file_attribute, category, hotel, channel_USD
 ):
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Type with variant and file attribute",
         slug="type-with-file-attribute",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.variant_attributes.add(file_attribute)
+    room_type.variant_attributes.add(file_attribute)
 
-    product = Product.objects.create(
-        name="Test product with variant and file attribute",
-        slug="test-product-with-variant-and-file-attribute",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room with variant and file attribute",
+        slug="test-room-with-variant-and-file-attribute",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         currency=channel_USD.currency_code,
@@ -1291,11 +1291,11 @@ def product_with_variant_with_file_attribute(
         available_for_purchase=datetime.date(1999, 1, 1),
     )
 
-    variant = ProductVariant.objects.create(
-        product=product,
+    variant = RoomVariant.objects.create(
+        room=room,
         sku="prodVarTest",
     )
-    ProductVariantChannelListing.objects.create(
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
@@ -1307,17 +1307,17 @@ def product_with_variant_with_file_attribute(
         variant, file_attribute, file_attribute.values.first()
     )
 
-    return product
+    return room
 
 
 @pytest.fixture
-def product_with_multiple_values_attributes(product, product_type, category) -> Product:
+def room_with_multiple_values_attributes(room, room_type, category) -> Room:
 
     attribute = Attribute.objects.create(
         slug="modes",
         name="Available Modes",
         input_type=AttributeInputType.MULTISELECT,
-        type=AttributeType.PRODUCT_TYPE,
+        type=AttributeType.ROOM_TYPE,
     )
 
     attr_val_1 = AttributeValue.objects.create(
@@ -1327,97 +1327,97 @@ def product_with_multiple_values_attributes(product, product_type, category) -> 
         attribute=attribute, name="Performance Mode", slug="power"
     )
 
-    product_type.product_attributes.clear()
-    product_type.product_attributes.add(attribute)
+    room_type.room_attributes.clear()
+    room_type.room_attributes.add(attribute)
 
-    associate_attribute_values_to_instance(product, attribute, attr_val_1, attr_val_2)
-    return product
+    associate_attribute_values_to_instance(room, attribute, attr_val_1, attr_val_2)
+    return room
 
 
 @pytest.fixture
-def product_with_default_variant(
-    product_type_without_variant, category, warehouse, channel_USD
+def room_with_default_variant(
+    room_type_without_variant, category, hotel, channel_USD
 ):
-    product = Product.objects.create(
-        name="Test product",
-        slug="test-product-3",
-        product_type=product_type_without_variant,
+    room = Room.objects.create(
+        name="Test room",
+        slug="test-room-3",
+        room_type=room_type_without_variant,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
         available_for_purchase=datetime.date(1999, 1, 1),
     )
-    variant = ProductVariant.objects.create(
-        product=product, sku="1234", track_inventory=True
+    variant = RoomVariant.objects.create(
+        room=room, sku="1234", track_inventory=True
     )
-    ProductVariantChannelListing.objects.create(
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
         cost_price_amount=Decimal(1),
         currency=channel_USD.currency_code,
     )
-    Stock.objects.create(warehouse=warehouse, product_variant=variant, quantity=100)
-    return product
+    Stock.objects.create(hotel=hotel, room_variant=variant, quantity=100)
+    return room
 
 
 @pytest.fixture
 def variant_without_inventory_tracking(
-    product_type_without_variant, category, warehouse, channel_USD
+    room_type_without_variant, category, hotel, channel_USD
 ):
-    product = Product.objects.create(
-        name="Test product without inventory tracking",
-        slug="test-product-without-tracking",
-        product_type=product_type_without_variant,
+    room = Room.objects.create(
+        name="Test room without inventory tracking",
+        slug="test-room-without-tracking",
+        room_type=room_type_without_variant,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
         available_for_purchase=datetime.date.today(),
     )
-    variant = ProductVariant.objects.create(
-        product=product,
+    variant = RoomVariant.objects.create(
+        room=room,
         sku="tracking123",
         track_inventory=False,
     )
-    ProductVariantChannelListing.objects.create(
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
         cost_price_amount=Decimal(1),
         currency=channel_USD.currency_code,
     )
-    Stock.objects.create(warehouse=warehouse, product_variant=variant, quantity=0)
+    Stock.objects.create(hotel=hotel, room_variant=variant, quantity=0)
     return variant
 
 
 @pytest.fixture
-def variant(product, channel_USD) -> ProductVariant:
-    product_variant = ProductVariant.objects.create(product=product, sku="SKU_A")
-    ProductVariantChannelListing.objects.create(
-        variant=product_variant,
+def variant(room, channel_USD) -> RoomVariant:
+    room_variant = RoomVariant.objects.create(room=room, sku="SKU_A")
+    RoomVariantChannelListing.objects.create(
+        variant=room_variant,
         channel=channel_USD,
         price_amount=Decimal(10),
         cost_price_amount=Decimal(1),
         currency=channel_USD.currency_code,
     )
-    return product_variant
+    return room_variant
 
 
 @pytest.fixture
-def variant_with_many_stocks(variant, warehouses_with_shipping_zone):
-    warehouses = warehouses_with_shipping_zone
+def variant_with_many_stocks(variant, hotels_with_shipping_zone):
+    hotels = hotels_with_shipping_zone
     Stock.objects.bulk_create(
         [
-            Stock(warehouse=warehouses[0], product_variant=variant, quantity=4),
-            Stock(warehouse=warehouses[1], product_variant=variant, quantity=3),
+            Stock(hotel=hotels[0], room_variant=variant, quantity=4),
+            Stock(hotel=hotels[1], room_variant=variant, quantity=3),
         ]
     )
     return variant
@@ -1425,46 +1425,46 @@ def variant_with_many_stocks(variant, warehouses_with_shipping_zone):
 
 @pytest.fixture
 def variant_with_many_stocks_different_shipping_zones(
-    variant, warehouses_with_different_shipping_zone
+    variant, hotels_with_different_shipping_zone
 ):
-    warehouses = warehouses_with_different_shipping_zone
+    hotels = hotels_with_different_shipping_zone
     Stock.objects.bulk_create(
         [
-            Stock(warehouse=warehouses[0], product_variant=variant, quantity=4),
-            Stock(warehouse=warehouses[1], product_variant=variant, quantity=3),
+            Stock(hotel=hotels[0], room_variant=variant, quantity=4),
+            Stock(hotel=hotels[1], room_variant=variant, quantity=3),
         ]
     )
     return variant
 
 
 @pytest.fixture
-def product_variant_list(product, channel_USD):
+def room_variant_list(room, channel_USD):
     variants = list(
-        ProductVariant.objects.bulk_create(
+        RoomVariant.objects.bulk_create(
             [
-                ProductVariant(product=product, sku="1"),
-                ProductVariant(product=product, sku="2"),
-                ProductVariant(product=product, sku="3"),
+                RoomVariant(room=room, sku="1"),
+                RoomVariant(room=room, sku="2"),
+                RoomVariant(room=room, sku="3"),
             ]
         )
     )
-    ProductVariantChannelListing.objects.bulk_create(
+    RoomVariantChannelListing.objects.bulk_create(
         [
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[0],
                 channel=channel_USD,
                 cost_price_amount=Decimal(1),
                 price_amount=Decimal(10),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[1],
                 channel=channel_USD,
                 cost_price_amount=Decimal(1),
                 price_amount=Decimal(10),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[2],
                 channel=channel_USD,
                 cost_price_amount=Decimal(1),
@@ -1477,97 +1477,97 @@ def product_variant_list(product, channel_USD):
 
 
 @pytest.fixture
-def product_without_shipping(category, warehouse, channel_USD):
-    product_type = ProductType.objects.create(
+def room_without_shipping(category, hotel, channel_USD):
+    room_type = RoomType.objects.create(
         name="Type with no shipping",
         slug="no-shipping",
         has_variants=False,
         is_shipping_required=False,
     )
-    product = Product.objects.create(
-        name="Test product",
-        slug="test-product-4",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room",
+        slug="test-room-4",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
     )
-    variant = ProductVariant.objects.create(product=product, sku="SKU_B")
-    ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="SKU_B")
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
         cost_price_amount=Decimal(1),
         currency=channel_USD.currency_code,
     )
-    Stock.objects.create(product_variant=variant, warehouse=warehouse, quantity=1)
-    return product
+    Stock.objects.create(room_variant=variant, hotel=hotel, quantity=1)
+    return room
 
 
 @pytest.fixture
-def product_without_category(product):
-    product.category = None
-    product.save()
-    product.channel_listings.all().update(is_published=False)
-    return product
+def room_without_category(room):
+    room.category = None
+    room.save()
+    room.channel_listings.all().update(is_published=False)
+    return room
 
 
 @pytest.fixture
-def product_list(product_type, category, warehouse, channel_USD, channel_PLN):
-    product_attr = product_type.product_attributes.first()
-    attr_value = product_attr.values.first()
+def room_list(room_type, category, hotel, channel_USD, channel_PLN):
+    room_attr = room_type.room_attributes.first()
+    attr_value = room_attr.values.first()
 
-    products = list(
-        Product.objects.bulk_create(
+    rooms = list(
+        Room.objects.bulk_create(
             [
-                Product(
+                Room(
                     pk=1486,
-                    name="Test product 1",
-                    slug="test-product-a",
+                    name="Test room 1",
+                    slug="test-room-a",
                     category=category,
-                    product_type=product_type,
+                    room_type=room_type,
                 ),
-                Product(
+                Room(
                     pk=1487,
-                    name="Test product 2",
-                    slug="test-product-b",
+                    name="Test room 2",
+                    slug="test-room-b",
                     category=category,
-                    product_type=product_type,
+                    room_type=room_type,
                 ),
-                Product(
+                Room(
                     pk=1489,
-                    name="Test product 3",
-                    slug="test-product-c",
+                    name="Test room 3",
+                    slug="test-room-c",
                     category=category,
-                    product_type=product_type,
+                    room_type=room_type,
                 ),
             ]
         )
     )
-    ProductChannelListing.objects.bulk_create(
+    RoomChannelListing.objects.bulk_create(
         [
-            ProductChannelListing(
-                product=products[0],
+            RoomChannelListing(
+                room=rooms[0],
                 channel=channel_USD,
                 is_published=True,
                 discounted_price_amount=10,
                 currency=channel_USD.currency_code,
                 visible_in_listings=True,
             ),
-            ProductChannelListing(
-                product=products[1],
+            RoomChannelListing(
+                room=rooms[1],
                 channel=channel_USD,
                 is_published=True,
                 discounted_price_amount=20,
                 currency=channel_USD.currency_code,
                 visible_in_listings=True,
             ),
-            ProductChannelListing(
-                product=products[2],
+            RoomChannelListing(
+                room=rooms[2],
                 channel=channel_USD,
                 is_published=True,
                 discounted_price_amount=30,
@@ -1577,43 +1577,43 @@ def product_list(product_type, category, warehouse, channel_USD, channel_PLN):
         ]
     )
     variants = list(
-        ProductVariant.objects.bulk_create(
+        RoomVariant.objects.bulk_create(
             [
-                ProductVariant(
-                    product=products[0],
+                RoomVariant(
+                    room=rooms[0],
                     sku=str(uuid.uuid4()).replace("-", ""),
                     track_inventory=True,
                 ),
-                ProductVariant(
-                    product=products[1],
+                RoomVariant(
+                    room=rooms[1],
                     sku=str(uuid.uuid4()).replace("-", ""),
                     track_inventory=True,
                 ),
-                ProductVariant(
-                    product=products[2],
+                RoomVariant(
+                    room=rooms[2],
                     sku=str(uuid.uuid4()).replace("-", ""),
                     track_inventory=True,
                 ),
             ]
         )
     )
-    ProductVariantChannelListing.objects.bulk_create(
+    RoomVariantChannelListing.objects.bulk_create(
         [
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[0],
                 channel=channel_USD,
                 cost_price_amount=Decimal(1),
                 price_amount=Decimal(10),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[1],
                 channel=channel_USD,
                 cost_price_amount=Decimal(1),
                 price_amount=Decimal(20),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[2],
                 channel=channel_USD,
                 cost_price_amount=Decimal(1),
@@ -1624,66 +1624,66 @@ def product_list(product_type, category, warehouse, channel_USD, channel_PLN):
     )
     stocks = []
     for variant in variants:
-        stocks.append(Stock(warehouse=warehouse, product_variant=variant, quantity=100))
+        stocks.append(Stock(hotel=hotel, room_variant=variant, quantity=100))
     Stock.objects.bulk_create(stocks)
 
-    for product in products:
-        associate_attribute_values_to_instance(product, product_attr, attr_value)
+    for room in rooms:
+        associate_attribute_values_to_instance(room, room_attr, attr_value)
 
-    return products
+    return rooms
 
 
 @pytest.fixture
-def product_list_with_variants_many_channel(
-    product_type, category, channel_USD, channel_PLN
+def room_list_with_variants_many_channel(
+    room_type, category, channel_USD, channel_PLN
 ):
-    products = list(
-        Product.objects.bulk_create(
+    rooms = list(
+        Room.objects.bulk_create(
             [
-                Product(
+                Room(
                     pk=1486,
-                    name="Test product 1",
-                    slug="test-product-a",
+                    name="Test room 1",
+                    slug="test-room-a",
                     category=category,
-                    product_type=product_type,
+                    room_type=room_type,
                 ),
-                Product(
+                Room(
                     pk=1487,
-                    name="Test product 2",
-                    slug="test-product-b",
+                    name="Test room 2",
+                    slug="test-room-b",
                     category=category,
-                    product_type=product_type,
+                    room_type=room_type,
                 ),
-                Product(
+                Room(
                     pk=1489,
-                    name="Test product 3",
-                    slug="test-product-c",
+                    name="Test room 3",
+                    slug="test-room-c",
                     category=category,
-                    product_type=product_type,
+                    room_type=room_type,
                 ),
             ]
         )
     )
-    ProductChannelListing.objects.bulk_create(
+    RoomChannelListing.objects.bulk_create(
         [
             # Channel: USD
-            ProductChannelListing(
-                product=products[0],
+            RoomChannelListing(
+                room=rooms[0],
                 channel=channel_USD,
                 is_published=True,
                 currency=channel_USD.currency_code,
                 visible_in_listings=True,
             ),
             # Channel: PLN
-            ProductChannelListing(
-                product=products[1],
+            RoomChannelListing(
+                room=rooms[1],
                 channel=channel_PLN,
                 is_published=True,
                 currency=channel_PLN.currency_code,
                 visible_in_listings=True,
             ),
-            ProductChannelListing(
-                product=products[2],
+            RoomChannelListing(
+                room=rooms[2],
                 channel=channel_PLN,
                 is_published=True,
                 currency=channel_PLN.currency_code,
@@ -1692,30 +1692,30 @@ def product_list_with_variants_many_channel(
         ]
     )
     variants = list(
-        ProductVariant.objects.bulk_create(
+        RoomVariant.objects.bulk_create(
             [
-                ProductVariant(
-                    product=products[0],
+                RoomVariant(
+                    room=rooms[0],
                     sku=str(uuid.uuid4()).replace("-", ""),
                     track_inventory=True,
                 ),
-                ProductVariant(
-                    product=products[1],
+                RoomVariant(
+                    room=rooms[1],
                     sku=str(uuid.uuid4()).replace("-", ""),
                     track_inventory=True,
                 ),
-                ProductVariant(
-                    product=products[2],
+                RoomVariant(
+                    room=rooms[2],
                     sku=str(uuid.uuid4()).replace("-", ""),
                     track_inventory=True,
                 ),
             ]
         )
     )
-    ProductVariantChannelListing.objects.bulk_create(
+    RoomVariantChannelListing.objects.bulk_create(
         [
             # Channel: USD
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[0],
                 channel=channel_USD,
                 cost_price_amount=Decimal(1),
@@ -1723,14 +1723,14 @@ def product_list_with_variants_many_channel(
                 currency=channel_USD.currency_code,
             ),
             # Channel: PLN
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[1],
                 channel=channel_PLN,
                 cost_price_amount=Decimal(1),
                 price_amount=Decimal(20),
                 currency=channel_PLN.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[2],
                 channel=channel_PLN,
                 cost_price_amount=Decimal(1),
@@ -1742,45 +1742,45 @@ def product_list_with_variants_many_channel(
 
 
 @pytest.fixture
-def product_list_with_many_channels(product_list, channel_PLN):
-    ProductChannelListing.objects.bulk_create(
+def room_list_with_many_channels(room_list, channel_PLN):
+    RoomChannelListing.objects.bulk_create(
         [
-            ProductChannelListing(
-                product=product_list[0],
+            RoomChannelListing(
+                room=room_list[0],
                 channel=channel_PLN,
                 is_published=True,
             ),
-            ProductChannelListing(
-                product=product_list[1],
+            RoomChannelListing(
+                room=room_list[1],
                 channel=channel_PLN,
                 is_published=True,
             ),
-            ProductChannelListing(
-                product=product_list[2],
+            RoomChannelListing(
+                room=room_list[2],
                 channel=channel_PLN,
                 is_published=True,
             ),
         ]
     )
-    return product_list
+    return room_list
 
 
 @pytest.fixture
-def product_list_unpublished(product_list, channel_USD):
-    products = Product.objects.filter(pk__in=[product.pk for product in product_list])
-    ProductChannelListing.objects.filter(
-        product__in=products, channel=channel_USD
+def room_list_unpublished(room_list, channel_USD):
+    rooms = Room.objects.filter(pk__in=[room.pk for room in room_list])
+    RoomChannelListing.objects.filter(
+        room__in=rooms, channel=channel_USD
     ).update(is_published=False)
-    return products
+    return rooms
 
 
 @pytest.fixture
-def product_list_published(product_list, channel_USD):
-    products = Product.objects.filter(pk__in=[product.pk for product in product_list])
-    ProductChannelListing.objects.filter(
-        product__in=products, channel=channel_USD
+def room_list_published(room_list, channel_USD):
+    rooms = Room.objects.filter(pk__in=[room.pk for room in room_list])
+    RoomChannelListing.objects.filter(
+        room__in=rooms, channel=channel_USD
     ).update(is_published=True)
-    return products
+    return rooms
 
 
 @pytest.fixture
@@ -1800,73 +1800,73 @@ def order_list(customer_user, channel_USD):
 
 
 @pytest.fixture
-def product_with_image(product, image, media_root):
-    ProductImage.objects.create(product=product, image=image)
-    return product
+def room_with_image(room, image, media_root):
+    RoomImage.objects.create(room=room, image=image)
+    return room
 
 
 @pytest.fixture
-def unavailable_product(product_type, category, channel_USD):
-    product = Product.objects.create(
-        name="Test product",
-        slug="test-product-5",
-        product_type=product_type,
+def unavailable_room(room_type, category, channel_USD):
+    room = Room.objects.create(
+        name="Test room",
+        slug="test-room-5",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=False,
         visible_in_listings=False,
     )
-    return product
+    return room
 
 
 @pytest.fixture
-def unavailable_product_with_variant(product_type, category, warehouse, channel_USD):
-    product = Product.objects.create(
-        name="Test product",
-        slug="test-product-6",
-        product_type=product_type,
+def unavailable_room_with_variant(room_type, category, hotel, channel_USD):
+    room = Room.objects.create(
+        name="Test room",
+        slug="test-room-6",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=False,
         visible_in_listings=False,
     )
 
-    variant_attr = product_type.variant_attributes.first()
+    variant_attr = room_type.variant_attributes.first()
     variant_attr_value = variant_attr.values.first()
 
-    variant = ProductVariant.objects.create(
-        product=product,
+    variant = RoomVariant.objects.create(
+        room=room,
         sku="123",
     )
-    ProductVariantChannelListing.objects.create(
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
         cost_price_amount=Decimal(1),
         currency=channel_USD.currency_code,
     )
-    Stock.objects.create(product_variant=variant, warehouse=warehouse, quantity=10)
+    Stock.objects.create(room_variant=variant, hotel=hotel, quantity=10)
 
     associate_attribute_values_to_instance(variant, variant_attr, variant_attr_value)
-    return product
+    return room
 
 
 @pytest.fixture
-def product_with_images(product_type, category, media_root, channel_USD):
-    product = Product.objects.create(
-        name="Test product",
-        slug="test-product-7",
-        product_type=product_type,
+def room_with_images(room_type, category, media_root, channel_USD):
+    room = Room.objects.create(
+        name="Test room",
+        slug="test-room-7",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
@@ -1875,9 +1875,9 @@ def product_with_images(product_type, category, media_root, channel_USD):
     file_mock_0.name = "image0.jpg"
     file_mock_1 = MagicMock(spec=File, name="FileMock1")
     file_mock_1.name = "image1.jpg"
-    product.images.create(image=file_mock_0)
-    product.images.create(image=file_mock_1)
-    return product
+    room.images.create(image=file_mock_0)
+    room.images.create(image=file_mock_1)
+    return room
 
 
 @pytest.fixture
@@ -1921,8 +1921,8 @@ def voucher_percentage(channel_USD):
 
 
 @pytest.fixture
-def voucher_specific_product_type(voucher_percentage):
-    voucher_percentage.type = VoucherType.SPECIFIC_PRODUCT
+def voucher_specific_room_type(voucher_percentage):
+    voucher_percentage.type = VoucherType.SPECIFIC_ROOM
     voucher_percentage.save()
     return voucher_percentage
 
@@ -1971,18 +1971,18 @@ def voucher_customer(voucher, customer_user):
 
 @pytest.fixture
 def order_line(order, variant):
-    product = variant.product
+    room = variant.room
     channel = order.channel
     channel_listing = variant.channel_listings.get(channel=channel)
-    net = variant.get_price(product, [], channel, channel_listing)
+    net = variant.get_price(room, [], channel, channel_listing)
     currency = net.currency
     gross = Money(amount=net.amount * Decimal(1.23), currency=currency)
     quantity = 3
     unit_price = TaxedMoney(net=net, gross=gross)
     return order.lines.create(
-        product_name=str(product),
+        room_name=str(room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -2007,17 +2007,17 @@ def order_line_with_allocation_in_many_stocks(
         channel=channel_USD,
     )
 
-    product = variant.product
+    room = variant.room
     channel_listing = variant.channel_listings.get(channel=channel_USD)
-    net = variant.get_price(product, [], channel_USD, channel_listing)
+    net = variant.get_price(room, [], channel_USD, channel_listing)
     currency = net.currency
     gross = Money(amount=net.amount * Decimal(1.23), currency=currency)
     quantity = 3
     unit_price = TaxedMoney(net=net, gross=gross)
     order_line = order.lines.create(
-        product_name=str(product),
+        room_name=str(room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -2051,17 +2051,17 @@ def order_line_with_one_allocation(
         channel=channel_USD,
     )
 
-    product = variant.product
+    room = variant.room
     channel_listing = variant.channel_listings.get(channel=channel_USD)
-    net = variant.get_price(product, [], channel_USD, channel_listing)
+    net = variant.get_price(room, [], channel_USD, channel_listing)
     currency = net.currency
     gross = Money(amount=net.amount * Decimal(1.23), currency=currency)
     quantity = 2
     unit_price = TaxedMoney(net=net, gross=gross)
     order_line = order.lines.create(
-        product_name=str(product),
+        room_name=str(room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -2107,23 +2107,23 @@ def gift_card_created_by_staff(staff_user):
 
 @pytest.fixture
 def order_with_lines(
-    order, product_type, category, shipping_zone, warehouse, channel_USD
+    order, room_type, category, shipping_zone, hotel, channel_USD
 ):
-    product = Product.objects.create(
-        name="Test product",
-        slug="test-product-8",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room",
+        slug="test-room-8",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
         available_for_purchase=datetime.date.today(),
     )
-    variant = ProductVariant.objects.create(product=product, sku="SKU_AA")
-    channel_listing = ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="SKU_AA")
+    channel_listing = RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
@@ -2131,17 +2131,17 @@ def order_with_lines(
         currency=channel_USD.currency_code,
     )
     stock = Stock.objects.create(
-        warehouse=warehouse, product_variant=variant, quantity=5
+        hotel=hotel, room_variant=variant, quantity=5
     )
-    net = variant.get_price(product, [], channel_USD, channel_listing)
+    net = variant.get_price(room, [], channel_USD, channel_listing)
     currency = net.currency
     gross = Money(amount=net.amount * Decimal(1.23), currency=currency)
     quantity = 3
     unit_price = TaxedMoney(net=net, gross=gross)
     line = order.lines.create(
-        product_name=str(variant.product),
+        room_name=str(variant.room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -2153,21 +2153,21 @@ def order_with_lines(
         order_line=line, stock=stock, quantity_allocated=line.quantity
     )
 
-    product = Product.objects.create(
-        name="Test product 2",
-        slug="test-product-9",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room 2",
+        slug="test-room-9",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
         available_for_purchase=datetime.date.today(),
     )
-    variant = ProductVariant.objects.create(product=product, sku="SKU_B")
-    channel_listing = ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="SKU_B")
+    channel_listing = RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(20),
@@ -2175,18 +2175,18 @@ def order_with_lines(
         currency=channel_USD.currency_code,
     )
     stock = Stock.objects.create(
-        product_variant=variant, warehouse=warehouse, quantity=2
+        room_variant=variant, hotel=hotel, quantity=2
     )
 
-    net = variant.get_price(product, [], channel_USD, channel_listing)
+    net = variant.get_price(room, [], channel_USD, channel_listing)
     currency = net.currency
     gross = Money(amount=net.amount * Decimal(1.23), currency=currency)
     unit_price = TaxedMoney(net=net, gross=gross)
     quantity = 2
     line = order.lines.create(
-        product_name=str(variant.product),
+        room_name=str(variant.room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -2219,10 +2219,10 @@ def order_with_lines(
 @pytest.fixture
 def order_with_lines_channel_PLN(
     customer_user,
-    product_type,
+    room_type,
     category,
     shipping_method_channel_PLN,
-    warehouse,
+    hotel,
     channel_PLN,
 ):
     address = customer_user.default_billing_address.get_copy()
@@ -2233,21 +2233,21 @@ def order_with_lines_channel_PLN(
         user_email=customer_user.email,
         user=customer_user,
     )
-    product = Product.objects.create(
-        name="Test product in PLN channel",
-        slug="test-product-8-pln",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room in PLN channel",
+        slug="test-room-8-pln",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_PLN,
         is_published=True,
         visible_in_listings=True,
         available_for_purchase=datetime.date.today(),
     )
-    variant = ProductVariant.objects.create(product=product, sku="SKU_A_PLN")
-    channel_listing = ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="SKU_A_PLN")
+    channel_listing = RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_PLN,
         price_amount=Decimal(10),
@@ -2255,17 +2255,17 @@ def order_with_lines_channel_PLN(
         currency=channel_PLN.currency_code,
     )
     stock = Stock.objects.create(
-        warehouse=warehouse, product_variant=variant, quantity=5
+        hotel=hotel, room_variant=variant, quantity=5
     )
-    net = variant.get_price(product, [], channel_PLN, channel_listing)
+    net = variant.get_price(room, [], channel_PLN, channel_listing)
     currency = net.currency
     gross = Money(amount=net.amount * Decimal(1.23), currency=currency)
     quantity = 3
     unit_price = TaxedMoney(net=net, gross=gross)
     line = order.lines.create(
-        product_name=str(variant.product),
+        room_name=str(variant.room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -2277,21 +2277,21 @@ def order_with_lines_channel_PLN(
         order_line=line, stock=stock, quantity_allocated=line.quantity
     )
 
-    product = Product.objects.create(
-        name="Test product 2 in PLN channel",
-        slug="test-product-9-pln",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test room 2 in PLN channel",
+        slug="test-room-9-pln",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_PLN,
         is_published=True,
         visible_in_listings=True,
         available_for_purchase=datetime.date.today(),
     )
-    variant = ProductVariant.objects.create(product=product, sku="SKU_B_PLN")
-    channel_listing = ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="SKU_B_PLN")
+    channel_listing = RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_PLN,
         price_amount=Decimal(20),
@@ -2299,18 +2299,18 @@ def order_with_lines_channel_PLN(
         currency=channel_PLN.currency_code,
     )
     stock = Stock.objects.create(
-        product_variant=variant, warehouse=warehouse, quantity=2
+        room_variant=variant, hotel=hotel, quantity=2
     )
 
-    net = variant.get_price(product, [], channel_PLN, channel_listing, None)
+    net = variant.get_price(room, [], channel_PLN, channel_listing, None)
     currency = net.currency
     gross = Money(amount=net.amount * Decimal(1.23), currency=currency)
     quantity = 2
     unit_price = TaxedMoney(net=net, gross=gross)
     line = order.lines.create(
-        product_name=str(variant.product),
+        room_name=str(variant.room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -2347,18 +2347,18 @@ def order_with_line_without_inventory_tracking(
     order, variant_without_inventory_tracking
 ):
     variant = variant_without_inventory_tracking
-    product = variant.product
+    room = variant.room
     channel = order.channel
     channel_listing = variant.channel_listings.get(channel=channel)
-    net = variant.get_price(product, [], channel, channel_listing)
+    net = variant.get_price(room, [], channel, channel_listing)
     currency = net.currency
     gross = Money(amount=net.amount * Decimal(1.23), currency=currency)
     quantity = 3
     unit_price = TaxedMoney(net=net, gross=gross)
     line = order.lines.create(
-        product_name=str(variant.product),
+        room_name=str(variant.room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         variant=variant,
@@ -2391,14 +2391,14 @@ def fulfilled_order(order_with_lines):
     fulfillment = order.fulfillments.create(tracking_number="123")
     line_1 = order.lines.first()
     stock_1 = line_1.allocations.get().stock
-    warehouse_1_pk = stock_1.warehouse.pk
+    hotel_1_pk = stock_1.hotel.pk
     line_2 = order.lines.last()
     stock_2 = line_2.allocations.get().stock
-    warehouse_2_pk = stock_2.warehouse.pk
+    hotel_2_pk = stock_2.hotel.pk
     fulfillment.lines.create(order_line=line_1, quantity=line_1.quantity, stock=stock_1)
-    fulfill_order_line(line_1, line_1.quantity, warehouse_1_pk)
+    fulfill_order_line(line_1, line_1.quantity, hotel_1_pk)
     fulfillment.lines.create(order_line=line_2, quantity=line_2.quantity, stock=stock_2)
-    fulfill_order_line(line_2, line_2.quantity, warehouse_2_pk)
+    fulfill_order_line(line_2, line_2.quantity, hotel_2_pk)
     order.status = OrderStatus.FULFILLED
     order.save(update_fields=["status"])
     return order
@@ -2412,9 +2412,9 @@ def fulfilled_order_without_inventory_tracking(
     fulfillment = order.fulfillments.create(tracking_number="123")
     line = order.lines.first()
     stock = line.variant.stocks.get()
-    warehouse_pk = stock.warehouse.pk
+    hotel_pk = stock.hotel.pk
     fulfillment.lines.create(order_line=line, quantity=line.quantity, stock=stock)
-    fulfill_order_line(line, line.quantity, warehouse_pk)
+    fulfill_order_line(line, line.quantity, hotel_pk)
     order.status = OrderStatus.FULFILLED
     order.save(update_fields=["status"])
     return order
@@ -2434,10 +2434,10 @@ def fulfilled_order_with_cancelled_fulfillment(fulfilled_order):
 
 @pytest.fixture
 def fulfilled_order_with_all_cancelled_fulfillments(
-    fulfilled_order, staff_user, warehouse
+    fulfilled_order, staff_user, hotel
 ):
     fulfillment = fulfilled_order.fulfillments.get()
-    cancel_fulfillment(fulfillment, staff_user, warehouse)
+    cancel_fulfillment(fulfillment, staff_user, hotel)
     return fulfilled_order
 
 
@@ -2580,7 +2580,7 @@ def new_sale(category, channel_USD):
 
 
 @pytest.fixture
-def sale(product, category, collection, channel_USD):
+def sale(room, category, collection, channel_USD):
     sale = Sale.objects.create(name="Sale")
     SaleChannelListing.objects.create(
         sale=sale,
@@ -2588,14 +2588,14 @@ def sale(product, category, collection, channel_USD):
         discount_value=5,
         currency=channel_USD.currency_code,
     )
-    sale.products.add(product)
+    sale.rooms.add(room)
     sale.categories.add(category)
     sale.collections.add(collection)
     return sale
 
 
 @pytest.fixture
-def sale_with_many_channels(product, category, collection, channel_USD, channel_PLN):
+def sale_with_many_channels(room, category, collection, channel_USD, channel_PLN):
     sale = Sale.objects.create(name="Sale")
     SaleChannelListing.objects.create(
         sale=sale,
@@ -2609,7 +2609,7 @@ def sale_with_many_channels(product, category, collection, channel_USD, channel_
         discount_value=5,
         currency=channel_PLN.currency_code,
     )
-    sale.products.add(product)
+    sale.rooms.add(room)
     sale.categories.add(category)
     sale.collections.add(collection)
     return sale
@@ -2622,7 +2622,7 @@ def discount_info(category, collection, sale, channel_USD):
     return DiscountInfo(
         sale=sale,
         channel_listings={channel_USD.slug: sale_channel_listing},
-        product_ids=set(),
+        room_ids=set(),
         category_ids={category.id},  # assumes this category does not have children
         collection_ids={collection.id},
     )
@@ -2634,13 +2634,13 @@ def permission_manage_staff():
 
 
 @pytest.fixture
-def permission_manage_products():
-    return Permission.objects.get(codename="manage_products")
+def permission_manage_rooms():
+    return Permission.objects.get(codename="manage_rooms")
 
 
 @pytest.fixture
-def permission_manage_product_types_and_attributes():
-    return Permission.objects.get(codename="manage_product_types_and_attributes")
+def permission_manage_room_types_and_attributes():
+    return Permission.objects.get(codename="manage_room_types_and_attributes")
 
 
 @pytest.fixture
@@ -2766,9 +2766,9 @@ def unpublished_collection_PLN(db, channel_PLN):
 
 
 @pytest.fixture
-def collection_with_products(db, published_collection, product_list_published):
-    published_collection.products.set(list(product_list_published))
-    return product_list_published
+def collection_with_rooms(db, published_collection, room_list_published):
+    published_collection.rooms.set(list(room_list_published))
+    return room_list_published
 
 
 @pytest.fixture
@@ -2937,16 +2937,16 @@ def menu_with_items(menu, category, published_collection):
 
 
 @pytest.fixture
-def translated_variant_fr(product):
-    attribute = product.product_type.variant_attributes.first()
+def translated_variant_fr(room):
+    attribute = room.room_type.variant_attributes.first()
     return AttributeTranslation.objects.create(
         language_code="fr", attribute=attribute, name="Name tranlsated to french"
     )
 
 
 @pytest.fixture
-def translated_attribute(product):
-    attribute = product.product_type.product_attributes.first()
+def translated_attribute(room):
+    attribute = room.room_type.room_attributes.first()
     return AttributeTranslation.objects.create(
         language_code="fr", attribute=attribute, name="French attribute name"
     )
@@ -2969,10 +2969,10 @@ def voucher_translation_fr(voucher):
 
 
 @pytest.fixture
-def product_translation_fr(product):
-    return ProductTranslation.objects.create(
+def room_translation_fr(room):
+    return RoomTranslation.objects.create(
         language_code="fr",
-        product=product,
+        room=room,
         name="French name",
         description="French description",
     )
@@ -2980,8 +2980,8 @@ def product_translation_fr(product):
 
 @pytest.fixture
 def variant_translation_fr(variant):
-    return ProductVariantTranslation.objects.create(
-        language_code="fr", product_variant=variant, name="French product variant name"
+    return RoomVariantTranslation.objects.create(
+        language_code="fr", room_variant=variant, name="French room variant name"
     )
 
 
@@ -3091,47 +3091,47 @@ def payment_dummy_credit_card(db, order_with_lines):
 
 
 @pytest.fixture
-def digital_content(category, media_root, warehouse, channel_USD) -> DigitalContent:
-    product_type = ProductType.objects.create(
+def digital_content(category, media_root, hotel, channel_USD) -> DigitalContent:
+    room_type = RoomType.objects.create(
         name="Digital Type",
         slug="digital-type",
         has_variants=True,
         is_shipping_required=False,
         is_digital=True,
     )
-    product = Product.objects.create(
-        name="Test digital product",
-        slug="test-digital-product",
-        product_type=product_type,
+    room = Room.objects.create(
+        name="Test digital room",
+        slug="test-digital-room",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
-        product=product,
+    RoomChannelListing.objects.create(
+        room=room,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
         available_for_purchase=datetime.date(1999, 1, 1),
     )
-    product_variant = ProductVariant.objects.create(product=product, sku="SKU_554")
-    ProductVariantChannelListing.objects.create(
-        variant=product_variant,
+    room_variant = RoomVariant.objects.create(room=room, sku="SKU_554")
+    RoomVariantChannelListing.objects.create(
+        variant=room_variant,
         channel=channel_USD,
         price_amount=Decimal(10),
         cost_price_amount=Decimal(1),
         currency=channel_USD.currency_code,
     )
     Stock.objects.create(
-        product_variant=product_variant,
-        warehouse=warehouse,
+        room_variant=room_variant,
+        hotel=hotel,
         quantity=5,
     )
 
-    assert product_variant.is_digital()
+    assert room_variant.is_digital()
 
     image_file, image_name = create_image()
     d_content = DigitalContent.objects.create(
         content_file=image_file,
-        product_variant=product_variant,
+        room_variant=room_variant,
         use_default_settings=True,
     )
     return d_content
@@ -3308,88 +3308,88 @@ def customer_wishlist(customer_user):
 
 
 @pytest.fixture
-def customer_wishlist_item(customer_wishlist, product_with_single_variant):
-    product = product_with_single_variant
-    assert product.variants.count() == 1
-    variant = product.variants.first()
+def customer_wishlist_item(customer_wishlist, room_with_single_variant):
+    room = room_with_single_variant
+    assert room.variants.count() == 1
+    variant = room.variants.first()
     item = customer_wishlist.add_variant(variant)
     return item
 
 
 @pytest.fixture
 def customer_wishlist_item_with_two_variants(
-    customer_wishlist, product_with_two_variants
+    customer_wishlist, room_with_two_variants
 ):
-    product = product_with_two_variants
-    assert product.variants.count() == 2
-    [variant_1, variant_2] = product.variants.all()
+    room = room_with_two_variants
+    assert room.variants.count() == 2
+    [variant_1, variant_2] = room.variants.all()
     item = customer_wishlist.add_variant(variant_1)
     item.variants.add(variant_2)
     return item
 
 
 @pytest.fixture
-def warehouse(address, shipping_zone):
-    warehouse = Warehouse.objects.create(
+def hotel(address, shipping_zone):
+    hotel = Hotel.objects.create(
         address=address,
-        name="Example Warehouse",
-        slug="example-warehouse",
+        name="Example Hotel",
+        slug="example-hotel",
         email="test@example.com",
     )
-    warehouse.shipping_zones.add(shipping_zone)
-    warehouse.save()
-    return warehouse
+    hotel.shipping_zones.add(shipping_zone)
+    hotel.save()
+    return hotel
 
 
 @pytest.fixture
-def warehouses(address):
-    return Warehouse.objects.bulk_create(
+def hotels(address):
+    return Hotel.objects.bulk_create(
         [
-            Warehouse(
+            Hotel(
                 address=address.get_copy(),
-                name="Warehouse1",
-                slug="warehouse1",
-                email="warehouse1@example.com",
+                name="Hotel1",
+                slug="hotel1",
+                email="hotel1@example.com",
             ),
-            Warehouse(
+            Hotel(
                 address=address.get_copy(),
-                name="Warehouse2",
-                slug="warehouse2",
-                email="warehouse2@example.com",
+                name="Hotel2",
+                slug="hotel2",
+                email="hotel2@example.com",
             ),
         ]
     )
 
 
 @pytest.fixture
-def warehouses_with_shipping_zone(warehouses, shipping_zone):
-    warehouses[0].shipping_zones.add(shipping_zone)
-    warehouses[1].shipping_zones.add(shipping_zone)
-    return warehouses
+def hotels_with_shipping_zone(hotels, shipping_zone):
+    hotels[0].shipping_zones.add(shipping_zone)
+    hotels[1].shipping_zones.add(shipping_zone)
+    return hotels
 
 
 @pytest.fixture
-def warehouses_with_different_shipping_zone(warehouses, shipping_zones):
-    warehouses[0].shipping_zones.add(shipping_zones[0])
-    warehouses[1].shipping_zones.add(shipping_zones[1])
-    return warehouses
+def hotels_with_different_shipping_zone(hotels, shipping_zones):
+    hotels[0].shipping_zones.add(shipping_zones[0])
+    hotels[1].shipping_zones.add(shipping_zones[1])
+    return hotels
 
 
 @pytest.fixture
-def warehouse_no_shipping_zone(address):
-    warehouse = Warehouse.objects.create(
+def hotel_no_shipping_zone(address):
+    hotel = Hotel.objects.create(
         address=address,
-        name="Warehouse without shipping zone",
-        slug="warehouse-no-shipping-zone",
+        name="Hotel without shipping zone",
+        slug="hotel-no-shipping-zone",
         email="test2@example.com",
     )
-    return warehouse
+    return hotel
 
 
 @pytest.fixture
-def stock(variant, warehouse):
+def stock(variant, hotel):
     return Stock.objects.create(
-        product_variant=variant, warehouse=warehouse, quantity=15
+        room_variant=variant, hotel=hotel, quantity=15
     )
 
 
@@ -3402,10 +3402,10 @@ def allocation(order_line, stock):
 
 @pytest.fixture
 def allocations(order_list, stock, channel_USD):
-    variant = stock.product_variant
-    product = variant.product
+    variant = stock.room_variant
+    room = variant.room
     channel_listing = variant.channel_listings.get(channel=channel_USD)
-    net = variant.get_price(product, [], channel_USD, channel_listing)
+    net = variant.get_price(room, [], channel_USD, channel_listing)
     gross = Money(amount=net.amount * Decimal(1.23), currency=net.currency)
     price = TaxedMoney(net=net, gross=gross)
     lines = OrderLine.objects.bulk_create(
@@ -3414,9 +3414,9 @@ def allocations(order_list, stock, channel_USD):
                 order=order_list[0],
                 variant=variant,
                 quantity=1,
-                product_name=str(variant.product),
+                room_name=str(variant.room),
                 variant_name=str(variant),
-                product_sku=variant.sku,
+                room_sku=variant.sku,
                 is_shipping_required=variant.is_shipping_required(),
                 unit_price=price,
                 total_price=price,
@@ -3426,9 +3426,9 @@ def allocations(order_list, stock, channel_USD):
                 order=order_list[1],
                 variant=variant,
                 quantity=2,
-                product_name=str(variant.product),
+                room_name=str(variant.room),
                 variant_name=str(variant),
-                product_sku=variant.sku,
+                room_sku=variant.sku,
                 is_shipping_required=variant.is_shipping_required(),
                 unit_price=price,
                 total_price=price,
@@ -3438,9 +3438,9 @@ def allocations(order_list, stock, channel_USD):
                 order=order_list[2],
                 variant=variant,
                 quantity=4,
-                product_name=str(variant.product),
+                room_name=str(variant.room),
                 variant_name=str(variant),
-                product_sku=variant.sku,
+                room_sku=variant.sku,
                 is_shipping_required=variant.is_shipping_required(),
                 unit_price=price,
                 total_price=price,

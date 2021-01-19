@@ -6,14 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0135_collection_channel_listing"),
+        ("room", "0135_collection_channel_listing"),
         ("shipping", "0022_shipping_method_channel_listing"),
     ]
 
     operations = [
         migrations.AddField(
             model_name="shippingmethod",
-            name="excluded_products",
-            field=models.ManyToManyField(blank=True, to="product.Product"),
+            name="excluded_rooms",
+            field=models.ManyToManyField(blank=True, to="room.Room"),
         ),
     ]

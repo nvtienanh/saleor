@@ -75,9 +75,9 @@ class Voucher(models.Model):
     # not mandatory fields, usage depends on type
     countries = CountryField(multiple=True, blank=True)
     min_checkout_items_quantity = models.PositiveIntegerField(null=True, blank=True)
-    products = models.ManyToManyField("product.Product", blank=True)
-    collections = models.ManyToManyField("product.Collection", blank=True)
-    categories = models.ManyToManyField("product.Category", blank=True)
+    rooms = models.ManyToManyField("room.Room", blank=True)
+    collections = models.ManyToManyField("room.Collection", blank=True)
+    categories = models.ManyToManyField("room.Category", blank=True)
 
     objects = VoucherQueryset.as_manager()
     translated = TranslationProxy()
@@ -224,9 +224,9 @@ class Sale(models.Model):
         choices=DiscountValueType.CHOICES,
         default=DiscountValueType.FIXED,
     )
-    products = models.ManyToManyField("product.Product", blank=True)
-    categories = models.ManyToManyField("product.Category", blank=True)
-    collections = models.ManyToManyField("product.Collection", blank=True)
+    rooms = models.ManyToManyField("room.Room", blank=True)
+    categories = models.ManyToManyField("room.Category", blank=True)
+    collections = models.ManyToManyField("room.Collection", blank=True)
     start_date = models.DateTimeField(default=timezone.now)
     end_date = models.DateTimeField(null=True, blank=True)
 

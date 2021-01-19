@@ -1,20 +1,20 @@
 import graphene
 from django.core.exceptions import ValidationError
 
-from ....core.permissions import ProductPermissions
-from ....product import models
-from ....product.error_codes import ProductErrorCode
+from ....core.permissions import RoomPermissions
+from ....room import models
+from ....room.error_codes import RoomErrorCode
 from ...channel import ChannelContext
 from ...core.mutations import BaseMutation, ModelMutation
 from ...core.types import Upload
-from ...core.types.common import ProductError
+from ...core.types.common import RoomError
 from ...decorators import permission_required
-from ..types import DigitalContent, ProductVariant
+from ..types import DigitalContent, RoomVariant
 
 
 class DigitalContentInput(graphene.InputObjectType):
     use_default_settings = graphene.Boolean(
-        description="Use default digital content settings for this product.",
+        description="Use default digital content settings for this room.",
         required=True,
     )
     max_downloads = graphene.Int(
@@ -44,12 +44,12 @@ class DigitalContentUploadInput(DigitalContentInput):
 
 
 class DigitalContentCreate(BaseMutation):
-    variant = graphene.Field(ProductVariant)
+    variant = graphene.Field(RoomVariant)
     content = graphene.Field(DigitalContent)
 
     class Arguments:
         variant_id = graphene.ID(
-            description="ID of a product variant to upload digital content.",
+            description="ID of a room variant to upload digital content.",
             required=True,
         )
         input = DigitalContentUploadInput(
@@ -62,11 +62,11 @@ class DigitalContentCreate(BaseMutation):
             "request. More detailed specs of the upload format can be found here: "
             "https://github.com/jaydenseric/graphql-multipart-request-spec"
         )
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def clean_input(cls, info, data, instance):
         if hasattr(instance, "digital_content"):
             instance.digital_content.delete()
@@ -86,16 +86,16 @@ class DigitalContentCreate(BaseMutation):
             if missing_fields:
                 msg += "{}, " * len(missing_fields)
                 raise ValidationError(
-                    msg.format(*missing_fields), code=ProductErrorCode.REQUIRED
+                    msg.format(*missing_fields), code=RoomErrorCode.REQUIRED
                 )
 
         return data
 
     @classmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def perform_mutation(cls, _root, info, variant_id, **data):
         variant = cls.get_node_or_error(
-            info, variant_id, "id", only_type=ProductVariant
+            info, variant_id, "id", only_type=RoomVariant
         )
 
         clean_input = cls.clean_input(info, data.get("input"), variant)
@@ -120,24 +120,24 @@ class DigitalContentCreate(BaseMutation):
 
 
 class DigitalContentDelete(BaseMutation):
-    variant = graphene.Field(ProductVariant)
+    variant = graphene.Field(RoomVariant)
 
     class Arguments:
         variant_id = graphene.ID(
-            description=("ID of a product variant with digital content to remove."),
+            description=("ID of a room variant with digital content to remove."),
             required=True,
         )
 
     class Meta:
         description = "Remove digital content assigned to given variant."
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def mutate(cls, _root, info, variant_id):
         variant = cls.get_node_or_error(
-            info, variant_id, "id", only_type=ProductVariant
+            info, variant_id, "id", only_type=RoomVariant
         )
 
         if hasattr(variant, "digital_content"):
@@ -148,12 +148,12 @@ class DigitalContentDelete(BaseMutation):
 
 
 class DigitalContentUpdate(BaseMutation):
-    variant = graphene.Field(ProductVariant)
+    variant = graphene.Field(RoomVariant)
     content = graphene.Field(DigitalContent)
 
     class Arguments:
         variant_id = graphene.ID(
-            description=("ID of a product variant with digital content to update."),
+            description=("ID of a room variant with digital content to update."),
             required=True,
         )
         input = DigitalContentInput(
@@ -162,11 +162,11 @@ class DigitalContentUpdate(BaseMutation):
 
     class Meta:
         description = "Update digital content."
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def clean_input(cls, info, data):
         use_default_settings = data.get("use_default_settings")
         if use_default_settings:
@@ -183,16 +183,16 @@ class DigitalContentUpdate(BaseMutation):
             if missing_fields:
                 msg += "{}, " * len(missing_fields)
                 raise ValidationError(
-                    msg.format(*missing_fields), code=ProductErrorCode.REQUIRED
+                    msg.format(*missing_fields), code=RoomErrorCode.REQUIRED
                 )
 
         return data
 
     @classmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def perform_mutation(cls, _root, info, variant_id, **data):
         variant = cls.get_node_or_error(
-            info, variant_id, "id", only_type=ProductVariant
+            info, variant_id, "id", only_type=RoomVariant
         )
 
         if not hasattr(variant, "digital_content"):
@@ -200,7 +200,7 @@ class DigitalContentUpdate(BaseMutation):
             raise ValidationError(
                 {
                     "variantId": ValidationError(
-                        msg, code=ProductErrorCode.VARIANT_NO_DIGITAL_CONTENT
+                        msg, code=RoomErrorCode.VARIANT_NO_DIGITAL_CONTENT
                     )
                 }
             )
@@ -243,10 +243,10 @@ class DigitalContentUrlCreate(ModelMutation):
     class Meta:
         description = "Generate new URL to digital content."
         model = models.DigitalContentUrl
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def mutate(cls, root, info, **data):
         return super().mutate(root, info, **data)

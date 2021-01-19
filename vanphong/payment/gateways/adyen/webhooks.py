@@ -92,7 +92,7 @@ def get_checkout(payment: Payment) -> Optional[Checkout]:
         Checkout.objects.select_for_update(of=("self",))
         .prefetch_related(
             "gift_cards",
-            "lines__variant__product",
+            "lines__variant__room",
         )
         .select_related("shipping_method__shipping_zone")
         .filter(pk=payment.checkout.pk)

@@ -6,35 +6,35 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-def assign_category_to_products(apps, schema_editor):
-    Product = apps.get_model("product", "Product")
-    for product in Product.objects.all():
-        product.category = product.categories.first()
-        product.save()
+def assign_category_to_rooms(apps, schema_editor):
+    Room = apps.get_model("room", "Room")
+    for room in Room.objects.all():
+        room.category = room.categories.first()
+        room.save()
 
 
-def assign_categories_to_products(apps, schema_editor):
-    Product = apps.get_model("product", "Product")
-    for product in Product.objects.all():
-        if product.category:
-            product.categories.add(product.category)
+def assign_categories_to_rooms(apps, schema_editor):
+    Room = apps.get_model("room", "Room")
+    for room in Room.objects.all():
+        if room.category:
+            room.categories.add(room.category)
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0045_md_to_html")]
+    dependencies = [("room", "0045_md_to_html")]
 
     operations = [
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="category",
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to="product.Category",
+                to="room.Category",
             ),
         ),
         migrations.RunPython(
-            assign_category_to_products, assign_categories_to_products
+            assign_category_to_rooms, assign_categories_to_rooms
         ),
     ]

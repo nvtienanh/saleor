@@ -23,52 +23,52 @@ def clone_attribute_data(original_attribute, new_attribute):
 
 
 def migrate_attributes(apps, schema_editor):
-    Attribute = apps.get_model("product", "Attribute")
+    Attribute = apps.get_model("room", "Attribute")
     for attribute in Attribute.objects.all():
-        for product_type in attribute.product_types.all():
-            new_attr = product_type.temp_product_attributes.create(
+        for room_type in attribute.room_types.all():
+            new_attr = room_type.temp_room_attributes.create(
                 name=attribute.name, slug=attribute.slug
             )
             clone_attribute_data(attribute, new_attr)
-        for product_type in attribute.product_variant_types.all():
-            new_attr = product_type.temp_variant_attributes.create(
+        for room_type in attribute.room_variant_types.all():
+            new_attr = room_type.temp_variant_attributes.create(
                 name=attribute.name, slug=attribute.slug
             )
             clone_attribute_data(attribute, new_attr)
 
 
 def migrate_attributes_hstore_to_new_ids(apps, schema_editor):
-    Product = apps.get_model("product", "Product")
-    Attribute = apps.get_model("product", "Attribute")
-    AttributeValue = apps.get_model("product", "AttributeValue")
+    Room = apps.get_model("room", "Room")
+    Attribute = apps.get_model("room", "Attribute")
+    AttributeValue = apps.get_model("room", "AttributeValue")
 
     # Objects maps to avoid DB queries in for-loop
     attributes_map = {str(attr.pk): attr for attr in Attribute.objects.all()}
     values_map = {str(val.pk): val for val in AttributeValue.objects.all()}
 
-    qs = Product.objects.select_related("product_type").prefetch_related("variants")
-    for product in qs:
+    qs = Room.objects.select_related("room_type").prefetch_related("variants")
+    for room in qs:
         # recreate attributes hstore with migrated attributes and values
-        if product.attributes:
+        if room.attributes:
             new_hstore = {}
-            product_type = product.product_type
+            room_type = room.room_type
 
-            for old_attr_pk, old_val_pk in product.attributes.items():
+            for old_attr_pk, old_val_pk in room.attributes.items():
                 old_attr = attributes_map.get(old_attr_pk)
                 old_val = values_map.get(old_val_pk)
                 if not (old_attr and old_val):
                     continue
-                new_attr = product_type.temp_product_attributes.filter(
+                new_attr = room_type.temp_room_attributes.filter(
                     slug=old_attr.slug
                 ).first()
                 if new_attr:
                     new_val = new_attr.values.filter(slug=old_val.slug).first()
                     if new_val:
                         new_hstore[str(new_attr.pk)] = str(new_val.pk)
-            product.attributes = new_hstore
-            product.save(update_fields=["attributes"])
+            room.attributes = new_hstore
+            room.save(update_fields=["attributes"])
 
-        for variant in product.variants.all():
+        for variant in room.variants.all():
             if variant.attributes:
                 new_hstore = {}
                 for old_attr_pk, old_val_pk in variant.attributes.items():
@@ -76,7 +76,7 @@ def migrate_attributes_hstore_to_new_ids(apps, schema_editor):
                     old_val = values_map.get(old_val_pk)
                     if not (old_attr and old_val):
                         continue
-                    new_attr = product_type.temp_variant_attributes.filter(
+                    new_attr = room_type.temp_variant_attributes.filter(
                         slug=old_attr.slug
                     ).first()
                     if new_attr:
@@ -88,17 +88,17 @@ def migrate_attributes_hstore_to_new_ids(apps, schema_editor):
 
 
 def clean_stale_attributes(apps, schema_editor):
-    # Remove attributes that have no relation with any product type after
+    # Remove attributes that have no relation with any room type after
     # all above data migrations were applied.
-    Attribute = apps.get_model("product", "Attribute")
-    Attribute.objects.filter(product_variant_type__isnull=True).filter(
-        product_type__isnull=True
+    Attribute = apps.get_model("room", "Attribute")
+    Attribute.objects.filter(room_variant_type__isnull=True).filter(
+        room_type__isnull=True
     ).delete()
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0073_auto_20181010_0729")]
+    dependencies = [("room", "0073_auto_20181010_0729")]
 
     operations = [
         migrations.RunPython(

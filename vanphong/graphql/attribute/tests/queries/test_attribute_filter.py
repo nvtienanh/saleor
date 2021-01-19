@@ -5,9 +5,9 @@ import pytest
 
 from .....attribute.models import Attribute
 from .....attribute.utils import associate_attribute_values_to_instance
-from .....product.models import ProductType
+from .....room.models import RoomType
 from ....tests.utils import get_graphql_content
-from ...filters import filter_attributes_by_product_types
+from ...filters import filter_attributes_by_room_types
 
 ATTRIBUTES_FILTER_QUERY = """
     query($filters: AttributeFilterInput!) {
@@ -66,15 +66,15 @@ def test_filter_attributes_if_available_in_grid(
     assert attributes[0]["node"]["slug"] == "size"
 
 
-def test_filter_attributes_by_global_id_list(api_client, product_type_attribute_list):
+def test_filter_attributes_by_global_id_list(api_client, room_type_attribute_list):
     global_ids = [
         graphene.Node.to_global_id("Attribute", attribute.pk)
-        for attribute in product_type_attribute_list[:2]
+        for attribute in room_type_attribute_list[:2]
     ]
     variables = {"filters": {"ids": global_ids}}
 
     expected_slugs = sorted(
-        [product_type_attribute_list[0].slug, product_type_attribute_list[1].slug]
+        [room_type_attribute_list[0].slug, room_type_attribute_list[1].slug]
     )
 
     attributes = get_graphql_content(
@@ -90,29 +90,29 @@ def test_filter_attributes_by_global_id_list(api_client, product_type_attribute_
 
 
 def test_filter_attributes_in_category_not_visible_in_listings_by_customer(
-    user_api_client, product_list, weight_attribute, channel_USD
+    user_api_client, room_list, weight_attribute, channel_USD
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(visible_in_listings=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(visible_in_listings=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -134,34 +134,34 @@ def test_filter_attributes_in_category_not_visible_in_listings_by_customer(
 
 def test_filter_attributes_in_category_not_visible_in_listings_by_staff_with_perm(
     staff_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
 
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(visible_in_listings=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(visible_in_listings=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -180,32 +180,32 @@ def test_filter_attributes_in_category_not_visible_in_listings_by_staff_with_per
 
 def test_filter_attributes_in_category_not_visible_in_listings_by_staff_without_perm(
     staff_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(visible_in_listings=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(visible_in_listings=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -227,34 +227,34 @@ def test_filter_attributes_in_category_not_visible_in_listings_by_staff_without_
 
 def test_filter_attributes_in_category_not_visible_in_listings_by_app_with_perm(
     app_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    app_api_client.app.permissions.add(permission_manage_products)
+    app_api_client.app.permissions.add(permission_manage_rooms)
 
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(visible_in_listings=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(visible_in_listings=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -273,32 +273,32 @@ def test_filter_attributes_in_category_not_visible_in_listings_by_app_with_perm(
 
 def test_filter_attributes_in_category_not_visible_in_listings_by_app_without_perm(
     app_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(visible_in_listings=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(visible_in_listings=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -319,29 +319,29 @@ def test_filter_attributes_in_category_not_visible_in_listings_by_app_without_pe
 
 
 def test_filter_attributes_in_category_not_published_by_customer(
-    user_api_client, product_list, weight_attribute, channel_USD
+    user_api_client, room_list, weight_attribute, channel_USD
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -363,34 +363,34 @@ def test_filter_attributes_in_category_not_published_by_customer(
 
 def test_filter_attributes_in_category_not_published_by_staff_with_perm(
     staff_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
 
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -409,32 +409,32 @@ def test_filter_attributes_in_category_not_published_by_staff_with_perm(
 
 def test_filter_attributes_in_category_not_published_by_staff_without_perm(
     staff_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -456,34 +456,34 @@ def test_filter_attributes_in_category_not_published_by_staff_without_perm(
 
 def test_filter_attributes_in_category_not_published_by_app_with_perm(
     app_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    app_api_client.app.permissions.add(permission_manage_products)
+    app_api_client.app.permissions.add(permission_manage_rooms)
 
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -502,32 +502,32 @@ def test_filter_attributes_in_category_not_published_by_app_with_perm(
 
 def test_filter_attributes_in_category_not_published_by_app_without_perm(
     app_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
 
-    category = last_product.category
+    category = last_room.category
     variables = {
         "filters": {
             "inCategory": graphene.Node.to_global_id("Category", category.pk),
@@ -548,27 +548,27 @@ def test_filter_attributes_in_category_not_published_by_app_without_perm(
 
 
 def test_filter_attributes_in_collection_not_visible_in_listings_by_customer(
-    user_api_client, product_list, weight_attribute, collection, channel_USD
+    user_api_client, room_list, weight_attribute, collection, channel_USD
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(visible_in_listings=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(visible_in_listings=False)
 
-    for product in product_list:
-        collection.products.add(product)
+    for room in room_list:
+        collection.rooms.add(room)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
@@ -590,27 +590,27 @@ def test_filter_attributes_in_collection_not_visible_in_listings_by_customer(
 
 
 def test_filter_in_collection_not_published_by_customer(
-    user_api_client, product_list, weight_attribute, collection, channel_USD
+    user_api_client, room_list, weight_attribute, collection, channel_USD
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
-    for product in product_list:
-        collection.products.add(product)
+    for room in room_list:
+        collection.rooms.add(room)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
@@ -636,33 +636,33 @@ def test_filter_in_collection_not_published_by_customer(
 
 def test_filter_in_collection_not_published_by_staff_with_perm(
     staff_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     collection,
     channel_USD,
 ):
     # given
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
 
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
-    for product in product_list:
-        collection.products.add(product)
+    for room in room_list:
+        collection.rooms.add(room)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
@@ -685,31 +685,31 @@ def test_filter_in_collection_not_published_by_staff_with_perm(
 
 def test_filter_in_collection_not_published_by_staff_without_perm(
     staff_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     collection,
     channel_USD,
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
-    for product in product_list:
-        collection.products.add(product)
+    for room in room_list:
+        collection.rooms.add(room)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
@@ -735,33 +735,33 @@ def test_filter_in_collection_not_published_by_staff_without_perm(
 
 def test_filter_in_collection_not_published_by_app_with_perm(
     app_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     collection,
     channel_USD,
 ):
     # given
-    app_api_client.app.permissions.add(permission_manage_products)
+    app_api_client.app.permissions.add(permission_manage_rooms)
 
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
-    for product in product_list:
-        collection.products.add(product)
+    for room in room_list:
+        collection.rooms.add(room)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
@@ -784,31 +784,31 @@ def test_filter_in_collection_not_published_by_app_with_perm(
 
 def test_filter_in_collection_not_published_by_app_without_perm(
     app_api_client,
-    product_list,
+    room_list,
     weight_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     collection,
     channel_USD,
 ):
     # given
-    product_type = ProductType.objects.create(
+    room_type = RoomType.objects.create(
         name="Default Type 2",
         slug="default-type-2",
         has_variants=True,
         is_shipping_required=True,
     )
-    product_type.product_attributes.add(weight_attribute)
+    room_type.room_attributes.add(weight_attribute)
 
-    last_product = product_list[-1]
-    last_product.product_type = product_type
-    last_product.save(update_fields=["product_type"])
-    last_product.channel_listings.all().update(is_published=False)
+    last_room = room_list[-1]
+    last_room.room_type = room_type
+    last_room.save(update_fields=["room_type"])
+    last_room.channel_listings.all().update(is_published=False)
 
-    for product in product_list:
-        collection.products.add(product)
+    for room in room_list:
+        collection.rooms.add(room)
 
     associate_attribute_values_to_instance(
-        product_list[-1], weight_attribute, weight_attribute.values.first()
+        room_list[-1], weight_attribute, weight_attribute.values.first()
     )
 
     attribute_count = Attribute.objects.count()
@@ -835,11 +835,11 @@ def test_filter_in_collection_not_published_by_app_without_perm(
 def test_filter_attributes_by_page_type(
     staff_api_client,
     size_page_attribute,
-    product_type_attribute_list,
-    permission_manage_products,
+    room_type_attribute_list,
+    permission_manage_rooms,
 ):
     # given
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
 
     variables = {"filters": {"type": "PAGE_TYPE"}}
 
@@ -853,16 +853,16 @@ def test_filter_attributes_by_page_type(
     assert attributes[0]["node"]["slug"] == size_page_attribute.slug
 
 
-def test_filter_attributes_by_product_type(
+def test_filter_attributes_by_room_type(
     staff_api_client,
     size_page_attribute,
-    product_type_attribute_list,
-    permission_manage_products,
+    room_type_attribute_list,
+    permission_manage_rooms,
 ):
     # given
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
 
-    variables = {"filters": {"type": "PRODUCT_TYPE"}}
+    variables = {"filters": {"type": "ROOM_TYPE"}}
 
     # when
     attributes = get_graphql_content(
@@ -870,24 +870,24 @@ def test_filter_attributes_by_product_type(
     )["data"]["attributes"]["edges"]
 
     # then
-    assert len(attributes) == len(product_type_attribute_list)
+    assert len(attributes) == len(room_type_attribute_list)
     assert size_page_attribute.slug not in {
         attribute["node"]["slug"] for attribute in attributes
     }
 
 
-def test_attributes_filter_by_product_type_with_empty_value():
+def test_attributes_filter_by_room_type_with_empty_value():
     """Ensure passing an empty or null value is ignored and the queryset is simply
     returned without any modification.
     """
 
     qs = Attribute.objects.all()
 
-    assert filter_attributes_by_product_types(qs, "...", "", None, None) is qs
-    assert filter_attributes_by_product_types(qs, "...", None, None, None) is qs
+    assert filter_attributes_by_room_types(qs, "...", "", None, None) is qs
+    assert filter_attributes_by_room_types(qs, "...", None, None, None) is qs
 
 
-def test_attributes_filter_by_product_type_with_unsupported_field(
+def test_attributes_filter_by_room_type_with_unsupported_field(
     customer_user, channel_USD
 ):
     """Ensure using an unknown field to filter attributes by raises a NotImplemented
@@ -897,7 +897,7 @@ def test_attributes_filter_by_product_type_with_unsupported_field(
     qs = Attribute.objects.all()
 
     with pytest.raises(NotImplementedError) as exc:
-        filter_attributes_by_product_types(
+        filter_attributes_by_room_types(
             qs, "in_space", "a-value", customer_user, channel_USD.slug
         )
 
@@ -909,7 +909,7 @@ def test_attributes_filter_by_non_existing_category_id(customer_user, channel_US
 
     category_id = graphene.Node.to_global_id("Category", -1)
     mocked_qs = mock.MagicMock()
-    qs = filter_attributes_by_product_types(
+    qs = filter_attributes_by_room_types(
         mocked_qs, "in_category", category_id, customer_user, channel_USD.slug
     )
     assert qs == mocked_qs.none.return_value

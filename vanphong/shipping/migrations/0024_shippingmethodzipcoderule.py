@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("shipping", "0023_shippingmethod_excluded_products"),
+        ("shipping", "0023_shippingmethod_excluded_rooms"),
     ]
 
     operations = [

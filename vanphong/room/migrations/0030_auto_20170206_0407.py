@@ -9,7 +9,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0029_product_is_featured")]
+    dependencies = [("room", "0029_room_is_featured")]
 
     operations = [
         migrations.AlterModelOptions(
@@ -24,37 +24,37 @@ class Migration(migrations.Migration):
             options={"verbose_name": "category", "verbose_name_plural": "categories"},
         ),
         migrations.AlterModelOptions(
-            name="product",
-            options={"verbose_name": "product", "verbose_name_plural": "products"},
+            name="room",
+            options={"verbose_name": "room", "verbose_name_plural": "rooms"},
         ),
         migrations.AlterModelOptions(
-            name="productattribute",
+            name="roomattribute",
             options={
                 "ordering": ("name",),
-                "verbose_name": "product attribute",
-                "verbose_name_plural": "product attributes",
+                "verbose_name": "room attribute",
+                "verbose_name_plural": "room attributes",
             },
         ),
         migrations.AlterModelOptions(
-            name="productclass",
+            name="roomclass",
             options={
-                "verbose_name": "product class",
-                "verbose_name_plural": "product classes",
+                "verbose_name": "room class",
+                "verbose_name_plural": "room classes",
             },
         ),
         migrations.AlterModelOptions(
-            name="productimage",
+            name="roomimage",
             options={
                 "ordering": ("order",),
-                "verbose_name": "product image",
-                "verbose_name_plural": "product images",
+                "verbose_name": "room image",
+                "verbose_name_plural": "room images",
             },
         ),
         migrations.AlterModelOptions(
-            name="productvariant",
+            name="roomvariant",
             options={
-                "verbose_name": "product variant",
-                "verbose_name_plural": "product variants",
+                "verbose_name": "room variant",
+                "verbose_name_plural": "room variants",
             },
         ),
         migrations.AlterModelOptions(
@@ -65,50 +65,50 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AlterField(
-            model_name="product",
-            name="product_class",
+            model_name="room",
+            name="room_class",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="products",
-                to="product.ProductClass",
-                verbose_name="product class",
+                related_name="rooms",
+                to="room.RoomClass",
+                verbose_name="room class",
             ),
         ),
         migrations.AlterField(
-            model_name="productimage",
+            model_name="roomimage",
             name="image",
             field=versatileimagefield.fields.VersatileImageField(
-                upload_to="products", verbose_name="image"
+                upload_to="rooms", verbose_name="image"
             ),
         ),
         migrations.AlterField(
-            model_name="productimage",
+            model_name="roomimage",
             name="order",
             field=models.PositiveIntegerField(editable=False, verbose_name="order"),
         ),
         migrations.AlterField(
-            model_name="productimage",
+            model_name="roomimage",
             name="ppoi",
             field=versatileimagefield.fields.PPOIField(
                 default="0.5x0.5", editable=False, max_length=20, verbose_name="ppoi"
             ),
         ),
         migrations.AlterField(
-            model_name="productimage",
-            name="product",
+            model_name="roomimage",
+            name="room",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="images",
-                to="product.Product",
-                verbose_name="product",
+                to="room.Room",
+                verbose_name="room",
             ),
         ),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="images",
             field=models.ManyToManyField(
-                through="product.VariantImage",
-                to="product.ProductImage",
+                through="room.VariantImage",
+                to="room.RoomImage",
                 verbose_name="images",
             ),
         ),
@@ -118,7 +118,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="variant_images",
-                to="product.ProductImage",
+                to="room.RoomImage",
                 verbose_name="image",
             ),
         ),
@@ -128,7 +128,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="variant_images",
-                to="product.ProductVariant",
+                to="room.RoomVariant",
                 verbose_name="variant",
             ),
         ),

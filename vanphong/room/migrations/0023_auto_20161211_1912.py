@@ -8,11 +8,11 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0022_auto_20161212_0301")]
+    dependencies = [("room", "0022_auto_20161212_0301")]
 
     operations = [
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="attributes_postgres",
             field=django.contrib.postgres.fields.hstore.HStoreField(
                 default={}, verbose_name="attributes"

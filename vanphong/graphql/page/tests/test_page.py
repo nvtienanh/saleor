@@ -180,7 +180,7 @@ def test_page_create_mutation(staff_api_client, permission_manage_pages, page_ty
     page_is_published = True
     page_type_id = graphene.Node.to_global_id("PageType", page_type.pk)
 
-    # Default attributes defined in product_type fixture
+    # Default attributes defined in room_type fixture
     tag_attr = page_type.page_attributes.get(name="tag")
     tag_value_slug = tag_attr.values.first().slug
     tag_attr_id = graphene.Node.to_global_id("Attribute", tag_attr.id)
@@ -268,7 +268,7 @@ def test_page_create_mutation_missing_required_attributes(
     page_is_published = True
     page_type_id = graphene.Node.to_global_id("PageType", page_type.pk)
 
-    # Default attributes defined in product_type fixture
+    # Default attributes defined in room_type fixture
     tag_attr = page_type.page_attributes.get(name="tag")
     tag_value_slug = tag_attr.values.first().slug
     tag_attr_id = graphene.Node.to_global_id("Attribute", tag_attr.id)
@@ -319,7 +319,7 @@ def test_page_create_mutation_empty_attribute_value(
     page_is_published = True
     page_type_id = graphene.Node.to_global_id("PageType", page_type.pk)
 
-    # Default attributes defined in product_type fixture
+    # Default attributes defined in room_type fixture
     tag_attr = page_type.page_attributes.get(name="tag")
     tag_attr_id = graphene.Node.to_global_id("Attribute", tag_attr.id)
 

@@ -1,16 +1,16 @@
-from ..utils import get_products_ids_without_variants
+from ..utils import get_rooms_ids_without_variants
 
 
-def test_get_products_ids_without_variants(product_list):
-    assert get_products_ids_without_variants(product_list) == []
+def test_get_rooms_ids_without_variants(room_list):
+    assert get_rooms_ids_without_variants(room_list) == []
 
-    product = product_list[0]
-    product.variants.all().delete()
+    room = room_list[0]
+    room.variants.all().delete()
 
-    second_product = product_list[1]
-    second_product.variants.all().delete()
+    second_room = room_list[1]
+    second_room.variants.all().delete()
 
-    assert get_products_ids_without_variants(product_list) == [
-        product.id,
-        second_product.id,
+    assert get_rooms_ids_without_variants(room_list) == [
+        room.id,
+        second_room.id,
     ]

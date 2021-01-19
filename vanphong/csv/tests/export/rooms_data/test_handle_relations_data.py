@@ -2,34 +2,34 @@ from unittest.mock import patch
 
 from .....attribute.models import Attribute
 from .....attribute.utils import associate_attribute_values_to_instance
-from .....product.models import Product, ProductImage, VariantImage
-from .....warehouse.models import Warehouse
-from ....utils import ProductExportFields
-from ....utils.products_data import (
+from .....room.models import Room, RoomImage, VariantImage
+from .....hotel.models import Hotel
+from ....utils import RoomExportFields
+from ....utils.rooms_data import (
     AttributeData,
     add_attribute_info_to_data,
     add_channel_info_to_data,
     add_collection_info_to_data,
     add_image_uris_to_data,
-    add_warehouse_info_to_data,
-    get_products_relations_data,
+    add_hotel_info_to_data,
+    get_rooms_relations_data,
     get_variants_relations_data,
-    prepare_products_relations_data,
+    prepare_rooms_relations_data,
     prepare_variants_relations_data,
 )
 from .utils import (
-    add_channel_to_expected_product_data,
+    add_channel_to_expected_room_data,
     add_channel_to_expected_variant_data,
-    add_product_attribute_data_to_expected_data,
+    add_room_attribute_data_to_expected_data,
     add_stocks_to_expected_data,
     add_variant_attribute_data_to_expected_data,
 )
 
 
-@patch("saleor.csv.utils.products_data.prepare_products_relations_data")
-def test_get_products_relations_data(prepare_products_data_mocked, product_list):
+@patch("saleor.csv.utils.rooms_data.prepare_rooms_relations_data")
+def test_get_rooms_relations_data(prepare_rooms_data_mocked, room_list):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {
         "collections__slug",
         "images__image",
@@ -40,11 +40,11 @@ def test_get_products_relations_data(prepare_products_data_mocked, product_list)
     channel_ids = []
 
     # when
-    get_products_relations_data(qs, export_fields, attribute_ids, channel_ids)
+    get_rooms_relations_data(qs, export_fields, attribute_ids, channel_ids)
 
     # then
-    assert prepare_products_data_mocked.call_count == 1
-    args, kwargs = prepare_products_data_mocked.call_args
+    assert prepare_rooms_data_mocked.call_count == 1
+    args, kwargs = prepare_rooms_data_mocked.call_args
     assert set(args[0].values_list("pk", flat=True)) == set(
         qs.values_list("pk", flat=True)
     )
@@ -55,99 +55,99 @@ def test_get_products_relations_data(prepare_products_data_mocked, product_list)
     )
 
 
-@patch("saleor.csv.utils.products_data.prepare_products_relations_data")
-def test_get_products_relations_data_no_relations_fields(
-    prepare_products_data_mocked, product_list
+@patch("saleor.csv.utils.rooms_data.prepare_rooms_relations_data")
+def test_get_rooms_relations_data_no_relations_fields(
+    prepare_rooms_data_mocked, room_list
 ):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {"name", "description"}
     attribute_ids = []
     channel_ids = []
 
     # when
-    get_products_relations_data(qs, export_fields, attribute_ids, channel_ids)
+    get_rooms_relations_data(qs, export_fields, attribute_ids, channel_ids)
 
     # then
-    prepare_products_data_mocked.assert_not_called()
+    prepare_rooms_data_mocked.assert_not_called()
 
 
-@patch("saleor.csv.utils.products_data.prepare_products_relations_data")
-def test_get_products_relations_data_attribute_ids(
-    prepare_products_data_mocked, product_list, file_attribute
+@patch("saleor.csv.utils.rooms_data.prepare_rooms_relations_data")
+def test_get_rooms_relations_data_attribute_ids(
+    prepare_rooms_data_mocked, room_list, file_attribute
 ):
     # given
-    product = product_list[0]
-    product.product_type.product_attributes.add(file_attribute)
+    room = room_list[0]
+    room.room_type.room_attributes.add(file_attribute)
     associate_attribute_values_to_instance(
-        product, file_attribute, file_attribute.values.first()
+        room, file_attribute, file_attribute.values.first()
     )
 
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {"name", "description"}
     attribute_ids = list(Attribute.objects.values_list("pk", flat=True))
     channel_ids = []
 
     # when
-    get_products_relations_data(qs, export_fields, attribute_ids, channel_ids)
+    get_rooms_relations_data(qs, export_fields, attribute_ids, channel_ids)
 
     # then
-    assert prepare_products_data_mocked.call_count == 1
-    args, kwargs = prepare_products_data_mocked.call_args
+    assert prepare_rooms_data_mocked.call_count == 1
+    args, kwargs = prepare_rooms_data_mocked.call_args
     assert set(args[0].values_list("pk", flat=True)) == set(
         qs.values_list("pk", flat=True)
     )
     assert args[1:] == (set(), attribute_ids, channel_ids)
 
 
-@patch("saleor.csv.utils.products_data.prepare_products_relations_data")
-def test_get_products_relations_data_channel_ids(
-    prepare_products_data_mocked, product_list, channel_USD, channel_PLN
+@patch("saleor.csv.utils.rooms_data.prepare_rooms_relations_data")
+def test_get_rooms_relations_data_channel_ids(
+    prepare_rooms_data_mocked, room_list, channel_USD, channel_PLN
 ):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {"name", "description"}
     attribute_ids = []
     channel_ids = [channel_PLN.pk, channel_USD.pk]
 
     # when
-    get_products_relations_data(qs, export_fields, attribute_ids, channel_ids)
+    get_rooms_relations_data(qs, export_fields, attribute_ids, channel_ids)
 
     # then
-    assert prepare_products_data_mocked.call_count == 1
-    args, kwargs = prepare_products_data_mocked.call_args
+    assert prepare_rooms_data_mocked.call_count == 1
+    args, kwargs = prepare_rooms_data_mocked.call_args
     assert set(args[0].values_list("pk", flat=True)) == set(
         qs.values_list("pk", flat=True)
     )
     assert args[1:] == (set(), attribute_ids, channel_ids)
 
 
-def test_prepare_products_relations_data(
-    product_with_image, collection_list, channel_USD, channel_PLN, file_attribute
+def test_prepare_rooms_relations_data(
+    room_with_image, collection_list, channel_USD, channel_PLN, file_attribute
 ):
     # given
-    pk = product_with_image.pk
+    pk = room_with_image.pk
 
-    product_with_image.product_type.product_attributes.add(file_attribute)
+    room_with_image.room_type.room_attributes.add(file_attribute)
     associate_attribute_values_to_instance(
-        product_with_image, file_attribute, file_attribute.values.first()
+        room_with_image, file_attribute, file_attribute.values.first()
     )
 
-    collection_list[0].products.add(product_with_image)
-    collection_list[1].products.add(product_with_image)
+    collection_list[0].rooms.add(room_with_image)
+    collection_list[1].rooms.add(room_with_image)
 
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     fields = set(
-        ProductExportFields.HEADERS_TO_FIELDS_MAPPING["product_many_to_many"].values()
+        RoomExportFields.HEADERS_TO_FIELDS_MAPPING["room_many_to_many"].values()
     )
     attribute_ids = [
         str(attr.assignment.attribute.pk)
-        for attr in product_with_image.attributes.all()
+        for attr in room_with_image.attributes.all()
     ]
     channel_ids = [str(channel_PLN.pk), str(channel_USD.pk)]
 
     # when
-    result = prepare_products_relations_data(qs, fields, attribute_ids, channel_ids)
+    result = prepare_rooms_relations_data(qs, fields, attribute_ids, channel_ids)
 
     # then
     collections = ", ".join(
@@ -156,35 +156,35 @@ def test_prepare_products_relations_data(
     images = ", ".join(
         [
             "http://mirumee.com/media/" + image.image.name
-            for image in product_with_image.images.all()
+            for image in room_with_image.images.all()
         ]
     )
     expected_result = {pk: {"collections__slug": collections, "images__image": images}}
 
-    expected_result = add_product_attribute_data_to_expected_data(
-        expected_result, product_with_image, attribute_ids, pk
+    expected_result = add_room_attribute_data_to_expected_data(
+        expected_result, room_with_image, attribute_ids, pk
     )
-    expected_result = add_channel_to_expected_product_data(
-        expected_result, product_with_image, channel_ids, pk
+    expected_result = add_channel_to_expected_room_data(
+        expected_result, room_with_image, channel_ids, pk
     )
 
     assert result == expected_result
 
 
-def test_prepare_products_relations_data_only_fields(
-    product_with_image, collection_list
+def test_prepare_rooms_relations_data_only_fields(
+    room_with_image, collection_list
 ):
     # given
-    pk = product_with_image.pk
-    collection_list[0].products.add(product_with_image)
-    collection_list[1].products.add(product_with_image)
-    qs = Product.objects.all()
+    pk = room_with_image.pk
+    collection_list[0].rooms.add(room_with_image)
+    collection_list[1].rooms.add(room_with_image)
+    qs = Room.objects.all()
     fields = {"collections__slug"}
     attribute_ids = []
     channel_ids = []
 
     # when
-    result = prepare_products_relations_data(qs, fields, attribute_ids, channel_ids)
+    result = prepare_rooms_relations_data(qs, fields, attribute_ids, channel_ids)
 
     # then
     collections = ", ".join(
@@ -195,75 +195,75 @@ def test_prepare_products_relations_data_only_fields(
     assert result == expected_result
 
 
-def test_prepare_products_relations_data_only_attributes_ids(
-    product_with_image, collection_list
+def test_prepare_rooms_relations_data_only_attributes_ids(
+    room_with_image, collection_list
 ):
     # given
-    pk = product_with_image.pk
-    collection_list[0].products.add(product_with_image)
-    collection_list[1].products.add(product_with_image)
-    qs = Product.objects.all()
+    pk = room_with_image.pk
+    collection_list[0].rooms.add(room_with_image)
+    collection_list[1].rooms.add(room_with_image)
+    qs = Room.objects.all()
     fields = {"name"}
     attribute_ids = [
         str(attr.assignment.attribute.pk)
-        for attr in product_with_image.attributes.all()
+        for attr in room_with_image.attributes.all()
     ]
     channel_ids = []
 
     # when
-    result = prepare_products_relations_data(qs, fields, attribute_ids, channel_ids)
+    result = prepare_rooms_relations_data(qs, fields, attribute_ids, channel_ids)
 
     # then
     expected_result = {pk: {}}
 
-    expected_result = add_product_attribute_data_to_expected_data(
-        expected_result, product_with_image, attribute_ids, pk
+    expected_result = add_room_attribute_data_to_expected_data(
+        expected_result, room_with_image, attribute_ids, pk
     )
 
     assert result == expected_result
 
 
-def test_prepare_products_relations_data_only_channel_ids(
-    product_with_image, collection_list, channel_PLN, channel_USD
+def test_prepare_rooms_relations_data_only_channel_ids(
+    room_with_image, collection_list, channel_PLN, channel_USD
 ):
     # given
-    pk = product_with_image.pk
-    collection_list[0].products.add(product_with_image)
-    collection_list[1].products.add(product_with_image)
-    qs = Product.objects.all()
+    pk = room_with_image.pk
+    collection_list[0].rooms.add(room_with_image)
+    collection_list[1].rooms.add(room_with_image)
+    qs = Room.objects.all()
     fields = {"name"}
     attribute_ids = []
     channel_ids = [str(channel_PLN.pk), str(channel_USD.pk)]
 
     # when
-    result = prepare_products_relations_data(qs, fields, attribute_ids, channel_ids)
+    result = prepare_rooms_relations_data(qs, fields, attribute_ids, channel_ids)
 
     # then
     expected_result = {pk: {}}
 
-    expected_result = add_channel_to_expected_product_data(
-        expected_result, product_with_image, channel_ids, pk
+    expected_result = add_channel_to_expected_room_data(
+        expected_result, room_with_image, channel_ids, pk
     )
 
     assert result == expected_result
 
 
-@patch("saleor.csv.utils.products_data.prepare_variants_relations_data")
-def test_get_variants_relations_data(prepare_variants_data_mocked, product_list):
+@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
+def test_get_variants_relations_data(prepare_variants_data_mocked, room_list):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {
         "collections__slug",
         "variants__sku",
         "variants__images__image",
     }
     attribute_ids = []
-    warehouse_ids = []
+    hotel_ids = []
     channel_ids = []
 
     # when
     get_variants_relations_data(
-        qs, export_fields, attribute_ids, warehouse_ids, channel_ids
+        qs, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -275,52 +275,52 @@ def test_get_variants_relations_data(prepare_variants_data_mocked, product_list)
     assert args[1:] == (
         {"variants__images__image"},
         attribute_ids,
-        warehouse_ids,
+        hotel_ids,
         channel_ids,
     )
 
 
-@patch("saleor.csv.utils.products_data.prepare_variants_relations_data")
+@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_no_relations_fields(
-    prepare_variants_data_mocked, product_list
+    prepare_variants_data_mocked, room_list
 ):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {"name", "variants__sku"}
     attribute_ids = []
-    warehouse_ids = []
+    hotel_ids = []
     channel_ids = []
 
     # when
     get_variants_relations_data(
-        qs, export_fields, attribute_ids, warehouse_ids, channel_ids
+        qs, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
     prepare_variants_data_mocked.assert_not_called()
 
 
-@patch("saleor.csv.utils.products_data.prepare_variants_relations_data")
+@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_attribute_ids(
-    prepare_variants_data_mocked, product_list, file_attribute
+    prepare_variants_data_mocked, room_list, file_attribute
 ):
     # given
-    product = product_list[0]
-    product.product_type.variant_attributes.add(file_attribute)
-    variant = product.variants.first()
+    room = room_list[0]
+    room.room_type.variant_attributes.add(file_attribute)
+    variant = room.variants.first()
     associate_attribute_values_to_instance(
         variant, file_attribute, file_attribute.values.first()
     )
 
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {"name", "variants__sku"}
     attribute_ids = list(Attribute.objects.values_list("pk", flat=True))
-    warehouse_ids = []
+    hotel_ids = []
     channel_ids = []
 
     # when
     get_variants_relations_data(
-        qs, export_fields, attribute_ids, warehouse_ids, channel_ids
+        qs, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -329,23 +329,23 @@ def test_get_variants_relations_data_attribute_ids(
     assert set(args[0].values_list("pk", flat=True)) == set(
         qs.values_list("pk", flat=True)
     )
-    assert args[1:] == (set(), attribute_ids, warehouse_ids, channel_ids)
+    assert args[1:] == (set(), attribute_ids, hotel_ids, channel_ids)
 
 
-@patch("saleor.csv.utils.products_data.prepare_variants_relations_data")
-def test_get_variants_relations_data_warehouse_ids(
-    prepare_variants_data_mocked, product_list, warehouses
+@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
+def test_get_variants_relations_data_hotel_ids(
+    prepare_variants_data_mocked, room_list, hotels
 ):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {"name", "variants__sku"}
     attribute_ids = []
-    warehouse_ids = list(Warehouse.objects.values_list("pk", flat=True))
+    hotel_ids = list(Hotel.objects.values_list("pk", flat=True))
     channel_ids = []
 
     # when
     get_variants_relations_data(
-        qs, export_fields, attribute_ids, warehouse_ids, channel_ids
+        qs, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -354,23 +354,23 @@ def test_get_variants_relations_data_warehouse_ids(
     assert set(args[0].values_list("pk", flat=True)) == set(
         qs.values_list("pk", flat=True)
     )
-    assert args[1:] == (set(), attribute_ids, warehouse_ids, channel_ids)
+    assert args[1:] == (set(), attribute_ids, hotel_ids, channel_ids)
 
 
-@patch("saleor.csv.utils.products_data.prepare_variants_relations_data")
+@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_channel_ids(
-    prepare_variants_data_mocked, product_list, channel_USD, channel_PLN
+    prepare_variants_data_mocked, room_list, channel_USD, channel_PLN
 ):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {"name", "variants__sku"}
     attribute_ids = []
-    warehouse_ids = []
+    hotel_ids = []
     channel_ids = [channel_PLN.pk, channel_USD.pk]
 
     # when
     get_variants_relations_data(
-        qs, export_fields, attribute_ids, warehouse_ids, channel_ids
+        qs, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -379,23 +379,23 @@ def test_get_variants_relations_data_channel_ids(
     assert set(args[0].values_list("pk", flat=True)) == set(
         qs.values_list("pk", flat=True)
     )
-    assert args[1:] == (set(), attribute_ids, warehouse_ids, channel_ids)
+    assert args[1:] == (set(), attribute_ids, hotel_ids, channel_ids)
 
 
-@patch("saleor.csv.utils.products_data.prepare_variants_relations_data")
-def test_get_variants_relations_data_attributes_warehouses_and_channels_ids(
-    prepare_variants_data_mocked, product_list, warehouses, channel_PLN, channel_USD
+@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
+def test_get_variants_relations_data_attributes_hotels_and_channels_ids(
+    prepare_variants_data_mocked, room_list, hotels, channel_PLN, channel_USD
 ):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_fields = {"name", "description"}
     attribute_ids = list(Attribute.objects.values_list("pk", flat=True))
-    warehouse_ids = list(Warehouse.objects.values_list("pk", flat=True))
+    hotel_ids = list(Hotel.objects.values_list("pk", flat=True))
     channel_ids = [channel_PLN.pk, channel_USD.pk]
 
     # when
     get_variants_relations_data(
-        qs, export_fields, attribute_ids, warehouse_ids, channel_ids
+        qs, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -404,11 +404,11 @@ def test_get_variants_relations_data_attributes_warehouses_and_channels_ids(
     assert set(args[0].values_list("pk", flat=True)) == set(
         qs.values_list("pk", flat=True)
     )
-    assert args[1:] == (set(), attribute_ids, warehouse_ids, channel_ids)
+    assert args[1:] == (set(), attribute_ids, hotel_ids, channel_ids)
 
 
 def test_prepare_variants_relations_data(
-    product_with_variant_with_two_attributes,
+    room_with_variant_with_two_attributes,
     image,
     media_root,
     channel_PLN,
@@ -416,28 +416,28 @@ def test_prepare_variants_relations_data(
     file_attribute,
 ):
     # given
-    product = product_with_variant_with_two_attributes
-    product.product_type.variant_attributes.add(file_attribute)
-    variant = product.variants.first()
+    room = room_with_variant_with_two_attributes
+    room.room_type.variant_attributes.add(file_attribute)
+    variant = room.variants.first()
     associate_attribute_values_to_instance(
         variant, file_attribute, file_attribute.values.first()
     )
 
-    qs = Product.objects.all()
-    variant = product_with_variant_with_two_attributes.variants.first()
-    product_image = ProductImage.objects.create(
-        product=product_with_variant_with_two_attributes, image=image
+    qs = Room.objects.all()
+    variant = room_with_variant_with_two_attributes.variants.first()
+    room_image = RoomImage.objects.create(
+        room=room_with_variant_with_two_attributes, image=image
     )
-    VariantImage.objects.create(variant=variant, image=product_image)
+    VariantImage.objects.create(variant=variant, image=room_image)
 
     fields = {"variants__images__image"}
     attribute_ids = [str(attr.pk) for attr in Attribute.objects.all()]
-    warehouse_ids = [str(w.pk) for w in Warehouse.objects.all()]
+    hotel_ids = [str(w.pk) for w in Hotel.objects.all()]
     channel_ids = [str(channel_PLN.pk), str(channel_USD.pk)]
 
     # when
     result = prepare_variants_relations_data(
-        qs, fields, attribute_ids, warehouse_ids, channel_ids
+        qs, fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -454,7 +454,7 @@ def test_prepare_variants_relations_data(
         expected_result, variant, attribute_ids, pk
     )
     expected_result = add_stocks_to_expected_data(
-        expected_result, variant, warehouse_ids, pk
+        expected_result, variant, hotel_ids, pk
     )
 
     expected_result = add_channel_to_expected_variant_data(
@@ -465,24 +465,24 @@ def test_prepare_variants_relations_data(
 
 
 def test_prepare_variants_relations_data_only_fields(
-    product_with_variant_with_two_attributes, image, media_root
+    room_with_variant_with_two_attributes, image, media_root
 ):
     # given
-    qs = Product.objects.all()
-    variant = product_with_variant_with_two_attributes.variants.first()
-    product_image = ProductImage.objects.create(
-        product=product_with_variant_with_two_attributes, image=image
+    qs = Room.objects.all()
+    variant = room_with_variant_with_two_attributes.variants.first()
+    room_image = RoomImage.objects.create(
+        room=room_with_variant_with_two_attributes, image=image
     )
-    VariantImage.objects.create(variant=variant, image=product_image)
+    VariantImage.objects.create(variant=variant, image=room_image)
 
     fields = {"variants__images__image"}
     attribute_ids = []
-    warehouse_ids = []
+    hotel_ids = []
     channel_ids = []
 
     # when
     result = prepare_variants_relations_data(
-        qs, fields, attribute_ids, warehouse_ids, channel_ids
+        qs, fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -499,24 +499,24 @@ def test_prepare_variants_relations_data_only_fields(
 
 
 def test_prepare_variants_relations_data_attributes_ids(
-    product_with_variant_with_two_attributes, image, media_root
+    room_with_variant_with_two_attributes, image, media_root
 ):
     # given
-    qs = Product.objects.all()
-    variant = product_with_variant_with_two_attributes.variants.first()
-    product_image = ProductImage.objects.create(
-        product=product_with_variant_with_two_attributes, image=image
+    qs = Room.objects.all()
+    variant = room_with_variant_with_two_attributes.variants.first()
+    room_image = RoomImage.objects.create(
+        room=room_with_variant_with_two_attributes, image=image
     )
-    VariantImage.objects.create(variant=variant, image=product_image)
+    VariantImage.objects.create(variant=variant, image=room_image)
 
     fields = set()
     attribute_ids = [str(attr.pk) for attr in Attribute.objects.all()]
-    warehouse_ids = []
+    hotel_ids = []
     channel_ids = []
 
     # when
     result = prepare_variants_relations_data(
-        qs, fields, attribute_ids, warehouse_ids, channel_ids
+        qs, fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -530,21 +530,21 @@ def test_prepare_variants_relations_data_attributes_ids(
     assert result == expected_result
 
 
-def test_prepare_variants_relations_data_warehouse_ids(
-    product_with_single_variant, image, media_root
+def test_prepare_variants_relations_data_hotel_ids(
+    room_with_single_variant, image, media_root
 ):
     # given
-    qs = Product.objects.all()
-    variant = product_with_single_variant.variants.first()
+    qs = Room.objects.all()
+    variant = room_with_single_variant.variants.first()
 
     fields = set()
     attribute_ids = []
-    warehouse_ids = [str(w.pk) for w in Warehouse.objects.all()]
+    hotel_ids = [str(w.pk) for w in Hotel.objects.all()]
     channel_ids = []
 
     # when
     result = prepare_variants_relations_data(
-        qs, fields, attribute_ids, warehouse_ids, channel_ids
+        qs, fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -552,27 +552,27 @@ def test_prepare_variants_relations_data_warehouse_ids(
     expected_result = {pk: {}}
 
     expected_result = add_stocks_to_expected_data(
-        expected_result, variant, warehouse_ids, pk
+        expected_result, variant, hotel_ids, pk
     )
 
     assert result == expected_result
 
 
 def test_prepare_variants_relations_data_channel_ids(
-    product_with_single_variant, channel_PLN, channel_USD
+    room_with_single_variant, channel_PLN, channel_USD
 ):
     # given
-    qs = Product.objects.all()
-    variant = product_with_single_variant.variants.first()
+    qs = Room.objects.all()
+    variant = room_with_single_variant.variants.first()
 
     fields = set()
     attribute_ids = []
-    warehouse_ids = []
+    hotel_ids = []
     channel_ids = [str(channel_PLN.pk), str(channel_USD.pk)]
 
     # when
     result = prepare_variants_relations_data(
-        qs, fields, attribute_ids, warehouse_ids, channel_ids
+        qs, fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
@@ -585,93 +585,93 @@ def test_prepare_variants_relations_data_channel_ids(
     assert result == expected_result
 
 
-def test_add_collection_info_to_data(product):
+def test_add_collection_info_to_data(room):
     # given
-    pk = product.pk
+    pk = room.pk
     collection = "test_collection"
     input_data = {pk: {}}
 
     # when
-    result = add_collection_info_to_data(product.pk, collection, input_data)
+    result = add_collection_info_to_data(room.pk, collection, input_data)
 
     # then
     assert result[pk]["collections__slug"] == {collection}
 
 
-def test_add_collection_info_to_data_update_collections(product):
+def test_add_collection_info_to_data_update_collections(room):
     # given
-    pk = product.pk
+    pk = room.pk
     existing_collection = "test2"
     collection = "test_collection"
     input_data = {pk: {"collections__slug": {existing_collection}}}
 
     # when
-    result = add_collection_info_to_data(product.pk, collection, input_data)
+    result = add_collection_info_to_data(room.pk, collection, input_data)
 
     # then
     assert result[pk]["collections__slug"] == {collection, existing_collection}
 
 
-def test_add_collection_info_to_data_no_collection(product):
+def test_add_collection_info_to_data_no_collection(room):
     # given
-    pk = product.pk
+    pk = room.pk
     collection = None
     input_data = {pk: {}}
 
     # when
-    result = add_collection_info_to_data(product.pk, collection, input_data)
+    result = add_collection_info_to_data(room.pk, collection, input_data)
 
     # then
     assert result == input_data
 
 
-def test_add_image_uris_to_data(product):
+def test_add_image_uris_to_data(room):
     # given
-    pk = product.pk
+    pk = room.pk
     image_path = "test/path/image.jpg"
     field = "variant_images"
     input_data = {pk: {}}
 
     # when
-    result = add_image_uris_to_data(product.pk, image_path, field, input_data)
+    result = add_image_uris_to_data(room.pk, image_path, field, input_data)
 
     # then
     assert result[pk][field] == {"http://mirumee.com/media/" + image_path}
 
 
-def test_add_image_uris_to_data_update_images(product):
+def test_add_image_uris_to_data_update_images(room):
     # given
-    pk = product.pk
+    pk = room.pk
     old_path = "http://mirumee.com/media/test/image0.jpg"
     image_path = "test/path/image.jpg"
-    input_data = {pk: {"product_images": {old_path}}}
-    field = "product_images"
+    input_data = {pk: {"room_images": {old_path}}}
+    field = "room_images"
 
     # when
-    result = add_image_uris_to_data(product.pk, image_path, field, input_data)
+    result = add_image_uris_to_data(room.pk, image_path, field, input_data)
 
     # then
     assert result[pk][field] == {"http://mirumee.com/media/" + image_path, old_path}
 
 
-def test_add_image_uris_to_data_no_image_path(product):
+def test_add_image_uris_to_data_no_image_path(room):
     # given
-    pk = product.pk
+    pk = room.pk
     image_path = None
     input_data = {pk: {"name": "test"}}
 
     # when
     result = add_image_uris_to_data(
-        product.pk, image_path, "product_images", input_data
+        room.pk, image_path, "room_images", input_data
     )
 
     # then
     assert result == input_data
 
 
-def test_add_attribute_info_to_data(product):
+def test_add_attribute_info_to_data(room):
     # given
-    pk = product.pk
+    pk = room.pk
     slug = "test_attribute_slug"
     value = "test value"
     attribute_data = AttributeData(
@@ -681,17 +681,17 @@ def test_add_attribute_info_to_data(product):
 
     # when
     result = add_attribute_info_to_data(
-        product.pk, attribute_data, "product attribute", input_data
+        room.pk, attribute_data, "room attribute", input_data
     )
 
     # then
-    expected_header = f"{slug} (product attribute)"
+    expected_header = f"{slug} (room attribute)"
     assert result[pk][expected_header] == {value}
 
 
-def test_add_attribute_info_to_data_update_attribute_data(product):
+def test_add_attribute_info_to_data_update_attribute_data(room):
     # given
-    pk = product.pk
+    pk = room.pk
     slug = "test_attribute_slug"
     value = "test value"
     expected_header = f"{slug} (variant attribute)"
@@ -703,16 +703,16 @@ def test_add_attribute_info_to_data_update_attribute_data(product):
 
     # when
     result = add_attribute_info_to_data(
-        product.pk, attribute_data, "variant attribute", input_data
+        room.pk, attribute_data, "variant attribute", input_data
     )
 
     # then
     assert result[pk][expected_header] == {value, "value1"}
 
 
-def test_add_attribute_info_to_data_no_slug(product):
+def test_add_attribute_info_to_data_no_slug(room):
     # given
-    pk = product.pk
+    pk = room.pk
     attribute_data = AttributeData(
         slug=None, value=None, file_url=None, input_type="dropdown"
     )
@@ -720,16 +720,16 @@ def test_add_attribute_info_to_data_no_slug(product):
 
     # when
     result = add_attribute_info_to_data(
-        product.pk, attribute_data, "variant attribute", input_data
+        room.pk, attribute_data, "variant attribute", input_data
     )
 
     # then
     assert result == input_data
 
 
-def test_add_file_attribute_info_to_data(product):
+def test_add_file_attribute_info_to_data(room):
     # given
-    pk = product.pk
+    pk = room.pk
     slug = "testtxt"
     test_url = "test.txt"
     attribute_data = AttributeData(
@@ -739,19 +739,19 @@ def test_add_file_attribute_info_to_data(product):
 
     # when
     result = add_attribute_info_to_data(
-        product.pk, attribute_data, "product attribute", input_data
+        room.pk, attribute_data, "room attribute", input_data
     )
 
     # then
-    expected_header = f"{slug} (product attribute)"
+    expected_header = f"{slug} (room attribute)"
     assert result[pk][expected_header] == {"http://mirumee.com/media/" + test_url}
 
 
-def test_add_warehouse_info_to_data(product):
+def test_add_hotel_info_to_data(room):
     # given
-    pk = product.pk
-    slug = "test_warehouse"
-    warehouse_data = {
+    pk = room.pk
+    slug = "test_hotel"
+    hotel_data = {
         "slug": slug,
         "qty": 12,
         "qty_alc": 10,
@@ -759,40 +759,40 @@ def test_add_warehouse_info_to_data(product):
     input_data = {pk: {}}
 
     # when
-    result = add_warehouse_info_to_data(product.pk, warehouse_data, input_data)
+    result = add_hotel_info_to_data(room.pk, hotel_data, input_data)
 
     # then
-    expected_header = f"{slug} (warehouse quantity)"
+    expected_header = f"{slug} (hotel quantity)"
     assert result[pk][expected_header] == 12
 
 
-def test_add_warehouse_info_to_data_data_not_changed(product):
+def test_add_hotel_info_to_data_data_not_changed(room):
     # given
-    pk = product.pk
-    slug = "test_warehouse"
-    warehouse_data = {
+    pk = room.pk
+    slug = "test_hotel"
+    hotel_data = {
         "slug": slug,
         "qty": 12,
         "qty_alc": 10,
     }
     input_data = {
         pk: {
-            f"{slug} (warehouse quantity)": 5,
-            f"{slug} (warehouse quantity allocated)": 8,
+            f"{slug} (hotel quantity)": 5,
+            f"{slug} (hotel quantity allocated)": 8,
         }
     }
 
     # when
-    result = add_warehouse_info_to_data(product.pk, warehouse_data, input_data)
+    result = add_hotel_info_to_data(room.pk, hotel_data, input_data)
 
     # then
     assert result == input_data
 
 
-def test_add_warehouse_info_to_data_data_no_slug(product):
+def test_add_hotel_info_to_data_data_no_slug(room):
     # given
-    pk = product.pk
-    warehouse_data = {
+    pk = room.pk
+    hotel_data = {
         "slug": None,
         "qty": None,
         "qty_alc": None,
@@ -800,15 +800,15 @@ def test_add_warehouse_info_to_data_data_no_slug(product):
     input_data = {pk: {}}
 
     # when
-    result = add_warehouse_info_to_data(product.pk, warehouse_data, input_data)
+    result = add_hotel_info_to_data(room.pk, hotel_data, input_data)
 
     # then
     assert result == input_data
 
 
-def test_add_channel_info_to_data(product):
+def test_add_channel_info_to_data(room):
     # given
-    pk = product.pk
+    pk = room.pk
     slug = "test_channel"
     channel_data = {
         "slug": slug,
@@ -819,7 +819,7 @@ def test_add_channel_info_to_data(product):
     fields = ["currency_code", "published"]
 
     # when
-    result = add_channel_info_to_data(product.pk, channel_data, input_data, fields)
+    result = add_channel_info_to_data(room.pk, channel_data, input_data, fields)
 
     # then
     assert len(result[pk]) == 2
@@ -829,9 +829,9 @@ def test_add_channel_info_to_data(product):
     assert result[pk][f"{slug} (channel published)"] == channel_data["published"]
 
 
-def test_add_channel_info_to_data_not_changed(product):
+def test_add_channel_info_to_data_not_changed(room):
     # given
-    pk = product.pk
+    pk = room.pk
     slug = "test_channel"
     channel_data = {
         "slug": slug,
@@ -847,15 +847,15 @@ def test_add_channel_info_to_data_not_changed(product):
     fields = ["currency_code", "published"]
 
     # when
-    result = add_channel_info_to_data(product.pk, channel_data, input_data, fields)
+    result = add_channel_info_to_data(room.pk, channel_data, input_data, fields)
 
     # then
     assert result == input_data
 
 
-def test_add_channel_info_to_data_no_slug(product):
+def test_add_channel_info_to_data_no_slug(room):
     # given
-    pk = product.pk
+    pk = room.pk
     channel_data = {
         "slug": None,
         "currency_code": None,
@@ -865,7 +865,7 @@ def test_add_channel_info_to_data_no_slug(product):
     fields = ["currency_code"]
 
     # when
-    result = add_channel_info_to_data(product.pk, channel_data, input_data, fields)
+    result = add_channel_info_to_data(room.pk, channel_data, input_data, fields)
 
     # then
     assert result == input_data

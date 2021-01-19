@@ -85,11 +85,11 @@ def test_vouchers_query_without_channel_slug(
     )
 
 
-EXCLUDE_PRODUCTS_MUTATION = """
-    mutation shippingPriceRemoveProductFromExclude(
-        $id: ID!, $input:ShippingPriceExcludeProductsInput!
+EXCLUDE_ROOMS_MUTATION = """
+    mutation shippingPriceRemoveRoomFromExclude(
+        $id: ID!, $input:ShippingPriceExcludeRoomsInput!
         ) {
-        shippingPriceExcludeProducts(
+        shippingPriceExcludeRooms(
             id: $id
             input: $input) {
             shippingErrors {
@@ -98,7 +98,7 @@ EXCLUDE_PRODUCTS_MUTATION = """
             }
             shippingMethod {
                 id
-                excludedProducts(first:10){
+                excludedRooms(first:10){
                    totalCount
                    edges{
                      node{
@@ -114,23 +114,23 @@ EXCLUDE_PRODUCTS_MUTATION = """
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_exclude_products_for_shipping_method(
+def test_exclude_rooms_for_shipping_method(
     shipping_method,
     published_collection,
-    product_list_published,
-    product_list,
-    categories_tree_with_published_products,
+    room_list_published,
+    room_list,
+    categories_tree_with_published_rooms,
     collection,
     staff_api_client,
     permission_manage_shipping,
 ):
-    # product_list has products with slugs slug:test-product-a, slug:test-product-b,
-    # slug:test-product-c
-    product_db_ids = [p.pk for p in product_list]
-    product_ids = [graphene.Node.to_global_id("Product", p) for p in product_db_ids]
+    # room_list has rooms with slugs slug:test-room-a, slug:test-room-b,
+    # slug:test-room-c
+    room_db_ids = [p.pk for p in room_list]
+    room_ids = [graphene.Node.to_global_id("Room", p) for p in room_db_ids]
 
-    expected_product_ids = [
-        graphene.Node.to_global_id("Product", p.pk) for p in product_list
+    expected_room_ids = [
+        graphene.Node.to_global_id("Room", p.pk) for p in room_list
     ]
 
     shipping_method_id = graphene.Node.to_global_id(
@@ -138,65 +138,65 @@ def test_exclude_products_for_shipping_method(
     )
     variables = {
         "id": shipping_method_id,
-        "input": {"products": product_ids},
+        "input": {"rooms": room_ids},
     }
 
     response = staff_api_client.post_graphql(
-        EXCLUDE_PRODUCTS_MUTATION, variables, permissions=[permission_manage_shipping]
+        EXCLUDE_ROOMS_MUTATION, variables, permissions=[permission_manage_shipping]
     )
 
     content = get_graphql_content(response)
-    shipping_method = content["data"]["shippingPriceExcludeProducts"]["shippingMethod"]
-    excluded_products = shipping_method["excludedProducts"]
-    total_count = excluded_products["totalCount"]
-    excluded_product_ids = {p["node"]["id"] for p in excluded_products["edges"]}
-    assert len(expected_product_ids) == total_count == 3
-    assert excluded_product_ids == set(expected_product_ids)
+    shipping_method = content["data"]["shippingPriceExcludeRooms"]["shippingMethod"]
+    excluded_rooms = shipping_method["excludedRooms"]
+    total_count = excluded_rooms["totalCount"]
+    excluded_room_ids = {p["node"]["id"] for p in excluded_rooms["edges"]}
+    assert len(expected_room_ids) == total_count == 3
+    assert excluded_room_ids == set(expected_room_ids)
 
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_exclude_products_for_shipping_method_already_has_excluded_products(
+def test_exclude_rooms_for_shipping_method_already_has_excluded_rooms(
     shipping_method,
-    product_list,
-    product,
+    room_list,
+    room,
     staff_api_client,
     permission_manage_shipping,
 ):
     shipping_method_id = graphene.Node.to_global_id(
         "ShippingMethod", shipping_method.pk
     )
-    shipping_method.excluded_products.add(product, product_list[0])
-    product_ids = [graphene.Node.to_global_id("Product", p.pk) for p in product_list]
-    variables = {"id": shipping_method_id, "input": {"products": product_ids}}
+    shipping_method.excluded_rooms.add(room, room_list[0])
+    room_ids = [graphene.Node.to_global_id("Room", p.pk) for p in room_list]
+    variables = {"id": shipping_method_id, "input": {"rooms": room_ids}}
     response = staff_api_client.post_graphql(
-        EXCLUDE_PRODUCTS_MUTATION, variables, permissions=[permission_manage_shipping]
+        EXCLUDE_ROOMS_MUTATION, variables, permissions=[permission_manage_shipping]
     )
     content = get_graphql_content(response)
-    shipping_method = content["data"]["shippingPriceExcludeProducts"]["shippingMethod"]
-    excluded_products = shipping_method["excludedProducts"]
-    total_count = excluded_products["totalCount"]
-    expected_product_ids = product_ids
-    expected_product_ids.append(graphene.Node.to_global_id("Product", product.pk))
-    excluded_product_ids = {p["node"]["id"] for p in excluded_products["edges"]}
-    assert len(expected_product_ids) == total_count
-    assert excluded_product_ids == set(expected_product_ids)
+    shipping_method = content["data"]["shippingPriceExcludeRooms"]["shippingMethod"]
+    excluded_rooms = shipping_method["excludedRooms"]
+    total_count = excluded_rooms["totalCount"]
+    expected_room_ids = room_ids
+    expected_room_ids.append(graphene.Node.to_global_id("Room", room.pk))
+    excluded_room_ids = {p["node"]["id"] for p in excluded_rooms["edges"]}
+    assert len(expected_room_ids) == total_count
+    assert excluded_room_ids == set(expected_room_ids)
 
 
-REMOVE_PRODUCTS_FROM_EXCLUDED_PRODUCTS_MUTATION = """
-    mutation shippingPriceRemoveProductFromExclude(
-        $id: ID!, $products: [ID]!
+REMOVE_ROOMS_FROM_EXCLUDED_ROOMS_MUTATION = """
+    mutation shippingPriceRemoveRoomFromExclude(
+        $id: ID!, $rooms: [ID]!
         ) {
-        shippingPriceRemoveProductFromExclude(
+        shippingPriceRemoveRoomFromExclude(
             id: $id
-            products: $products) {
+            rooms: $rooms) {
             shippingErrors {
                 field
                 code
             }
             shippingMethod {
                 id
-                excludedProducts(first:10){
+                excludedRooms(first:10){
                    totalCount
                    edges{
                      node{
@@ -212,38 +212,38 @@ REMOVE_PRODUCTS_FROM_EXCLUDED_PRODUCTS_MUTATION = """
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_remove_products_from_excluded_products_for_shipping_method(
+def test_remove_rooms_from_excluded_rooms_for_shipping_method(
     shipping_method,
-    product_list,
+    room_list,
     staff_api_client,
     permission_manage_shipping,
-    product,
+    room,
 ):
     shipping_method_id = graphene.Node.to_global_id(
         "ShippingMethod", shipping_method.pk
     )
-    shipping_method.excluded_products.set(product_list)
-    shipping_method.excluded_products.add(product)
+    shipping_method.excluded_rooms.set(room_list)
+    shipping_method.excluded_rooms.add(room)
 
-    product_ids = [
-        graphene.Node.to_global_id("Product", product.pk),
+    room_ids = [
+        graphene.Node.to_global_id("Room", room.pk),
     ]
-    variables = {"id": shipping_method_id, "products": product_ids}
+    variables = {"id": shipping_method_id, "rooms": room_ids}
     response = staff_api_client.post_graphql(
-        REMOVE_PRODUCTS_FROM_EXCLUDED_PRODUCTS_MUTATION,
+        REMOVE_ROOMS_FROM_EXCLUDED_ROOMS_MUTATION,
         variables,
         permissions=[permission_manage_shipping],
     )
 
     content = get_graphql_content(response)
-    shipping_method = content["data"]["shippingPriceRemoveProductFromExclude"][
+    shipping_method = content["data"]["shippingPriceRemoveRoomFromExclude"][
         "shippingMethod"
     ]
-    excluded_products = shipping_method["excludedProducts"]
-    total_count = excluded_products["totalCount"]
-    expected_product_ids = {
-        graphene.Node.to_global_id("Product", p.pk) for p in product_list
+    excluded_rooms = shipping_method["excludedRooms"]
+    total_count = excluded_rooms["totalCount"]
+    expected_room_ids = {
+        graphene.Node.to_global_id("Room", p.pk) for p in room_list
     }
-    excluded_product_ids = {p["node"]["id"] for p in excluded_products["edges"]}
-    assert total_count == len(expected_product_ids)
-    assert excluded_product_ids == expected_product_ids
+    excluded_room_ids = {p["node"]["id"] for p in excluded_rooms["edges"]}
+    assert total_count == len(expected_room_ids)
+    assert excluded_room_ids == expected_room_ids

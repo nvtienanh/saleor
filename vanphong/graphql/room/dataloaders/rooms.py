@@ -3,22 +3,22 @@ from typing import DefaultDict, Dict, Iterable, List, Optional, Tuple
 
 from django.db.models import F
 
-from ....product.models import (
+from ....room.models import (
     Category,
     Collection,
     CollectionChannelListing,
-    CollectionProduct,
-    Product,
-    ProductChannelListing,
-    ProductImage,
-    ProductType,
-    ProductVariant,
-    ProductVariantChannelListing,
+    CollectionRoom,
+    Room,
+    RoomChannelListing,
+    RoomImage,
+    RoomType,
+    RoomVariant,
+    RoomVariantChannelListing,
     VariantImage,
 )
 from ...core.dataloaders import DataLoader
 
-ProductIdAndChannelSlug = Tuple[int, str]
+RoomIdAndChannelSlug = Tuple[int, str]
 VariantIdAndChannelSlug = Tuple[int, str]
 
 
@@ -30,155 +30,155 @@ class CategoryByIdLoader(DataLoader):
         return [categories.get(category_id) for category_id in keys]
 
 
-class ProductByIdLoader(DataLoader):
-    context_key = "product_by_id"
+class RoomByIdLoader(DataLoader):
+    context_key = "room_by_id"
 
     def batch_load(self, keys):
-        products = Product.objects.all().in_bulk(keys)
-        return [products.get(product_id) for product_id in keys]
+        rooms = Room.objects.all().in_bulk(keys)
+        return [rooms.get(room_id) for room_id in keys]
 
 
-class ProductByVariantIdLoader(DataLoader):
-    context_key = "product_by_variant_id"
+class RoomByVariantIdLoader(DataLoader):
+    context_key = "room_by_variant_id"
 
     def batch_load(self, keys):
         def with_variants(variants):
-            product_ids = [variant.product_id for variant in variants]
-            return ProductByIdLoader(self.context).load_many(product_ids)
+            room_ids = [variant.room_id for variant in variants]
+            return RoomByIdLoader(self.context).load_many(room_ids)
 
         return (
-            ProductVariantByIdLoader(self.context).load_many(keys).then(with_variants)
+            RoomVariantByIdLoader(self.context).load_many(keys).then(with_variants)
         )
 
 
-class ProductChannelListingByIdLoader(DataLoader[int, ProductChannelListing]):
-    context_key = "productchannelisting_by_id"
+class RoomChannelListingByIdLoader(DataLoader[int, RoomChannelListing]):
+    context_key = "roomchannelisting_by_id"
 
     def batch_load(self, keys):
-        product_channel_listings = ProductChannelListing.objects.in_bulk(keys)
-        return [product_channel_listings.get(key) for key in keys]
+        room_channel_listings = RoomChannelListing.objects.in_bulk(keys)
+        return [room_channel_listings.get(key) for key in keys]
 
 
-class ProductChannelListingByProductIdLoader(DataLoader[int, ProductChannelListing]):
-    context_key = "productchannelisting_by_product"
+class RoomChannelListingByRoomIdLoader(DataLoader[int, RoomChannelListing]):
+    context_key = "roomchannelisting_by_room"
 
     def batch_load(self, keys):
-        product_channel_listings = ProductChannelListing.objects.filter(
-            product_id__in=keys
+        room_channel_listings = RoomChannelListing.objects.filter(
+            room_id__in=keys
         )
-        product_id_variant_channel_listings_map = defaultdict(list)
-        for product_channel_listing in product_channel_listings:
-            product_id_variant_channel_listings_map[
-                product_channel_listing.product_id
-            ].append(product_channel_listing)
+        room_id_variant_channel_listings_map = defaultdict(list)
+        for room_channel_listing in room_channel_listings:
+            room_id_variant_channel_listings_map[
+                room_channel_listing.room_id
+            ].append(room_channel_listing)
         return [
-            product_id_variant_channel_listings_map.get(product_id, [])
-            for product_id in keys
+            room_id_variant_channel_listings_map.get(room_id, [])
+            for room_id in keys
         ]
 
 
-class ProductChannelListingByProductIdAndChannelSlugLoader(
-    DataLoader[ProductIdAndChannelSlug, ProductChannelListing]
+class RoomChannelListingByRoomIdAndChannelSlugLoader(
+    DataLoader[RoomIdAndChannelSlug, RoomChannelListing]
 ):
-    context_key = "productchannelisting_by_product_and_channel"
+    context_key = "roomchannelisting_by_room_and_channel"
 
     def batch_load(self, keys):
         # Split the list of keys by channel first. A typical query will only touch
-        # a handful of unique countries but may access thousands of product variants
+        # a handful of unique countries but may access thousands of room variants
         # so it's cheaper to execute one query per channel.
-        product_channel_listing_by_channel: DefaultDict[str, List[int]] = defaultdict(
+        room_channel_listing_by_channel: DefaultDict[str, List[int]] = defaultdict(
             list
         )
-        for product_id, channel_slug in keys:
-            product_channel_listing_by_channel[channel_slug].append(product_id)
+        for room_id, channel_slug in keys:
+            room_channel_listing_by_channel[channel_slug].append(room_id)
 
-        # For each channel execute a single query for all products.
-        product_channel_listing_by_product_and_channel: DefaultDict[
-            ProductIdAndChannelSlug, Optional[ProductChannelListing]
+        # For each channel execute a single query for all rooms.
+        room_channel_listing_by_room_and_channel: DefaultDict[
+            RoomIdAndChannelSlug, Optional[RoomChannelListing]
         ] = defaultdict()
-        for channel_slug, product_ids in product_channel_listing_by_channel.items():
-            product_channel_listings = self.batch_load_channel(
-                channel_slug, product_ids
+        for channel_slug, room_ids in room_channel_listing_by_channel.items():
+            room_channel_listings = self.batch_load_channel(
+                channel_slug, room_ids
             )
-            for product_id, product_channel_listing in product_channel_listings:
-                product_channel_listing_by_product_and_channel[
-                    (product_id, channel_slug)
-                ] = product_channel_listing
+            for room_id, room_channel_listing in room_channel_listings:
+                room_channel_listing_by_room_and_channel[
+                    (room_id, channel_slug)
+                ] = room_channel_listing
 
-        return [product_channel_listing_by_product_and_channel[key] for key in keys]
+        return [room_channel_listing_by_room_and_channel[key] for key in keys]
 
     def batch_load_channel(
-        self, channel_slug: str, products_ids: Iterable[int]
-    ) -> Iterable[Tuple[int, Optional[ProductChannelListing]]]:
-        product_channel_listings = ProductChannelListing.objects.filter(
-            channel__slug=channel_slug, product_id__in=products_ids
+        self, channel_slug: str, rooms_ids: Iterable[int]
+    ) -> Iterable[Tuple[int, Optional[RoomChannelListing]]]:
+        room_channel_listings = RoomChannelListing.objects.filter(
+            channel__slug=channel_slug, room_id__in=rooms_ids
         )
 
-        product_channel_listings_map: Dict[int, ProductChannelListing] = {}
-        for product_channel_listing in product_channel_listings.iterator():
-            product_channel_listings_map[
-                product_channel_listing.product_id
-            ] = product_channel_listing
+        room_channel_listings_map: Dict[int, RoomChannelListing] = {}
+        for room_channel_listing in room_channel_listings.iterator():
+            room_channel_listings_map[
+                room_channel_listing.room_id
+            ] = room_channel_listing
 
         return [
-            (products_id, product_channel_listings_map.get(products_id))
-            for products_id in products_ids
+            (rooms_id, room_channel_listings_map.get(rooms_id))
+            for rooms_id in rooms_ids
         ]
 
 
-class ProductTypeByIdLoader(DataLoader):
-    context_key = "product_type_by_id"
+class RoomTypeByIdLoader(DataLoader):
+    context_key = "room_type_by_id"
 
     def batch_load(self, keys):
-        product_types = ProductType.objects.in_bulk(keys)
-        return [product_types.get(product_type_id) for product_type_id in keys]
+        room_types = RoomType.objects.in_bulk(keys)
+        return [room_types.get(room_type_id) for room_type_id in keys]
 
 
-class ImagesByProductIdLoader(DataLoader):
-    context_key = "images_by_product"
+class ImagesByRoomIdLoader(DataLoader):
+    context_key = "images_by_room"
 
     def batch_load(self, keys):
-        images = ProductImage.objects.filter(product_id__in=keys)
+        images = RoomImage.objects.filter(room_id__in=keys)
         image_map = defaultdict(list)
         for image in images:
-            image_map[image.product_id].append(image)
-        return [image_map[product_id] for product_id in keys]
+            image_map[image.room_id].append(image)
+        return [image_map[room_id] for room_id in keys]
 
 
-class ProductVariantByIdLoader(DataLoader):
-    context_key = "productvariant_by_id"
+class RoomVariantByIdLoader(DataLoader):
+    context_key = "roomvariant_by_id"
 
     def batch_load(self, keys):
-        variants = ProductVariant.objects.in_bulk(keys)
+        variants = RoomVariant.objects.in_bulk(keys)
         return [variants.get(key) for key in keys]
 
 
-class ProductVariantsByProductIdLoader(DataLoader):
-    context_key = "productvariants_by_product"
+class RoomVariantsByRoomIdLoader(DataLoader):
+    context_key = "roomvariants_by_room"
 
     def batch_load(self, keys):
-        variants = ProductVariant.objects.filter(product_id__in=keys)
+        variants = RoomVariant.objects.filter(room_id__in=keys)
         variant_map = defaultdict(list)
-        variant_loader = ProductVariantByIdLoader(self.context)
+        variant_loader = RoomVariantByIdLoader(self.context)
         for variant in variants.iterator():
-            variant_map[variant.product_id].append(variant)
+            variant_map[variant.room_id].append(variant)
             variant_loader.prime(variant.id, variant)
-        return [variant_map.get(product_id, []) for product_id in keys]
+        return [variant_map.get(room_id, []) for room_id in keys]
 
 
-class ProductVariantChannelListingByIdLoader(DataLoader):
-    context_key = "productvariantchannelisting_by_id"
+class RoomVariantChannelListingByIdLoader(DataLoader):
+    context_key = "roomvariantchannelisting_by_id"
 
     def batch_load(self, keys):
-        variants = ProductVariantChannelListing.objects.in_bulk(keys)
+        variants = RoomVariantChannelListing.objects.in_bulk(keys)
         return [variants.get(key) for key in keys]
 
 
 class VariantChannelListingByVariantIdLoader(DataLoader):
-    context_key = "productvariantchannelisting_by_productvariant"
+    context_key = "roomvariantchannelisting_by_roomvariant"
 
     def batch_load(self, keys):
-        variant_channel_listings = ProductVariantChannelListing.objects.filter(
+        variant_channel_listings = RoomVariantChannelListing.objects.filter(
             variant_id__in=keys
         )
         variant_id_variant_channel_listings_map = defaultdict(list)
@@ -193,13 +193,13 @@ class VariantChannelListingByVariantIdLoader(DataLoader):
 
 
 class VariantChannelListingByVariantIdAndChannelSlugLoader(
-    DataLoader[VariantIdAndChannelSlug, ProductVariantChannelListing]
+    DataLoader[VariantIdAndChannelSlug, RoomVariantChannelListing]
 ):
     context_key = "variantchannelisting_by_variant_and_channel"
 
     def batch_load(self, keys):
         # Split the list of keys by channel first. A typical query will only touch
-        # a handful of unique countries but may access thousands of product variants
+        # a handful of unique countries but may access thousands of room variants
         # so it's cheaper to execute one query per channel.
         variant_channel_listing_by_channel: DefaultDict[str, List[int]] = defaultdict(
             list
@@ -207,9 +207,9 @@ class VariantChannelListingByVariantIdAndChannelSlugLoader(
         for variant_id, channel_slug in keys:
             variant_channel_listing_by_channel[channel_slug].append(variant_id)
 
-        # For each channel execute a single query for all product variants.
+        # For each channel execute a single query for all room variants.
         variant_channel_listing_by_variant_and_channel: DefaultDict[
-            VariantIdAndChannelSlug, Optional[ProductVariantChannelListing]
+            VariantIdAndChannelSlug, Optional[RoomVariantChannelListing]
         ] = defaultdict()
         for channel_slug, variant_ids in variant_channel_listing_by_channel.items():
             variant_channel_listings = self.batch_load_channel(
@@ -224,12 +224,12 @@ class VariantChannelListingByVariantIdAndChannelSlugLoader(
 
     def batch_load_channel(
         self, channel_slug: str, variant_ids: Iterable[int]
-    ) -> Iterable[Tuple[int, Optional[ProductVariantChannelListing]]]:
-        variant_channel_listings = ProductVariantChannelListing.objects.filter(
+    ) -> Iterable[Tuple[int, Optional[RoomVariantChannelListing]]]:
+        variant_channel_listings = RoomVariantChannelListing.objects.filter(
             channel__slug=channel_slug, variant_id__in=variant_ids
         )
 
-        variant_channel_listings_map: Dict[int, ProductVariantChannelListing] = {}
+        variant_channel_listings_map: Dict[int, RoomVariantChannelListing] = {}
         for variant_channel_listing in variant_channel_listings.iterator():
             variant_channel_listings_map[
                 variant_channel_listing.variant_id
@@ -241,69 +241,69 @@ class VariantChannelListingByVariantIdAndChannelSlugLoader(
         ]
 
 
-class VariantsChannelListingByProductIdAndChanneSlugLoader(
-    DataLoader[ProductIdAndChannelSlug, Iterable[ProductVariantChannelListing]]
+class VariantsChannelListingByRoomIdAndChanneSlugLoader(
+    DataLoader[RoomIdAndChannelSlug, Iterable[RoomVariantChannelListing]]
 ):
-    context_key = "variantschannelisting_by_product_and_channel"
+    context_key = "variantschannelisting_by_room_and_channel"
 
     def batch_load(self, keys):
         # Split the list of keys by channel first. A typical query will only touch
-        # a handful of unique countries but may access thousands of product variants
+        # a handful of unique countries but may access thousands of room variants
         # so it's cheaper to execute one query per channel.
         variant_channel_listing_by_channel: DefaultDict[str, List[int]] = defaultdict(
             list
         )
-        for product_id, channel_slug in keys:
-            variant_channel_listing_by_channel[channel_slug].append(product_id)
+        for room_id, channel_slug in keys:
+            variant_channel_listing_by_channel[channel_slug].append(room_id)
 
-        # For each channel execute a single query for all product variants.
-        variant_channel_listing_by_product_and_channel: DefaultDict[
-            ProductIdAndChannelSlug, Optional[Iterable[ProductVariantChannelListing]]
+        # For each channel execute a single query for all room variants.
+        variant_channel_listing_by_room_and_channel: DefaultDict[
+            RoomIdAndChannelSlug, Optional[Iterable[RoomVariantChannelListing]]
         ] = defaultdict()
-        for channel_slug, product_ids in variant_channel_listing_by_channel.items():
+        for channel_slug, room_ids in variant_channel_listing_by_channel.items():
             varaint_channel_listings = self.batch_load_channel(
-                channel_slug, product_ids
+                channel_slug, room_ids
             )
-            for product_id, variants_channel_listing in varaint_channel_listings:
-                variant_channel_listing_by_product_and_channel[
-                    (product_id, channel_slug)
+            for room_id, variants_channel_listing in varaint_channel_listings:
+                variant_channel_listing_by_room_and_channel[
+                    (room_id, channel_slug)
                 ] = variants_channel_listing
 
         return [
-            variant_channel_listing_by_product_and_channel.get(key, []) for key in keys
+            variant_channel_listing_by_room_and_channel.get(key, []) for key in keys
         ]
 
     def batch_load_channel(
-        self, channel_slug: str, products_ids: Iterable[int]
-    ) -> Iterable[Tuple[int, Optional[List[ProductVariantChannelListing]]]]:
-        variants_channel_listings = ProductVariantChannelListing.objects.filter(
-            channel__slug=channel_slug, variant__product_id__in=products_ids
-        ).annotate(product_id=F("variant__product_id"))
+        self, channel_slug: str, rooms_ids: Iterable[int]
+    ) -> Iterable[Tuple[int, Optional[List[RoomVariantChannelListing]]]]:
+        variants_channel_listings = RoomVariantChannelListing.objects.filter(
+            channel__slug=channel_slug, variant__room_id__in=rooms_ids
+        ).annotate(room_id=F("variant__room_id"))
 
         variants_channel_listings_map: Dict[
-            int, List[ProductVariantChannelListing]
+            int, List[RoomVariantChannelListing]
         ] = defaultdict(list)
         for variant_channel_listing in variants_channel_listings.iterator():
-            variants_channel_listings_map[variant_channel_listing.product_id].append(
+            variants_channel_listings_map[variant_channel_listing.room_id].append(
                 variant_channel_listing
             )
 
         return [
-            (products_id, variants_channel_listings_map.get(products_id, []))
-            for products_id in products_ids
+            (rooms_id, variants_channel_listings_map.get(rooms_id, []))
+            for rooms_id in rooms_ids
         ]
 
 
-class ProductImageByIdLoader(DataLoader):
-    context_key = "product_image_by_id"
+class RoomImageByIdLoader(DataLoader):
+    context_key = "room_image_by_id"
 
     def batch_load(self, keys):
-        product_images = ProductImage.objects.in_bulk(keys)
-        return [product_images.get(product_image_id) for product_image_id in keys]
+        room_images = RoomImage.objects.in_bulk(keys)
+        return [room_images.get(room_image_id) for room_image_id in keys]
 
 
-class ImagesByProductVariantIdLoader(DataLoader):
-    context_key = "images_by_product_variant"
+class ImagesByRoomVariantIdLoader(DataLoader):
+    context_key = "images_by_room_variant"
 
     def batch_load(self, keys):
         variant_images = VariantImage.objects.filter(variant_id__in=keys).values_list(
@@ -322,7 +322,7 @@ class ImagesByProductVariantIdLoader(DataLoader):
             ]
 
         return (
-            ProductImageByIdLoader(self.context)
+            RoomImageByIdLoader(self.context)
             .load_many(set(image_id for variant_id, image_id in variant_images))
             .then(map_variant_images)
         )
@@ -336,29 +336,29 @@ class CollectionByIdLoader(DataLoader):
         return [collections.get(collection_id) for collection_id in keys]
 
 
-class CollectionsByProductIdLoader(DataLoader):
-    context_key = "collections_by_product"
+class CollectionsByRoomIdLoader(DataLoader):
+    context_key = "collections_by_room"
 
     def batch_load(self, keys):
-        product_collection_pairs = list(
-            CollectionProduct.objects.filter(product_id__in=keys)
+        room_collection_pairs = list(
+            CollectionRoom.objects.filter(room_id__in=keys)
             .order_by("id")
-            .values_list("product_id", "collection_id")
+            .values_list("room_id", "collection_id")
         )
-        product_collection_map = defaultdict(list)
-        for pid, cid in product_collection_pairs:
-            product_collection_map[pid].append(cid)
+        room_collection_map = defaultdict(list)
+        for pid, cid in room_collection_pairs:
+            room_collection_map[pid].append(cid)
 
         def map_collections(collections):
             collection_map = {c.id: c for c in collections}
             return [
-                [collection_map[cid] for cid in product_collection_map[pid]]
+                [collection_map[cid] for cid in room_collection_map[pid]]
                 for pid in keys
             ]
 
         return (
             CollectionByIdLoader(self.context)
-            .load_many(set(cid for pid, cid in product_collection_pairs))
+            .load_many(set(cid for pid, cid in room_collection_pairs))
             .then(map_collections)
         )
 
@@ -368,38 +368,38 @@ class CollectionsByVariantIdLoader(DataLoader):
 
     def batch_load(self, keys):
         def with_variants(variants):
-            product_ids = [variant.product_id for variant in variants]
-            return CollectionsByProductIdLoader(self.context).load_many(product_ids)
+            room_ids = [variant.room_id for variant in variants]
+            return CollectionsByRoomIdLoader(self.context).load_many(room_ids)
 
         return (
-            ProductVariantByIdLoader(self.context).load_many(keys).then(with_variants)
+            RoomVariantByIdLoader(self.context).load_many(keys).then(with_variants)
         )
 
 
-class ProductTypeByProductIdLoader(DataLoader):
-    context_key = "producttype_by_product_id"
+class RoomTypeByRoomIdLoader(DataLoader):
+    context_key = "roomtype_by_room_id"
 
     def batch_load(self, keys):
-        def with_products(products):
-            product_ids = {p.id for p in products}
-            product_types_map = ProductType.objects.filter(
-                products__in=product_ids
+        def with_rooms(rooms):
+            room_ids = {p.id for p in rooms}
+            room_types_map = RoomType.objects.filter(
+                rooms__in=room_ids
             ).in_bulk()
-            return [product_types_map[product.product_type_id] for product in products]
+            return [room_types_map[room.room_type_id] for room in rooms]
 
-        return ProductByIdLoader(self.context).load_many(keys).then(with_products)
+        return RoomByIdLoader(self.context).load_many(keys).then(with_rooms)
 
 
-class ProductTypeByVariantIdLoader(DataLoader):
-    context_key = "producttype_by_variant_id"
+class RoomTypeByVariantIdLoader(DataLoader):
+    context_key = "roomtype_by_variant_id"
 
     def batch_load(self, keys):
         def with_variants(variants):
-            product_ids = [v.product_id for v in variants]
-            return ProductTypeByProductIdLoader(self.context).load_many(product_ids)
+            room_ids = [v.room_id for v in variants]
+            return RoomTypeByRoomIdLoader(self.context).load_many(room_ids)
 
         return (
-            ProductVariantByIdLoader(self.context).load_many(keys).then(with_variants)
+            RoomVariantByIdLoader(self.context).load_many(keys).then(with_variants)
         )
 
 

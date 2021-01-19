@@ -7,21 +7,21 @@ from ...core.db.fields import SanitizedJSONField
 from ...core.utils.draftjs import json_content_to_raw_text
 
 
-def convert_products_html_to_json(apps, schema_editor):
-    Product = apps.get_model("product", "Product")
-    qs = Product.objects.all()
+def convert_rooms_html_to_json(apps, schema_editor):
+    Room = apps.get_model("room", "Room")
+    qs = Room.objects.all()
 
-    for product in qs:
-        description_json = product.description_json
+    for room in qs:
+        description_json = room.description_json
         description_raw = json_content_to_raw_text(description_json)
 
         # Override the JSON description if there was nothing in it
         if not description_raw.strip():
-            product.description_json = html_to_draftjs(product.description)
-            product.save(update_fields=["description_json"])
+            room.description_json = html_to_draftjs(room.description)
+            room.save(update_fields=["description_json"])
 
-    ProductTranslation = apps.get_model("product", "ProductTranslation")
-    qs = ProductTranslation.objects.all()
+    RoomTranslation = apps.get_model("room", "RoomTranslation")
+    qs = RoomTranslation.objects.all()
 
     for translation in qs:
         description_json = translation.description_json
@@ -34,37 +34,37 @@ def convert_products_html_to_json(apps, schema_editor):
 
 
 def sanitize_descriptions_json(apps, schema_editor):
-    Product = apps.get_model("product", "Product")
-    qs = Product.objects.all()
+    Room = apps.get_model("room", "Room")
+    qs = Room.objects.all()
 
-    for product in qs:
-        product.description_json = clean_draft_js(product.description_json)
-        product.save(update_fields=["description_json"])
+    for room in qs:
+        room.description_json = clean_draft_js(room.description_json)
+        room.save(update_fields=["description_json"])
 
-    ProductTranslation = apps.get_model("product", "ProductTranslation")
-    qs = ProductTranslation.objects.all()
+    RoomTranslation = apps.get_model("room", "RoomTranslation")
+    qs = RoomTranslation.objects.all()
 
-    for product in qs:
-        product.description_json = clean_draft_js(product.description_json)
-        product.save(update_fields=["description_json"])
+    for room in qs:
+        room.description_json = clean_draft_js(room.description_json)
+        room.save(update_fields=["description_json"])
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0095_auto_20190618_0842")]
+    dependencies = [("room", "0095_auto_20190618_0842")]
 
     operations = [
-        migrations.RunPython(convert_products_html_to_json),
+        migrations.RunPython(convert_rooms_html_to_json),
         migrations.RunPython(sanitize_descriptions_json),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="description_json",
             field=SanitizedJSONField(
                 blank=True, default=dict, sanitizer=clean_draft_js
             ),
         ),
         migrations.AlterField(
-            model_name="producttranslation",
+            model_name="roomtranslation",
             name="description_json",
             field=SanitizedJSONField(
                 blank=True, default=dict, sanitizer=clean_draft_js

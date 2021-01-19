@@ -12,24 +12,24 @@ from ....attribute.utils import associate_attribute_values_to_instance
 from ....core.weight import WeightUnits
 from ....order import OrderStatus
 from ....order.models import OrderLine
-from ....product.error_codes import ProductErrorCode
-from ....product.models import Product, ProductChannelListing, ProductVariant
-from ....warehouse.error_codes import StockErrorCode
-from ....warehouse.models import Stock, Warehouse
+from ....room.error_codes import RoomErrorCode
+from ....room.models import Room, RoomChannelListing, RoomVariant
+from ....hotel.error_codes import StockErrorCode
+from ....hotel.models import Stock, Hotel
 from ...core.enums import WeightUnitsEnum
 from ...tests.utils import assert_no_permission, get_graphql_content
 
 
 def test_fetch_variant(
     staff_api_client,
-    product,
-    permission_manage_products,
+    room,
+    permission_manage_rooms,
     site_settings,
     channel_USD,
 ):
     query = """
-    query ProductVariantDetails($id: ID!, $countyCode: CountryCode, $channel: String) {
-        productVariant(id: $id, channel: $channel) {
+    query RoomVariantDetails($id: ID!, $countyCode: CountryCode, $channel: String) {
+        roomVariant(id: $id, channel: $channel) {
             id
             stocks(countryCode: $countyCode) {
                 id
@@ -72,7 +72,7 @@ def test_fetch_variant(
                     amount
                 }
             }
-            product {
+            room {
                 id
             }
             weight {
@@ -83,23 +83,23 @@ def test_fetch_variant(
     }
     """
     # given
-    variant = product.variants.first()
+    variant = room.variants.first()
     variant.weight = Weight(kg=10)
     variant.save(update_fields=["weight"])
 
     site_settings.default_weight_unit = WeightUnits.GRAM
     site_settings.save(update_fields=["default_weight_unit"])
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "countyCode": "EU", "channel": channel_USD.slug}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
 
     # when
     response = staff_api_client.post_graphql(query, variables)
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     assert data["name"] == variant.name
     assert len(data["stocks"]) == variant.stocks.count()
     assert data["weight"]["value"] == 10000
@@ -115,9 +115,9 @@ def test_fetch_variant(
     )
 
 
-QUERY_PRODUCT_VARIANT_CHANNEL_LISTING = """
-    query ProductVariantDetails($id: ID!, $channel: String) {
-        productVariant(id: $id, channel: $channel) {
+QUERY_ROOM_VARIANT_CHANNEL_LISTING = """
+    query RoomVariantDetails($id: ID!, $channel: String) {
+        roomVariant(id: $id, channel: $channel) {
             id
             channelListings {
                 channel {
@@ -137,27 +137,27 @@ QUERY_PRODUCT_VARIANT_CHANNEL_LISTING = """
 """
 
 
-def test_get_product_variant_channel_listing_as_staff_user(
+def test_get_room_variant_channel_listing_as_staff_user(
     staff_api_client,
-    product_available_in_many_channels,
-    permission_manage_products,
+    room_available_in_many_channels,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    variant = product_available_in_many_channels.variants.get()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = room_available_in_many_channels.variants.get()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "channel": channel_USD.slug}
 
     # when
     response = staff_api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_CHANNEL_LISTING,
+        QUERY_ROOM_VARIANT_CHANNEL_LISTING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
     # then
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     channel_listings = variant.channel_listings.all()
     for channel_listing in channel_listings:
         assert {
@@ -174,27 +174,27 @@ def test_get_product_variant_channel_listing_as_staff_user(
     assert len(data["channelListings"]) == variant.channel_listings.count()
 
 
-def test_get_product_variant_channel_listing_as_app(
+def test_get_room_variant_channel_listing_as_app(
     app_api_client,
-    product_available_in_many_channels,
-    permission_manage_products,
+    room_available_in_many_channels,
+    permission_manage_rooms,
     channel_USD,
 ):
     # given
-    variant = product_available_in_many_channels.variants.get()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = room_available_in_many_channels.variants.get()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "channel": channel_USD.slug}
 
     # when
     response = app_api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_CHANNEL_LISTING,
+        QUERY_ROOM_VARIANT_CHANNEL_LISTING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
     # then
-    data = content["data"]["productVariant"]
+    data = content["data"]["roomVariant"]
     channel_listings = variant.channel_listings.all()
     for channel_listing in channel_listings:
         assert {
@@ -211,19 +211,19 @@ def test_get_product_variant_channel_listing_as_app(
     assert len(data["channelListings"]) == variant.channel_listings.count()
 
 
-def test_get_product_variant_channel_listing_as_customer(
+def test_get_room_variant_channel_listing_as_customer(
     user_api_client,
-    product_available_in_many_channels,
+    room_available_in_many_channels,
     channel_USD,
 ):
     # given
-    variant = product_available_in_many_channels.variants.get()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = room_available_in_many_channels.variants.get()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "channel": channel_USD.slug}
 
     # when
     response = user_api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_CHANNEL_LISTING,
+        QUERY_ROOM_VARIANT_CHANNEL_LISTING,
         variables,
     )
 
@@ -231,19 +231,19 @@ def test_get_product_variant_channel_listing_as_customer(
     assert_no_permission(response)
 
 
-def test_get_product_variant_channel_listing_as_anonymous(
+def test_get_room_variant_channel_listing_as_anonymous(
     api_client,
-    product_available_in_many_channels,
+    room_available_in_many_channels,
     channel_USD,
 ):
     # given
-    variant = product_available_in_many_channels.variants.get()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = room_available_in_many_channels.variants.get()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "channel": channel_USD.slug}
 
     # when
     response = api_client.post_graphql(
-        QUERY_PRODUCT_VARIANT_CHANNEL_LISTING,
+        QUERY_ROOM_VARIANT_CHANNEL_LISTING,
         variables,
     )
 
@@ -253,28 +253,28 @@ def test_get_product_variant_channel_listing_as_anonymous(
 
 CREATE_VARIANT_MUTATION = """
       mutation createVariant (
-            $productId: ID!,
+            $roomId: ID!,
             $sku: String,
             $stocks: [StockInput!],
             $attributes: [AttributeValueInput]!,
             $weight: WeightScalar,
             $trackInventory: Boolean) {
-                productVariantCreate(
+                roomVariantCreate(
                     input: {
-                        product: $productId,
+                        room: $roomId,
                         sku: $sku,
                         stocks: $stocks,
                         attributes: $attributes,
                         trackInventory: $trackInventory,
                         weight: $weight
                     }) {
-                    productErrors {
+                    roomErrors {
                       field
                       message
                       attributes
                       code
                     }
-                    productVariant {
+                    roomVariant {
                         name
                         sku
                         attributes {
@@ -301,7 +301,7 @@ CREATE_VARIANT_MUTATION = """
                         }
                         stocks {
                             quantity
-                            warehouse {
+                            hotel {
                                 slug
                             }
                         }
@@ -312,33 +312,33 @@ CREATE_VARIANT_MUTATION = """
 """
 
 
-@patch("saleor.plugins.manager.PluginsManager.product_updated")
+@patch("saleor.plugins.manager.PluginsManager.room_updated")
 def test_create_variant(
     updated_webhook_mock,
     staff_api_client,
-    product,
-    product_type,
-    permission_manage_products,
-    warehouse,
+    room,
+    room_type,
+    permission_manage_rooms,
+    hotel,
 ):
     query = CREATE_VARIANT_MUTATION
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     sku = "1"
     weight = 10.22
-    variant_slug = product_type.variant_attributes.first().slug
+    variant_slug = room_type.variant_attributes.first().slug
     variant_id = graphene.Node.to_global_id(
-        "Attribute", product_type.variant_attributes.first().pk
+        "Attribute", room_type.variant_attributes.first().pk
     )
     variant_value = "test-value"
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.pk),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
             "quantity": 20,
         }
     ]
 
     variables = {
-        "productId": product_id,
+        "roomId": room_id,
         "sku": sku,
         "stocks": stocks,
         "weight": weight,
@@ -346,11 +346,11 @@ def test_create_variant(
         "trackInventory": True,
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
-    content = get_graphql_content(response)["data"]["productVariantCreate"]
-    assert not content["productErrors"]
-    data = content["productVariant"]
+    content = get_graphql_content(response)["data"]["roomVariantCreate"]
+    assert not content["roomErrors"]
+    data = content["roomVariant"]
     assert data["name"] == variant_value
     assert data["sku"] == sku
     assert data["attributes"][0]["attribute"]["slug"] == variant_slug
@@ -359,27 +359,27 @@ def test_create_variant(
     assert data["weight"]["value"] == weight
     assert len(data["stocks"]) == 1
     assert data["stocks"][0]["quantity"] == stocks[0]["quantity"]
-    assert data["stocks"][0]["warehouse"]["slug"] == warehouse.slug
-    updated_webhook_mock.assert_called_once_with(product)
+    assert data["stocks"][0]["hotel"]["slug"] == hotel.slug
+    updated_webhook_mock.assert_called_once_with(room)
 
 
-@patch("saleor.plugins.manager.PluginsManager.product_updated")
+@patch("saleor.plugins.manager.PluginsManager.room_updated")
 def test_create_variant_with_file_attribute(
     updated_webhook_mock,
     staff_api_client,
-    product,
-    product_type,
+    room,
+    room_type,
     file_attribute,
-    permission_manage_products,
-    warehouse,
+    permission_manage_rooms,
+    hotel,
 ):
     query = CREATE_VARIANT_MUTATION
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     sku = "1"
     weight = 10.22
 
-    product_type.variant_attributes.clear()
-    product_type.variant_attributes.add(file_attribute)
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(file_attribute)
     file_attr_id = graphene.Node.to_global_id("Attribute", file_attribute.id)
     existing_value = file_attribute.values.first()
 
@@ -387,13 +387,13 @@ def test_create_variant_with_file_attribute(
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.pk),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
             "quantity": 20,
         }
     ]
 
     variables = {
-        "productId": product_id,
+        "roomId": room_id,
         "sku": sku,
         "stocks": stocks,
         "weight": weight,
@@ -401,11 +401,11 @@ def test_create_variant_with_file_attribute(
         "trackInventory": True,
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
-    content = get_graphql_content(response)["data"]["productVariantCreate"]
-    assert not content["productErrors"]
-    data = content["productVariant"]
+    content = get_graphql_content(response)["data"]["roomVariantCreate"]
+    assert not content["roomErrors"]
+    data = content["roomVariant"]
     assert data["name"] == sku
     assert data["sku"] == sku
     assert data["attributes"][0]["attribute"]["slug"] == file_attribute.slug
@@ -415,33 +415,33 @@ def test_create_variant_with_file_attribute(
     assert data["weight"]["value"] == weight
     assert len(data["stocks"]) == 1
     assert data["stocks"][0]["quantity"] == stocks[0]["quantity"]
-    assert data["stocks"][0]["warehouse"]["slug"] == warehouse.slug
+    assert data["stocks"][0]["hotel"]["slug"] == hotel.slug
 
     file_attribute.refresh_from_db()
     assert file_attribute.values.count() == values_count + 1
 
-    updated_webhook_mock.assert_called_once_with(product)
+    updated_webhook_mock.assert_called_once_with(room)
 
 
-@patch("saleor.plugins.manager.PluginsManager.product_updated")
+@patch("saleor.plugins.manager.PluginsManager.room_updated")
 def test_create_variant_with_file_attribute_new_value(
     updated_webhook_mock,
     staff_api_client,
-    product,
-    product_type,
+    room,
+    room_type,
     file_attribute,
-    permission_manage_products,
-    warehouse,
+    permission_manage_rooms,
+    hotel,
 ):
     query = CREATE_VARIANT_MUTATION
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     sku = "1"
     price = 1.32
     cost_price = 3.22
     weight = 10.22
 
-    product_type.variant_attributes.clear()
-    product_type.variant_attributes.add(file_attribute)
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(file_attribute)
     file_attr_id = graphene.Node.to_global_id("Attribute", file_attribute.id)
     new_value = "new_value.txt"
 
@@ -449,13 +449,13 @@ def test_create_variant_with_file_attribute_new_value(
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.pk),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
             "quantity": 20,
         }
     ]
 
     variables = {
-        "productId": product_id,
+        "roomId": room_id,
         "sku": sku,
         "stocks": stocks,
         "costPrice": cost_price,
@@ -465,11 +465,11 @@ def test_create_variant_with_file_attribute_new_value(
         "trackInventory": True,
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
-    content = get_graphql_content(response)["data"]["productVariantCreate"]
-    assert not content["productErrors"]
-    data = content["productVariant"]
+    content = get_graphql_content(response)["data"]["roomVariantCreate"]
+    assert not content["roomErrors"]
+    data = content["roomVariant"]
     assert data["name"] == sku
     assert data["sku"] == sku
     assert data["attributes"][0]["attribute"]["slug"] == file_attribute.slug
@@ -478,46 +478,46 @@ def test_create_variant_with_file_attribute_new_value(
     assert data["weight"]["value"] == weight
     assert len(data["stocks"]) == 1
     assert data["stocks"][0]["quantity"] == stocks[0]["quantity"]
-    assert data["stocks"][0]["warehouse"]["slug"] == warehouse.slug
+    assert data["stocks"][0]["hotel"]["slug"] == hotel.slug
 
     file_attribute.refresh_from_db()
     assert file_attribute.values.count() == values_count + 1
 
-    updated_webhook_mock.assert_called_once_with(product)
+    updated_webhook_mock.assert_called_once_with(room)
 
 
-@patch("saleor.plugins.manager.PluginsManager.product_updated")
+@patch("saleor.plugins.manager.PluginsManager.room_updated")
 def test_create_variant_with_file_attribute_no_file_url_given(
     updated_webhook_mock,
     staff_api_client,
-    product,
-    product_type,
+    room,
+    room_type,
     file_attribute,
-    permission_manage_products,
-    warehouse,
+    permission_manage_rooms,
+    hotel,
 ):
     query = CREATE_VARIANT_MUTATION
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     sku = "1"
     price = 1.32
     cost_price = 3.22
     weight = 10.22
 
-    product_type.variant_attributes.clear()
-    product_type.variant_attributes.add(file_attribute)
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(file_attribute)
     file_attr_id = graphene.Node.to_global_id("Attribute", file_attribute.id)
 
     values_count = file_attribute.values.count()
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.pk),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
             "quantity": 20,
         }
     ]
 
     variables = {
-        "productId": product_id,
+        "roomId": room_id,
         "sku": sku,
         "stocks": stocks,
         "costPrice": cost_price,
@@ -527,11 +527,11 @@ def test_create_variant_with_file_attribute_no_file_url_given(
         "trackInventory": True,
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
-    content = get_graphql_content(response)["data"]["productVariantCreate"]
-    errors = content["productErrors"]
-    data = content["productVariant"]
+    content = get_graphql_content(response)["data"]["roomVariantCreate"]
+    errors = content["roomErrors"]
+    data = content["roomVariant"]
     assert not errors
     assert data["name"] == sku
     assert data["sku"] == sku
@@ -541,48 +541,48 @@ def test_create_variant_with_file_attribute_no_file_url_given(
     assert data["weight"]["value"] == weight
     assert len(data["stocks"]) == 1
     assert data["stocks"][0]["quantity"] == stocks[0]["quantity"]
-    assert data["stocks"][0]["warehouse"]["slug"] == warehouse.slug
+    assert data["stocks"][0]["hotel"]["slug"] == hotel.slug
 
     file_attribute.refresh_from_db()
     assert file_attribute.values.count() == values_count
 
-    updated_webhook_mock.assert_called_once_with(product)
+    updated_webhook_mock.assert_called_once_with(room)
 
 
-def test_create_product_variant_with_negative_weight(
-    staff_api_client, product, product_type, permission_manage_products
+def test_create_room_variant_with_negative_weight(
+    staff_api_client, room, room_type, permission_manage_rooms
 ):
     query = CREATE_VARIANT_MUTATION
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
 
     variant_id = graphene.Node.to_global_id(
-        "Attribute", product_type.variant_attributes.first().pk
+        "Attribute", room_type.variant_attributes.first().pk
     )
     variant_value = "test-value"
 
     variables = {
-        "productId": product_id,
+        "roomId": room_id,
         "weight": -1,
         "attributes": [{"id": variant_id, "values": [variant_value]}],
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantCreate"]
-    error = data["productErrors"][0]
+    data = content["data"]["roomVariantCreate"]
+    error = data["roomErrors"][0]
     assert error["field"] == "weight"
-    assert error["code"] == ProductErrorCode.INVALID.name
+    assert error["code"] == RoomErrorCode.INVALID.name
 
 
-def test_create_product_variant_without_attributes(
-    staff_api_client, product, permission_manage_products
+def test_create_room_variant_without_attributes(
+    staff_api_client, room, permission_manage_rooms
 ):
     # given
     query = CREATE_VARIANT_MUTATION
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     variables = {
-        "productId": product_id,
+        "roomId": room_id,
         "sku": "test-sku",
         "price": 0,
         "attributes": [],
@@ -590,64 +590,64 @@ def test_create_product_variant_without_attributes(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariantCreate"]
-    error = data["productErrors"][0]
+    data = content["data"]["roomVariantCreate"]
+    error = data["roomErrors"][0]
 
     assert error["field"] == "attributes"
-    assert error["code"] == ProductErrorCode.REQUIRED.name
+    assert error["code"] == RoomErrorCode.REQUIRED.name
 
 
-def test_create_product_variant_not_all_attributes(
-    staff_api_client, product, product_type, color_attribute, permission_manage_products
+def test_create_room_variant_not_all_attributes(
+    staff_api_client, room, room_type, color_attribute, permission_manage_rooms
 ):
     query = CREATE_VARIANT_MUTATION
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     sku = "1"
     variant_id = graphene.Node.to_global_id(
-        "Attribute", product_type.variant_attributes.first().pk
+        "Attribute", room_type.variant_attributes.first().pk
     )
     variant_value = "test-value"
-    product_type.variant_attributes.add(color_attribute)
+    room_type.variant_attributes.add(color_attribute)
 
     variables = {
-        "productId": product_id,
+        "roomId": room_id,
         "sku": sku,
         "attributes": [{"id": variant_id, "values": [variant_value]}],
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
-    assert content["data"]["productVariantCreate"]["productErrors"]
-    assert content["data"]["productVariantCreate"]["productErrors"][0] == {
+    assert content["data"]["roomVariantCreate"]["roomErrors"]
+    assert content["data"]["roomVariantCreate"]["roomErrors"][0] == {
         "field": "attributes",
-        "code": ProductErrorCode.REQUIRED.name,
+        "code": RoomErrorCode.REQUIRED.name,
         "message": ANY,
         "attributes": None,
     }
-    assert not product.variants.filter(sku=sku).exists()
+    assert not room.variants.filter(sku=sku).exists()
 
 
-def test_create_product_variant_duplicated_attributes(
+def test_create_room_variant_duplicated_attributes(
     staff_api_client,
-    product_with_variant_with_two_attributes,
+    room_with_variant_with_two_attributes,
     color_attribute,
     size_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     query = CREATE_VARIANT_MUTATION
-    product = product_with_variant_with_two_attributes
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room = room_with_variant_with_two_attributes
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     color_attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.id)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.id)
     sku = str(uuid4())[:12]
     variables = {
-        "productId": product_id,
+        "roomId": room_id,
         "sku": sku,
         "attributes": [
             {"id": color_attribute_id, "values": ["red"]},
@@ -655,58 +655,58 @@ def test_create_product_variant_duplicated_attributes(
         ],
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
-    assert content["data"]["productVariantCreate"]["productErrors"]
-    assert content["data"]["productVariantCreate"]["productErrors"][0] == {
+    assert content["data"]["roomVariantCreate"]["roomErrors"]
+    assert content["data"]["roomVariantCreate"]["roomErrors"][0] == {
         "field": "attributes",
-        "code": ProductErrorCode.DUPLICATED_INPUT_ITEM.name,
+        "code": RoomErrorCode.DUPLICATED_INPUT_ITEM.name,
         "message": ANY,
         "attributes": None,
     }
-    assert not product.variants.filter(sku=sku).exists()
+    assert not room.variants.filter(sku=sku).exists()
 
 
 def test_create_variant_invalid_variant_attributes(
     staff_api_client,
-    product,
-    product_type,
-    permission_manage_products,
-    warehouse,
+    room,
+    room_type,
+    permission_manage_rooms,
+    hotel,
     color_attribute,
     weight_attribute,
 ):
     query = CREATE_VARIANT_MUTATION
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     sku = "1"
     price = 1.32
     cost_price = 3.22
     weight = 10.22
 
-    # Default attribute defined in product_type fixture
-    size_attribute = product_type.variant_attributes.get(name="Size")
+    # Default attribute defined in room_type fixture
+    size_attribute = room_type.variant_attributes.get(name="Size")
     size_value_slug = size_attribute.values.first().slug
     size_attr_id = graphene.Node.to_global_id("Attribute", size_attribute.id)
 
     # Add second attribute
-    product_type.variant_attributes.add(color_attribute)
+    room_type.variant_attributes.add(color_attribute)
     color_attr_id = graphene.Node.to_global_id("Attribute", color_attribute.id)
     non_existent_attr_value = "The cake is a lie"
 
     # Add third attribute
-    product_type.variant_attributes.add(weight_attribute)
+    room_type.variant_attributes.add(weight_attribute)
     weight_attr_id = graphene.Node.to_global_id("Attribute", weight_attribute.id)
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.pk),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
             "quantity": 20,
         }
     ]
 
     variables = {
-        "productId": product_id,
+        "roomId": room_id,
         "sku": sku,
         "stocks": stocks,
         "costPrice": cost_price,
@@ -720,26 +720,26 @@ def test_create_variant_invalid_variant_attributes(
         "trackInventory": True,
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
 
-    data = content["data"]["productVariantCreate"]
-    errors = data["productErrors"]
+    data = content["data"]["roomVariantCreate"]
+    errors = data["roomErrors"]
 
-    assert not data["productVariant"]
+    assert not data["roomVariant"]
     assert len(errors) == 2
 
     expected_errors = [
         {
             "attributes": [color_attr_id, weight_attr_id],
-            "code": ProductErrorCode.REQUIRED.name,
+            "code": RoomErrorCode.REQUIRED.name,
             "field": "attributes",
             "message": ANY,
         },
         {
             "attributes": [size_attr_id],
-            "code": ProductErrorCode.INVALID.name,
+            "code": RoomErrorCode.INVALID.name,
             "field": "attributes",
             "message": ANY,
         },
@@ -748,8 +748,8 @@ def test_create_variant_invalid_variant_attributes(
         assert error in errors
 
 
-def test_create_product_variant_update_with_new_attributes(
-    staff_api_client, permission_manage_products, product, size_attribute
+def test_create_room_variant_update_with_new_attributes(
+    staff_api_client, permission_manage_rooms, room, size_attribute
 ):
     query = """
         mutation VariantUpdate(
@@ -758,7 +758,7 @@ def test_create_product_variant_update_with_new_attributes(
           $sku: String
           $trackInventory: Boolean!
         ) {
-          productVariantUpdate(
+          roomVariantUpdate(
             id: $id
             input: {
               attributes: $attributes
@@ -770,7 +770,7 @@ def test_create_product_variant_update_with_new_attributes(
               field
               message
             }
-            productVariant {
+            roomVariant {
               id
               attributes {
                 attribute {
@@ -794,7 +794,7 @@ def test_create_product_variant_update_with_new_attributes(
 
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     variant_id = graphene.Node.to_global_id(
-        "ProductVariant", product.variants.first().pk
+        "RoomVariant", room.variants.first().pk
     )
 
     variables = {
@@ -806,24 +806,24 @@ def test_create_product_variant_update_with_new_attributes(
 
     data = get_graphql_content(
         staff_api_client.post_graphql(
-            query, variables, permissions=[permission_manage_products]
+            query, variables, permissions=[permission_manage_rooms]
         )
-    )["data"]["productVariantUpdate"]
+    )["data"]["roomVariantUpdate"]
     assert not data["errors"]
-    assert data["productVariant"]["id"] == variant_id
+    assert data["roomVariant"]["id"] == variant_id
 
-    attributes = data["productVariant"]["attributes"]
+    attributes = data["roomVariant"]["attributes"]
     assert len(attributes) == 1
     assert attributes[0]["attribute"]["id"] == size_attribute_id
 
 
-@patch("saleor.plugins.manager.PluginsManager.product_updated")
-def test_update_product_variant(
+@patch("saleor.plugins.manager.PluginsManager.room_updated")
+def test_update_room_variant(
     updated_webhook_mock,
     staff_api_client,
-    product,
+    room,
     size_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     query = """
         mutation updateVariant (
@@ -831,14 +831,14 @@ def test_update_product_variant(
             $sku: String!,
             $trackInventory: Boolean!,
             $attributes: [AttributeValueInput]) {
-                productVariantUpdate(
+                roomVariantUpdate(
                     id: $id,
                     input: {
                         sku: $sku,
                         trackInventory: $trackInventory,
                         attributes: $attributes,
                     }) {
-                    productVariant {
+                    roomVariant {
                         name
                         sku
                         channelListings {
@@ -856,8 +856,8 @@ def test_update_product_variant(
             }
 
     """
-    variant = product.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = room.variants.first()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     sku = "test sku"
 
@@ -869,34 +869,34 @@ def test_update_product_variant(
     }
 
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     variant.refresh_from_db()
     content = get_graphql_content(response)
-    data = content["data"]["productVariantUpdate"]["productVariant"]
+    data = content["data"]["roomVariantUpdate"]["roomVariant"]
     assert data["name"] == variant.name
     assert data["sku"] == sku
-    updated_webhook_mock.assert_called_once_with(product)
+    updated_webhook_mock.assert_called_once_with(room)
 
 
-def test_update_product_variant_with_negative_weight(
-    staff_api_client, product, permission_manage_products
+def test_update_room_variant_with_negative_weight(
+    staff_api_client, room, permission_manage_rooms
 ):
     query = """
         mutation updateVariant (
             $id: ID!,
             $weight: WeightScalar
         ) {
-            productVariantUpdate(
+            roomVariantUpdate(
                 id: $id,
                 input: {
                     weight: $weight,
                 }
             ){
-                productVariant {
+                roomVariant {
                     name
                 }
-                productErrors {
+                roomErrors {
                     field
                     message
                     code
@@ -904,18 +904,18 @@ def test_update_product_variant_with_negative_weight(
             }
         }
     """
-    variant = product.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = room.variants.first()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id, "weight": -1}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     variant.refresh_from_db()
     content = get_graphql_content(response)
-    data = content["data"]["productVariantUpdate"]
-    error = data["productErrors"][0]
+    data = content["data"]["roomVariantUpdate"]
+    error = data["roomErrors"][0]
     assert error["field"] == "weight"
-    assert error["code"] == ProductErrorCode.INVALID.name
+    assert error["code"] == RoomErrorCode.INVALID.name
 
 
 QUERY_UPDATE_VARIANT_ATTRIBUTES = """
@@ -923,13 +923,13 @@ QUERY_UPDATE_VARIANT_ATTRIBUTES = """
         $id: ID!,
         $sku: String,
         $attributes: [AttributeValueInput]!) {
-            productVariantUpdate(
+            roomVariantUpdate(
                 id: $id,
                 input: {
                     sku: $sku,
                     attributes: $attributes
                 }) {
-                productVariant {
+                roomVariant {
                     sku
                     attributes {
                         attribute {
@@ -949,7 +949,7 @@ QUERY_UPDATE_VARIANT_ATTRIBUTES = """
                     field
                     message
                 }
-                productErrors {
+                roomErrors {
                     field
                     code
                 }
@@ -958,22 +958,22 @@ QUERY_UPDATE_VARIANT_ATTRIBUTES = """
 """
 
 
-def test_update_product_variant_not_all_attributes(
-    staff_api_client, product, product_type, color_attribute, permission_manage_products
+def test_update_room_variant_not_all_attributes(
+    staff_api_client, room, room_type, color_attribute, permission_manage_rooms
 ):
     """Ensures updating a variant with missing attributes (all attributes must
     be provided) raises an error. We expect the color attribute
     to be flagged as missing."""
 
     query = QUERY_UPDATE_VARIANT_ATTRIBUTES
-    variant = product.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = room.variants.first()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     sku = "test sku"
     attr_id = graphene.Node.to_global_id(
-        "Attribute", product_type.variant_attributes.first().id
+        "Attribute", room_type.variant_attributes.first().id
     )
     variant_value = "test-value"
-    product_type.variant_attributes.add(color_attribute)
+    room_type.variant_attributes.add(color_attribute)
 
     variables = {
         "id": variant_id,
@@ -982,33 +982,33 @@ def test_update_product_variant_not_all_attributes(
     }
 
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     variant.refresh_from_db()
     content = get_graphql_content(response)
-    assert len(content["data"]["productVariantUpdate"]["errors"]) == 1
-    assert content["data"]["productVariantUpdate"]["errors"][0] == {
+    assert len(content["data"]["roomVariantUpdate"]["errors"]) == 1
+    assert content["data"]["roomVariantUpdate"]["errors"][0] == {
         "field": "attributes",
         "message": "All variant selection attributes must take a value.",
     }
-    assert not product.variants.filter(sku=sku).exists()
+    assert not room.variants.filter(sku=sku).exists()
 
 
-def test_update_product_variant_with_current_attribute(
+def test_update_room_variant_with_current_attribute(
     staff_api_client,
-    product_with_variant_with_two_attributes,
+    room_with_variant_with_two_attributes,
     color_attribute,
     size_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
-    product = product_with_variant_with_two_attributes
-    variant = product.variants.first()
+    room = room_with_variant_with_two_attributes
+    variant = room.variants.first()
     sku = str(uuid4())[:12]
     assert not variant.sku == sku
     assert variant.attributes.first().values.first().slug == "red"
     assert variant.attributes.last().values.first().slug == "small"
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     color_attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.pk)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
 
@@ -1024,11 +1024,11 @@ def test_update_product_variant_with_current_attribute(
     response = staff_api_client.post_graphql(
         QUERY_UPDATE_VARIANT_ATTRIBUTES,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
-    data = content["data"]["productVariantUpdate"]
+    data = content["data"]["roomVariantUpdate"]
     assert not data["errors"]
     variant.refresh_from_db()
     assert variant.sku == sku
@@ -1036,21 +1036,21 @@ def test_update_product_variant_with_current_attribute(
     assert variant.attributes.last().values.first().slug == "small"
 
 
-def test_update_product_variant_with_new_attribute(
+def test_update_room_variant_with_new_attribute(
     staff_api_client,
-    product_with_variant_with_two_attributes,
+    room_with_variant_with_two_attributes,
     color_attribute,
     size_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
-    product = product_with_variant_with_two_attributes
-    variant = product.variants.first()
+    room = room_with_variant_with_two_attributes
+    variant = room.variants.first()
     sku = str(uuid4())[:12]
     assert not variant.sku == sku
     assert variant.attributes.first().values.first().slug == "red"
     assert variant.attributes.last().values.first().slug == "small"
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     color_attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.pk)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
 
@@ -1066,11 +1066,11 @@ def test_update_product_variant_with_new_attribute(
     response = staff_api_client.post_graphql(
         QUERY_UPDATE_VARIANT_ATTRIBUTES,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
-    data = content["data"]["productVariantUpdate"]
+    data = content["data"]["roomVariantUpdate"]
     assert not data["errors"]
     variant.refresh_from_db()
     assert variant.sku == sku
@@ -1078,16 +1078,16 @@ def test_update_product_variant_with_new_attribute(
     assert variant.attributes.last().values.first().slug == "big"
 
 
-def test_update_product_variant_with_duplicated_attribute(
+def test_update_room_variant_with_duplicated_attribute(
     staff_api_client,
-    product_with_variant_with_two_attributes,
+    room_with_variant_with_two_attributes,
     color_attribute,
     size_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
-    product = product_with_variant_with_two_attributes
-    variant = product.variants.first()
-    variant2 = product.variants.first()
+    room = room_with_variant_with_two_attributes
+    variant = room.variants.first()
+    variant2 = room.variants.first()
 
     variant2.pk = None
     variant2.sku = str(uuid4())[:12]
@@ -1104,7 +1104,7 @@ def test_update_product_variant_with_duplicated_attribute(
     assert variant2.attributes.first().values.first().slug == "blue"
     assert variant2.attributes.last().values.first().slug == "big"
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     color_attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.pk)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
 
@@ -1119,25 +1119,25 @@ def test_update_product_variant_with_duplicated_attribute(
     response = staff_api_client.post_graphql(
         QUERY_UPDATE_VARIANT_ATTRIBUTES,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
-    data = content["data"]["productVariantUpdate"]
-    assert data["productErrors"][0] == {
+    data = content["data"]["roomVariantUpdate"]
+    assert data["roomErrors"][0] == {
         "field": "attributes",
-        "code": ProductErrorCode.DUPLICATED_INPUT_ITEM.name,
+        "code": RoomErrorCode.DUPLICATED_INPUT_ITEM.name,
     }
 
 
-def test_update_product_variant_with_current_file_attribute(
+def test_update_room_variant_with_current_file_attribute(
     staff_api_client,
-    product_with_variant_with_file_attribute,
+    room_with_variant_with_file_attribute,
     file_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
-    product = product_with_variant_with_file_attribute
-    variant = product.variants.first()
+    room = room_with_variant_with_file_attribute
+    variant = room.variants.first()
     sku = str(uuid4())[:12]
     assert not variant.sku == sku
     assert set(variant.attributes.first().values.values_list("slug", flat=True)) == {
@@ -1145,7 +1145,7 @@ def test_update_product_variant_with_current_file_attribute(
     }
     second_value = file_attribute.values.last()
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     file_attribute_id = graphene.Node.to_global_id("Attribute", file_attribute.pk)
 
     variables = {
@@ -1158,13 +1158,13 @@ def test_update_product_variant_with_current_file_attribute(
     response = staff_api_client.post_graphql(
         QUERY_UPDATE_VARIANT_ATTRIBUTES,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
-    data = content["data"]["productVariantUpdate"]
+    data = content["data"]["roomVariantUpdate"]
     assert not data["errors"]
-    variant_data = data["productVariant"]
+    variant_data = data["roomVariant"]
     assert variant_data
     assert variant_data["sku"] == sku
     assert len(variant_data["attributes"]) == 1
@@ -1176,15 +1176,15 @@ def test_update_product_variant_with_current_file_attribute(
     )
 
 
-def test_update_product_variant_with_duplicated_file_attribute(
+def test_update_room_variant_with_duplicated_file_attribute(
     staff_api_client,
-    product_with_variant_with_file_attribute,
+    room_with_variant_with_file_attribute,
     file_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
-    product = product_with_variant_with_file_attribute
-    variant = product.variants.first()
-    variant2 = product.variants.first()
+    room = room_with_variant_with_file_attribute
+    variant = room.variants.first()
+    variant2 = room.variants.first()
 
     variant2.pk = None
     variant2.sku = str(uuid4())[:12]
@@ -1202,7 +1202,7 @@ def test_update_product_variant_with_duplicated_file_attribute(
         "test_filejpeg"
     }
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     file_attribute_id = graphene.Node.to_global_id("Attribute", file_attribute.pk)
 
     variables = {
@@ -1215,25 +1215,25 @@ def test_update_product_variant_with_duplicated_file_attribute(
     response = staff_api_client.post_graphql(
         QUERY_UPDATE_VARIANT_ATTRIBUTES,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
-    data = content["data"]["productVariantUpdate"]
-    assert data["productErrors"][0] == {
+    data = content["data"]["roomVariantUpdate"]
+    assert data["roomErrors"][0] == {
         "field": "attributes",
-        "code": ProductErrorCode.DUPLICATED_INPUT_ITEM.name,
+        "code": RoomErrorCode.DUPLICATED_INPUT_ITEM.name,
     }
 
 
-def test_update_product_variant_with_file_attribute_new_value_is_not_created(
+def test_update_room_variant_with_file_attribute_new_value_is_not_created(
     staff_api_client,
-    product_with_variant_with_file_attribute,
+    room_with_variant_with_file_attribute,
     file_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
-    product = product_with_variant_with_file_attribute
-    variant = product.variants.first()
+    room = room_with_variant_with_file_attribute
+    variant = room.variants.first()
     sku = str(uuid4())[:12]
     assert not variant.sku == sku
 
@@ -1242,7 +1242,7 @@ def test_update_product_variant_with_file_attribute_new_value_is_not_created(
         assignment__attribute=file_attribute, values=existing_value
     ).exists()
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     file_attribute_id = graphene.Node.to_global_id("Attribute", file_attribute.pk)
 
     variables = {
@@ -1255,13 +1255,13 @@ def test_update_product_variant_with_file_attribute_new_value_is_not_created(
     response = staff_api_client.post_graphql(
         QUERY_UPDATE_VARIANT_ATTRIBUTES,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
-    data = content["data"]["productVariantUpdate"]
+    data = content["data"]["roomVariantUpdate"]
     assert not data["errors"]
-    variant_data = data["productVariant"]
+    variant_data = data["roomVariant"]
     assert variant_data
     assert variant_data["sku"] == sku
     assert len(variant_data["attributes"]) == 1
@@ -1283,8 +1283,8 @@ def test_update_product_variant_with_file_attribute_new_value_is_not_created(
         ([None], "Attribute values cannot be blank"),
     ),
 )
-def test_update_product_variant_requires_values(
-    staff_api_client, variant, product_type, permission_manage_products, values, message
+def test_update_room_variant_requires_values(
+    staff_api_client, variant, room_type, permission_manage_rooms, values, message
 ):
     """Ensures updating a variant with invalid values raise an error.
 
@@ -1297,9 +1297,9 @@ def test_update_product_variant_requires_values(
     sku = "updated"
 
     query = QUERY_UPDATE_VARIANT_ATTRIBUTES
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     attr_id = graphene.Node.to_global_id(
-        "Attribute", product_type.variant_attributes.first().id
+        "Attribute", room_type.variant_attributes.first().id
     )
 
     variables = {
@@ -1309,42 +1309,42 @@ def test_update_product_variant_requires_values(
     }
 
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     variant.refresh_from_db()
     content = get_graphql_content(response)
     assert (
-        len(content["data"]["productVariantUpdate"]["errors"]) == 1
+        len(content["data"]["roomVariantUpdate"]["errors"]) == 1
     ), f"expected: {message}"
-    assert content["data"]["productVariantUpdate"]["errors"][0] == {
+    assert content["data"]["roomVariantUpdate"]["errors"][0] == {
         "field": "attributes",
         "message": message,
     }
-    assert not variant.product.variants.filter(sku=sku).exists()
+    assert not variant.room.variants.filter(sku=sku).exists()
 
 
-def test_update_product_variant_with_price_does_not_raise_price_validation_error(
-    staff_api_client, variant, size_attribute, permission_manage_products
+def test_update_room_variant_with_price_does_not_raise_price_validation_error(
+    staff_api_client, variant, size_attribute, permission_manage_rooms
 ):
     mutation = """
     mutation updateVariant ($id: ID!, $attributes: [AttributeValueInput]) {
-        productVariantUpdate(
+        roomVariantUpdate(
             id: $id,
             input: {
             attributes: $attributes,
         }) {
-            productVariant {
+            roomVariant {
                 id
             }
-            productErrors {
+            roomErrors {
                 field
                 code
             }
         }
     }
     """
-    # given a product variant and an attribute
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    # given a room variant and an attribute
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
 
     # when running the updateVariant mutation without price input field
@@ -1353,18 +1353,18 @@ def test_update_product_variant_with_price_does_not_raise_price_validation_error
         "attributes": [{"id": attribute_id, "values": ["S"]}],
     }
     response = staff_api_client.post_graphql(
-        mutation, variables, permissions=[permission_manage_products]
+        mutation, variables, permissions=[permission_manage_rooms]
     )
 
     # then mutation passes without validation errors
     content = get_graphql_content(response)
-    assert not content["data"]["productVariantUpdate"]["productErrors"]
+    assert not content["data"]["roomVariantUpdate"]["roomErrors"]
 
 
 DELETE_VARIANT_MUTATION = """
     mutation variantDelete($id: ID!) {
-        productVariantDelete(id: $id) {
-            productVariant {
+        roomVariantDelete(id: $id) {
+            roomVariant {
                 sku
                 id
             }
@@ -1373,17 +1373,17 @@ DELETE_VARIANT_MUTATION = """
 """
 
 
-def test_delete_variant(staff_api_client, product, permission_manage_products):
+def test_delete_variant(staff_api_client, room, permission_manage_rooms):
     query = DELETE_VARIANT_MUTATION
-    variant = product.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = room.variants.first()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantDelete"]
-    assert data["productVariant"]["sku"] == variant.sku
+    data = content["data"]["roomVariantDelete"]
+    assert data["roomVariant"]["sku"] == variant.sku
     with pytest.raises(variant._meta.model.DoesNotExist):
         variant.refresh_from_db()
 
@@ -1391,7 +1391,7 @@ def test_delete_variant(staff_api_client, product, permission_manage_products):
 def test_delete_variant_in_draft_order(
     staff_api_client,
     order_line,
-    permission_manage_products,
+    permission_manage_rooms,
     order_list,
     channel_USD,
 ):
@@ -1403,11 +1403,11 @@ def test_delete_variant_in_draft_order(
 
     variant = order_line.variant
     variant_channel_listing = variant.channel_listings.get(channel=channel_USD)
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"id": variant_id}
 
-    product = variant.product
-    net = variant.get_price(product, [], channel_USD, variant_channel_listing, None)
+    room = variant.room
+    net = variant.get_price(room, [], channel_USD, variant_channel_listing, None)
     gross = Money(amount=net.amount, currency=net.currency)
     order_not_draft = order_list[-1]
     unit_price = TaxedMoney(net=net, gross=gross)
@@ -1415,9 +1415,9 @@ def test_delete_variant_in_draft_order(
     order_line_not_in_draft = OrderLine.objects.create(
         variant=variant,
         order=order_not_draft,
-        product_name=str(product),
+        room_name=str(room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         unit_price=unit_price,
         total_price=unit_price * quantity,
@@ -1426,12 +1426,12 @@ def test_delete_variant_in_draft_order(
     order_line_not_in_draft_pk = order_line_not_in_draft.pk
 
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     content = get_graphql_content(response)
-    data = content["data"]["productVariantDelete"]
-    assert data["productVariant"]["sku"] == variant.sku
+    data = content["data"]["roomVariantDelete"]
+    assert data["roomVariant"]["sku"] == variant.sku
     with pytest.raises(order_line._meta.model.DoesNotExist):
         order_line.refresh_from_db()
 
@@ -1439,109 +1439,109 @@ def test_delete_variant_in_draft_order(
 
 
 def test_delete_default_variant(
-    staff_api_client, product_with_two_variants, permission_manage_products
+    staff_api_client, room_with_two_variants, permission_manage_rooms
 ):
     # given
     query = DELETE_VARIANT_MUTATION
-    product = product_with_two_variants
+    room = room_with_two_variants
 
-    default_variant = product.variants.first()
-    second_variant = product.variants.last()
+    default_variant = room.variants.first()
+    second_variant = room.variants.last()
 
-    product.default_variant = default_variant
-    product.save(update_fields=["default_variant"])
+    room.default_variant = default_variant
+    room.save(update_fields=["default_variant"])
 
     assert second_variant.pk != default_variant.pk
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", default_variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", default_variant.pk)
     variables = {"id": variant_id}
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariantDelete"]
-    assert data["productVariant"]["sku"] == default_variant.sku
+    data = content["data"]["roomVariantDelete"]
+    assert data["roomVariant"]["sku"] == default_variant.sku
     with pytest.raises(default_variant._meta.model.DoesNotExist):
         default_variant.refresh_from_db()
 
-    product.refresh_from_db()
-    assert product.default_variant.pk == second_variant.pk
+    room.refresh_from_db()
+    assert room.default_variant.pk == second_variant.pk
 
 
 def test_delete_not_default_variant_left_default_variant_unchanged(
-    staff_api_client, product_with_two_variants, permission_manage_products
+    staff_api_client, room_with_two_variants, permission_manage_rooms
 ):
     # given
     query = DELETE_VARIANT_MUTATION
-    product = product_with_two_variants
+    room = room_with_two_variants
 
-    default_variant = product.variants.first()
-    second_variant = product.variants.last()
+    default_variant = room.variants.first()
+    second_variant = room.variants.last()
 
-    product.default_variant = default_variant
-    product.save(update_fields=["default_variant"])
+    room.default_variant = default_variant
+    room.save(update_fields=["default_variant"])
 
     assert second_variant.pk != default_variant.pk
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", second_variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", second_variant.pk)
     variables = {"id": variant_id}
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariantDelete"]
-    assert data["productVariant"]["sku"] == second_variant.sku
+    data = content["data"]["roomVariantDelete"]
+    assert data["roomVariant"]["sku"] == second_variant.sku
     with pytest.raises(second_variant._meta.model.DoesNotExist):
         second_variant.refresh_from_db()
 
-    product.refresh_from_db()
-    assert product.default_variant.pk == default_variant.pk
+    room.refresh_from_db()
+    assert room.default_variant.pk == default_variant.pk
 
 
-def test_delete_default_all_product_variant_left_product_default_variant_unset(
-    staff_api_client, product, permission_manage_products
+def test_delete_default_all_room_variant_left_room_default_variant_unset(
+    staff_api_client, room, permission_manage_rooms
 ):
     # given
     query = DELETE_VARIANT_MUTATION
 
-    default_variant = product.variants.first()
+    default_variant = room.variants.first()
 
-    product.default_variant = default_variant
-    product.save(update_fields=["default_variant"])
+    room.default_variant = default_variant
+    room.save(update_fields=["default_variant"])
 
-    assert product.variants.count() == 1
+    assert room.variants.count() == 1
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", default_variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", default_variant.pk)
     variables = {"id": variant_id}
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productVariantDelete"]
-    assert data["productVariant"]["sku"] == default_variant.sku
+    data = content["data"]["roomVariantDelete"]
+    assert data["roomVariant"]["sku"] == default_variant.sku
     with pytest.raises(default_variant._meta.model.DoesNotExist):
         default_variant.refresh_from_db()
 
-    product.refresh_from_db()
-    assert not product.default_variant
+    room.refresh_from_db()
+    assert not room.default_variant
 
 
 def _fetch_all_variants(client, variables={}, permissions=None):
     query = """
         query fetchAllVariants($channel: String) {
-            productVariants(first: 10, channel: $channel) {
+            roomVariants(first: 10, channel: $channel) {
                 totalCount
                 edges {
                     node {
@@ -1555,63 +1555,63 @@ def _fetch_all_variants(client, variables={}, permissions=None):
         query, variables, permissions=permissions, check_no_permissions=False
     )
     content = get_graphql_content(response)
-    return content["data"]["productVariants"]
+    return content["data"]["roomVariants"]
 
 
 def test_fetch_all_variants_staff_user(
-    staff_api_client, unavailable_product_with_variant, permission_manage_products
+    staff_api_client, unavailable_room_with_variant, permission_manage_rooms
 ):
-    variant = unavailable_product_with_variant.variants.first()
+    variant = unavailable_room_with_variant.variants.first()
     data = _fetch_all_variants(
-        staff_api_client, permissions=[permission_manage_products]
+        staff_api_client, permissions=[permission_manage_rooms]
     )
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     assert data["totalCount"] == 1
     assert data["edges"][0]["node"]["id"] == variant_id
 
 
 def test_fetch_all_variants_staff_user_with_channel(
     staff_api_client,
-    product_list_with_variants_many_channel,
-    permission_manage_products,
+    room_list_with_variants_many_channel,
+    permission_manage_rooms,
     channel_PLN,
 ):
     variables = {"channel": channel_PLN.slug}
     data = _fetch_all_variants(
-        staff_api_client, variables, permissions=[permission_manage_products]
+        staff_api_client, variables, permissions=[permission_manage_rooms]
     )
     assert data["totalCount"] == 2
 
 
 def test_fetch_all_variants_staff_user_without_channel(
     staff_api_client,
-    product_list_with_variants_many_channel,
-    permission_manage_products,
+    room_list_with_variants_many_channel,
+    permission_manage_rooms,
 ):
     data = _fetch_all_variants(
-        staff_api_client, permissions=[permission_manage_products]
+        staff_api_client, permissions=[permission_manage_rooms]
     )
     assert data["totalCount"] == 3
 
 
 def test_fetch_all_variants_customer(
-    user_api_client, unavailable_product_with_variant, channel_USD
+    user_api_client, unavailable_room_with_variant, channel_USD
 ):
     data = _fetch_all_variants(user_api_client, variables={"channel": channel_USD.slug})
     assert data["totalCount"] == 0
 
 
 def test_fetch_all_variants_anonymous_user(
-    api_client, unavailable_product_with_variant, channel_USD
+    api_client, unavailable_room_with_variant, channel_USD
 ):
     data = _fetch_all_variants(api_client, variables={"channel": channel_USD.slug})
     assert data["totalCount"] == 0
 
 
-def test_product_variants_by_ids(user_api_client, variant, channel_USD):
+def test_room_variants_by_ids(user_api_client, variant, channel_USD):
     query = """
-        query getProduct($ids: [ID!], $channel: String) {
-            productVariants(ids: $ids, first: 1, channel: $channel) {
+        query getRoom($ids: [ID!], $channel: String) {
+            roomVariants(ids: $ids, first: 1, channel: $channel) {
                 edges {
                     node {
                         id
@@ -1620,171 +1620,171 @@ def test_product_variants_by_ids(user_api_client, variant, channel_USD):
             }
         }
     """
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
 
     variables = {"ids": [variant_id], "channel": channel_USD.slug}
     response = user_api_client.post_graphql(query, variables)
     content = get_graphql_content(response)
-    data = content["data"]["productVariants"]
+    data = content["data"]["roomVariants"]
     assert data["edges"][0]["node"]["id"] == variant_id
     assert len(data["edges"]) == 1
 
 
-def test_product_variants_visible_in_listings_by_customer(
-    user_api_client, product_list, channel_USD
+def test_room_variants_visible_in_listings_by_customer(
+    user_api_client, room_list, channel_USD
 ):
     # given
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     # when
     data = _fetch_all_variants(user_api_client, variables={"channel": channel_USD.slug})
 
-    assert data["totalCount"] == product_count - 1
+    assert data["totalCount"] == room_count - 1
 
 
-def test_product_variants_visible_in_listings_by_staff_without_perm(
-    staff_api_client, product_list, channel_USD
+def test_room_variants_visible_in_listings_by_staff_without_perm(
+    staff_api_client, room_list, channel_USD
 ):
     # given
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     # when
     data = _fetch_all_variants(
         staff_api_client, variables={"channel": channel_USD.slug}
     )
 
-    assert data["totalCount"] == product_count - 1
+    assert data["totalCount"] == room_count - 1
 
 
-def test_product_variants_visible_in_listings_by_staff_with_perm(
-    staff_api_client, product_list, permission_manage_products, channel_USD
+def test_room_variants_visible_in_listings_by_staff_with_perm(
+    staff_api_client, room_list, permission_manage_rooms, channel_USD
 ):
     # given
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     # when
     data = _fetch_all_variants(
         staff_api_client,
         variables={"channel": channel_USD.slug},
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
 
-    assert data["totalCount"] == product_count
+    assert data["totalCount"] == room_count
 
 
-def test_product_variants_visible_in_listings_by_app_without_perm(
-    app_api_client, product_list, channel_USD
+def test_room_variants_visible_in_listings_by_app_without_perm(
+    app_api_client, room_list, channel_USD
 ):
     # given
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     # when
     data = _fetch_all_variants(app_api_client, variables={"channel": channel_USD.slug})
 
-    assert data["totalCount"] == product_count - 1
+    assert data["totalCount"] == room_count - 1
 
 
-def test_product_variants_visible_in_listings_by_app_with_perm(
-    app_api_client, product_list, permission_manage_products, channel_USD
+def test_room_variants_visible_in_listings_by_app_with_perm(
+    app_api_client, room_list, permission_manage_rooms, channel_USD
 ):
     # given
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     # when
     data = _fetch_all_variants(
         app_api_client,
         variables={"channel": channel_USD.slug},
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
 
-    assert data["totalCount"] == product_count
+    assert data["totalCount"] == room_count
 
 
 def _fetch_variant(client, variant, channel_slug=None, permissions=None):
     query = """
-    query ProductVariantDetails($variantId: ID!, $channel: String) {
-        productVariant(id: $variantId, channel: $channel) {
+    query RoomVariantDetails($variantId: ID!, $channel: String) {
+        roomVariant(id: $variantId, channel: $channel) {
             id
-            product {
+            room {
                 id
             }
         }
     }
     """
-    variables = {"variantId": graphene.Node.to_global_id("ProductVariant", variant.id)}
+    variables = {"variantId": graphene.Node.to_global_id("RoomVariant", variant.id)}
     if channel_slug:
         variables["channel"] = channel_slug
     response = client.post_graphql(
         query, variables, permissions=permissions, check_no_permissions=False
     )
     content = get_graphql_content(response)
-    return content["data"]["productVariant"]
+    return content["data"]["roomVariant"]
 
 
 def test_fetch_unpublished_variant_staff_user(
-    staff_api_client, unavailable_product_with_variant, permission_manage_products
+    staff_api_client, unavailable_room_with_variant, permission_manage_rooms
 ):
-    variant = unavailable_product_with_variant.variants.first()
+    variant = unavailable_room_with_variant.variants.first()
     data = _fetch_variant(
         staff_api_client,
         variant,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    product_id = graphene.Node.to_global_id(
-        "Product", unavailable_product_with_variant.pk
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    room_id = graphene.Node.to_global_id(
+        "Room", unavailable_room_with_variant.pk
     )
 
     assert data["id"] == variant_id
-    assert data["product"]["id"] == product_id
+    assert data["room"]["id"] == room_id
 
 
 def test_fetch_unpublished_variant_customer(
-    user_api_client, unavailable_product_with_variant, channel_USD
+    user_api_client, unavailable_room_with_variant, channel_USD
 ):
-    variant = unavailable_product_with_variant.variants.first()
+    variant = unavailable_room_with_variant.variants.first()
     data = _fetch_variant(user_api_client, variant, channel_slug=channel_USD.slug)
     assert data is None
 
 
 def test_fetch_unpublished_variant_anonymous_user(
-    api_client, unavailable_product_with_variant, channel_USD
+    api_client, unavailable_room_with_variant, channel_USD
 ):
-    variant = unavailable_product_with_variant.variants.first()
+    variant = unavailable_room_with_variant.variants.first()
     data = _fetch_variant(api_client, variant, channel_slug=channel_USD.slug)
     assert data is None
 
 
-PRODUCT_VARIANT_BULK_CREATE_MUTATION = """
-    mutation ProductVariantBulkCreate(
-        $variants: [ProductVariantBulkCreateInput]!, $productId: ID!
+ROOM_VARIANT_BULK_CREATE_MUTATION = """
+    mutation RoomVariantBulkCreate(
+        $variants: [RoomVariantBulkCreateInput]!, $roomId: ID!
     ) {
-        productVariantBulkCreate(variants: $variants, product: $productId) {
-            bulkProductErrors {
+        roomVariantBulkCreate(variants: $variants, room: $roomId) {
+            bulkRoomErrors {
                 field
                 message
                 code
                 index
-                warehouses
+                hotels
                 channels
             }
-            productVariants{
+            roomVariants{
                 id
                 name
                 sku
                 stocks {
-                    warehouse {
+                    hotel {
                         slug
                     }
                     quantity
@@ -1809,12 +1809,12 @@ PRODUCT_VARIANT_BULK_CREATE_MUTATION = """
 """
 
 
-def test_product_variant_bulk_create_by_attribute_id(
-    staff_api_client, product, size_attribute, permission_manage_products
+def test_room_variant_bulk_create_by_attribute_id(
+    staff_api_client, room, size_attribute, permission_manage_rooms
 ):
-    product_variant_count = ProductVariant.objects.count()
+    room_variant_count = RoomVariant.objects.count()
     attribute_value_count = size_attribute.values.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     attribut_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     attribute_value = size_attribute.values.last()
     sku = str(uuid4())[:12]
@@ -1827,36 +1827,36 @@ def test_product_variant_bulk_create_by_attribute_id(
         }
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert not data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert not data["bulkRoomErrors"]
     assert data["count"] == 1
-    assert data["productVariants"][0]["name"] == attribute_value.name
-    assert product_variant_count + 1 == ProductVariant.objects.count()
+    assert data["roomVariants"][0]["name"] == attribute_value.name
+    assert room_variant_count + 1 == RoomVariant.objects.count()
     assert attribute_value_count == size_attribute.values.count()
-    product_variant = ProductVariant.objects.get(sku=sku)
-    product.refresh_from_db()
-    assert product.default_variant == product_variant
+    room_variant = RoomVariant.objects.get(sku=sku)
+    room.refresh_from_db()
+    assert room.default_variant == room_variant
 
 
-def test_product_variant_bulk_create_only_not_variant_selection_attributes(
-    staff_api_client, product, size_attribute, permission_manage_products
+def test_room_variant_bulk_create_only_not_variant_selection_attributes(
+    staff_api_client, room, size_attribute, permission_manage_rooms
 ):
     """Ensure that sku is set as variant name when only variant selection attributes
     are assigned.
     """
-    product_variant_count = ProductVariant.objects.count()
+    room_variant_count = RoomVariant.objects.count()
     attribute_value_count = size_attribute.values.count()
 
     size_attribute.input_type = AttributeInputType.MULTISELECT
     size_attribute.save(update_fields=["input_type"])
 
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     attribut_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
 
     attribute_value = size_attribute.values.last()
@@ -1870,49 +1870,49 @@ def test_product_variant_bulk_create_only_not_variant_selection_attributes(
         }
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert not data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert not data["bulkRoomErrors"]
     assert data["count"] == 1
-    assert data["productVariants"][0]["name"] == sku
-    assert product_variant_count + 1 == ProductVariant.objects.count()
+    assert data["roomVariants"][0]["name"] == sku
+    assert room_variant_count + 1 == RoomVariant.objects.count()
     assert attribute_value_count == size_attribute.values.count()
-    product_variant = ProductVariant.objects.get(sku=sku)
-    product.refresh_from_db()
-    assert product.default_variant == product_variant
+    room_variant = RoomVariant.objects.get(sku=sku)
+    room.refresh_from_db()
+    assert room.default_variant == room_variant
 
 
-def test_product_variant_bulk_create_empty_attribute(
-    staff_api_client, product, size_attribute, permission_manage_products
+def test_room_variant_bulk_create_empty_attribute(
+    staff_api_client, room, size_attribute, permission_manage_rooms
 ):
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     variants = [{"sku": str(uuid4())[:12], "attributes": []}]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert not data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert not data["bulkRoomErrors"]
     assert data["count"] == 1
-    assert product_variant_count + 1 == ProductVariant.objects.count()
+    assert room_variant_count + 1 == RoomVariant.objects.count()
 
 
-def test_product_variant_bulk_create_with_new_attribute_value(
-    staff_api_client, product, size_attribute, permission_manage_products
+def test_room_variant_bulk_create_with_new_attribute_value(
+    staff_api_client, room, size_attribute, permission_manage_rooms
 ):
-    product_variant_count = ProductVariant.objects.count()
+    room_variant_count = RoomVariant.objects.count()
     attribute_value_count = size_attribute.values.count()
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     attribute_value = size_attribute.values.last()
     variants = [
         {
@@ -1925,34 +1925,34 @@ def test_product_variant_bulk_create_with_new_attribute_value(
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert not data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert not data["bulkRoomErrors"]
     assert data["count"] == 2
-    assert product_variant_count + 2 == ProductVariant.objects.count()
+    assert room_variant_count + 2 == RoomVariant.objects.count()
     assert attribute_value_count + 1 == size_attribute.values.count()
 
 
-def test_product_variant_bulk_create_variant_selection_and_other_attributes(
+def test_room_variant_bulk_create_variant_selection_and_other_attributes(
     staff_api_client,
-    product,
+    room,
     size_attribute,
     file_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     """Ensure that only values for variant selection attributes are required."""
-    product_type = product.product_type
-    product_type.variant_attributes.add(file_attribute)
+    room_type = room.room_type
+    room_type.variant_attributes.add(file_attribute)
 
-    product_variant_count = ProductVariant.objects.count()
+    room_variant_count = RoomVariant.objects.count()
     attribute_value_count = size_attribute.values.count()
 
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
 
     attribute_value = size_attribute.values.last()
@@ -1966,27 +1966,27 @@ def test_product_variant_bulk_create_variant_selection_and_other_attributes(
         }
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert not data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert not data["bulkRoomErrors"]
     assert data["count"] == 1
-    assert product_variant_count + 1 == ProductVariant.objects.count()
+    assert room_variant_count + 1 == RoomVariant.objects.count()
     assert attribute_value_count == size_attribute.values.count()
-    product_variant = ProductVariant.objects.get(sku=sku)
-    product.refresh_from_db()
-    assert product.default_variant == product_variant
+    room_variant = RoomVariant.objects.get(sku=sku)
+    room.refresh_from_db()
+    assert room.default_variant == room_variant
 
 
-def test_product_variant_bulk_create_stocks_input(
-    staff_api_client, product, permission_manage_products, warehouses, size_attribute
+def test_room_variant_bulk_create_stocks_input(
+    staff_api_client, room, permission_manage_rooms, hotels, size_attribute
 ):
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     attribute_value_count = size_attribute.values.count()
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     attribute_value = size_attribute.values.last()
@@ -1996,8 +1996,8 @@ def test_product_variant_bulk_create_stocks_input(
             "stocks": [
                 {
                     "quantity": 10,
-                    "warehouse": graphene.Node.to_global_id(
-                        "Warehouse", warehouses[0].pk
+                    "hotel": graphene.Node.to_global_id(
+                        "Hotel", hotels[0].pk
                     ),
                 }
             ],
@@ -2009,30 +2009,30 @@ def test_product_variant_bulk_create_stocks_input(
             "stocks": [
                 {
                     "quantity": 15,
-                    "warehouse": graphene.Node.to_global_id(
-                        "Warehouse", warehouses[0].pk
+                    "hotel": graphene.Node.to_global_id(
+                        "Hotel", hotels[0].pk
                     ),
                 },
                 {
                     "quantity": 15,
-                    "warehouse": graphene.Node.to_global_id(
-                        "Warehouse", warehouses[1].pk
+                    "hotel": graphene.Node.to_global_id(
+                        "Hotel", hotels[1].pk
                     ),
                 },
             ],
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert not data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert not data["bulkRoomErrors"]
     assert data["count"] == 2
-    assert product_variant_count + 2 == ProductVariant.objects.count()
+    assert room_variant_count + 2 == RoomVariant.objects.count()
     assert attribute_value_count + 1 == size_attribute.values.count()
 
     expected_result = {
@@ -2040,7 +2040,7 @@ def test_product_variant_bulk_create_stocks_input(
             "sku": variants[0]["sku"],
             "stocks": [
                 {
-                    "warehouse": {"slug": warehouses[0].slug},
+                    "hotel": {"slug": hotels[0].slug},
                     "quantity": variants[0]["stocks"][0]["quantity"],
                 }
             ],
@@ -2049,17 +2049,17 @@ def test_product_variant_bulk_create_stocks_input(
             "sku": variants[1]["sku"],
             "stocks": [
                 {
-                    "warehouse": {"slug": warehouses[0].slug},
+                    "hotel": {"slug": hotels[0].slug},
                     "quantity": variants[1]["stocks"][0]["quantity"],
                 },
                 {
-                    "warehouse": {"slug": warehouses[1].slug},
+                    "hotel": {"slug": hotels[1].slug},
                     "quantity": variants[1]["stocks"][1]["quantity"],
                 },
             ],
         },
     }
-    for variant_data in data["productVariants"]:
+    for variant_data in data["roomVariants"]:
         variant_data.pop("id")
         assert variant_data["sku"] in expected_result
         expected_variant = expected_result[variant_data["sku"]]
@@ -2067,21 +2067,21 @@ def test_product_variant_bulk_create_stocks_input(
         assert all([stock in expected_stocks for stock in variant_data["stocks"]])
 
 
-def test_product_variant_bulk_create_duplicated_warehouses(
-    staff_api_client, product, permission_manage_products, warehouses, size_attribute
+def test_room_variant_bulk_create_duplicated_hotels(
+    staff_api_client, room, permission_manage_rooms, hotels, size_attribute
 ):
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     attribute_value = size_attribute.values.last()
-    warehouse1_id = graphene.Node.to_global_id("Warehouse", warehouses[0].pk)
+    hotel1_id = graphene.Node.to_global_id("Hotel", hotels[0].pk)
     variants = [
         {
             "sku": str(uuid4())[:12],
             "stocks": [
                 {
                     "quantity": 10,
-                    "warehouse": graphene.Node.to_global_id(
-                        "Warehouse", warehouses[1].pk
+                    "hotel": graphene.Node.to_global_id(
+                        "Hotel", hotels[1].pk
                     ),
                 }
             ],
@@ -2091,45 +2091,45 @@ def test_product_variant_bulk_create_duplicated_warehouses(
             "sku": str(uuid4())[:12],
             "attributes": [{"id": size_attribute_id, "values": ["Test-attribute"]}],
             "stocks": [
-                {"quantity": 15, "warehouse": warehouse1_id},
-                {"quantity": 15, "warehouse": warehouse1_id},
+                {"quantity": 15, "hotel": hotel1_id},
+                {"quantity": 15, "hotel": hotel1_id},
             ],
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    errors = data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    errors = data["bulkRoomErrors"]
 
-    assert not data["productVariants"]
+    assert not data["roomVariants"]
     assert len(errors) == 1
     error = errors[0]
     assert error["field"] == "stocks"
     assert error["index"] == 1
-    assert error["code"] == ProductErrorCode.DUPLICATED_INPUT_ITEM.name
-    assert error["warehouses"] == [warehouse1_id]
+    assert error["code"] == RoomErrorCode.DUPLICATED_INPUT_ITEM.name
+    assert error["hotels"] == [hotel1_id]
 
 
-def test_product_variant_bulk_create_channel_listings_input(
+def test_room_variant_bulk_create_channel_listings_input(
     staff_api_client,
-    product_available_in_many_channels,
-    permission_manage_products,
-    warehouses,
+    room_available_in_many_channels,
+    permission_manage_rooms,
+    hotels,
     size_attribute,
     channel_USD,
     channel_PLN,
 ):
-    product = product_available_in_many_channels
-    ProductChannelListing.objects.filter(product=product, channel=channel_PLN).update(
+    room = room_available_in_many_channels
+    RoomChannelListing.objects.filter(room=room, channel=channel_PLN).update(
         is_published=False
     )
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     attribute_value_count = size_attribute.values.count()
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     attribute_value = size_attribute.values.last()
@@ -2163,16 +2163,16 @@ def test_product_variant_bulk_create_channel_listings_input(
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert not data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert not data["bulkRoomErrors"]
     assert data["count"] == 2
-    assert product_variant_count + 2 == ProductVariant.objects.count()
+    assert room_variant_count + 2 == RoomVariant.objects.count()
     assert attribute_value_count + 1 == size_attribute.values.count()
 
     expected_result = {
@@ -2220,7 +2220,7 @@ def test_product_variant_bulk_create_channel_listings_input(
             ],
         },
     }
-    for variant_data in data["productVariants"]:
+    for variant_data in data["roomVariants"]:
         variant_data.pop("id")
         assert variant_data["sku"] in expected_result
         expected_variant = expected_result[variant_data["sku"]]
@@ -2233,17 +2233,17 @@ def test_product_variant_bulk_create_channel_listings_input(
         )
 
 
-def test_product_variant_bulk_create_duplicated_channels(
+def test_room_variant_bulk_create_duplicated_channels(
     staff_api_client,
-    product_available_in_many_channels,
-    permission_manage_products,
-    warehouses,
+    room_available_in_many_channels,
+    permission_manage_rooms,
+    hotels,
     size_attribute,
     channel_USD,
 ):
-    product = product_available_in_many_channels
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room = room_available_in_many_channels
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     attribute_value = size_attribute.values.last()
     channel_id = graphene.Node.to_global_id("Channel", channel_USD.pk)
@@ -2258,33 +2258,33 @@ def test_product_variant_bulk_create_duplicated_channels(
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert len(data["bulkProductErrors"]) == 1
-    error = data["bulkProductErrors"][0]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert len(data["bulkRoomErrors"]) == 1
+    error = data["bulkRoomErrors"][0]
     assert error["field"] == "channelListings"
-    assert error["code"] == ProductErrorCode.DUPLICATED_INPUT_ITEM.name
+    assert error["code"] == RoomErrorCode.DUPLICATED_INPUT_ITEM.name
     assert error["index"] == 0
     assert error["channels"] == [channel_id]
-    assert product_variant_count == ProductVariant.objects.count()
+    assert room_variant_count == RoomVariant.objects.count()
 
 
-def test_product_variant_bulk_create_too_many_decimal_places_in_price(
+def test_room_variant_bulk_create_too_many_decimal_places_in_price(
     staff_api_client,
-    product_available_in_many_channels,
-    permission_manage_products,
+    room_available_in_many_channels,
+    permission_manage_rooms,
     size_attribute,
     channel_USD,
     channel_PLN,
 ):
-    product = product_available_in_many_channels
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room = room_available_in_many_channels
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     attribute_value = size_attribute.values.last()
     channel_id = graphene.Node.to_global_id("Channel", channel_USD.pk)
@@ -2300,46 +2300,46 @@ def test_product_variant_bulk_create_too_many_decimal_places_in_price(
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert len(data["bulkProductErrors"]) == 4
-    errors = data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert len(data["bulkRoomErrors"]) == 4
+    errors = data["bulkRoomErrors"]
     assert errors[0]["field"] == "price"
-    assert errors[0]["code"] == ProductErrorCode.INVALID.name
+    assert errors[0]["code"] == RoomErrorCode.INVALID.name
     assert errors[0]["index"] == 0
     assert errors[0]["channels"] == [channel_id]
     assert errors[1]["field"] == "price"
-    assert errors[1]["code"] == ProductErrorCode.INVALID.name
+    assert errors[1]["code"] == RoomErrorCode.INVALID.name
     assert errors[1]["index"] == 0
     assert errors[1]["channels"] == [channel_pln_id]
     assert errors[2]["field"] == "costPrice"
-    assert errors[2]["code"] == ProductErrorCode.INVALID.name
+    assert errors[2]["code"] == RoomErrorCode.INVALID.name
     assert errors[2]["index"] == 0
     assert errors[2]["channels"] == [channel_id]
     assert errors[3]["field"] == "costPrice"
-    assert errors[3]["code"] == ProductErrorCode.INVALID.name
+    assert errors[3]["code"] == RoomErrorCode.INVALID.name
     assert errors[3]["index"] == 0
     assert errors[3]["channels"] == [channel_pln_id]
-    assert product_variant_count == ProductVariant.objects.count()
+    assert room_variant_count == RoomVariant.objects.count()
 
 
-def test_product_variant_bulk_create_product_not_assigned_to_channel(
+def test_room_variant_bulk_create_room_not_assigned_to_channel(
     staff_api_client,
-    product,
-    permission_manage_products,
-    warehouses,
+    room,
+    permission_manage_rooms,
+    hotels,
     size_attribute,
     channel_PLN,
 ):
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
-    assert not ProductChannelListing.objects.filter(
-        product=product, channel=channel_PLN
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    assert not RoomChannelListing.objects.filter(
+        room=room, channel=channel_PLN
     ).exists()
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     attribute_value = size_attribute.values.last()
@@ -2352,34 +2352,34 @@ def test_product_variant_bulk_create_product_not_assigned_to_channel(
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert len(data["bulkProductErrors"]) == 1
-    error = data["bulkProductErrors"][0]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert len(data["bulkRoomErrors"]) == 1
+    error = data["bulkRoomErrors"][0]
     assert error["field"] == "channelId"
-    assert error["code"] == ProductErrorCode.PRODUCT_NOT_ASSIGNED_TO_CHANNEL.name
+    assert error["code"] == RoomErrorCode.ROOM_NOT_ASSIGNED_TO_CHANNEL.name
     assert error["index"] == 0
     assert error["channels"] == [channel_id]
-    assert product_variant_count == ProductVariant.objects.count()
+    assert room_variant_count == RoomVariant.objects.count()
 
 
-def test_product_variant_bulk_create_duplicated_sku(
+def test_room_variant_bulk_create_duplicated_sku(
     staff_api_client,
-    product,
-    product_with_default_variant,
+    room,
+    room_with_default_variant,
     size_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
-    sku = product.variants.first().sku
-    sku2 = product_with_default_variant.variants.first().sku
+    sku = room.variants.first().sku
+    sku2 = room_with_default_variant.variants.first().sku
     assert not sku == sku2
     variants = [
         {
@@ -2392,27 +2392,27 @@ def test_product_variant_bulk_create_duplicated_sku(
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert len(data["bulkProductErrors"]) == 2
-    errors = data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert len(data["bulkRoomErrors"]) == 2
+    errors = data["bulkRoomErrors"]
     for index, error in enumerate(errors):
         assert error["field"] == "sku"
-        assert error["code"] == ProductErrorCode.UNIQUE.name
+        assert error["code"] == RoomErrorCode.UNIQUE.name
         assert error["index"] == index
-    assert product_variant_count == ProductVariant.objects.count()
+    assert room_variant_count == RoomVariant.objects.count()
 
 
-def test_product_variant_bulk_create_duplicated_sku_in_input(
-    staff_api_client, product, size_attribute, permission_manage_products
+def test_room_variant_bulk_create_duplicated_sku_in_input(
+    staff_api_client, room, size_attribute, permission_manage_rooms
 ):
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     sku = str(uuid4())[:12]
     variants = [
@@ -2426,32 +2426,32 @@ def test_product_variant_bulk_create_duplicated_sku_in_input(
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert len(data["bulkProductErrors"]) == 1
-    error = data["bulkProductErrors"][0]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert len(data["bulkRoomErrors"]) == 1
+    error = data["bulkRoomErrors"][0]
     assert error["field"] == "sku"
-    assert error["code"] == ProductErrorCode.UNIQUE.name
+    assert error["code"] == RoomErrorCode.UNIQUE.name
     assert error["index"] == 1
-    assert product_variant_count == ProductVariant.objects.count()
+    assert room_variant_count == RoomVariant.objects.count()
 
 
-def test_product_variant_bulk_create_many_errors(
-    staff_api_client, product, size_attribute, permission_manage_products
+def test_room_variant_bulk_create_many_errors(
+    staff_api_client, room, size_attribute, permission_manage_rooms
 ):
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.pk)
     non_existent_attribute_pk = 0
     invalid_attribute_id = graphene.Node.to_global_id(
         "Attribute", non_existent_attribute_pk
     )
-    sku = product.variants.first().sku
+    sku = room.variants.first().sku
     variants = [
         {
             "sku": str(uuid4())[:12],
@@ -2471,48 +2471,48 @@ def test_product_variant_bulk_create_many_errors(
         },
     ]
 
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert len(data["bulkProductErrors"]) == 2
-    errors = data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert len(data["bulkRoomErrors"]) == 2
+    errors = data["bulkRoomErrors"]
     expected_errors = [
         {
             "field": "sku",
             "index": 2,
-            "code": ProductErrorCode.UNIQUE.name,
+            "code": RoomErrorCode.UNIQUE.name,
             "message": ANY,
-            "warehouses": None,
+            "hotels": None,
             "channels": None,
         },
         {
             "field": "attributes",
             "index": 3,
-            "code": ProductErrorCode.NOT_FOUND.name,
+            "code": RoomErrorCode.NOT_FOUND.name,
             "message": ANY,
-            "warehouses": None,
+            "hotels": None,
             "channels": None,
         },
     ]
     for expected_error in expected_errors:
         assert expected_error in errors
-    assert product_variant_count == ProductVariant.objects.count()
+    assert room_variant_count == RoomVariant.objects.count()
 
 
-def test_product_variant_bulk_create_two_variants_duplicated_attribute_value(
+def test_room_variant_bulk_create_two_variants_duplicated_attribute_value(
     staff_api_client,
-    product_with_variant_with_two_attributes,
+    room_with_variant_with_two_attributes,
     color_attribute,
     size_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
-    product = product_with_variant_with_two_attributes
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room = room_with_variant_with_two_attributes
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     color_attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.id)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.id)
     variants = [
@@ -2524,31 +2524,31 @@ def test_product_variant_bulk_create_two_variants_duplicated_attribute_value(
             ],
         }
     ]
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert len(data["bulkProductErrors"]) == 1
-    error = data["bulkProductErrors"][0]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert len(data["bulkRoomErrors"]) == 1
+    error = data["bulkRoomErrors"][0]
     assert error["field"] == "attributes"
-    assert error["code"] == ProductErrorCode.DUPLICATED_INPUT_ITEM.name
+    assert error["code"] == RoomErrorCode.DUPLICATED_INPUT_ITEM.name
     assert error["index"] == 0
-    assert product_variant_count == ProductVariant.objects.count()
+    assert room_variant_count == RoomVariant.objects.count()
 
 
-def test_product_variant_bulk_create_two_variants_duplicated_attribute_value_in_input(
+def test_room_variant_bulk_create_two_variants_duplicated_attribute_value_in_input(
     staff_api_client,
-    product_with_variant_with_two_attributes,
-    permission_manage_products,
+    room_with_variant_with_two_attributes,
+    permission_manage_rooms,
     color_attribute,
     size_attribute,
 ):
-    product = product_with_variant_with_two_attributes
-    product_id = graphene.Node.to_global_id("Product", product.pk)
-    product_variant_count = ProductVariant.objects.count()
+    room = room_with_variant_with_two_attributes
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    room_variant_count = RoomVariant.objects.count()
     color_attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.id)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.id)
     attributes = [
@@ -2559,31 +2559,31 @@ def test_product_variant_bulk_create_two_variants_duplicated_attribute_value_in_
         {"sku": str(uuid4())[:12], "attributes": attributes},
         {"sku": str(uuid4())[:12], "attributes": attributes},
     ]
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert len(data["bulkProductErrors"]) == 1
-    error = data["bulkProductErrors"][0]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert len(data["bulkRoomErrors"]) == 1
+    error = data["bulkRoomErrors"][0]
     assert error["field"] == "attributes"
-    assert error["code"] == ProductErrorCode.DUPLICATED_INPUT_ITEM.name
+    assert error["code"] == RoomErrorCode.DUPLICATED_INPUT_ITEM.name
     assert error["index"] == 1
-    assert product_variant_count == ProductVariant.objects.count()
+    assert room_variant_count == RoomVariant.objects.count()
 
 
-def test_product_variant_bulk_create_two_variants_duplicated_one_attribute_value(
+def test_room_variant_bulk_create_two_variants_duplicated_one_attribute_value(
     staff_api_client,
-    product_with_variant_with_two_attributes,
+    room_with_variant_with_two_attributes,
     color_attribute,
     size_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
-    product = product_with_variant_with_two_attributes
-    product_variant_count = ProductVariant.objects.count()
-    product_id = graphene.Node.to_global_id("Product", product.pk)
+    room = room_with_variant_with_two_attributes
+    room_variant_count = RoomVariant.objects.count()
+    room_id = graphene.Node.to_global_id("Room", room.pk)
     color_attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.id)
     size_attribute_id = graphene.Node.to_global_id("Attribute", size_attribute.id)
     variants = [
@@ -2595,28 +2595,28 @@ def test_product_variant_bulk_create_two_variants_duplicated_one_attribute_value
             ],
         }
     ]
-    variables = {"productId": product_id, "variants": variants}
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    variables = {"roomId": room_id, "variants": variants}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
-        PRODUCT_VARIANT_BULK_CREATE_MUTATION, variables
+        ROOM_VARIANT_BULK_CREATE_MUTATION, variables
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantBulkCreate"]
-    assert not data["bulkProductErrors"]
+    data = content["data"]["roomVariantBulkCreate"]
+    assert not data["bulkRoomErrors"]
     assert data["count"] == 1
-    assert product_variant_count + 1 == ProductVariant.objects.count()
+    assert room_variant_count + 1 == RoomVariant.objects.count()
 
 
 VARIANT_STOCKS_CREATE_MUTATION = """
-    mutation ProductVariantStocksCreate($variantId: ID!, $stocks: [StockInput!]!){
-        productVariantStocksCreate(variantId: $variantId, stocks: $stocks){
-            productVariant{
+    mutation RoomVariantStocksCreate($variantId: ID!, $stocks: [StockInput!]!){
+        roomVariantStocksCreate(variantId: $variantId, stocks: $stocks){
+            roomVariant{
                 id
                 stocks {
                     quantity
                     quantityAllocated
                     id
-                    warehouse{
+                    hotel{
                         slug
                     }
                 }
@@ -2633,21 +2633,21 @@ VARIANT_STOCKS_CREATE_MUTATION = """
 
 
 def test_variant_stocks_create(
-    staff_api_client, variant, warehouse, permission_manage_products
+    staff_api_client, variant, hotel, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.id),
             "quantity": 20,
         },
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", second_warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", second_hotel.id),
             "quantity": 100,
         },
     ]
@@ -2655,27 +2655,27 @@ def test_variant_stocks_create(
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_CREATE_MUTATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksCreate"]
+    data = content["data"]["roomVariantStocksCreate"]
 
     expected_result = [
         {
             "quantity": stocks[0]["quantity"],
             "quantityAllocated": 0,
-            "warehouse": {"slug": warehouse.slug},
+            "hotel": {"slug": hotel.slug},
         },
         {
             "quantity": stocks[1]["quantity"],
             "quantityAllocated": 0,
-            "warehouse": {"slug": second_warehouse.slug},
+            "hotel": {"slug": second_hotel.slug},
         },
     ]
     assert not data["bulkStockErrors"]
-    assert len(data["productVariant"]["stocks"]) == len(stocks)
+    assert len(data["roomVariant"]["stocks"]) == len(stocks)
     result = []
-    for stock in data["productVariant"]["stocks"]:
+    for stock in data["roomVariant"]["stocks"]:
         stock.pop("id")
         result.append(stock)
     for res in result:
@@ -2683,42 +2683,42 @@ def test_variant_stocks_create(
 
 
 def test_variant_stocks_create_empty_stock_input(
-    staff_api_client, variant, permission_manage_products
+    staff_api_client, variant, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
 
     variables = {"variantId": variant_id, "stocks": []}
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_CREATE_MUTATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksCreate"]
+    data = content["data"]["roomVariantStocksCreate"]
 
     assert not data["bulkStockErrors"]
-    assert len(data["productVariant"]["stocks"]) == variant.stocks.count()
-    assert data["productVariant"]["id"] == variant_id
+    assert len(data["roomVariant"]["stocks"]) == variant.stocks.count()
+    assert data["roomVariant"]["id"] == variant_id
 
 
 def test_variant_stocks_create_stock_already_exists(
-    staff_api_client, variant, warehouse, permission_manage_products
+    staff_api_client, variant, hotel, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
-    Stock.objects.create(product_variant=variant, warehouse=warehouse, quantity=10)
+    Stock.objects.create(room_variant=variant, hotel=hotel, quantity=10)
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.id),
             "quantity": 20,
         },
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", second_warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", second_hotel.id),
             "quantity": 100,
         },
     ]
@@ -2726,84 +2726,84 @@ def test_variant_stocks_create_stock_already_exists(
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_CREATE_MUTATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksCreate"]
+    data = content["data"]["roomVariantStocksCreate"]
     errors = data["bulkStockErrors"]
 
     assert errors
     assert errors[0]["code"] == StockErrorCode.UNIQUE.name
-    assert errors[0]["field"] == "warehouse"
+    assert errors[0]["field"] == "hotel"
     assert errors[0]["index"] == 0
 
 
-def test_variant_stocks_create_stock_duplicated_warehouse(
-    staff_api_client, variant, warehouse, permission_manage_products
+def test_variant_stocks_create_stock_duplicated_hotel(
+    staff_api_client, variant, hotel, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
-    second_warehouse_id = graphene.Node.to_global_id("Warehouse", second_warehouse.id)
+    second_hotel_id = graphene.Node.to_global_id("Hotel", second_hotel.id)
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.id),
             "quantity": 20,
         },
-        {"warehouse": second_warehouse_id, "quantity": 100},
-        {"warehouse": second_warehouse_id, "quantity": 120},
+        {"hotel": second_hotel_id, "quantity": 100},
+        {"hotel": second_hotel_id, "quantity": 120},
     ]
     variables = {"variantId": variant_id, "stocks": stocks}
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_CREATE_MUTATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksCreate"]
+    data = content["data"]["roomVariantStocksCreate"]
     errors = data["bulkStockErrors"]
 
     assert errors
     assert errors[0]["code"] == StockErrorCode.UNIQUE.name
-    assert errors[0]["field"] == "warehouse"
+    assert errors[0]["field"] == "hotel"
     assert errors[0]["index"] == 2
 
 
-def test_variant_stocks_create_stock_duplicated_warehouse_and_warehouse_already_exists(
-    staff_api_client, variant, warehouse, permission_manage_products
+def test_variant_stocks_create_stock_duplicated_hotel_and_hotel_already_exists(
+    staff_api_client, variant, hotel, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
-    second_warehouse_id = graphene.Node.to_global_id("Warehouse", second_warehouse.id)
+    second_hotel_id = graphene.Node.to_global_id("Hotel", second_hotel.id)
     Stock.objects.create(
-        product_variant=variant, warehouse=second_warehouse, quantity=10
+        room_variant=variant, hotel=second_hotel, quantity=10
     )
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.id),
             "quantity": 20,
         },
-        {"warehouse": second_warehouse_id, "quantity": 100},
-        {"warehouse": second_warehouse_id, "quantity": 120},
+        {"hotel": second_hotel_id, "quantity": 100},
+        {"hotel": second_hotel_id, "quantity": 120},
     ]
 
     variables = {"variantId": variant_id, "stocks": stocks}
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_CREATE_MUTATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksCreate"]
+    data = content["data"]["roomVariantStocksCreate"]
     errors = data["bulkStockErrors"]
 
     assert len(errors) == 3
@@ -2811,20 +2811,20 @@ def test_variant_stocks_create_stock_duplicated_warehouse_and_warehouse_already_
         StockErrorCode.UNIQUE.name,
     }
     assert {error["field"] for error in errors} == {
-        "warehouse",
+        "hotel",
     }
     assert {error["index"] for error in errors} == {1, 2}
 
 
 VARIANT_STOCKS_UPDATE_MUTATIONS = """
-    mutation ProductVariantStocksUpdate($variantId: ID!, $stocks: [StockInput!]!){
-        productVariantStocksUpdate(variantId: $variantId, stocks: $stocks){
-            productVariant{
+    mutation RoomVariantStocksUpdate($variantId: ID!, $stocks: [StockInput!]!){
+        roomVariantStocksUpdate(variantId: $variantId, stocks: $stocks){
+            roomVariant{
                 stocks{
                     quantity
                     quantityAllocated
                     id
-                    warehouse{
+                    hotel{
                         slug
                     }
                 }
@@ -2840,24 +2840,24 @@ VARIANT_STOCKS_UPDATE_MUTATIONS = """
 """
 
 
-def test_product_variant_stocks_update(
-    staff_api_client, variant, warehouse, permission_manage_products
+def test_room_variant_stocks_update(
+    staff_api_client, variant, hotel, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
-    Stock.objects.create(product_variant=variant, warehouse=warehouse, quantity=10)
+    Stock.objects.create(room_variant=variant, hotel=hotel, quantity=10)
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.id),
             "quantity": 20,
         },
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", second_warehouse.id),
+            "hotel": graphene.Node.to_global_id("Hotel", second_hotel.id),
             "quantity": 100,
         },
     ]
@@ -2865,73 +2865,73 @@ def test_product_variant_stocks_update(
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_UPDATE_MUTATIONS,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksUpdate"]
+    data = content["data"]["roomVariantStocksUpdate"]
 
     expected_result = [
         {
             "quantity": stocks[0]["quantity"],
             "quantityAllocated": 0,
-            "warehouse": {"slug": warehouse.slug},
+            "hotel": {"slug": hotel.slug},
         },
         {
             "quantity": stocks[1]["quantity"],
             "quantityAllocated": 0,
-            "warehouse": {"slug": second_warehouse.slug},
+            "hotel": {"slug": second_hotel.slug},
         },
     ]
     assert not data["bulkStockErrors"]
-    assert len(data["productVariant"]["stocks"]) == len(stocks)
+    assert len(data["roomVariant"]["stocks"]) == len(stocks)
     result = []
-    for stock in data["productVariant"]["stocks"]:
+    for stock in data["roomVariant"]["stocks"]:
         stock.pop("id")
         result.append(stock)
     for res in result:
         assert res in expected_result
 
 
-def test_product_variant_stocks_update_with_empty_stock_list(
-    staff_api_client, variant, warehouse, permission_manage_products
+def test_room_variant_stocks_update_with_empty_stock_list(
+    staff_api_client, variant, hotel, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     stocks = []
     variables = {"variantId": variant_id, "stocks": stocks}
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_UPDATE_MUTATIONS,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksUpdate"]
+    data = content["data"]["roomVariantStocksUpdate"]
 
     assert not data["bulkStockErrors"]
-    assert len(data["productVariant"]["stocks"]) == len(stocks)
+    assert len(data["roomVariant"]["stocks"]) == len(stocks)
 
 
-def test_variant_stocks_update_stock_duplicated_warehouse(
-    staff_api_client, variant, warehouse, permission_manage_products
+def test_variant_stocks_update_stock_duplicated_hotel(
+    staff_api_client, variant, hotel, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
-    Stock.objects.create(product_variant=variant, warehouse=warehouse, quantity=10)
+    Stock.objects.create(room_variant=variant, hotel=hotel, quantity=10)
 
     stocks = [
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.pk),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
             "quantity": 20,
         },
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", second_warehouse.pk),
+            "hotel": graphene.Node.to_global_id("Hotel", second_hotel.pk),
             "quantity": 100,
         },
         {
-            "warehouse": graphene.Node.to_global_id("Warehouse", warehouse.pk),
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
             "quantity": 150,
         },
     ]
@@ -2939,28 +2939,28 @@ def test_variant_stocks_update_stock_duplicated_warehouse(
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_UPDATE_MUTATIONS,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksUpdate"]
+    data = content["data"]["roomVariantStocksUpdate"]
     errors = data["bulkStockErrors"]
 
     assert errors
     assert errors[0]["code"] == StockErrorCode.UNIQUE.name
-    assert errors[0]["field"] == "warehouse"
+    assert errors[0]["field"] == "hotel"
     assert errors[0]["index"] == 2
 
 
 VARIANT_STOCKS_DELETE_MUTATION = """
-    mutation ProductVariantStocksDelete($variantId: ID!, $warehouseIds: [ID!]!){
-        productVariantStocksDelete(
-            variantId: $variantId, warehouseIds: $warehouseIds
+    mutation RoomVariantStocksDelete($variantId: ID!, $hotelIds: [ID!]!){
+        roomVariantStocksDelete(
+            variantId: $variantId, hotelIds: $hotelIds
         ){
-            productVariant{
+            roomVariant{
                 stocks{
                     id
                     quantity
-                    warehouse{
+                    hotel{
                         slug
                     }
                 }
@@ -2975,74 +2975,74 @@ VARIANT_STOCKS_DELETE_MUTATION = """
 """
 
 
-def test_product_variant_stocks_delete_mutation(
-    staff_api_client, variant, warehouse, permission_manage_products
+def test_room_variant_stocks_delete_mutation(
+    staff_api_client, variant, hotel, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
     Stock.objects.bulk_create(
         [
-            Stock(product_variant=variant, warehouse=warehouse, quantity=10),
-            Stock(product_variant=variant, warehouse=second_warehouse, quantity=140),
+            Stock(room_variant=variant, hotel=hotel, quantity=10),
+            Stock(room_variant=variant, hotel=second_hotel, quantity=140),
         ]
     )
     stocks_count = variant.stocks.count()
 
-    warehouse_ids = [graphene.Node.to_global_id("Warehouse", second_warehouse.id)]
+    hotel_ids = [graphene.Node.to_global_id("Hotel", second_hotel.id)]
 
-    variables = {"variantId": variant_id, "warehouseIds": warehouse_ids}
+    variables = {"variantId": variant_id, "hotelIds": hotel_ids}
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_DELETE_MUTATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksDelete"]
+    data = content["data"]["roomVariantStocksDelete"]
 
     variant.refresh_from_db()
     assert not data["stockErrors"]
     assert (
-        len(data["productVariant"]["stocks"])
+        len(data["roomVariant"]["stocks"])
         == variant.stocks.count()
         == stocks_count - 1
     )
-    assert data["productVariant"]["stocks"][0]["quantity"] == 10
-    assert data["productVariant"]["stocks"][0]["warehouse"]["slug"] == warehouse.slug
+    assert data["roomVariant"]["stocks"][0]["quantity"] == 10
+    assert data["roomVariant"]["stocks"][0]["hotel"]["slug"] == hotel.slug
 
 
-def test_product_variant_stocks_delete_mutation_invalid_warehouse_id(
-    staff_api_client, variant, warehouse, permission_manage_products
+def test_room_variant_stocks_delete_mutation_invalid_hotel_id(
+    staff_api_client, variant, hotel, permission_manage_rooms
 ):
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
-    second_warehouse = Warehouse.objects.get(pk=warehouse.pk)
-    second_warehouse.slug = "second warehouse"
-    second_warehouse.pk = None
-    second_warehouse.save()
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    second_hotel = Hotel.objects.get(pk=hotel.pk)
+    second_hotel.slug = "second hotel"
+    second_hotel.pk = None
+    second_hotel.save()
 
     Stock.objects.bulk_create(
-        [Stock(product_variant=variant, warehouse=warehouse, quantity=10)]
+        [Stock(room_variant=variant, hotel=hotel, quantity=10)]
     )
     stocks_count = variant.stocks.count()
 
-    warehouse_ids = [graphene.Node.to_global_id("Warehouse", second_warehouse.id)]
+    hotel_ids = [graphene.Node.to_global_id("Hotel", second_hotel.id)]
 
-    variables = {"variantId": variant_id, "warehouseIds": warehouse_ids}
+    variables = {"variantId": variant_id, "hotelIds": hotel_ids}
     response = staff_api_client.post_graphql(
         VARIANT_STOCKS_DELETE_MUTATION,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
-    data = content["data"]["productVariantStocksDelete"]
+    data = content["data"]["roomVariantStocksDelete"]
 
     variant.refresh_from_db()
     assert not data["stockErrors"]
     assert (
-        len(data["productVariant"]["stocks"]) == variant.stocks.count() == stocks_count
+        len(data["roomVariant"]["stocks"]) == variant.stocks.count() == stocks_count
     )
-    assert data["productVariant"]["stocks"][0]["quantity"] == 10
-    assert data["productVariant"]["stocks"][0]["warehouse"]["slug"] == warehouse.slug
+    assert data["roomVariant"]["stocks"][0]["quantity"] == 10
+    assert data["roomVariant"]["stocks"][0]["hotel"]["slug"] == hotel.slug

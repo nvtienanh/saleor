@@ -5,7 +5,7 @@ import pytest
 from ..schema.email import (
     get_order_confirmation_markup,
     get_organization,
-    get_product_data,
+    get_room_data,
 )
 
 
@@ -19,36 +19,36 @@ def test_get_organization(site_settings):
     assert result["name"] == example_name
 
 
-def test_get_product_data_without_image(order_with_lines):
-    """Tested OrderLine Product has no image assigned."""
+def test_get_room_data_without_image(order_with_lines):
+    """Tested OrderLine Room has no image assigned."""
     line = order_with_lines.lines.first()
     organization = get_organization()
-    result = get_product_data(line, organization)
+    result = get_room_data(line, organization)
     assert "image" not in result["itemOffered"]
 
 
-def test_get_product_data_with_image(order_with_lines, product_with_image):
+def test_get_room_data_with_image(order_with_lines, room_with_image):
     line = order_with_lines.lines.first()
-    variant = product_with_image.variants.first()
+    variant = room_with_image.variants.first()
     line.variant = variant
-    line.product_name = str(variant.product)
+    line.room_name = str(variant.room)
     line.variant_name = str(variant)
     line.save()
     organization = get_organization()
-    result = get_product_data(line, organization)
+    result = get_room_data(line, organization)
     assert "image" in result["itemOffered"]
-    assert result["itemOffered"]["name"] == variant.display_product()
+    assert result["itemOffered"]["name"] == variant.display_room()
 
 
-def test_get_product_data_without_line_variant(order_with_lines):
-    """Tested OrderLine Product has no image assigned."""
+def test_get_room_data_without_line_variant(order_with_lines):
+    """Tested OrderLine Room has no image assigned."""
     line = order_with_lines.lines.first()
     organization = get_organization()
     line.variant = None
     line.save()
 
     assert not line.variant
-    result = get_product_data(line, organization)
+    result = get_room_data(line, organization)
 
     assert result == {}
 

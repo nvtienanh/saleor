@@ -7,38 +7,38 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0026_auto_20161230_0347")]
+    dependencies = [("room", "0026_auto_20161230_0347")]
 
     operations = [
         migrations.AlterField(
-            model_name="productclass",
+            model_name="roomclass",
             name="has_variants",
             field=models.BooleanField(default=True, verbose_name="has variants"),
         ),
         migrations.AlterField(
-            model_name="productclass",
+            model_name="roomclass",
             name="is_shipping_required",
             field=models.BooleanField(
                 default=False, verbose_name="is shipping required"
             ),
         ),
         migrations.AlterField(
-            model_name="productclass",
-            name="product_attributes",
+            model_name="roomclass",
+            name="room_attributes",
             field=models.ManyToManyField(
                 blank=True,
-                related_name="products_class",
-                to="product.ProductAttribute",
-                verbose_name="product attributes",
+                related_name="rooms_class",
+                to="room.RoomAttribute",
+                verbose_name="room attributes",
             ),
         ),
         migrations.AlterField(
-            model_name="productclass",
+            model_name="roomclass",
             name="variant_attributes",
             field=models.ManyToManyField(
                 blank=True,
-                related_name="product_variants_class",
-                to="product.ProductAttribute",
+                related_name="room_variants_class",
+                to="room.RoomAttribute",
                 verbose_name="variant attributes",
             ),
         ),

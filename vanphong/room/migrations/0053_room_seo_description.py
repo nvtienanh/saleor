@@ -5,11 +5,11 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0052_slug_field_length")]
+    dependencies = [("room", "0052_slug_field_length")]
 
     operations = [
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="seo_description",
             field=models.CharField(
                 blank=True,

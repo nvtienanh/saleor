@@ -8,11 +8,11 @@ from django.db.models.functions import Coalesce
 
 from ..account.models import Address
 from ..order.models import OrderLine
-from ..product.models import Product, ProductVariant
+from ..room.models import Room, RoomVariant
 from ..shipping.models import ShippingZone
 
 
-class WarehouseQueryset(models.QuerySet):
+class HotelQueryset(models.QuerySet):
     def prefetch_data(self):
         return self.select_related("address").prefetch_related("shipping_zones")
 
@@ -24,18 +24,18 @@ class WarehouseQueryset(models.QuerySet):
         )
 
 
-class Warehouse(models.Model):
+class Hotel(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     name = models.CharField(max_length=250)
     slug = models.SlugField(max_length=255, unique=True, allow_unicode=True)
     company_name = models.CharField(blank=True, max_length=255)
     shipping_zones = models.ManyToManyField(
-        ShippingZone, blank=True, related_name="warehouses"
+        ShippingZone, blank=True, related_name="hotels"
     )
     address = models.ForeignKey(Address, on_delete=models.PROTECT)
     email = models.EmailField(blank=True, default="")
 
-    objects = WarehouseQueryset.as_manager()
+    objects = HotelQueryset.as_manager()
 
     class Meta:
         ordering = ("-slug",)
@@ -62,45 +62,45 @@ class StockQuerySet(models.QuerySet):
         )
 
     def for_country(self, country_code: str):
-        query_warehouse = models.Subquery(
-            Warehouse.objects.filter(
+        query_hotel = models.Subquery(
+            Hotel.objects.filter(
                 shipping_zones__countries__contains=country_code
             ).values("pk")
         )
-        return self.select_related("product_variant", "warehouse").filter(
-            warehouse__in=query_warehouse
+        return self.select_related("room_variant", "hotel").filter(
+            hotel__in=query_hotel
         )
 
     def get_variant_stocks_for_country(
-        self, country_code: str, product_variant: ProductVariant
+        self, country_code: str, room_variant: RoomVariant
     ):
         """Return the stock information about the a stock for a given country.
 
         Note it will raise a 'Stock.DoesNotExist' exception if no such stock is found.
         """
-        return self.for_country(country_code).filter(product_variant=product_variant)
+        return self.for_country(country_code).filter(room_variant=room_variant)
 
-    def get_product_stocks_for_country(self, country_code: str, product: Product):
+    def get_room_stocks_for_country(self, country_code: str, room: Room):
         return self.for_country(country_code).filter(
-            product_variant__product_id=product.pk
+            room_variant__room_id=room.pk
         )
 
 
 class Stock(models.Model):
-    warehouse = models.ForeignKey(Warehouse, null=False, on_delete=models.CASCADE)
-    product_variant = models.ForeignKey(
-        ProductVariant, null=False, on_delete=models.CASCADE, related_name="stocks"
+    hotel = models.ForeignKey(Hotel, null=False, on_delete=models.CASCADE)
+    room_variant = models.ForeignKey(
+        RoomVariant, null=False, on_delete=models.CASCADE, related_name="stocks"
     )
     quantity = models.PositiveIntegerField(default=0)
 
     objects = StockQuerySet.as_manager()
 
     class Meta:
-        unique_together = [["warehouse", "product_variant"]]
+        unique_together = [["hotel", "room_variant"]]
         ordering = ("pk",)
 
     def increase_stock(self, quantity: int, commit: bool = True):
-        """Return given quantity of product to a stock."""
+        """Return given quantity of room to a stock."""
         self.quantity = F("quantity") + quantity
         if commit:
             self.save(update_fields=["quantity"])

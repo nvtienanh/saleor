@@ -32,12 +32,12 @@ if TYPE_CHECKING:
         PaymentGateway,
         TokenConfig,
     )
-    from ..product.models import (
+    from ..room.models import (
         Collection,
-        Product,
-        ProductType,
-        ProductVariant,
-        ProductVariantChannelListing,
+        Room,
+        RoomType,
+        RoomVariant,
+        RoomVariantChannelListing,
     )
     from .base_plugin import BasePlugin
 
@@ -148,7 +148,7 @@ class PluginsManager(PaymentInterface):
                 checkout,
                 line_info.line,
                 line_info.variant,
-                line_info.product,
+                line_info.room,
                 line_info.collections,
                 address,
                 line_info.channel_listing.channel,
@@ -237,18 +237,18 @@ class PluginsManager(PaymentInterface):
         self,
         checkout: "Checkout",
         checkout_line: "CheckoutLine",
-        variant: "ProductVariant",
-        product: "Product",
+        variant: "RoomVariant",
+        room: "Room",
         collections: Iterable["Collection"],
         address: Optional["Address"],
         channel: "Channel",
-        channel_listing: "ProductVariantChannelListing",
+        channel_listing: "RoomVariantChannelListing",
         discounts: Iterable[DiscountInfo],
     ):
         default_value = base_calculations.base_checkout_line_total(
             checkout_line,
             variant,
-            product,
+            room,
             collections,
             channel,
             channel_listing,
@@ -261,7 +261,7 @@ class PluginsManager(PaymentInterface):
                 checkout,
                 checkout_line,
                 variant,
-                product,
+                room,
                 collections,
                 address,
                 channel,
@@ -318,13 +318,13 @@ class PluginsManager(PaymentInterface):
     def get_order_line_tax_rate(
         self,
         order: "Order",
-        product: "Product",
+        room: "Room",
         address: Optional["Address"],
         unit_price: TaxedMoney,
     ) -> Decimal:
         default_value = base_calculations.base_tax_rate(unit_price)
         return self.__run_method_on_plugins(
-            "get_order_line_tax_rate", default_value, order, product, address
+            "get_order_line_tax_rate", default_value, order, room, address
         ).quantize(Decimal(".0001"))
 
     def get_tax_rate_type_choices(self) -> List[TaxType]:
@@ -335,15 +335,15 @@ class PluginsManager(PaymentInterface):
         default_value = False
         return self.__run_method_on_plugins("show_taxes_on_storefront", default_value)
 
-    def apply_taxes_to_product(
-        self, product: "Product", price: Money, country: Country
+    def apply_taxes_to_room(
+        self, room: "Room", price: Money, country: Country
     ):
         default_value = quantize_price(
             TaxedMoney(net=price, gross=price), price.currency
         )
         return quantize_price(
             self.__run_method_on_plugins(
-                "apply_taxes_to_product", default_value, product, price, country
+                "apply_taxes_to_room", default_value, room, price, country
             ),
             price.currency,
         )
@@ -386,13 +386,13 @@ class PluginsManager(PaymentInterface):
         default_value = None
         return self.__run_method_on_plugins("customer_created", default_value, customer)
 
-    def product_created(self, product: "Product"):
+    def room_created(self, room: "Room"):
         default_value = None
-        return self.__run_method_on_plugins("product_created", default_value, product)
+        return self.__run_method_on_plugins("room_created", default_value, room)
 
-    def product_updated(self, product: "Product"):
+    def room_updated(self, room: "Room"):
         default_value = None
-        return self.__run_method_on_plugins("product_updated", default_value, product)
+        return self.__run_method_on_plugins("room_updated", default_value, room)
 
     def order_created(self, order: "Order"):
         default_value = None
@@ -617,7 +617,7 @@ class PluginsManager(PaymentInterface):
     # FIXME these methods should be more generic
 
     def assign_tax_code_to_object_meta(
-        self, obj: Union["Product", "ProductType"], tax_code: Optional[str]
+        self, obj: Union["Room", "RoomType"], tax_code: Optional[str]
     ):
         default_value = None
         return self.__run_method_on_plugins(
@@ -625,7 +625,7 @@ class PluginsManager(PaymentInterface):
         )
 
     def get_tax_code_from_object_meta(
-        self, obj: Union["Product", "ProductType"]
+        self, obj: Union["Room", "RoomType"]
     ) -> TaxType:
         default_value = TaxType(code="", description="")
         return self.__run_method_on_plugins(
@@ -633,7 +633,7 @@ class PluginsManager(PaymentInterface):
         )
 
     def get_tax_rate_percentage_value(
-        self, obj: Union["Product", "ProductType"], country: Country
+        self, obj: Union["Room", "RoomType"], country: Country
     ) -> Decimal:
         default_value = Decimal("0").quantize(Decimal("1."))
         return self.__run_method_on_plugins(

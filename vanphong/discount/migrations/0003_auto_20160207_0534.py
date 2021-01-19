@@ -77,8 +77,8 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("value", "All purchases"),
-                    ("product", "One product"),
-                    ("category", "A category of products"),
+                    ("room", "One room"),
+                    ("category", "A category of rooms"),
                     ("shipping", "Shipping"),
                 ],
                 default="value",

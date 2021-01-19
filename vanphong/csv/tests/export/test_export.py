@@ -10,16 +10,16 @@ from django.core.files import File
 from freezegun import freeze_time
 
 from ....core import JobStatus
-from ....graphql.csv.enums import ProductFieldEnum
-from ....product.models import Product, ProductChannelListing
+from ....graphql.csv.enums import RoomFieldEnum
+from ....room.models import Room, RoomChannelListing
 from ... import FileTypes
 from ...utils.export import (
     append_to_file,
     create_file_with_headers,
-    export_products,
-    export_products_in_batches,
+    export_rooms,
+    export_rooms_in_batches,
     get_filename,
-    get_product_queryset,
+    get_room_queryset,
     save_csv_file_in_export_file,
 )
 
@@ -29,22 +29,22 @@ from ...utils.export import (
     [FileTypes.CSV, FileTypes.XLSX],
 )
 @patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_products_in_batches")
+@patch("saleor.csv.utils.export.export_rooms_in_batches")
 @patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
 @patch("saleor.csv.utils.export.save_csv_file_in_export_file")
-def test_export_products(
+def test_export_rooms(
     save_file_mock,
     send_email_mock,
-    export_products_in_batches_mock,
+    export_rooms_in_batches_mock,
     create_file_with_headers_mock,
-    product_list,
+    room_list,
     user_export_file,
     file_type,
 ):
     # given
     export_info = {
-        "fields": [ProductFieldEnum.NAME.value],
-        "warehouses": [],
+        "fields": [RoomFieldEnum.NAME.value],
+        "hotels": [],
         "attributes": [],
         "channels": [],
     }
@@ -53,16 +53,16 @@ def test_export_products(
     create_file_with_headers_mock.return_value = mock_file
 
     # when
-    export_products(user_export_file, {"all": ""}, export_info, file_type)
+    export_rooms(user_export_file, {"all": ""}, export_info, file_type)
 
     # then
     create_file_with_headers_mock.assert_called_once_with(
         ["id", "name"], ";", file_type
     )
-    assert export_products_in_batches_mock.call_count == 1
-    args, kwargs = export_products_in_batches_mock.call_args
+    assert export_rooms_in_batches_mock.call_count == 1
+    args, kwargs = export_rooms_in_batches_mock.call_args
     assert set(args[0].values_list("pk", flat=True)) == set(
-        Product.objects.all().values_list("pk", flat=True)
+        Room.objects.all().values_list("pk", flat=True)
     )
     assert args[1:] == (
         export_info,
@@ -73,26 +73,26 @@ def test_export_products(
         file_type,
     )
     send_email_mock.assert_called_once_with(
-        user_export_file, user_export_file.user.email, "export_products_success"
+        user_export_file, user_export_file.user.email, "export_rooms_success"
     )
     save_file_mock.assert_called_once_with(user_export_file, mock_file, ANY)
 
 
 @patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_products_in_batches")
+@patch("saleor.csv.utils.export.export_rooms_in_batches")
 @patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
 @patch("saleor.csv.utils.export.save_csv_file_in_export_file")
-def test_export_products_ids(
+def test_export_rooms_ids(
     save_file_mock,
     send_email_mock,
-    export_products_in_batches_mock,
+    export_rooms_in_batches_mock,
     create_file_with_headers_mock,
-    product_list,
+    room_list,
     user_export_file,
 ):
     # given
-    pks = [product.pk for product in product_list[:2]]
-    export_info = {"fields": [], "warehouses": [], "attributes": [], "channels": []}
+    pks = [room.pk for room in room_list[:2]]
+    export_info = {"fields": [], "hotels": [], "attributes": [], "channels": []}
     file_type = FileTypes.CSV
 
     assert user_export_file.status == JobStatus.PENDING
@@ -102,15 +102,15 @@ def test_export_products_ids(
     create_file_with_headers_mock.return_value = mock_file
 
     # when
-    export_products(user_export_file, {"ids": pks}, export_info, file_type)
+    export_rooms(user_export_file, {"ids": pks}, export_info, file_type)
 
     # then
     create_file_with_headers_mock.assert_called_once_with(["id"], ";", file_type)
 
-    assert export_products_in_batches_mock.call_count == 1
-    args, kwargs = export_products_in_batches_mock.call_args
+    assert export_rooms_in_batches_mock.call_count == 1
+    args, kwargs = export_rooms_in_batches_mock.call_args
     assert set(args[0].values_list("pk", flat=True)) == set(
-        Product.objects.filter(pk__in=pks).values_list("pk", flat=True)
+        Room.objects.filter(pk__in=pks).values_list("pk", flat=True)
     )
     assert args[1:] == (
         export_info,
@@ -121,30 +121,30 @@ def test_export_products_ids(
         file_type,
     )
     send_email_mock.assert_called_once_with(
-        user_export_file, user_export_file.user.email, "export_products_success"
+        user_export_file, user_export_file.user.email, "export_rooms_success"
     )
     save_file_mock.assert_called_once_with(user_export_file, mock_file, ANY)
 
 
 @patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_products_in_batches")
+@patch("saleor.csv.utils.export.export_rooms_in_batches")
 @patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
 @patch("saleor.csv.utils.export.save_csv_file_in_export_file")
-def test_export_products_filter_is_published(
+def test_export_rooms_filter_is_published(
     save_file_mock,
     send_email_mock,
-    export_products_in_batches_mock,
+    export_rooms_in_batches_mock,
     create_file_with_headers_mock,
-    product_list,
+    room_list,
     user_export_file,
     channel_USD,
 ):
     # given
-    ProductChannelListing.objects.filter(
-        product=product_list[0], channel=channel_USD
+    RoomChannelListing.objects.filter(
+        room=room_list[0], channel=channel_USD
     ).update(is_published=False)
 
-    export_info = {"fields": [], "warehouses": [], "attributes": []}
+    export_info = {"fields": [], "hotels": [], "attributes": []}
     file_type = FileTypes.CSV
 
     assert user_export_file.status == JobStatus.PENDING
@@ -154,7 +154,7 @@ def test_export_products_filter_is_published(
     create_file_with_headers_mock.return_value = mock_file
 
     # when
-    export_products(
+    export_rooms(
         user_export_file,
         {"filter": {"is_published": True, "channel": channel_USD.slug}},
         export_info,
@@ -164,10 +164,10 @@ def test_export_products_filter_is_published(
     # then
     create_file_with_headers_mock.assert_called_once_with(["id"], ";", file_type)
 
-    assert export_products_in_batches_mock.call_count == 1
-    args, _ = export_products_in_batches_mock.call_args
+    assert export_rooms_in_batches_mock.call_count == 1
+    args, _ = export_rooms_in_batches_mock.call_args
     assert set(args[0].values_list("pk", flat=True)) == set(
-        Product.objects.filter(
+        Room.objects.filter(
             channel_listings__is_published=True, channel_listings__channel=channel_USD
         ).values_list("pk", flat=True)
     )
@@ -180,29 +180,29 @@ def test_export_products_filter_is_published(
         file_type,
     )
     send_email_mock.assert_called_once_with(
-        user_export_file, user_export_file.user.email, "export_products_success"
+        user_export_file, user_export_file.user.email, "export_rooms_success"
     )
     save_file_mock.assert_called_once_with(user_export_file, mock_file, ANY)
 
 
 @patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_products_in_batches")
+@patch("saleor.csv.utils.export.export_rooms_in_batches")
 @patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
 @patch("saleor.csv.utils.export.save_csv_file_in_export_file")
-def test_export_products_filter_collections(
+def test_export_rooms_filter_collections(
     save_file_mock,
     send_email_mock,
-    export_products_in_batches_mock,
+    export_rooms_in_batches_mock,
     create_file_with_headers_mock,
-    product_list,
+    room_list,
     user_export_file,
     channel_USD,
     collection,
 ):
     # given
-    collection.products.add(product_list[-1])
+    collection.rooms.add(room_list[-1])
 
-    export_info = {"fields": [], "warehouses": [], "attributes": []}
+    export_info = {"fields": [], "hotels": [], "attributes": []}
     file_type = FileTypes.CSV
 
     assert user_export_file.status == JobStatus.PENDING
@@ -212,7 +212,7 @@ def test_export_products_filter_collections(
     create_file_with_headers_mock.return_value = mock_file
 
     # when
-    export_products(
+    export_rooms(
         user_export_file,
         {
             "filter": {
@@ -226,32 +226,32 @@ def test_export_products_filter_collections(
     # then
     create_file_with_headers_mock.assert_called_once_with(["id"], ";", file_type)
 
-    assert export_products_in_batches_mock.call_count == 1
-    batch_args, _ = export_products_in_batches_mock.call_args
-    assert set(batch_args[0].values_list("pk", flat=True)) == {product_list[-1].pk}
+    assert export_rooms_in_batches_mock.call_count == 1
+    batch_args, _ = export_rooms_in_batches_mock.call_args
+    assert set(batch_args[0].values_list("pk", flat=True)) == {room_list[-1].pk}
     assert batch_args[1:] == (export_info, {"id"}, ["id"], ";", mock_file, file_type)
     send_email_mock.assert_called_once_with(
-        user_export_file, user_export_file.user.email, "export_products_success"
+        user_export_file, user_export_file.user.email, "export_rooms_success"
     )
     save_file_mock.assert_called_once_with(user_export_file, mock_file, ANY)
 
 
 @patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_products_in_batches")
+@patch("saleor.csv.utils.export.export_rooms_in_batches")
 @patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
 @patch("saleor.csv.utils.export.save_csv_file_in_export_file")
-def test_export_products_by_app(
+def test_export_rooms_by_app(
     save_file_mock,
     send_email_mock,
-    export_products_in_batches_mock,
+    export_rooms_in_batches_mock,
     create_file_with_headers_mock,
-    product_list,
+    room_list,
     app_export_file,
 ):
     # given
     export_info = {
-        "fields": [ProductFieldEnum.NAME.value],
-        "warehouses": [],
+        "fields": [RoomFieldEnum.NAME.value],
+        "hotels": [],
         "attributes": [],
         "channels": [],
     }
@@ -261,17 +261,17 @@ def test_export_products_by_app(
     create_file_with_headers_mock.return_value = mock_file
 
     # when
-    export_products(app_export_file, {"all": ""}, export_info, file_type)
+    export_rooms(app_export_file, {"all": ""}, export_info, file_type)
 
     # then
     create_file_with_headers_mock.assert_called_once_with(
         ["id", "name"], ";", file_type
     )
 
-    assert export_products_in_batches_mock.call_count == 1
-    args, kwargs = export_products_in_batches_mock.call_args
+    assert export_rooms_in_batches_mock.call_count == 1
+    args, kwargs = export_rooms_in_batches_mock.call_args
     assert set(args[0].values_list("pk", flat=True)) == set(
-        Product.objects.all().values_list("pk", flat=True)
+        Room.objects.all().values_list("pk", flat=True)
     )
     assert args[1:] == (
         export_info,
@@ -301,27 +301,27 @@ def test_get_filename_xlsx():
         assert file_name == "test_data_09_02_2000.xlsx"
 
 
-def test_get_product_queryset_all(product_list):
-    queryset = get_product_queryset({"all": ""})
+def test_get_room_queryset_all(room_list):
+    queryset = get_room_queryset({"all": ""})
 
-    assert queryset.count() == len(product_list)
+    assert queryset.count() == len(room_list)
 
 
-def test_get_product_queryset_ids(product_list):
-    pks = [product.pk for product in product_list[:2]]
-    queryset = get_product_queryset({"ids": pks})
+def test_get_room_queryset_ids(room_list):
+    pks = [room.pk for room in room_list[:2]]
+    queryset = get_room_queryset({"ids": pks})
 
     assert queryset.count() == len(pks)
 
 
-def get_product_queryset_filter(product_list):
-    product_not_published = product_list.first()
-    product_not_published.is_published = False
-    product_not_published.save()
+def get_room_queryset_filter(room_list):
+    room_not_published = room_list.first()
+    room_not_published.is_published = False
+    room_not_published.save()
 
-    queryset = get_product_queryset({"ids": {"is_published": True}})
+    queryset = get_room_queryset({"ids": {"is_published": True}})
 
-    assert queryset.count() == len(product_list) - 1
+    assert queryset.count() == len(room_list) - 1
 
 
 def test_create_file_with_headers_csv(user_export_file, tmpdir, media_root):
@@ -458,17 +458,17 @@ def test_append_to_file_for_xlsx(user_export_file, tmpdir, media_root):
 
 
 @patch("saleor.csv.utils.export.BATCH_SIZE", 1)
-def test_export_products_in_batches_for_csv(
-    product_list,
+def test_export_rooms_in_batches_for_csv(
+    room_list,
     user_export_file,
     tmpdir,
     media_root,
 ):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_info = {
-        "fields": [ProductFieldEnum.NAME.value, ProductFieldEnum.VARIANT_SKU.value],
-        "warehouses": [],
+        "fields": [RoomFieldEnum.NAME.value, RoomFieldEnum.VARIANT_SKU.value],
+        "hotels": [],
         "attributes": [],
         "channels": [],
     }
@@ -481,7 +481,7 @@ def test_export_products_in_batches_for_csv(
     etl.tocsv(table, temp_file.name, delimiter=";")
 
     # when
-    export_products_in_batches(
+    export_rooms_in_batches(
         qs,
         export_info,
         set(export_fields),
@@ -494,14 +494,14 @@ def test_export_products_in_batches_for_csv(
     # then
 
     expected_data = []
-    for product in qs.order_by("pk"):
-        product_data = []
-        product_data.append(str(product.pk))
-        product_data.append(product.name)
+    for room in qs.order_by("pk"):
+        room_data = []
+        room_data.append(str(room.pk))
+        room_data.append(room.name)
 
-        for variant in product.variants.all():
-            product_data.append(str(variant.sku))
-            expected_data.append(product_data)
+        for variant in room.variants.all():
+            room_data.append(str(variant.sku))
+            expected_data.append(room_data)
 
     file_content = temp_file.read().decode().split("\r\n")
 
@@ -515,17 +515,17 @@ def test_export_products_in_batches_for_csv(
 
 
 @patch("saleor.csv.utils.export.BATCH_SIZE", 1)
-def test_export_products_in_batches_for_xlsx(
-    product_list,
+def test_export_rooms_in_batches_for_xlsx(
+    room_list,
     user_export_file,
     tmpdir,
     media_root,
 ):
     # given
-    qs = Product.objects.all()
+    qs = Room.objects.all()
     export_info = {
-        "fields": [ProductFieldEnum.NAME.value, ProductFieldEnum.VARIANT_SKU.value],
-        "warehouses": [],
+        "fields": [RoomFieldEnum.NAME.value, RoomFieldEnum.VARIANT_SKU.value],
+        "hotels": [],
         "attributes": [],
         "channels": [],
     }
@@ -538,7 +538,7 @@ def test_export_products_in_batches_for_xlsx(
     etl.io.xlsx.toxlsx(table, temp_file.name)
 
     # when
-    export_products_in_batches(
+    export_rooms_in_batches(
         qs,
         export_info,
         set(export_fields),
@@ -550,14 +550,14 @@ def test_export_products_in_batches_for_xlsx(
 
     # then
     expected_data = []
-    for product in qs.order_by("pk"):
-        product_data = []
-        product_data.append(product.pk)
-        product_data.append(product.name)
+    for room in qs.order_by("pk"):
+        room_data = []
+        room_data.append(room.pk)
+        room_data.append(room.name)
 
-        for variant in product.variants.all():
-            product_data.append(variant.sku)
-            expected_data.append(product_data)
+        for variant in room.variants.all():
+            room_data.append(variant.sku)
+            expected_data.append(room_data)
 
     wb_obj = openpyxl.load_workbook(temp_file)
 

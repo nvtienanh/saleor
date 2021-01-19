@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0054_merge_20180320_1108")]
+    dependencies = [("room", "0054_merge_20180320_1108")]
 
     operations = [
         migrations.AddField(
@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="seo_title",
             field=models.CharField(
                 blank=True,

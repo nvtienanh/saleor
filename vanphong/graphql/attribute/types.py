@@ -103,10 +103,10 @@ class Attribute(CountableDjangoObjectType):
 
     class Meta:
         description = (
-            "Custom attribute of a product. Attributes can be assigned to products and "
-            "variants at the product type level."
+            "Custom attribute of a room. Attributes can be assigned to rooms and "
+            "variants at the room type level."
         )
-        only_fields = ["id", "product_types", "product_variant_types"]
+        only_fields = ["id", "room_types", "room_variant_types"]
         interfaces = [graphene.relay.Node, ObjectWithMetadata]
         model = models.Attribute
 

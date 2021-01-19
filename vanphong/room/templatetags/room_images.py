@@ -83,7 +83,7 @@ def get_thumbnail_size(size, method, rendition_key_set):
 
 
 @register.simple_tag()
-def get_thumbnail(image_file, size, method, rendition_key_set="products"):
+def get_thumbnail(image_file, size, method, rendition_key_set="rooms"):
     if image_file:
         used_size = get_thumbnail_size(size, method, rendition_key_set)
         try:
@@ -98,6 +98,6 @@ def get_thumbnail(image_file, size, method, rendition_key_set="products"):
 
 
 @register.simple_tag()
-def get_product_image_thumbnail(instance, size, method):
+def get_room_image_thumbnail(instance, size, method):
     image_file = instance.image if instance else None
     return get_thumbnail(image_file, size, method)

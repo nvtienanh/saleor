@@ -8,8 +8,8 @@ from django.db import migrations, models
 def fill_is_shipping_required(apps, schema_editor):
     OrderLine = apps.get_model("order", "OrderLine")
     for line in OrderLine.objects.all():
-        if line.product:
-            line.is_shipping_required = line.product.product_type.is_shipping_required
+        if line.room:
+            line.is_shipping_required = line.room.room_type.is_shipping_required
             line.save(update_fields=["is_shipping_required"])
 
 
@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("order", "0031_auto_20180119_0405"),
-        ("product", "0048_product_class_to_type"),
+        ("room", "0048_room_class_to_type"),
     ]
 
     operations = [

@@ -4,13 +4,13 @@ import graphene
 import pytest
 
 from .....attribute import AttributeType
-from .....attribute.models import Attribute, AttributeProduct, AttributeVariant
-from .....product.models import (
-    Product,
-    ProductChannelListing,
-    ProductType,
-    ProductVariant,
-    ProductVariantChannelListing,
+from .....attribute.models import Attribute, AttributeRoom, AttributeVariant
+from .....room.models import (
+    Room,
+    RoomChannelListing,
+    RoomType,
+    RoomVariant,
+    RoomVariantChannelListing,
 )
 from ....tests.utils import get_graphql_content
 
@@ -24,67 +24,67 @@ def attributes_for_pagination(collection, category, channel_USD):
                 slug="attr1",
                 value_required=True,
                 storefront_search_position=4,
-                type=AttributeType.PRODUCT_TYPE,
+                type=AttributeType.ROOM_TYPE,
             ),
             Attribute(
                 name="AttrAttr1",
                 slug="attr_attr1",
                 value_required=True,
                 storefront_search_position=3,
-                type=AttributeType.PRODUCT_TYPE,
+                type=AttributeType.ROOM_TYPE,
             ),
             Attribute(
                 name="AttrAttr2",
                 slug="attr_attr2",
                 value_required=True,
                 storefront_search_position=2,
-                type=AttributeType.PRODUCT_TYPE,
+                type=AttributeType.ROOM_TYPE,
             ),
             Attribute(
                 name="Attr2",
                 slug="attr2",
                 value_required=False,
                 storefront_search_position=5,
-                type=AttributeType.PRODUCT_TYPE,
+                type=AttributeType.ROOM_TYPE,
             ),
             Attribute(
                 name="Attr3",
                 slug="attr3",
                 value_required=False,
                 storefront_search_position=1,
-                type=AttributeType.PRODUCT_TYPE,
+                type=AttributeType.ROOM_TYPE,
             ),
         ]
     )
 
-    product_type = ProductType.objects.create(name="My Product Type")
-    product = Product.objects.create(
-        name="Test product",
-        product_type=product_type,
+    room_type = RoomType.objects.create(name="My Room Type")
+    room = Room.objects.create(
+        name="Test room",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.create(
+    RoomChannelListing.objects.create(
         channel=channel_USD,
-        product=product,
+        room=room,
         is_published=True,
         visible_in_listings=True,
     )
-    variants = ProductVariant.objects.bulk_create(
+    variants = RoomVariant.objects.bulk_create(
         [
-            ProductVariant(product=product),
-            ProductVariant(product=product, sku="testVariant"),
+            RoomVariant(room=room),
+            RoomVariant(room=room, sku="testVariant"),
         ]
     )
-    ProductVariantChannelListing.objects.bulk_create(
+    RoomVariantChannelListing.objects.bulk_create(
         [
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[0],
                 channel=channel_USD,
                 cost_price_amount=Decimal(1),
                 price_amount=Decimal(10),
                 currency=channel_USD.currency_code,
             ),
-            ProductVariantChannelListing(
+            RoomVariantChannelListing(
                 variant=variants[1],
                 channel=channel_USD,
                 cost_price_amount=Decimal(1),
@@ -94,30 +94,30 @@ def attributes_for_pagination(collection, category, channel_USD):
         ]
     )
 
-    collection.products.add(product)
+    collection.rooms.add(room)
     AttributeVariant.objects.bulk_create(
         [
             AttributeVariant(
-                product_type=product_type, attribute=attributes[1], sort_order=1
+                room_type=room_type, attribute=attributes[1], sort_order=1
             ),
             AttributeVariant(
-                product_type=product_type, attribute=attributes[3], sort_order=2
+                room_type=room_type, attribute=attributes[3], sort_order=2
             ),
             AttributeVariant(
-                product_type=product_type, attribute=attributes[4], sort_order=3
+                room_type=room_type, attribute=attributes[4], sort_order=3
             ),
         ]
     )
-    AttributeProduct.objects.bulk_create(
+    AttributeRoom.objects.bulk_create(
         [
-            AttributeProduct(
-                product_type=product_type, attribute=attributes[2], sort_order=1
+            AttributeRoom(
+                room_type=room_type, attribute=attributes[2], sort_order=1
             ),
-            AttributeProduct(
-                product_type=product_type, attribute=attributes[0], sort_order=2
+            AttributeRoom(
+                room_type=room_type, attribute=attributes[0], sort_order=2
             ),
-            AttributeProduct(
-                product_type=product_type, attribute=attributes[1], sort_order=3
+            AttributeRoom(
+                room_type=room_type, attribute=attributes[1], sort_order=3
             ),
         ]
     )

@@ -16,12 +16,12 @@ from ..core.types.money import TaxedMoney
 from ..discount.dataloaders import DiscountsByDateTimeLoader
 from ..giftcard.types import GiftCard
 from ..meta.types import ObjectWithMetadata
-from ..product.dataloaders import (
+from ..room.dataloaders import (
     CollectionsByVariantIdLoader,
-    ProductByVariantIdLoader,
-    ProductTypeByProductIdLoader,
-    ProductTypeByVariantIdLoader,
-    ProductVariantByIdLoader,
+    RoomByVariantIdLoader,
+    RoomTypeByRoomIdLoader,
+    RoomTypeByVariantIdLoader,
+    RoomVariantByIdLoader,
     VariantChannelListingByVariantIdAndChannelSlugLoader,
 )
 from ..shipping.dataloaders import (
@@ -84,7 +84,7 @@ class CheckoutLine(CountableDjangoObjectType):
 
     @staticmethod
     def resolve_variant(root: models.CheckoutLine, info):
-        variant = ProductVariantByIdLoader(info.context).load(root.variant_id)
+        variant = RoomVariantByIdLoader(info.context).load(root.variant_id)
         channel = ChannelByCheckoutLineIDLoader(info.context).load(root.id)
 
         return Promise.all([variant, channel]).then(
@@ -101,11 +101,11 @@ class CheckoutLine(CountableDjangoObjectType):
                     if address_id
                     else None
                 )
-                variant = ProductVariantByIdLoader(info.context).load(root.variant_id)
+                variant = RoomVariantByIdLoader(info.context).load(root.variant_id)
                 channel_listing = VariantChannelListingByVariantIdAndChannelSlugLoader(
                     info.context
                 ).load((root.variant_id, channel.slug))
-                product = ProductByVariantIdLoader(info.context).load(root.variant_id)
+                room = RoomByVariantIdLoader(info.context).load(root.variant_id)
                 collections = CollectionsByVariantIdLoader(info.context).load(
                     root.variant_id
                 )
@@ -118,7 +118,7 @@ class CheckoutLine(CountableDjangoObjectType):
                         address,
                         variant,
                         channel_listing,
-                        product,
+                        room,
                         collections,
                         channel,
                         discounts,
@@ -137,7 +137,7 @@ class CheckoutLine(CountableDjangoObjectType):
                 address,
                 variant,
                 channel_listing,
-                product,
+                room,
                 collections,
                 channel,
                 discounts,
@@ -146,7 +146,7 @@ class CheckoutLine(CountableDjangoObjectType):
                 checkout=checkout,
                 checkout_line=root,
                 variant=variant,
-                product=product,
+                room=room,
                 collections=collections,
                 address=address,
                 channel=channel,
@@ -162,11 +162,11 @@ class CheckoutLine(CountableDjangoObjectType):
 
     @staticmethod
     def resolve_requires_shipping(root: models.CheckoutLine, info):
-        def is_shipping_required(product_type):
-            return product_type.is_shipping_required
+        def is_shipping_required(room_type):
+            return room_type.is_shipping_required
 
         return (
-            ProductTypeByVariantIdLoader(info.context)
+            RoomTypeByVariantIdLoader(info.context)
             .load(root.variant_id)
             .then(is_shipping_required)
         )
@@ -447,15 +447,15 @@ class Checkout(CountableDjangoObjectType):
     @staticmethod
     def resolve_is_shipping_required(root: models.Checkout, info):
         def is_shipping_required(lines):
-            product_ids = [line_info.product.id for line_info in lines]
+            room_ids = [line_info.room.id for line_info in lines]
 
-            def with_product_types(product_types):
-                return any([pt.is_shipping_required for pt in product_types])
+            def with_room_types(room_types):
+                return any([pt.is_shipping_required for pt in room_types])
 
             return (
-                ProductTypeByProductIdLoader(info.context)
-                .load_many(product_ids)
-                .then(with_product_types)
+                RoomTypeByRoomIdLoader(info.context)
+                .load_many(room_ids)
+                .then(with_room_types)
             )
 
         return (

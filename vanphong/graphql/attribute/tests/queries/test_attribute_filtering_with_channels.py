@@ -3,13 +3,13 @@ from decimal import Decimal
 import graphene
 import pytest
 
-from .....attribute.models import Attribute, AttributeProduct, AttributeVariant
-from .....product.models import (
-    Product,
-    ProductChannelListing,
-    ProductType,
-    ProductVariant,
-    ProductVariantChannelListing,
+from .....attribute.models import Attribute, AttributeRoom, AttributeVariant
+from .....room.models import (
+    Room,
+    RoomChannelListing,
+    RoomType,
+    RoomVariant,
+    RoomVariantChannelListing,
 )
 from ....channel.filters import LACK_OF_CHANNEL_IN_FILTERING_MSG
 from ....tests.utils import assert_graphql_error_with_message, get_graphql_content
@@ -54,53 +54,53 @@ def attributes_for_filtering_with_channels(
         ]
     )
 
-    product_type = ProductType.objects.create(name="My Product Type")
-    product = Product.objects.create(
-        name="Test product",
-        product_type=product_type,
+    room_type = RoomType.objects.create(name="My Room Type")
+    room = Room.objects.create(
+        name="Test room",
+        room_type=room_type,
         category=category,
     )
-    ProductChannelListing.objects.bulk_create(
+    RoomChannelListing.objects.bulk_create(
         [
-            ProductChannelListing(
+            RoomChannelListing(
                 channel=channel_USD,
-                product=product,
+                room=room,
                 visible_in_listings=True,
                 currency=channel_USD.currency_code,
                 is_published=True,
             ),
-            ProductChannelListing(
+            RoomChannelListing(
                 channel=channel_PLN,
-                product=product,
+                room=room,
                 visible_in_listings=False,
                 currency=channel_PLN.currency_code,
                 is_published=True,
             ),
-            ProductChannelListing(
+            RoomChannelListing(
                 channel=other_channel_USD,
-                product=product,
+                room=room,
                 visible_in_listings=True,
                 currency=other_channel_USD.currency_code,
                 is_published=False,
             ),
         ]
     )
-    variant = ProductVariant.objects.create(product=product)
-    ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room)
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         cost_price_amount=Decimal(1),
         price_amount=Decimal(10),
         currency=channel_USD.currency_code,
     )
-    ProductVariantChannelListing.objects.create(
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_PLN,
         cost_price_amount=Decimal(1),
         price_amount=Decimal(10),
         currency=channel_PLN.currency_code,
     )
-    ProductVariantChannelListing.objects.create(
+    RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=other_channel_USD,
         cost_price_amount=Decimal(1),
@@ -108,30 +108,30 @@ def attributes_for_filtering_with_channels(
         currency=other_channel_USD.currency_code,
     )
 
-    collection.products.add(product)
+    collection.rooms.add(room)
     AttributeVariant.objects.bulk_create(
         [
             AttributeVariant(
-                product_type=product_type, attribute=attributes[1], sort_order=1
+                room_type=room_type, attribute=attributes[1], sort_order=1
             ),
             AttributeVariant(
-                product_type=product_type, attribute=attributes[3], sort_order=2
+                room_type=room_type, attribute=attributes[3], sort_order=2
             ),
             AttributeVariant(
-                product_type=product_type, attribute=attributes[4], sort_order=3
+                room_type=room_type, attribute=attributes[4], sort_order=3
             ),
         ]
     )
-    AttributeProduct.objects.bulk_create(
+    AttributeRoom.objects.bulk_create(
         [
-            AttributeProduct(
-                product_type=product_type, attribute=attributes[2], sort_order=1
+            AttributeRoom(
+                room_type=room_type, attribute=attributes[2], sort_order=1
             ),
-            AttributeProduct(
-                product_type=product_type, attribute=attributes[0], sort_order=2
+            AttributeRoom(
+                room_type=room_type, attribute=attributes[0], sort_order=2
             ),
-            AttributeProduct(
-                product_type=product_type, attribute=attributes[1], sort_order=3
+            AttributeRoom(
+                room_type=room_type, attribute=attributes[1], sort_order=3
             ),
         ]
     )
@@ -163,7 +163,7 @@ QUERY_ATTRIBUTES_FILTERING = """
 def test_attributes_with_filtering_without_channel(
     tested_field,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     category,
     collection,
 ):
@@ -181,7 +181,7 @@ def test_attributes_with_filtering_without_channel(
     response = staff_api_client.post_graphql(
         QUERY_ATTRIBUTES_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -193,11 +193,11 @@ def test_attributes_with_filtering_without_channel(
     "tested_field, attribute_count",
     [("inCategory", 5), ("inCollection", 5)],
 )
-def test_products_with_filtering_with_as_staff_user(
+def test_rooms_with_filtering_with_as_staff_user(
     tested_field,
     attribute_count,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     attributes_for_filtering_with_channels,
     category,
     collection,
@@ -218,7 +218,7 @@ def test_products_with_filtering_with_as_staff_user(
     response = staff_api_client.post_graphql(
         QUERY_ATTRIBUTES_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -232,7 +232,7 @@ def test_products_with_filtering_with_as_staff_user(
     "tested_field, attribute_count",
     [("inCategory", 5), ("inCollection", 5)],
 )
-def test_products_with_filtering_as_anonymous_client(
+def test_rooms_with_filtering_as_anonymous_client(
     tested_field,
     attribute_count,
     api_client,
@@ -265,11 +265,11 @@ def test_products_with_filtering_as_anonymous_client(
     "tested_field, attribute_count",
     [("inCategory", 5), ("inCollection", 5)],
 )
-def test_products_with_filtering_with_not_visible_in_listings_as_staff_user(
+def test_rooms_with_filtering_with_not_visible_in_listings_as_staff_user(
     tested_field,
     attribute_count,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     attributes_for_filtering_with_channels,
     category,
     collection,
@@ -290,7 +290,7 @@ def test_products_with_filtering_with_not_visible_in_listings_as_staff_user(
     response = staff_api_client.post_graphql(
         QUERY_ATTRIBUTES_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -304,11 +304,11 @@ def test_products_with_filtering_with_not_visible_in_listings_as_staff_user(
     "tested_field, attribute_count",
     [
         ("inCategory", 0),
-        # Products not visible in listings should be visible in collections
+        # Rooms not visible in listings should be visible in collections
         ("inCollection", 5),
     ],
 )
-def test_products_with_filtering_with_not_visible_in_listings_as_anonymous_client(
+def test_rooms_with_filtering_with_not_visible_in_listings_as_anonymous_client(
     tested_field,
     attribute_count,
     api_client,
@@ -341,11 +341,11 @@ def test_products_with_filtering_with_not_visible_in_listings_as_anonymous_clien
     "tested_field, attribute_count",
     [("inCategory", 5), ("inCollection", 5)],
 )
-def test_products_with_filtering_with_not_published_as_staff_user(
+def test_rooms_with_filtering_with_not_published_as_staff_user(
     tested_field,
     attribute_count,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     attributes_for_filtering_with_channels,
     category,
     collection,
@@ -366,7 +366,7 @@ def test_products_with_filtering_with_not_published_as_staff_user(
     response = staff_api_client.post_graphql(
         QUERY_ATTRIBUTES_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -380,7 +380,7 @@ def test_products_with_filtering_with_not_published_as_staff_user(
     "tested_field, attribute_count",
     [("inCategory", 0), ("inCollection", 0)],
 )
-def test_products_with_filtering_with_not_published_as_anonymous_client(
+def test_rooms_with_filtering_with_not_published_as_anonymous_client(
     tested_field,
     attribute_count,
     api_client,
@@ -413,7 +413,7 @@ def test_products_with_filtering_with_not_published_as_anonymous_client(
     "tested_field",
     ["inCategory", "inCollection"],
 )
-def test_products_with_filtering_not_existing_channel(
+def test_rooms_with_filtering_not_existing_channel(
     tested_field,
     api_client,
     attributes_for_filtering_with_channels,

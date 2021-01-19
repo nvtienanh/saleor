@@ -6,16 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0124_auto_20200909_0904"),
+        ("room", "0124_auto_20200909_0904"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="productvariant",
+            name="roomvariant",
             options={"ordering": ("sort_order", "sku")},
         ),
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="sort_order",
             field=models.IntegerField(db_index=True, editable=False, null=True),
         ),

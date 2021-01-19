@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name="orderline",
-            name="product_name",
+            name="room_name",
             field=models.CharField(max_length=386),
         )
     ]

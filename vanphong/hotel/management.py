@@ -6,7 +6,7 @@ from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
 
 from ..core.exceptions import AllocationError, InsufficientStock
-from .models import Allocation, Stock, Warehouse
+from .models import Allocation, Stock, Hotel
 
 if TYPE_CHECKING:
     from ..order.models import Order, OrderLine
@@ -115,14 +115,14 @@ def deallocate_stock(order_line: "OrderLine", quantity: int):
 @transaction.atomic
 def increase_stock(
     order_line: "OrderLine",
-    warehouse: Warehouse,
+    hotel: Hotel,
     quantity: int,
     allocate: bool = False,
 ):
-    """Increse stock quantity for given `order_line` in a given warehouse.
+    """Increse stock quantity for given `order_line` in a given hotel.
 
     Function lock for update stock and allocations related to given `order_line`
-    in a given warehouse. If the stock exists, increase the stock quantity
+    in a given hotel. If the stock exists, increase the stock quantity
     by given value. If not exist create a stock with the given quantity. This function
     can create the allocation for increased quantity in stock by passing True
     to `allocate` argument. If the order line has the allocation in this stock
@@ -131,14 +131,14 @@ def increase_stock(
     """
     stock = (
         Stock.objects.select_for_update(of=("self",))
-        .filter(warehouse=warehouse, product_variant=order_line.variant)
+        .filter(hotel=hotel, room_variant=order_line.variant)
         .first()
     )
     if stock:
         stock.increase_stock(quantity, commit=True)
     else:
         stock = Stock.objects.create(
-            warehouse=warehouse, product_variant=order_line.variant, quantity=quantity
+            hotel=hotel, room_variant=order_line.variant, quantity=quantity
         )
     if allocate:
         allocation = order_line.allocations.filter(stock=stock).first()
@@ -152,12 +152,12 @@ def increase_stock(
 
 
 @transaction.atomic
-def decrease_stock(order_line: "OrderLine", quantity: int, warehouse_pk: str):
-    """Decrease stock quantity for given `order_line` in given warehouse.
+def decrease_stock(order_line: "OrderLine", quantity: int, hotel_pk: str):
+    """Decrease stock quantity for given `order_line` in given hotel.
 
     Function deallocate as many quantities as requested if order_line has less quantity
     from requested function deallocate whole quantity. Next function try to find the
-    stock in a given warehouse, if stock not exists or have not enough stock,
+    stock in a given hotel, if stock not exists or have not enough stock,
     the function raise InsufficientStock exception. When the stock has enough quantity
     function decrease it by given value.
     """
@@ -170,10 +170,10 @@ def decrease_stock(order_line: "OrderLine", quantity: int, warehouse_pk: str):
         stock = (
             order_line.variant.stocks.select_for_update()  # type: ignore
             .prefetch_related("allocations")
-            .get(warehouse__pk=warehouse_pk)
+            .get(hotel__pk=hotel_pk)
         )
     except Stock.DoesNotExist:
-        error_context = {"order_line": order_line, "warehouse_pk": warehouse_pk}
+        error_context = {"order_line": order_line, "hotel_pk": hotel_pk}
         raise InsufficientStock(order_line.variant, error_context)
 
     quantity_allocated = stock.allocations.aggregate(
@@ -181,7 +181,7 @@ def decrease_stock(order_line: "OrderLine", quantity: int, warehouse_pk: str):
     )["quantity_allocated"]
 
     if stock.quantity - quantity_allocated < quantity:
-        error_context = {"order_line": order_line, "warehouse_pk": warehouse_pk}
+        error_context = {"order_line": order_line, "hotel_pk": hotel_pk}
         raise InsufficientStock(order_line.variant, error_context)
 
     stock.quantity = F("quantity") - quantity

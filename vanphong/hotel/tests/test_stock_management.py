@@ -142,7 +142,7 @@ def test_increase_stock_without_allocate(allocation):
     allocation.quantity_allocated = 80
     allocation.save(update_fields=["quantity_allocated"])
 
-    increase_stock(allocation.order_line, stock.warehouse, 50, allocate=False)
+    increase_stock(allocation.order_line, stock.hotel, 50, allocate=False)
 
     stock.refresh_from_db()
     assert stock.quantity == 150
@@ -157,7 +157,7 @@ def test_increase_stock_with_allocate(allocation):
     allocation.quantity_allocated = 80
     allocation.save(update_fields=["quantity_allocated"])
 
-    increase_stock(allocation.order_line, stock.warehouse, 50, allocate=True)
+    increase_stock(allocation.order_line, stock.hotel, 50, allocate=True)
 
     stock.refresh_from_db()
     assert stock.quantity == 150
@@ -170,7 +170,7 @@ def test_increase_stock_with_new_allocation(order_line, stock):
     stock.quantity = 100
     stock.save(update_fields=["quantity"])
 
-    increase_stock(order_line, stock.warehouse, 50, allocate=True)
+    increase_stock(order_line, stock.hotel, 50, allocate=True)
 
     stock.refresh_from_db()
     assert stock.quantity == 150
@@ -184,9 +184,9 @@ def test_decrease_stock(allocation):
     stock.save(update_fields=["quantity"])
     allocation.quantity_allocated = 80
     allocation.save(update_fields=["quantity_allocated"])
-    warehouse_pk = allocation.stock.warehouse.pk
+    hotel_pk = allocation.stock.hotel.pk
 
-    decrease_stock(allocation.order_line, 50, warehouse_pk)
+    decrease_stock(allocation.order_line, 50, hotel_pk)
 
     stock.refresh_from_db()
     assert stock.quantity == 50
@@ -200,9 +200,9 @@ def test_decrease_stock_partially(allocation):
     stock.save(update_fields=["quantity"])
     allocation.quantity_allocated = 80
     allocation.save(update_fields=["quantity_allocated"])
-    warehouse_pk = allocation.stock.warehouse.pk
+    hotel_pk = allocation.stock.hotel.pk
 
-    decrease_stock(allocation.order_line, 80, warehouse_pk)
+    decrease_stock(allocation.order_line, 80, hotel_pk)
 
     stock.refresh_from_db()
     assert stock.quantity == 20
@@ -215,9 +215,9 @@ def test_decrease_stock_many_allocations(
 ):
     order_line = order_line_with_allocation_in_many_stocks
     allocations = order_line.allocations.all()
-    warehouse_pk = allocations[1].stock.warehouse.pk
+    hotel_pk = allocations[1].stock.hotel.pk
 
-    decrease_stock(order_line, 3, warehouse_pk)
+    decrease_stock(order_line, 3, hotel_pk)
 
     assert allocations[0].quantity_allocated == 0
     assert allocations[1].quantity_allocated == 0
@@ -230,9 +230,9 @@ def test_decrease_stock_many_allocations_partially(
 ):
     order_line = order_line_with_allocation_in_many_stocks
     allocations = order_line.allocations.all()
-    warehouse_pk = allocations[0].stock.warehouse.pk
+    hotel_pk = allocations[0].stock.hotel.pk
 
-    decrease_stock(order_line, 2, warehouse_pk)
+    decrease_stock(order_line, 2, hotel_pk)
 
     assert allocations[0].quantity_allocated == 0
     assert allocations[1].quantity_allocated == 1
@@ -245,13 +245,13 @@ def test_decrease_stock_more_then_allocated(
 ):
     order_line = order_line_with_allocation_in_many_stocks
     allocations = order_line.allocations.all()
-    warehouse_pk = allocations[0].stock.warehouse.pk
+    hotel_pk = allocations[0].stock.hotel.pk
     quantity_allocated = allocations.aggregate(
         quantity_allocated=Coalesce(Sum("quantity_allocated"), 0)
     )["quantity_allocated"]
     assert quantity_allocated < 4
 
-    decrease_stock(order_line, 4, warehouse_pk)
+    decrease_stock(order_line, 4, hotel_pk)
 
     assert allocations[0].quantity_allocated == 0
     assert allocations[1].quantity_allocated == 0

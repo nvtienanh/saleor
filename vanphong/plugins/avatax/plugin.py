@@ -10,7 +10,7 @@ from prices import Money, TaxedMoney, TaxedMoneyRange
 from ...checkout import base_calculations
 from ...core.taxes import TaxError, TaxType, charge_taxes_on_shipping, zero_taxed_money
 from ...discount import DiscountInfo
-from ...product.models import ProductType
+from ...room.models import RoomType
 from ..base_plugin import BasePlugin, ConfigurationTypeField
 from ..error_codes import PluginErrorCode
 from . import (
@@ -41,11 +41,11 @@ if TYPE_CHECKING:
     from ...checkout import CheckoutLineInfo
     from ...checkout.models import Checkout, CheckoutLine
     from ...order.models import Order, OrderLine
-    from ...product.models import (
+    from ...room.models import (
         Collection,
-        Product,
-        ProductVariant,
-        ProductVariantChannelListing,
+        Room,
+        RoomVariant,
+        RoomVariantChannelListing,
     )
     from ..models import PluginConfiguration
 
@@ -136,12 +136,12 @@ class AvataxPlugin(BasePlugin):
         discounts: Iterable[DiscountInfo],
     ):
         for line_info in lines:
-            if line_info.variant.product.charge_taxes:
+            if line_info.variant.room.charge_taxes:
                 continue
             line_price = base_calculations.base_checkout_line_total(
                 line_info.line,
                 line_info.variant,
-                line_info.product,
+                line_info.room,
                 line_info.collections,
                 channel,
                 line_info.channel_listing,
@@ -331,12 +331,12 @@ class AvataxPlugin(BasePlugin):
         self,
         checkout: "Checkout",
         checkout_line: "CheckoutLine",
-        variant: "ProductVariant",
-        product: "Product",
+        variant: "RoomVariant",
+        room: "Room",
         collections: Iterable["Collection"],
         address: Optional["Address"],
         channel: "Channel",
-        channel_listing: "ProductVariantChannelListing",
+        channel_listing: "RoomVariantChannelListing",
         discounts: Iterable[DiscountInfo],
         previous_value: TaxedMoney,
     ) -> TaxedMoney:
@@ -344,7 +344,7 @@ class AvataxPlugin(BasePlugin):
             return previous_value
 
         base_total = previous_value
-        if not checkout_line.variant.product.charge_taxes:
+        if not checkout_line.variant.room.charge_taxes:
             return base_total
 
         if not _validate_checkout(checkout, [checkout_line]):
@@ -383,7 +383,7 @@ class AvataxPlugin(BasePlugin):
     ) -> TaxedMoney:
         if self._skip_plugin(previous_value):
             return previous_value
-        if order_line.variant and not order_line.variant.product.charge_taxes:  # type: ignore
+        if order_line.variant and not order_line.variant.room.charge_taxes:  # type: ignore
             return previous_value
         if _validate_order(order_line.order):
             return self._calculate_order_line_unit(order_line)
@@ -438,7 +438,7 @@ class AvataxPlugin(BasePlugin):
     def get_order_line_tax_rate(
         self,
         order: "Order",
-        product: "Product",
+        room: "Room",
         address: Optional["Address"],
         previous_value: Decimal,
     ) -> Decimal:
@@ -536,7 +536,7 @@ class AvataxPlugin(BasePlugin):
 
     def assign_tax_code_to_object_meta(
         self,
-        obj: Union["Product", "ProductType"],
+        obj: Union["Room", "RoomType"],
         tax_code: Optional[str],
         previous_value: Any,
     ):
@@ -558,15 +558,15 @@ class AvataxPlugin(BasePlugin):
         return previous_value
 
     def get_tax_code_from_object_meta(
-        self, obj: Union["Product", "ProductType"], previous_value: Any
+        self, obj: Union["Room", "RoomType"], previous_value: Any
     ) -> TaxType:
         if not self.active:
             return previous_value
 
-        # Product has None as it determines if we overwrite taxes for the product
+        # Room has None as it determines if we overwrite taxes for the room
         default_tax_code = None
         default_tax_description = None
-        if isinstance(obj, ProductType):
+        if isinstance(obj, RoomType):
             default_tax_code = DEFAULT_TAX_CODE
             default_tax_description = DEFAULT_TAX_DESCRIPTION
 

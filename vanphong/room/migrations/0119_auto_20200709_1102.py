@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0118_populate_product_variant_price"),
+        ("room", "0118_populate_room_variant_price"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="attributeproduct",
+            name="attributeroom",
             options={"ordering": ("sort_order", "pk")},
         ),
         migrations.AlterModelOptions(
@@ -23,14 +23,14 @@ class Migration(migrations.Migration):
             options={"ordering": ("sort_order", "pk")},
         ),
         migrations.AlterModelOptions(
-            name="product",
+            name="room",
             options={
                 "ordering": ("slug",),
-                "permissions": (("manage_products", "Manage products."),),
+                "permissions": (("manage_rooms", "Manage rooms."),),
             },
         ),
         migrations.AlterModelOptions(
-            name="productimage",
+            name="roomimage",
             options={"ordering": ("sort_order", "pk")},
         ),
     ]

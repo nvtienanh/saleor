@@ -1,10 +1,10 @@
 from .....attribute import AttributeInputType
 
 
-def add_product_attribute_data_to_expected_data(data, product, attribute_ids, pk=None):
-    for assigned_attribute in product.attributes.all():
+def add_room_attribute_data_to_expected_data(data, room, attribute_ids, pk=None):
+    for assigned_attribute in room.attributes.all():
         if assigned_attribute:
-            header = f"{assigned_attribute.attribute.slug} (product attribute)"
+            header = f"{assigned_attribute.attribute.slug} (room attribute)"
             if str(assigned_attribute.attribute.pk) in attribute_ids:
                 value_instance = assigned_attribute.values.first()
                 value = (
@@ -38,27 +38,27 @@ def add_variant_attribute_data_to_expected_data(data, variant, attribute_ids, pk
     return data
 
 
-def add_stocks_to_expected_data(data, variant, warehouse_ids, pk=None):
+def add_stocks_to_expected_data(data, variant, hotel_ids, pk=None):
     for stock in variant.stocks.all():
-        if str(stock.warehouse.pk) in warehouse_ids:
-            slug = stock.warehouse.slug
-            warehouse_headers = [
-                f"{slug} (warehouse quantity)",
+        if str(stock.hotel.pk) in hotel_ids:
+            slug = stock.hotel.slug
+            hotel_headers = [
+                f"{slug} (hotel quantity)",
             ]
             if pk:
-                data[pk][warehouse_headers[0]] = stock.quantity
+                data[pk][hotel_headers[0]] = stock.quantity
             else:
-                data[warehouse_headers[0]] = stock.quantity
+                data[hotel_headers[0]] = stock.quantity
 
     return data
 
 
-def add_channel_to_expected_product_data(data, product, channel_ids, pk=None):
-    for channel_listing in product.channel_listings.all():
+def add_channel_to_expected_room_data(data, room, channel_ids, pk=None):
+    for channel_listing in room.channel_listings.all():
         if str(channel_listing.channel.pk) in channel_ids:
             channel_slug = channel_listing.channel.slug
             for lookup, field in [
-                ("currency_code", "product currency code"),
+                ("currency_code", "room currency code"),
                 ("is_published", "published"),
                 ("publication_date", "publication date"),
                 ("visible_in_listings", "searchable"),

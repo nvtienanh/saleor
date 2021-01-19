@@ -7,7 +7,7 @@ from prices import Money
 
 from ...checkout.utils import fetch_checkout_lines, get_voucher_discount_for_checkout
 from ...plugins.manager import get_plugins_manager
-from ...product.models import Product, ProductVariant, ProductVariantChannelListing
+from ...room.models import Room, RoomVariant, RoomVariantChannelListing
 from .. import DiscountInfo, DiscountValueType, VoucherType
 from ..models import (
     NotApplicable,
@@ -21,7 +21,7 @@ from ..templatetags.voucher import discount_as_negative
 from ..utils import (
     add_voucher_usage_by_customer,
     decrease_voucher_usage,
-    get_product_discount_on_sale,
+    get_room_discount_on_sale,
     increase_voucher_usage,
     remove_voucher_usage_by_customer,
     validate_voucher,
@@ -81,8 +81,8 @@ def test_valid_voucher_min_checkout_items_quantity(voucher):
 
 @pytest.mark.integration
 @pytest.mark.django_db(transaction=True)
-def test_variant_discounts(product, channel_USD):
-    variant = product.variants.get()
+def test_variant_discounts(room, channel_USD):
+    variant = room.variants.get()
     low_sale = Sale.objects.create(type=DiscountValueType.FIXED)
     low_sale_channel_listing = SaleChannelListing.objects.create(
         sale=low_sale,
@@ -93,7 +93,7 @@ def test_variant_discounts(product, channel_USD):
     low_discount = DiscountInfo(
         sale=low_sale,
         channel_listings={channel_USD.slug: low_sale_channel_listing},
-        product_ids={product.id},
+        room_ids={room.id},
         category_ids=set(),
         collection_ids=set(),
     )
@@ -107,7 +107,7 @@ def test_variant_discounts(product, channel_USD):
     discount = DiscountInfo(
         sale=sale,
         channel_listings={channel_USD.slug: sale_channel_listing},
-        product_ids={product.id},
+        room_ids={room.id},
         category_ids=set(),
         collection_ids=set(),
     )
@@ -121,13 +121,13 @@ def test_variant_discounts(product, channel_USD):
     high_discount = DiscountInfo(
         sale=high_sale,
         channel_listings={channel_USD.slug: high_sale_channel_listing},
-        product_ids={product.id},
+        room_ids={room.id},
         category_ids=set(),
         collection_ids=set(),
     )
     variant_channel_listing = variant.channel_listings.get(channel=channel_USD)
     final_price = variant.get_price(
-        product,
+        room,
         [],
         channel_USD,
         variant_channel_listing,
@@ -138,8 +138,8 @@ def test_variant_discounts(product, channel_USD):
 
 @pytest.mark.integration
 @pytest.mark.django_db(transaction=True)
-def test_percentage_discounts(product, channel_USD):
-    variant = product.variants.get()
+def test_percentage_discounts(room, channel_USD):
+    variant = room.variants.get()
     sale = Sale.objects.create(type=DiscountValueType.PERCENTAGE)
     sale_channel_listing = SaleChannelListing.objects.create(
         sale=sale,
@@ -150,13 +150,13 @@ def test_percentage_discounts(product, channel_USD):
     discount = DiscountInfo(
         sale=sale,
         channel_listings={channel_USD.slug: sale_channel_listing},
-        product_ids={product.id},
+        room_ids={room.id},
         category_ids=set(),
         collection_ids=set(),
     )
     variant_channel_listing = variant.channel_listings.get(channel=channel_USD)
     final_price = variant.get_price(
-        product, [], channel_USD, variant_channel_listing, discounts=[discount]
+        room, [], channel_USD, variant_channel_listing, discounts=[discount]
     )
     assert final_price == Money(5, "USD")
 
@@ -200,7 +200,7 @@ def test_voucher_queryset_active_in_other_channel(voucher, channel_PLN):
         ([10, 10, 10], 5, DiscountValueType.FIXED, False, 15),
     ],
 )
-def test_specific_products_voucher_checkout_discount(
+def test_specific_rooms_voucher_checkout_discount(
     monkeypatch,
     prices,
     discount_value,
@@ -212,14 +212,14 @@ def test_specific_products_voucher_checkout_discount(
 ):
     discounts = []
     monkeypatch.setattr(
-        "saleor.checkout.utils.get_prices_of_discounted_specific_product",
+        "saleor.checkout.utils.get_prices_of_discounted_specific_room",
         lambda manager, checkout, lines, voucher, channel, discounts: (
             Money(price, "USD") for price in prices
         ),
     )
     voucher = Voucher.objects.create(
         code="unique",
-        type=VoucherType.SPECIFIC_PRODUCT,
+        type=VoucherType.SPECIFIC_ROOM,
         discount_value_type=discount_type,
         apply_once_per_order=apply_once_per_order,
     )
@@ -237,31 +237,31 @@ def test_specific_products_voucher_checkout_discount(
     assert discount == Money(expected_value, "USD")
 
 
-def test_sale_applies_to_correct_products(product_type, category, channel_USD):
-    product = Product.objects.create(
-        name="Test Product",
-        slug="test-product",
+def test_sale_applies_to_correct_rooms(room_type, category, channel_USD):
+    room = Room.objects.create(
+        name="Test Room",
+        slug="test-room",
         description="",
         pk=111,
-        product_type=product_type,
+        room_type=room_type,
         category=category,
     )
-    variant = ProductVariant.objects.create(product=product, sku="firstvar")
-    variant_channel_listing = ProductVariantChannelListing.objects.create(
+    variant = RoomVariant.objects.create(room=room, sku="firstvar")
+    variant_channel_listing = RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
         currency=channel_USD.currency_code,
     )
-    product2 = Product.objects.create(
-        name="Second product",
-        slug="second-product",
+    room2 = Room.objects.create(
+        name="Second room",
+        slug="second-room",
         description="",
-        product_type=product_type,
+        room_type=room_type,
         category=category,
     )
-    sec_variant = ProductVariant.objects.create(product=product2, sku="secvar", pk=111)
-    ProductVariantChannelListing.objects.create(
+    sec_variant = RoomVariant.objects.create(room=room2, sku="secvar", pk=111)
+    RoomVariantChannelListing.objects.create(
         variant=sec_variant,
         channel=channel_USD,
         price_amount=Decimal(10),
@@ -277,18 +277,18 @@ def test_sale_applies_to_correct_products(product_type, category, channel_USD):
     discount = DiscountInfo(
         sale=sale,
         channel_listings={channel_USD.slug: sale_channel_listing},
-        product_ids={product.id},
+        room_ids={room.id},
         category_ids=set(),
         collection_ids=set(),
     )
-    product_discount = get_product_discount_on_sale(
-        variant.product, set(), discount, channel_USD
+    room_discount = get_room_discount_on_sale(
+        variant.room, set(), discount, channel_USD
     )
 
-    discounted_price = product_discount(variant_channel_listing.price)
+    discounted_price = room_discount(variant_channel_listing.price)
     assert discounted_price == Money(7, "USD")
     with pytest.raises(NotApplicable):
-        get_product_discount_on_sale(sec_variant.product, set(), discount, channel_USD)
+        get_room_discount_on_sale(sec_variant.room, set(), discount, channel_USD)
 
 
 def test_increase_voucher_usage(channel_USD):

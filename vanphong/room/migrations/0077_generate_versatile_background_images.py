@@ -5,6 +5,6 @@ from django.db import migrations
 class Migration(migrations.Migration):
     # there was 'thumbnail generation' which already exists ad management command
     # because this migration is depended on, it cannot be removed
-    dependencies = [("product", "0076_auto_20181012_1146")]
+    dependencies = [("room", "0076_auto_20181012_1146")]
 
     operations = []

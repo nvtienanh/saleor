@@ -7,20 +7,20 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0035_auto_20170919_0846")]
+    dependencies = [("room", "0035_auto_20170919_0846")]
 
     operations = [
         migrations.AlterModelOptions(
-            name="product",
+            name="room",
             options={
                 "permissions": (
-                    ("view_product", "Can view products"),
-                    ("edit_product", "Can edit products"),
-                    ("view_properties", "Can view product properties"),
-                    ("edit_properties", "Can edit product properties"),
+                    ("view_room", "Can view rooms"),
+                    ("edit_room", "Can edit rooms"),
+                    ("view_properties", "Can view room properties"),
+                    ("edit_properties", "Can edit room properties"),
                 ),
-                "verbose_name": "product",
-                "verbose_name_plural": "products",
+                "verbose_name": "room",
+                "verbose_name_plural": "rooms",
             },
         )
     ]

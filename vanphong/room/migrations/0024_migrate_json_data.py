@@ -6,22 +6,22 @@ from django.db import migrations
 
 
 def move_data(apps, schema_editor):
-    ProductVariant = apps.get_model("product", "ProductVariant")
+    RoomVariant = apps.get_model("room", "RoomVariant")
 
-    for variant in ProductVariant.objects.all():
+    for variant in RoomVariant.objects.all():
         variant.attributes_postgres = json.loads(variant.attributes)
         variant.save()
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0023_auto_20161211_1912")]
+    dependencies = [("room", "0023_auto_20161211_1912")]
 
     operations = [
         migrations.RunPython(move_data),
-        migrations.RemoveField(model_name="productvariant", name="attributes"),
+        migrations.RemoveField(model_name="roomvariant", name="attributes"),
         migrations.RenameField(
-            model_name="productvariant",
+            model_name="roomvariant",
             old_name="attributes_postgres",
             new_name="attributes",
         ),

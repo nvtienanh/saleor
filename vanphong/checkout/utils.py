@@ -10,7 +10,7 @@ from ..account.models import User
 from ..channel.models import Channel
 from ..checkout import calculations
 from ..checkout.error_codes import CheckoutErrorCode
-from ..core.exceptions import ProductNotPublished
+from ..core.exceptions import RoomNotPublished
 from ..core.taxes import zero_taxed_money
 from ..core.utils.promo_code import (
     InvalidPromoCode,
@@ -20,7 +20,7 @@ from ..core.utils.promo_code import (
 from ..discount import DiscountInfo, VoucherType
 from ..discount.models import NotApplicable, Voucher
 from ..discount.utils import (
-    get_products_voucher_discount,
+    get_rooms_voucher_discount,
     validate_voucher_for_checkout,
 )
 from ..giftcard.utils import (
@@ -28,9 +28,9 @@ from ..giftcard.utils import (
     remove_gift_card_code_from_checkout,
 )
 from ..plugins.manager import PluginsManager, get_plugins_manager
-from ..product import models as product_models
+from ..room import models as room_models
 from ..shipping.models import ShippingMethod
-from ..warehouse.availability import check_stock_quantity, check_stock_quantity_bulk
+from ..hotel.availability import check_stock_quantity, check_stock_quantity_bulk
 from . import AddressType, CheckoutLineInfo
 from .models import Checkout, CheckoutLine
 
@@ -70,16 +70,16 @@ def check_variant_in_stock(
 def add_variant_to_checkout(
     checkout, variant, quantity=1, replace=False, check_quantity=True
 ):
-    """Add a product variant to checkout.
+    """Add a room variant to checkout.
 
     If `replace` is truthy then any previous quantity is discarded instead
     of added to.
     """
-    product_channel_listing = variant.product.channel_listings.filter(
+    room_channel_listing = variant.room.channel_listings.filter(
         channel_id=checkout.channel_id
     ).first()
-    if not product_channel_listing or not product_channel_listing.is_published:
-        raise ProductNotPublished()
+    if not room_channel_listing or not room_channel_listing.is_published:
+        raise RoomNotPublished()
 
     new_quantity, line = check_variant_in_stock(
         checkout,
@@ -116,17 +116,17 @@ def add_variants_to_checkout(checkout, variants, quantities):
     country_code = checkout.get_country()
     check_stock_quantity_bulk(variants, country_code, quantities)
 
-    channel_listings = product_models.ProductChannelListing.objects.filter(
+    channel_listings = room_models.RoomChannelListing.objects.filter(
         channel_id=checkout.channel.id,
-        product_id__in=[v.product_id for v in variants],
+        room_id__in=[v.room_id for v in variants],
     )
-    channel_listings_by_product_id = {cl.product_id: cl for cl in channel_listings}
+    channel_listings_by_room_id = {cl.room_id: cl for cl in channel_listings}
 
     # check if variants are published
     for variant in variants:
-        product_channel_listing = channel_listings_by_product_id[variant.product_id]
-        if not product_channel_listing or not product_channel_listing.is_published:
-            raise ProductNotPublished()
+        room_channel_listing = channel_listings_by_room_id[variant.room_id]
+        if not room_channel_listing or not room_channel_listing.is_published:
+            raise RoomNotPublished()
 
     # create checkout lines
     lines = []
@@ -238,7 +238,7 @@ def _get_shipping_voucher_discount_for_checkout(
     return voucher.get_discount_amount_for(shipping_price, checkout.channel)
 
 
-def _get_products_voucher_discount(
+def _get_rooms_voucher_discount(
     manager: PluginsManager,
     checkout: "Checkout",
     lines: Iterable["CheckoutLineInfo"],
@@ -246,43 +246,43 @@ def _get_products_voucher_discount(
     channel: "Channel",
     discounts: Optional[Iterable[DiscountInfo]] = None,
 ):
-    """Calculate products discount value for a voucher, depending on its type."""
+    """Calculate rooms discount value for a voucher, depending on its type."""
     prices = None
-    if voucher.type == VoucherType.SPECIFIC_PRODUCT:
-        prices = get_prices_of_discounted_specific_product(
+    if voucher.type == VoucherType.SPECIFIC_ROOM:
+        prices = get_prices_of_discounted_specific_room(
             manager, checkout, lines, voucher, channel, discounts
         )
     if not prices:
         msg = "This offer is only valid for selected items."
         raise NotApplicable(msg)
-    return get_products_voucher_discount(voucher, prices, channel)
+    return get_rooms_voucher_discount(voucher, prices, channel)
 
 
 def get_discounted_lines(lines: Iterable["CheckoutLineInfo"], voucher):
-    discounted_products = voucher.products.all()
+    discounted_rooms = voucher.rooms.all()
     discounted_categories = set(voucher.categories.all())
     discounted_collections = set(voucher.collections.all())
 
     discounted_lines = []
-    if discounted_products or discounted_collections or discounted_categories:
+    if discounted_rooms or discounted_collections or discounted_categories:
         for line_info in lines:
-            line_product = line_info.product
-            line_category = line_info.product.category
+            line_room = line_info.room
+            line_category = line_info.room.category
             line_collections = set(line_info.collections)
             if line_info.variant and (
-                line_product in discounted_products
+                line_room in discounted_rooms
                 or line_category in discounted_categories
                 or line_collections.intersection(discounted_collections)
             ):
                 discounted_lines.append(line_info.line)
     else:
-        # If there's no discounted products, collections or categories,
-        # it means that all products are discounted
+        # If there's no discounted rooms, collections or categories,
+        # it means that all rooms are discounted
         discounted_lines.extend([line_info.line for line_info in lines])
     return discounted_lines
 
 
-def get_prices_of_discounted_specific_product(
+def get_prices_of_discounted_specific_room(
     manager: PluginsManager,
     checkout: "Checkout",
     lines: Iterable["CheckoutLineInfo"],
@@ -290,11 +290,11 @@ def get_prices_of_discounted_specific_product(
     channel: Channel,
     discounts: Optional[Iterable[DiscountInfo]] = None,
 ) -> List[Money]:
-    """Get prices of variants belonging to the discounted specific products.
+    """Get prices of variants belonging to the discounted specific rooms.
 
-    Specific products are products, collections and categories.
-    Product must be assigned directly to the discounted category, assigning
-    product to child category won't work.
+    Specific rooms are rooms, collections and categories.
+    Room must be assigned directly to the discounted category, assigning
+    room to child category won't work.
     """
     line_prices = []
     discounted_lines = get_discounted_lines(lines, voucher)
@@ -306,8 +306,8 @@ def get_prices_of_discounted_specific_product(
             checkout=checkout,
             line=line,
             variant=line.variant,
-            product=line.variant.product,
-            collections=line.variant.product.collections.all(),
+            room=line.variant.room,
+            collections=line.variant.room.collections.all(),
             address=address,
             channel=channel,
             channel_listing=line.variant.channel_listings.get(channel=channel),
@@ -347,8 +347,8 @@ def get_voucher_discount_for_checkout(
         return _get_shipping_voucher_discount_for_checkout(
             manager, voucher, checkout, lines, address, discounts
         )
-    if voucher.type == VoucherType.SPECIFIC_PRODUCT:
-        return _get_products_voucher_discount(
+    if voucher.type == VoucherType.SPECIFIC_ROOM:
+        return _get_rooms_voucher_discount(
             manager, checkout, lines, voucher, checkout.channel, discounts
         )
     raise NotImplementedError("Unknown discount type")
@@ -693,16 +693,16 @@ def cancel_active_payments(checkout: Checkout):
 def fetch_checkout_lines(checkout: Checkout) -> Iterable[CheckoutLineInfo]:
     """Fetch checkout lines as CheckoutLineInfo objects."""
     lines = CheckoutLine.objects.filter(checkout=checkout).prefetch_related(
-        "variant__product__collections",
+        "variant__room__collections",
         "variant__channel_listings__channel",
-        "variant__product__product_type",
+        "variant__room__room_type",
     )
     lines_info = []
 
     for line in lines:
         variant = line.variant
-        product = variant.product
-        collections = list(product.collections.all())
+        room = variant.room
+        collections = list(room.collections.all())
 
         variant_channel_listing = None
         for channel_listing in line.variant.channel_listings.all():
@@ -719,7 +719,7 @@ def fetch_checkout_lines(checkout: Checkout) -> Iterable[CheckoutLineInfo]:
                 line=line,
                 variant=variant,
                 channel_listing=variant_channel_listing,
-                product=product,
+                room=room,
                 collections=collections,
             )
         )
@@ -729,5 +729,5 @@ def fetch_checkout_lines(checkout: Checkout) -> Iterable[CheckoutLineInfo]:
 def is_shipping_required(lines: Iterable[CheckoutLineInfo]):
     """Check if shipping is required for given checkout lines."""
     return any(
-        line_info.product.product_type.is_shipping_required for line_info in lines
+        line_info.room.room_type.is_shipping_required for line_info in lines
     )

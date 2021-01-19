@@ -4,7 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
 
-def create_image(image_name="product2"):
+def create_image(image_name="room2"):
     img_data = BytesIO()
     image = Image.new("RGB", size=(1, 1), color=(255, 0, 0, 0))
     image.save(img_data, format="JPEG")
@@ -13,6 +13,6 @@ def create_image(image_name="product2"):
 
 
 def create_pdf_file_with_image_ext():
-    file_name = "product.jpg"
-    file_data = SimpleUploadedFile(file_name, b"product_data", "application/pdf")
+    file_name = "room.jpg"
+    file_data = SimpleUploadedFile(file_name, b"room_data", "application/pdf")
     return file_data, file_name

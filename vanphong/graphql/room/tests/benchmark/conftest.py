@@ -1,7 +1,7 @@
 import pytest
 
 from .....discount.models import Sale, SaleChannelListing
-from .....product.models import Category
+from .....room.models import Category
 
 
 @pytest.fixture
@@ -23,25 +23,25 @@ def sales_list(channel_USD):
 
 
 @pytest.fixture
-def category_with_products(
-    product_with_image,
-    product_list_published,
-    product_with_variant_with_two_attributes,
-    product_with_multiple_values_attributes,
-    product_without_shipping,
+def category_with_rooms(
+    room_with_image,
+    room_list_published,
+    room_with_variant_with_two_attributes,
+    room_with_multiple_values_attributes,
+    room_without_shipping,
     sales_list,
 ):
     category = Category.objects.create(name="Category", slug="cat")
 
-    product_list_published.update(category=category)
+    room_list_published.update(category=category)
 
-    product_with_image.category = category
-    product_with_image.save()
-    product_with_variant_with_two_attributes.category = category
-    product_with_variant_with_two_attributes.save()
-    product_with_multiple_values_attributes.category = category
-    product_with_multiple_values_attributes.save()
-    product_without_shipping.category = category
-    product_without_shipping.save()
+    room_with_image.category = category
+    room_with_image.save()
+    room_with_variant_with_two_attributes.category = category
+    room_with_variant_with_two_attributes.save()
+    room_with_multiple_values_attributes.category = category
+    room_with_multiple_values_attributes.save()
+    room_without_shipping.category = category
+    room_without_shipping.save()
 
     return category

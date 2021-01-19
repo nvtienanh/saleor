@@ -7,7 +7,7 @@ from ...webhook.payloads import (
     generate_fulfillment_payload,
     generate_invoice_payload,
     generate_order_payload,
-    generate_product_payload,
+    generate_room_payload,
 )
 from ..base_plugin import BasePlugin
 from .tasks import trigger_webhooks_for_event
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from ...checkout.models import Checkout
     from ...invoice.models import Invoice
     from ...order.models import Fulfillment, Order
-    from ...product.models import Product
+    from ...room.models import Room
 
 
 class WebhookPlugin(BasePlugin):
@@ -107,17 +107,17 @@ class WebhookPlugin(BasePlugin):
             WebhookEventType.CUSTOMER_CREATED, customer_data
         )
 
-    def product_created(self, product: "Product", previous_value: Any) -> Any:
+    def room_created(self, room: "Room", previous_value: Any) -> Any:
         if not self.active:
             return previous_value
-        product_data = generate_product_payload(product)
-        trigger_webhooks_for_event.delay(WebhookEventType.PRODUCT_CREATED, product_data)
+        room_data = generate_room_payload(room)
+        trigger_webhooks_for_event.delay(WebhookEventType.ROOM_CREATED, room_data)
 
-    def product_updated(self, product: "Product", previous_value: Any) -> Any:
+    def room_updated(self, room: "Room", previous_value: Any) -> Any:
         if not self.active:
             return previous_value
-        product_data = generate_product_payload(product)
-        trigger_webhooks_for_event.delay(WebhookEventType.PRODUCT_UPDATED, product_data)
+        room_data = generate_room_payload(room)
+        trigger_webhooks_for_event.delay(WebhookEventType.ROOM_UPDATED, room_data)
 
     # Deprecated. This method will be removed in Saleor 3.0
     def checkout_quantity_changed(

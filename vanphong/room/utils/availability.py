@@ -10,12 +10,12 @@ from ...core.utils import to_local_currency
 from ...discount import DiscountInfo
 from ...discount.utils import calculate_discounted_price
 from ...plugins.manager import get_plugins_manager
-from ...product.models import (
+from ...room.models import (
     Collection,
-    Product,
-    ProductChannelListing,
-    ProductVariant,
-    ProductVariantChannelListing,
+    Room,
+    RoomChannelListing,
+    RoomVariant,
+    RoomVariantChannelListing,
 )
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ProductAvailability:
+class RoomAvailability:
     on_sale: bool
     price_range: Optional[TaxedMoneyRange]
     price_range_undiscounted: Optional[TaxedMoneyRange]
@@ -67,7 +67,7 @@ def _get_total_discount(
     return None
 
 
-def _get_product_price_range(
+def _get_room_price_range(
     discounted: Union[MoneyRange, TaxedMoneyRange],
     undiscounted: Union[MoneyRange, TaxedMoneyRange],
     local_currency: Optional[str] = None,
@@ -86,15 +86,15 @@ def _get_product_price_range(
 
 def get_variant_price(
     *,
-    variant: ProductVariant,
-    variant_channel_listing: ProductVariantChannelListing,
-    product: Product,
+    variant: RoomVariant,
+    variant_channel_listing: RoomVariantChannelListing,
+    room: Room,
     collections: Iterable[Collection],
     discounts: Iterable[DiscountInfo],
     channel: Channel
 ):
     return calculate_discounted_price(
-        product=product,
+        room=room,
         price=variant_channel_listing.price,
         collections=collections,
         discounts=discounts,
@@ -102,16 +102,16 @@ def get_variant_price(
     )
 
 
-def get_product_price_range(
+def get_room_price_range(
     *,
-    product: Product,
-    variants: Iterable[ProductVariant],
-    variants_channel_listing: List[ProductVariantChannelListing],
+    room: Room,
+    variants: Iterable[RoomVariant],
+    variants_channel_listing: List[RoomVariantChannelListing],
     collections: Iterable[Collection],
     discounts: Iterable[DiscountInfo],
     channel: Channel,
 ) -> Optional[MoneyRange]:
-    with opentracing.global_tracer().start_active_span("get_product_price_range"):
+    with opentracing.global_tracer().start_active_span("get_room_price_range"):
         if variants:
             variants_channel_listing_dict = {
                 channel_listing.variant_id: channel_listing
@@ -125,7 +125,7 @@ def get_product_price_range(
                     price = get_variant_price(
                         variant=variant,
                         variant_channel_listing=variant_channel_listing,
-                        product=product,
+                        room=room,
                         collections=collections,
                         discounts=discounts,
                         channel=channel,
@@ -137,25 +137,25 @@ def get_product_price_range(
         return None
 
 
-def get_product_availability(
+def get_room_availability(
     *,
-    product: Product,
-    product_channel_listing: Optional[ProductChannelListing],
-    variants: Iterable[ProductVariant],
-    variants_channel_listing: List[ProductVariantChannelListing],
+    room: Room,
+    room_channel_listing: Optional[RoomChannelListing],
+    variants: Iterable[RoomVariant],
+    variants_channel_listing: List[RoomVariantChannelListing],
     collections: Iterable[Collection],
     discounts: Iterable[DiscountInfo],
     channel: Channel,
     country: Optional[str] = None,
     local_currency: Optional[str] = None,
     plugins: Optional["PluginsManager"] = None,
-) -> ProductAvailability:
-    with opentracing.global_tracer().start_active_span("get_product_availability"):
+) -> RoomAvailability:
+    with opentracing.global_tracer().start_active_span("get_room_availability"):
         if not plugins:
             plugins = get_plugins_manager()
         discounted = None
-        discounted_net_range = get_product_price_range(
-            product=product,
+        discounted_net_range = get_room_price_range(
+            room=room,
             variants=variants,
             variants_channel_listing=variants_channel_listing,
             collections=collections,
@@ -164,17 +164,17 @@ def get_product_availability(
         )
         if discounted_net_range is not None:
             discounted = TaxedMoneyRange(
-                start=plugins.apply_taxes_to_product(
-                    product, discounted_net_range.start, country
+                start=plugins.apply_taxes_to_room(
+                    room, discounted_net_range.start, country
                 ),
-                stop=plugins.apply_taxes_to_product(
-                    product, discounted_net_range.stop, country
+                stop=plugins.apply_taxes_to_room(
+                    room, discounted_net_range.stop, country
                 ),
             )
 
         undiscounted = None
-        undiscounted_net_range = get_product_price_range(
-            product=product,
+        undiscounted_net_range = get_room_price_range(
+            room=room,
             variants=variants,
             variants_channel_listing=variants_channel_listing,
             collections=collections,
@@ -183,11 +183,11 @@ def get_product_availability(
         )
         if undiscounted_net_range is not None:
             undiscounted = TaxedMoneyRange(
-                start=plugins.apply_taxes_to_product(
-                    product, undiscounted_net_range.start, country
+                start=plugins.apply_taxes_to_room(
+                    room, undiscounted_net_range.start, country
                 ),
-                stop=plugins.apply_taxes_to_product(
-                    product, undiscounted_net_range.stop, country
+                stop=plugins.apply_taxes_to_room(
+                    room, undiscounted_net_range.stop, country
                 ),
             )
 
@@ -196,16 +196,16 @@ def get_product_availability(
         discount_local_currency = None
         if undiscounted_net_range is not None and discounted_net_range is not None:
             discount = _get_total_discount_from_range(undiscounted, discounted)
-            price_range_local, discount_local_currency = _get_product_price_range(
+            price_range_local, discount_local_currency = _get_room_price_range(
                 discounted, undiscounted, local_currency
             )
 
         is_visible = (
-            product_channel_listing is not None and product_channel_listing.is_visible
+            room_channel_listing is not None and room_channel_listing.is_visible
         )
         is_on_sale = is_visible and discount is not None
 
-        return ProductAvailability(
+        return RoomAvailability(
             on_sale=is_on_sale,
             price_range=discounted,
             price_range_undiscounted=undiscounted,
@@ -216,10 +216,10 @@ def get_product_availability(
 
 
 def get_variant_availability(
-    variant: ProductVariant,
-    variant_channel_listing: ProductVariantChannelListing,
-    product: Product,
-    product_channel_listing: Optional[ProductChannelListing],
+    variant: RoomVariant,
+    variant_channel_listing: RoomVariantChannelListing,
+    room: Room,
+    room_channel_listing: Optional[RoomChannelListing],
     collections: Iterable[Collection],
     discounts: Iterable[DiscountInfo],
     channel: Channel,
@@ -230,24 +230,24 @@ def get_variant_availability(
     with opentracing.global_tracer().start_active_span("get_variant_availability"):
         if not plugins:
             plugins = get_plugins_manager()
-        discounted = plugins.apply_taxes_to_product(
-            product,
+        discounted = plugins.apply_taxes_to_room(
+            room,
             get_variant_price(
                 variant=variant,
                 variant_channel_listing=variant_channel_listing,
-                product=product,
+                room=room,
                 collections=collections,
                 discounts=discounts,
                 channel=channel,
             ),
             country,
         )
-        undiscounted = plugins.apply_taxes_to_product(
-            product,
+        undiscounted = plugins.apply_taxes_to_room(
+            room,
             get_variant_price(
                 variant=variant,
                 variant_channel_listing=variant_channel_listing,
-                product=product,
+                room=room,
                 collections=collections,
                 discounts=[],
                 channel=channel,
@@ -268,7 +268,7 @@ def get_variant_availability(
             discount_local_currency = None
 
         is_visible = (
-            product_channel_listing is not None and product_channel_listing.is_visible
+            room_channel_listing is not None and room_channel_listing.is_visible
         )
         is_on_sale = is_visible and discount is not None
 

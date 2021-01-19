@@ -15,7 +15,7 @@ class AttributeDescriptions:
         "The position of the attribute in the storefront navigation (0 by default)."
     )
     AVAILABLE_IN_GRID = (
-        "Whether the attribute can be displayed in the admin product list."
+        "Whether the attribute can be displayed in the admin room list."
     )
 
 

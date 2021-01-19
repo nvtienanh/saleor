@@ -4,16 +4,16 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-def set_product_type_to_all_existing_attributes(apps, schema_editor):
-    Attribute = apps.get_model("product", "Attribute")
-    Attribute.objects.all().update(type="product-type")
+def set_room_type_to_all_existing_attributes(apps, schema_editor):
+    Attribute = apps.get_model("room", "Attribute")
+    Attribute.objects.all().update(type="room-type")
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ("page", "0017_pagetype"),
-        ("product", "0135_collection_channel_listing"),
+        ("room", "0135_collection_channel_listing"),
     ]
 
     operations = [
@@ -21,20 +21,20 @@ class Migration(migrations.Migration):
             model_name="attribute",
             name="type",
             field=models.CharField(
-                choices=[("product-type", "Product type"), ("page-type", "Page type")],
+                choices=[("room-type", "Room type"), ("page-type", "Page type")],
                 max_length=50,
                 null=True,
             ),
         ),
         migrations.RunPython(
-            set_product_type_to_all_existing_attributes,
+            set_room_type_to_all_existing_attributes,
             migrations.RunPython.noop,
         ),
         migrations.AlterField(
             model_name="attribute",
             name="type",
             field=models.CharField(
-                choices=[("product-type", "Product type"), ("page-type", "Page type")],
+                choices=[("room-type", "Room type"), ("page-type", "Page type")],
                 max_length=50,
             ),
         ),
@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
                     models.ManyToManyField(
                         blank=True,
                         related_name="attributesrelated",
-                        through="product.AssignedPageAttribute",
+                        through="room.AssignedPageAttribute",
                         to="page.Page",
                     ),
                 ),
@@ -83,7 +83,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="attributepage",
-                        to="product.attribute",
+                        to="room.attribute",
                     ),
                 ),
                 (
@@ -106,7 +106,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="pageassignments",
-                to="product.attributepage",
+                to="room.attributepage",
             ),
         ),
         migrations.AddField(
@@ -121,7 +121,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="assignedpageattribute",
             name="values",
-            field=models.ManyToManyField(to="product.AttributeValue"),
+            field=models.ManyToManyField(to="room.AttributeValue"),
         ),
         migrations.AddField(
             model_name="attribute",
@@ -129,7 +129,7 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(
                 blank=True,
                 related_name="page_attributes",
-                through="product.AttributePage",
+                through="room.AttributePage",
                 to="page.PageType",
             ),
         ),

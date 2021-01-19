@@ -188,7 +188,7 @@ def vouchers_for_pagination(db, channel_USD):
                 end_date=now + timezone.timedelta(hours=14),
                 discount_value_type=DiscountValueType.PERCENTAGE,
                 usage_limit=10,
-                type=VoucherType.SPECIFIC_PRODUCT,
+                type=VoucherType.SPECIFIC_ROOM,
             ),
             Voucher(
                 code="Code2",
@@ -212,7 +212,7 @@ def vouchers_for_pagination(db, channel_USD):
                 name="Voucher4",
                 end_date=now + timezone.timedelta(hours=1),
                 usage_limit=100,
-                type=VoucherType.SPECIFIC_PRODUCT,
+                type=VoucherType.SPECIFIC_ROOM,
             ),
             Voucher(
                 code="Code15",

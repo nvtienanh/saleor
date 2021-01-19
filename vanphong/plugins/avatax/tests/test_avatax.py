@@ -12,7 +12,7 @@ from ....checkout import CheckoutLineInfo
 from ....checkout.utils import add_variant_to_checkout, fetch_checkout_lines
 from ....core.prices import quantize_price
 from ....core.taxes import TaxError, TaxType
-from ....product.models import Product
+from ....room.models import Room
 from ...manager import get_plugins_manager
 from ...models import PluginConfiguration
 from .. import (
@@ -92,11 +92,11 @@ def test_calculate_checkout_line_total(
     site_settings.include_taxes_in_prices = taxes_in_prices
     site_settings.save()
     line = checkout_with_item.lines.first()
-    product = line.variant.product
-    product.metadata = {}
-    manager.assign_tax_code_to_object_meta(product.product_type, "PC040156")
-    product.save()
-    product.product_type.save()
+    room = line.variant.room
+    room.metadata = {}
+    manager.assign_tax_code_to_object_meta(room.room_type, "PC040156")
+    room.save()
+    room.room_type.save()
     discounts = [discount_info] if with_discount else None
     channel = checkout_with_item.channel
     channel_listing = line.variant.channel_listings.get(channel=channel)
@@ -104,7 +104,7 @@ def test_calculate_checkout_line_total(
         checkout_with_item,
         line,
         line.variant,
-        line.variant.product,
+        line.variant.room,
         [],
         checkout_with_item.shipping_address,
         channel,
@@ -134,7 +134,7 @@ def test_calculate_checkout_total_uses_default_calculation(
     voucher_amount,
     taxes_in_prices,
     checkout_with_item,
-    product_with_single_variant,
+    room_with_single_variant,
     discount_info,
     shipping_zone,
     address,
@@ -161,16 +161,16 @@ def test_calculate_checkout_total_uses_default_calculation(
     checkout_with_item.discount = voucher_amount
     checkout_with_item.save()
     line = checkout_with_item.lines.first()
-    product = line.variant.product
-    product.metadata = {}
-    manager.assign_tax_code_to_object_meta(product.product_type, "PC040156")
-    product.save()
-    product.product_type.save()
-    product_with_single_variant.charge_taxes = False
-    product_with_single_variant.category = non_default_category
-    product_with_single_variant.save()
+    room = line.variant.room
+    room.metadata = {}
+    manager.assign_tax_code_to_object_meta(room.room_type, "PC040156")
+    room.save()
+    room.room_type.save()
+    room_with_single_variant.charge_taxes = False
+    room_with_single_variant.category = non_default_category
+    room_with_single_variant.save()
     add_variant_to_checkout(
-        checkout_with_item, product_with_single_variant.variants.get()
+        checkout_with_item, room_with_single_variant.variants.get()
     )
 
     discounts = [discount_info] if with_discount else None
@@ -201,7 +201,7 @@ def test_calculate_checkout_total(
     voucher_amount,
     taxes_in_prices,
     checkout_with_item,
-    product_with_single_variant,
+    room_with_single_variant,
     discount_info,
     shipping_zone,
     address,
@@ -231,16 +231,16 @@ def test_calculate_checkout_total(
     checkout_with_item.discount = voucher_amount
     checkout_with_item.save()
     line = checkout_with_item.lines.first()
-    product = line.variant.product
-    product.metadata = {}
-    manager.assign_tax_code_to_object_meta(product.product_type, "PC040156")
-    product.save()
-    product.product_type.save()
-    product_with_single_variant.charge_taxes = False
-    product_with_single_variant.category = non_default_category
-    product_with_single_variant.save()
+    room = line.variant.room
+    room.metadata = {}
+    manager.assign_tax_code_to_object_meta(room.room_type, "PC040156")
+    room.save()
+    room.room_type.save()
+    room_with_single_variant.charge_taxes = False
+    room_with_single_variant.category = non_default_category
+    room_with_single_variant.save()
     add_variant_to_checkout(
-        checkout_with_item, product_with_single_variant.variants.get()
+        checkout_with_item, room_with_single_variant.variants.get()
     )
 
     discounts = [discount_info] if with_discount else None
@@ -313,7 +313,7 @@ def test_calculate_checkout_subtotal(
     plugin_configuration,
 ):
     plugin_configuration()
-    variant = stock.product_variant
+    variant = stock.room_variant
     monkeypatch.setattr(
         "saleor.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
         lambda _: {"PC040156": "desc"},
@@ -553,7 +553,7 @@ def test_get_checkout_line_tax_rate(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
 
@@ -592,7 +592,7 @@ def test_get_checkout_line_tax_rate_checkout_not_valid_default_value_returned(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
 
@@ -632,7 +632,7 @@ def test_get_checkout_line_tax_rate_error_in_response(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
 
@@ -662,7 +662,7 @@ def test_get_order_line_tax_rate(
 
     manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
 
-    product = Product.objects.get(name=order_line.product_name)
+    room = Room.objects.get(name=order_line.room_name)
 
     method = shipping_zone.shipping_methods.get()
     order.shipping_address = order.billing_address.get_copy()
@@ -673,7 +673,7 @@ def test_get_order_line_tax_rate(
     # when
     tax_rate = manager.get_order_line_tax_rate(
         order,
-        product,
+        room,
         None,
         unit_price,
     )
@@ -695,12 +695,12 @@ def test_get_order_line_tax_rate_order_not_valid_default_value_returned(
 
     manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
 
-    product = Product.objects.get(name=order_line.product_name)
+    room = Room.objects.get(name=order_line.room_name)
 
     # when
     tax_rate = manager.get_order_line_tax_rate(
         order,
-        product,
+        room,
         None,
         unit_price,
     )
@@ -723,7 +723,7 @@ def test_get_order_line_tax_rate_error_in_response(
 
     manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
 
-    product = Product.objects.get(name=order_line.product_name)
+    room = Room.objects.get(name=order_line.room_name)
 
     method = shipping_zone.shipping_methods.get()
     order.shipping_address = order.billing_address.get_copy()
@@ -734,7 +734,7 @@ def test_get_order_line_tax_rate_error_in_response(
     # when
     tax_rate = manager.get_order_line_tax_rate(
         order,
-        product,
+        room,
         None,
         unit_price,
     )
@@ -766,7 +766,7 @@ def test_get_checkout_shipping_tax_rate(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
 
@@ -805,7 +805,7 @@ def test_get_checkout_shipping_tax_rate_checkout_not_valid_default_value_returne
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
 
@@ -845,7 +845,7 @@ def test_get_checkout_shipping_tax_rate_error_in_response(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
 
@@ -889,7 +889,7 @@ def test_get_checkout_shipping_tax_rate_skip_plugin(
         line=line,
         variant=variant,
         channel_listing=variant.channel_listings.first(),
-        product=variant.product,
+        room=variant.room,
         collections=[],
     )
 
@@ -1212,21 +1212,21 @@ def test_skip_disabled_plugin(settings, plugin_configuration):
     )
 
 
-def test_get_tax_code_from_object_meta(product, settings, plugin_configuration):
-    product.store_value_in_metadata(
+def test_get_tax_code_from_object_meta(room, settings, plugin_configuration):
+    room.store_value_in_metadata(
         {META_CODE_KEY: "KEY", META_DESCRIPTION_KEY: "DESC"}
     )
     plugin_configuration(username=None, password=None)
     settings.PLUGINS = ["saleor.plugins.avatax.plugin.AvataxPlugin"]
     manager = get_plugins_manager()
-    tax_type = manager.get_tax_code_from_object_meta(product)
+    tax_type = manager.get_tax_code_from_object_meta(room)
 
     assert isinstance(tax_type, TaxType)
     assert tax_type.code == "KEY"
     assert tax_type.description == "DESC"
 
 
-def test_api_get_request_handles_request_errors(product, monkeypatch):
+def test_api_get_request_handles_request_errors(room, monkeypatch):
     mocked_response = Mock(side_effect=RequestException())
     monkeypatch.setattr("saleor.plugins.avatax.requests.get", mocked_response)
 
@@ -1245,7 +1245,7 @@ def test_api_get_request_handles_request_errors(product, monkeypatch):
     assert mocked_response.called
 
 
-def test_api_get_request_handles_json_errors(product, monkeypatch):
+def test_api_get_request_handles_json_errors(room, monkeypatch):
     mocked_response = Mock(side_effect=JSONDecodeError("", "", 0))
     monkeypatch.setattr("saleor.plugins.avatax.requests.get", mocked_response)
 
@@ -1264,7 +1264,7 @@ def test_api_get_request_handles_json_errors(product, monkeypatch):
     assert mocked_response.called
 
 
-def test_api_post_request_handles_request_errors(product, monkeypatch):
+def test_api_post_request_handles_request_errors(room, monkeypatch):
     mocked_response = Mock(side_effect=RequestException())
     monkeypatch.setattr("saleor.plugins.avatax.requests.post", mocked_response)
 
@@ -1281,7 +1281,7 @@ def test_api_post_request_handles_request_errors(product, monkeypatch):
     assert response == {}
 
 
-def test_api_post_request_handles_json_errors(product, monkeypatch):
+def test_api_post_request_handles_json_errors(room, monkeypatch):
     mocked_response = Mock(side_effect=JSONDecodeError("", "", 0))
     monkeypatch.setattr("saleor.plugins.avatax.requests.post", mocked_response)
 
@@ -1357,7 +1357,7 @@ def test_get_order_request_data_checks_when_taxes_are_not_included_to_price(
     assert len(line_without_taxes) == 2
     assert len(lines_with_taxes) == 1
 
-    assert line_without_taxes[0]["itemCode"] == line.product_sku
+    assert line_without_taxes[0]["itemCode"] == line.room_sku
 
 
 @patch("saleor.plugins.avatax.get_order_request_data")

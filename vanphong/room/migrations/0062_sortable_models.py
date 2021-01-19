@@ -3,9 +3,9 @@
 from django.db import migrations, models
 
 
-def assign_sort_order_to_product_images(apps, schema_editor):
-    ProductAttribute = apps.get_model("product", "ProductAttribute")
-    for attribute in ProductAttribute.objects.prefetch_related("values"):
+def assign_sort_order_to_room_images(apps, schema_editor):
+    RoomAttribute = apps.get_model("room", "RoomAttribute")
+    for attribute in RoomAttribute.objects.prefetch_related("values"):
         for order, value in enumerate(attribute.values.all()):
             value.sort_order = order
             value.save()
@@ -13,7 +13,7 @@ def assign_sort_order_to_product_images(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0061_product_taxes")]
+    dependencies = [("room", "0061_room_taxes")]
 
     operations = [
         migrations.AlterModelOptions(
@@ -25,18 +25,18 @@ class Migration(migrations.Migration):
             field=models.PositiveIntegerField(db_index=True, editable=False, null=True),
         ),
         migrations.AlterModelOptions(
-            name="productimage", options={"ordering": ("sort_order",)}
+            name="roomimage", options={"ordering": ("sort_order",)}
         ),
         migrations.RenameField(
-            model_name="productimage", old_name="order", new_name="sort_order"
+            model_name="roomimage", old_name="order", new_name="sort_order"
         ),
         migrations.AlterField(
-            model_name="productimage",
+            model_name="roomimage",
             name="sort_order",
             field=models.PositiveIntegerField(db_index=True, editable=False),
         ),
         migrations.RemoveField(model_name="attributechoicevalue", name="color"),
         migrations.RunPython(
-            assign_sort_order_to_product_images, migrations.RunPython.noop
+            assign_sort_order_to_room_images, migrations.RunPython.noop
         ),
     ]

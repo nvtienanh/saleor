@@ -14,7 +14,7 @@ from ..core.fields import (
 )
 from ..core.types import Money
 from ..decorators import permission_required
-from ..product.types import Category, Collection, Product
+from ..room.types import Category, Collection, Room
 from ..translations.fields import TranslationField
 from ..translations.types import SaleTranslation, VoucherTranslation
 from .dataloaders import (
@@ -45,8 +45,8 @@ class Sale(ChannelContextType, CountableDjangoObjectType):
     collections = ChannelContextFilterConnectionField(
         Collection, description="List of collections this sale applies to."
     )
-    products = ChannelContextFilterConnectionField(
-        Product, description="List of products this sale applies to."
+    rooms = ChannelContextFilterConnectionField(
+        Room, description="List of rooms this sale applies to."
     )
     translation = TranslationField(
         SaleTranslation,
@@ -63,7 +63,7 @@ class Sale(ChannelContextType, CountableDjangoObjectType):
     class Meta:
         default_resolver = ChannelContextType.resolver_with_context
         description = (
-            "Sales allow creating discounts for categories, collections or products "
+            "Sales allow creating discounts for categories, collections or rooms "
             "and are visible to all the customers."
         )
         interfaces = [relay.Node]
@@ -87,8 +87,8 @@ class Sale(ChannelContextType, CountableDjangoObjectType):
 
     @staticmethod
     @permission_required(DiscountPermissions.MANAGE_DISCOUNTS)
-    def resolve_products(root: ChannelContext[models.Sale], info, **_kwargs):
-        qs = root.node.products.all()
+    def resolve_rooms(root: ChannelContext[models.Sale], info, **_kwargs):
+        qs = root.node.rooms.all()
         return ChannelQsContext(qs=qs, channel_slug=root.channel_slug)
 
     @staticmethod
@@ -141,8 +141,8 @@ class Voucher(ChannelContextType, CountableDjangoObjectType):
     collections = ChannelContextFilterConnectionField(
         Collection, description="List of collections this voucher applies to."
     )
-    products = ChannelContextFilterConnectionField(
-        Product, description="List of products this voucher applies to."
+    rooms = ChannelContextFilterConnectionField(
+        Room, description="List of rooms this voucher applies to."
     )
     countries = graphene.List(
         types.CountryDisplay,
@@ -172,7 +172,7 @@ class Voucher(ChannelContextType, CountableDjangoObjectType):
         default_resolver = ChannelContextType.resolver_with_context
         description = (
             "Vouchers allow giving discounts to particular customers on categories, "
-            "collections or specific products. They can be used during checkout by "
+            "collections or specific rooms. They can be used during checkout by "
             "providing valid voucher codes."
         )
         only_fields = [
@@ -206,8 +206,8 @@ class Voucher(ChannelContextType, CountableDjangoObjectType):
 
     @staticmethod
     @permission_required(DiscountPermissions.MANAGE_DISCOUNTS)
-    def resolve_products(root: ChannelContext[models.Voucher], info, **_kwargs):
-        qs = root.node.products.all()
+    def resolve_rooms(root: ChannelContext[models.Voucher], info, **_kwargs):
+        qs = root.node.rooms.all()
         return ChannelQsContext(qs=qs, channel_slug=root.channel_slug)
 
     @staticmethod

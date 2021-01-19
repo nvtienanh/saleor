@@ -39,8 +39,8 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("DRAFT_CREATED", "draft_created"),
-                    ("DRAFT_ADDED_PRODUCTS", "draft_added_products"),
-                    ("DRAFT_REMOVED_PRODUCTS", "draft_removed_products"),
+                    ("DRAFT_ADDED_ROOMS", "draft_added_rooms"),
+                    ("DRAFT_REMOVED_ROOMS", "draft_removed_rooms"),
                     ("PLACED", "placed"),
                     ("PLACED_FROM_DRAFT", "placed_from_draft"),
                     ("OVERSOLD_ITEMS", "oversold_items"),

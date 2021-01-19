@@ -7,15 +7,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("warehouse", "0007_auto_20200406_0341"),
+        ("hotel", "0007_auto_20200406_0341"),
     ]
 
     operations = [
         migrations.AlterField(
             model_name="stock",
-            name="warehouse",
+            name="hotel",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="warehouse.Warehouse"
+                on_delete=django.db.models.deletion.CASCADE, to="hotel.Hotel"
             ),
         ),
     ]

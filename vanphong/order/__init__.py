@@ -21,9 +21,9 @@ class OrderStatus:
 
 
 class FulfillmentStatus:
-    FULFILLED = "fulfilled"  # group of products in an order marked as fulfilled
-    REFUNDED = "refunded"  # group of refunded products
-    CANCELED = "canceled"  # fulfilled group of products in an order marked as canceled
+    FULFILLED = "fulfilled"  # group of rooms in an order marked as fulfilled
+    REFUNDED = "refunded"  # group of refunded rooms
+    CANCELED = "canceled"  # fulfilled group of rooms in an order marked as canceled
 
     CHOICES = [
         (FULFILLED, "Fulfilled"),
@@ -37,8 +37,8 @@ class OrderEvents:
 
     CONFIRMED = "confirmed"
     DRAFT_CREATED = "draft_created"
-    DRAFT_ADDED_PRODUCTS = "draft_added_products"
-    DRAFT_REMOVED_PRODUCTS = "draft_removed_products"
+    DRAFT_ADDED_ROOMS = "draft_added_rooms"
+    DRAFT_REMOVED_ROOMS = "draft_removed_rooms"
 
     PLACED = "placed"
     PLACED_FROM_DRAFT = "placed_from_draft"
@@ -77,8 +77,8 @@ class OrderEvents:
 
     CHOICES = [
         (DRAFT_CREATED, "The draft order was created"),
-        (DRAFT_ADDED_PRODUCTS, "Some products were added to the draft order"),
-        (DRAFT_REMOVED_PRODUCTS, "Some products were removed from the draft order"),
+        (DRAFT_ADDED_ROOMS, "Some rooms were added to the draft order"),
+        (DRAFT_REMOVED_ROOMS, "Some rooms were removed from the draft order"),
         (PLACED, "The order was placed"),
         (PLACED_FROM_DRAFT, "The draft order was placed"),
         (OVERSOLD_ITEMS, "The draft order was placed with oversold items"),

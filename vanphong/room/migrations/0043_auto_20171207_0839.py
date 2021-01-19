@@ -7,8 +7,8 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0042_auto_20171206_0501")]
+    dependencies = [("room", "0042_auto_20171206_0501")]
 
     operations = [
-        migrations.RemoveIndex(model_name="product", name="product_pro_name_5bb6fa_gin")
+        migrations.RemoveIndex(model_name="room", name="room_pro_name_5bb6fa_gin")
     ]

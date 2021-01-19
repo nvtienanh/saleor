@@ -4,7 +4,7 @@ from django.db.models import Q
 from graphene.utils.str_converters import to_camel_case
 
 from .....attribute.models import Attribute
-from .....product.models import Category, Collection, Product, ProductType
+from .....room.models import Category, Collection, Room, RoomType
 from ....tests.utils import assert_no_permission, get_graphql_content
 from ...enums import AttributeValueType
 from ...types import resolve_attribute_value_type
@@ -85,10 +85,10 @@ query($id: ID!) {
 """
 
 
-def test_get_single_product_attribute_by_staff(
-    staff_api_client, color_attribute_without_values, permission_manage_products
+def test_get_single_room_attribute_by_staff(
+    staff_api_client, color_attribute_without_values, permission_manage_rooms
 ):
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     attribute_gql_id = graphene.Node.to_global_id(
         "Attribute", color_attribute_without_values.id
     )
@@ -126,10 +126,10 @@ def test_get_single_product_attribute_by_staff(
     )
 
 
-def test_get_single_product_attribute_by_app(
-    staff_api_client, color_attribute_without_values, permission_manage_products
+def test_get_single_room_attribute_by_app(
+    staff_api_client, color_attribute_without_values, permission_manage_rooms
 ):
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     attribute_gql_id = graphene.Node.to_global_id(
         "Attribute", color_attribute_without_values.id
     )
@@ -167,7 +167,7 @@ def test_get_single_product_attribute_by_app(
     )
 
 
-def test_get_single_product_attribute_by_staff_no_perm(
+def test_get_single_room_attribute_by_staff_no_perm(
     staff_api_client, color_attribute_without_values, permission_manage_pages
 ):
     staff_api_client.user.user_permissions.add(permission_manage_pages)
@@ -196,9 +196,9 @@ def test_get_single_page_attribute_by_staff(
 
 
 def test_get_single_page_attribute_by_staff_no_perm(
-    staff_api_client, size_page_attribute, permission_manage_products
+    staff_api_client, size_page_attribute, permission_manage_rooms
 ):
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     attribute_gql_id = graphene.Node.to_global_id("Attribute", size_page_attribute.id)
     query = QUERY_ATTRIBUTE
     response = staff_api_client.post_graphql(query, {"id": attribute_gql_id})
@@ -206,10 +206,10 @@ def test_get_single_page_attribute_by_staff_no_perm(
     assert_no_permission(response)
 
 
-def test_get_single_product_attribute_with_file_value(
-    staff_api_client, file_attribute, permission_manage_products, media_root
+def test_get_single_room_attribute_with_file_value(
+    staff_api_client, file_attribute, permission_manage_rooms, media_root
 ):
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     attribute_gql_id = graphene.Node.to_global_id("Attribute", file_attribute.id)
     query = QUERY_ATTRIBUTE
     content = get_graphql_content(
@@ -269,7 +269,7 @@ QUERY_ATTRIBUTES = """
 """
 
 
-def test_attributes_query(user_api_client, product):
+def test_attributes_query(user_api_client, room):
     attributes = Attribute.objects
     query = QUERY_ATTRIBUTES
     response = user_api_client.post_graphql(query)
@@ -279,7 +279,7 @@ def test_attributes_query(user_api_client, product):
     assert len(attributes_data) == attributes.count()
 
 
-def test_attributes_query_hidden_attribute(user_api_client, product, color_attribute):
+def test_attributes_query_hidden_attribute(user_api_client, room, color_attribute):
     query = QUERY_ATTRIBUTES
 
     # hide the attribute
@@ -298,7 +298,7 @@ def test_attributes_query_hidden_attribute(user_api_client, product, color_attri
 
 
 def test_attributes_query_hidden_attribute_as_staff_user(
-    staff_api_client, product, color_attribute, permission_manage_products
+    staff_api_client, room, color_attribute, permission_manage_rooms
 ):
     query = QUERY_ATTRIBUTES
 
@@ -308,12 +308,12 @@ def test_attributes_query_hidden_attribute_as_staff_user(
 
     attribute_count = Attribute.objects.all().count()
 
-    # The user doesn't have the permission yet to manage products,
+    # The user doesn't have the permission yet to manage rooms,
     # the user shouldn't be able to see the hidden attributes
     assert Attribute.objects.get_visible_to_user(staff_api_client.user).count() == 1
 
     # The user should now be able to see the attributes
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
 
     response = staff_api_client.post_graphql(query)
     content = get_graphql_content(response)
@@ -361,7 +361,7 @@ def test_attributes_query_ids_not_exists(user_api_client, category):
 def test_retrieving_the_restricted_attributes_restricted(
     staff_api_client,
     color_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     attribute,
     expected_value,
 ):
@@ -385,7 +385,7 @@ def test_retrieving_the_restricted_attributes_restricted(
     )
 
     found_attributes = get_graphql_content(
-        staff_api_client.post_graphql(query, permissions=[permission_manage_products])
+        staff_api_client.post_graphql(query, permissions=[permission_manage_rooms])
     )["data"]["attributes"]["edges"]
 
     assert len(found_attributes) == 1
@@ -417,10 +417,10 @@ def test_resolve_attribute_value_type(raw_value, expected_type):
 @pytest.mark.parametrize("tested_field", ["inCategory", "inCollection"])
 def test_attributes_in_collection_query(
     user_api_client,
-    product_type,
+    room_type,
     category,
     published_collection,
-    collection_with_products,
+    collection_with_rooms,
     tested_field,
     channel_USD,
 ):
@@ -433,29 +433,29 @@ def test_attributes_in_collection_query(
     else:
         raise AssertionError(tested_field)
     expected_qs = Attribute.objects.filter(
-        Q(attributeproduct__product_type_id=product_type.pk)
-        | Q(attributevariant__product_type_id=product_type.pk)
+        Q(attributeroom__room_type_id=room_type.pk)
+        | Q(attributevariant__room_type_id=room_type.pk)
     )
 
-    # Create another product type and attribute that shouldn't get matched
+    # Create another room type and attribute that shouldn't get matched
     other_category = Category.objects.create(name="Other Category", slug="other-cat")
     other_attribute = Attribute.objects.create(name="Other", slug="other")
-    other_product_type = ProductType.objects.create(
+    other_room_type = RoomType.objects.create(
         name="Other type", has_variants=True, is_shipping_required=True
     )
-    other_product_type.product_attributes.add(other_attribute)
-    other_product = Product.objects.create(
-        name="Another Product", product_type=other_product_type, category=other_category
+    other_room_type.room_attributes.add(other_attribute)
+    other_room = Room.objects.create(
+        name="Another Room", room_type=other_room_type, category=other_category
     )
 
-    # Create another collection with products but shouldn't get matched
+    # Create another collection with rooms but shouldn't get matched
     # as we don't look for this other collection
     other_collection = Collection.objects.create(
         name="Other Collection",
         slug="other-collection",
         description="Description",
     )
-    other_collection.products.add(other_product)
+    other_collection.rooms.add(other_room)
 
     query = """
     query($nodeID: ID!, $channel: String) {

@@ -356,13 +356,13 @@ class Order(ModelWithMetadata):
 
 class OrderLineQueryset(models.QuerySet):
     def digital(self):
-        """Return lines with digital products."""
+        """Return lines with digital rooms."""
         for line in self.all():
             if line.is_digital:
                 yield line
 
     def physical(self):
-        """Return lines with physical products."""
+        """Return lines with physical rooms."""
         for line in self.all():
             if not line.is_digital:
                 yield line
@@ -373,18 +373,18 @@ class OrderLine(models.Model):
         Order, related_name="lines", editable=False, on_delete=models.CASCADE
     )
     variant = models.ForeignKey(
-        "product.ProductVariant",
+        "room.RoomVariant",
         related_name="order_lines",
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
     )
-    # max_length is as produced by ProductVariant's display_product method
-    product_name = models.CharField(max_length=386)
+    # max_length is as produced by RoomVariant's display_room method
+    room_name = models.CharField(max_length=386)
     variant_name = models.CharField(max_length=255, default="", blank=True)
-    translated_product_name = models.CharField(max_length=386, default="", blank=True)
+    translated_room_name = models.CharField(max_length=386, default="", blank=True)
     translated_variant_name = models.CharField(max_length=255, default="", blank=True)
-    product_sku = models.CharField(max_length=255)
+    room_sku = models.CharField(max_length=255)
     is_shipping_required = models.BooleanField()
     quantity = models.IntegerField(validators=[MinValueValidator(1)])
     quantity_fulfilled = models.IntegerField(
@@ -452,9 +452,9 @@ class OrderLine(models.Model):
 
     def __str__(self):
         return (
-            f"{self.product_name} ({self.variant_name})"
+            f"{self.room_name} ({self.variant_name})"
             if self.variant_name
-            else self.product_name
+            else self.room_name
         )
 
     @property
@@ -526,7 +526,7 @@ class FulfillmentLine(models.Model):
     )
     quantity = models.PositiveIntegerField()
     stock = models.ForeignKey(
-        "warehouse.Stock",
+        "hotel.Stock",
         related_name="fulfillment_lines",
         on_delete=models.SET_NULL,
         blank=True,

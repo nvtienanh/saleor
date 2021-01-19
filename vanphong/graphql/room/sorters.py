@@ -15,11 +15,11 @@ from django.db.models import (
 from django.db.models.expressions import Window
 from django.db.models.functions import Coalesce, DenseRank
 
-from ...product.models import (
+from ...room.models import (
     Category,
     CollectionChannelListing,
-    Product,
-    ProductChannelListing,
+    Room,
+    RoomChannelListing,
 )
 from ..channel.sorters import validate_channel_slug
 from ..core.types import ChannelSortInputObjectType, SortInputObjectType
@@ -27,7 +27,7 @@ from ..core.types import ChannelSortInputObjectType, SortInputObjectType
 
 class CategorySortField(graphene.Enum):
     NAME = ["name", "slug"]
-    PRODUCT_COUNT = ["product_count", "name", "slug"]
+    ROOM_COUNT = ["room_count", "name", "slug"]
     SUBCATEGORY_COUNT = ["subcategory_count", "name", "slug"]
 
     @property
@@ -35,7 +35,7 @@ class CategorySortField(graphene.Enum):
         # pylint: disable=no-member
         if self in [
             CategorySortField.NAME,
-            CategorySortField.PRODUCT_COUNT,
+            CategorySortField.ROOM_COUNT,
             CategorySortField.SUBCATEGORY_COUNT,
         ]:
             sort_name = self.name.lower().replace("_", " ")
@@ -43,12 +43,12 @@ class CategorySortField(graphene.Enum):
         raise ValueError("Unsupported enum value: %s" % self.value)
 
     @staticmethod
-    def qs_with_product_count(queryset: QuerySet, **_kwargs) -> QuerySet:
+    def qs_with_room_count(queryset: QuerySet, **_kwargs) -> QuerySet:
         return queryset.annotate(
-            product_count=Coalesce(
+            room_count=Coalesce(
                 Subquery(
                     Category.tree.add_related_count(
-                        queryset, Product, "category", "p_c", cumulative=True
+                        queryset, Room, "category", "p_c", cumulative=True
                     )
                     .values("p_c")
                     .filter(pk=OuterRef("pk"))[:1]
@@ -72,7 +72,7 @@ class CategorySortingInput(ChannelSortInputObjectType):
 class CollectionSortField(graphene.Enum):
     NAME = ["name"]
     AVAILABILITY = ["is_published", "name"]
-    PRODUCT_COUNT = ["product_count", "name"]
+    ROOM_COUNT = ["room_count", "name"]
     PUBLICATION_DATE = ["publication_date", "name"]
 
     @property
@@ -81,7 +81,7 @@ class CollectionSortField(graphene.Enum):
         if self in [
             CollectionSortField.NAME,
             CollectionSortField.AVAILABILITY,
-            CollectionSortField.PRODUCT_COUNT,
+            CollectionSortField.ROOM_COUNT,
             CollectionSortField.PUBLICATION_DATE,
         ]:
             sort_name = self.name.lower().replace("_", " ")
@@ -89,8 +89,8 @@ class CollectionSortField(graphene.Enum):
         raise ValueError("Unsupported enum value: %s" % self.value)
 
     @staticmethod
-    def qs_with_product_count(queryset: QuerySet, **_kwargs) -> QuerySet:
-        return queryset.annotate(product_count=Count("collectionproduct__id"))
+    def qs_with_room_count(queryset: QuerySet, **_kwargs) -> QuerySet:
+        return queryset.annotate(room_count=Count("collectionroom__id"))
 
     @staticmethod
     def qs_with_availability(queryset: QuerySet, channel_slug: str) -> QuerySet:
@@ -123,12 +123,12 @@ class CollectionSortingInput(ChannelSortInputObjectType):
         type_name = "collections"
 
 
-class ProductOrderField(graphene.Enum):
+class RoomOrderField(graphene.Enum):
     NAME = ["name", "slug"]
     PRICE = ["min_variants_price_amount", "name", "slug"]
     MINIMAL_PRICE = ["discounted_price_amount", "name", "slug"]
     DATE = ["updated_at", "name", "slug"]
-    TYPE = ["product_type__name", "name", "slug"]
+    TYPE = ["room_type__name", "name", "slug"]
     PUBLISHED = ["is_published", "name", "slug"]
     PUBLICATION_DATE = ["publication_date", "name", "slug"]
     COLLECTION = ["sort_order"]
@@ -138,23 +138,23 @@ class ProductOrderField(graphene.Enum):
     def description(self):
         # pylint: disable=no-member
         descriptions = {
-            ProductOrderField.COLLECTION.name: (
+            RoomOrderField.COLLECTION.name: (
                 "collection. Note: "
-                "This option is available only for the `Collection.products` query."
+                "This option is available only for the `Collection.rooms` query."
             ),
-            ProductOrderField.NAME.name: "name.",
-            ProductOrderField.PRICE.name: "price.",
-            ProductOrderField.TYPE.name: "type.",
-            ProductOrderField.MINIMAL_PRICE.name: (
-                "a minimal price of a product's variant."
+            RoomOrderField.NAME.name: "name.",
+            RoomOrderField.PRICE.name: "price.",
+            RoomOrderField.TYPE.name: "type.",
+            RoomOrderField.MINIMAL_PRICE.name: (
+                "a minimal price of a room's variant."
             ),
-            ProductOrderField.DATE.name: "update date.",
-            ProductOrderField.PUBLISHED.name: "publication status.",
-            ProductOrderField.PUBLICATION_DATE.name: "publication date.",
-            ProductOrderField.RATING.name: "rating.",
+            RoomOrderField.DATE.name: "update date.",
+            RoomOrderField.PUBLISHED.name: "publication status.",
+            RoomOrderField.PUBLICATION_DATE.name: "publication date.",
+            RoomOrderField.RATING.name: "rating.",
         }
         if self.name in descriptions:
-            return f"Sort products by {descriptions[self.name]}"
+            return f"Sort rooms by {descriptions[self.name]}"
         raise ValueError("Unsupported enum value: %s" % self.value)
 
     @staticmethod
@@ -181,8 +181,8 @@ class ProductOrderField(graphene.Enum):
     def qs_with_published(queryset: QuerySet, channel_slug: str) -> QuerySet:
         validate_channel_slug(channel_slug)
         subquery = Subquery(
-            ProductChannelListing.objects.filter(
-                product_id=OuterRef("pk"), channel__slug=channel_slug
+            RoomChannelListing.objects.filter(
+                room_id=OuterRef("pk"), channel__slug=channel_slug
             ).values_list("is_published")[:1]
         )
         return queryset.annotate(
@@ -193,8 +193,8 @@ class ProductOrderField(graphene.Enum):
     def qs_with_publication_date(queryset: QuerySet, channel_slug: str) -> QuerySet:
         validate_channel_slug(channel_slug)
         subquery = Subquery(
-            ProductChannelListing.objects.filter(
-                product_id=OuterRef("pk"), channel__slug=channel_slug
+            RoomChannelListing.objects.filter(
+                room_id=OuterRef("pk"), channel__slug=channel_slug
             ).values_list("publication_date")[:1]
         )
         return queryset.annotate(
@@ -207,30 +207,30 @@ class ProductOrderField(graphene.Enum):
             sort_order=Window(
                 expression=DenseRank(),
                 order_by=(
-                    F("collectionproduct__sort_order").asc(nulls_last=True),
-                    F("collectionproduct__id"),
+                    F("collectionroom__sort_order").asc(nulls_last=True),
+                    F("collectionroom__id"),
                 ),
             )
         )
 
 
-class ProductOrder(ChannelSortInputObjectType):
+class RoomOrder(ChannelSortInputObjectType):
     attribute_id = graphene.Argument(
         graphene.ID,
         description=(
-            "Sort product by the selected attribute's values.\n"
+            "Sort room by the selected attribute's values.\n"
             "Note: this doesn't take translations into account yet."
         ),
     )
     field = graphene.Argument(
-        ProductOrderField, description="Sort products by the selected field."
+        RoomOrderField, description="Sort rooms by the selected field."
     )
 
     class Meta:
-        sort_enum = ProductOrderField
+        sort_enum = RoomOrderField
 
 
-class ProductTypeSortField(graphene.Enum):
+class RoomTypeSortField(graphene.Enum):
     NAME = ["name", "slug"]
     DIGITAL = ["is_digital", "name", "slug"]
     SHIPPING_REQUIRED = ["is_shipping_required", "name", "slug"]
@@ -239,16 +239,16 @@ class ProductTypeSortField(graphene.Enum):
     def description(self):
         # pylint: disable=no-member
         descriptions = {
-            ProductTypeSortField.NAME.name: "name",
-            ProductTypeSortField.DIGITAL.name: "type",
-            ProductTypeSortField.SHIPPING_REQUIRED.name: "shipping",
+            RoomTypeSortField.NAME.name: "name",
+            RoomTypeSortField.DIGITAL.name: "type",
+            RoomTypeSortField.SHIPPING_REQUIRED.name: "shipping",
         }
         if self.name in descriptions:
-            return f"Sort products by {descriptions[self.name]}."
+            return f"Sort rooms by {descriptions[self.name]}."
         raise ValueError("Unsupported enum value: %s" % self.value)
 
 
-class ProductTypeSortingInput(SortInputObjectType):
+class RoomTypeSortingInput(SortInputObjectType):
     class Meta:
-        sort_enum = ProductTypeSortField
-        type_name = "product types"
+        sort_enum = RoomTypeSortField
+        type_name = "room types"

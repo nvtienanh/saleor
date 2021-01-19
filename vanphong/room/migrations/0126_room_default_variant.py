@@ -5,30 +5,30 @@ from django.db import migrations, models
 
 
 def set_default_variants(apps, schema_editor):
-    Product = apps.get_model("product", "Product")
-    for product in Product.objects.iterator():
-        first_variant = product.variants.first()
+    Room = apps.get_model("room", "Room")
+    for room in Room.objects.iterator():
+        first_variant = room.variants.first()
         if first_variant:
-            product.default_variant = first_variant
-            product.save(update_fields=["default_variant", "updated_at"])
+            room.default_variant = first_variant
+            room.save(update_fields=["default_variant", "updated_at"])
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0125_auto_20200916_1511"),
+        ("room", "0125_auto_20200916_1511"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="default_variant",
             field=models.OneToOneField(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="+",
-                to="product.productvariant",
+                to="room.roomvariant",
             ),
         ),
         migrations.RunPython(

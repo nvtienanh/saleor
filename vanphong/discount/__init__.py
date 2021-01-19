@@ -21,12 +21,12 @@ class DiscountValueType:
 class VoucherType:
     SHIPPING = "shipping"
     ENTIRE_ORDER = "entire_order"
-    SPECIFIC_PRODUCT = "specific_product"
+    SPECIFIC_ROOM = "specific_room"
 
     CHOICES = [
         (ENTIRE_ORDER, "Entire order"),
         (SHIPPING, "Shipping"),
-        (SPECIFIC_PRODUCT, "Specific products, collections and categories"),
+        (SPECIFIC_ROOM, "Specific rooms, collections and categories"),
     ]
 
 
@@ -34,6 +34,6 @@ class VoucherType:
 class DiscountInfo:
     sale: Union["Sale", "Voucher"]
     channel_listings: Dict[str, "SaleChannelListing"]
-    product_ids: Union[List[int], Set[int]]
+    room_ids: Union[List[int], Set[int]]
     category_ids: Union[List[int], Set[int]]
     collection_ids: Union[List[int], Set[int]]

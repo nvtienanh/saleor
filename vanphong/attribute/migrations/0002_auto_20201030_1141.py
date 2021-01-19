@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("attribute", "0001_initial"),
-        ("product", "0137_drop_attribute_models"),
+        ("room", "0137_drop_attribute_models"),
     ]
 
     operations = [
@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             table=None,
         ),
         migrations.AlterModelTable(
-            name="assignedproductattribute",
+            name="assignedroomattribute",
             table=None,
         ),
         migrations.AlterModelTable(
@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
             table=None,
         ),
         migrations.AlterModelTable(
-            name="attributeproduct",
+            name="attributeroom",
             table=None,
         ),
         migrations.AlterModelTable(

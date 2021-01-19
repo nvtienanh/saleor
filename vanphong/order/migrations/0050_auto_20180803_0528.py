@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="orderline",
-            name="translated_product_name",
+            name="translated_room_name",
             field=models.CharField(default="", max_length=386),
         ),
     ]

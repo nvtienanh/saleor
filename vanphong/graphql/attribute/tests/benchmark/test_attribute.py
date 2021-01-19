@@ -9,7 +9,7 @@ from ....tests.utils import get_graphql_content
 def test_query_attribute(
     staff_api_client,
     color_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     count_queries,
 ):
     query = """
@@ -33,7 +33,7 @@ def test_query_attribute(
             }
         }
         """
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     attribute_gql_id = graphene.Node.to_global_id("Attribute", color_attribute.id)
     response = staff_api_client.post_graphql(query, {"id": attribute_gql_id})
 
@@ -49,7 +49,7 @@ def test_query_attributes(
     size_attribute,
     weight_attribute,
     color_attribute,
-    permission_manage_products,
+    permission_manage_rooms,
     count_queries,
 ):
     query = """
@@ -77,7 +77,7 @@ def test_query_attributes(
             }
         }
         """
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
 
     response = staff_api_client.post_graphql(query, {})
 

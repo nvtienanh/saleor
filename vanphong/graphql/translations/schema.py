@@ -5,7 +5,7 @@ from ...core.permissions import SitePermissions
 from ...discount.models import Sale, Voucher
 from ...menu.models import MenuItem
 from ...page.models import Page
-from ...product.models import Category, Collection, Product, ProductVariant
+from ...room.models import Category, Collection, Room, RoomVariant
 from ...shipping.models import ShippingMethod
 from ..attribute.resolvers import resolve_attributes
 from ..core.connection import CountableConnection
@@ -13,13 +13,13 @@ from ..core.fields import BaseConnectionField
 from ..decorators import permission_required
 from ..menu.resolvers import resolve_menu_items
 from ..page.resolvers import resolve_pages
-from ..product.resolvers import resolve_categories
+from ..room.resolvers import resolve_categories
 from ..translations import types as translation_types
 from .resolvers import (
     resolve_attribute_values,
     resolve_collections,
-    resolve_product_variants,
-    resolve_products,
+    resolve_room_variants,
+    resolve_rooms,
     resolve_sales,
     resolve_shipping_methods,
     resolve_vouchers,
@@ -29,12 +29,12 @@ from .resolvers import (
 class TranslatableItem(graphene.Union):
     class Meta:
         types = (
-            translation_types.ProductTranslatableContent,
+            translation_types.RoomTranslatableContent,
             translation_types.CollectionTranslatableContent,
             translation_types.CategoryTranslatableContent,
             translation_types.AttributeTranslatableContent,
             translation_types.AttributeValueTranslatableContent,
-            translation_types.ProductVariantTranslatableContent,
+            translation_types.RoomVariantTranslatableContent,
             translation_types.PageTranslatableContent,
             translation_types.ShippingMethodTranslatableContent,
             translation_types.SaleTranslatableContent,
@@ -55,10 +55,10 @@ class TranslatableKinds(graphene.Enum):
     COLLECTION = "Collection"
     MENU_ITEM = "MenuItem"
     PAGE = "Page"
-    PRODUCT = "Product"
+    ROOM = "Room"
     SALE = "Sale"
     SHIPPING_METHOD = "ShippingMethod"
-    VARIANT = "ProductVariant"
+    VARIANT = "RoomVariant"
     VOUCHER = "Voucher"
 
 
@@ -84,8 +84,8 @@ class TranslationQueries(graphene.ObjectType):
 
     @permission_required(SitePermissions.MANAGE_TRANSLATIONS)
     def resolve_translations(self, info, kind, **_kwargs):
-        if kind == TranslatableKinds.PRODUCT:
-            return resolve_products(info)
+        if kind == TranslatableKinds.ROOM:
+            return resolve_rooms(info)
         elif kind == TranslatableKinds.COLLECTION:
             return resolve_collections(info)
         elif kind == TranslatableKinds.CATEGORY:
@@ -101,7 +101,7 @@ class TranslationQueries(graphene.ObjectType):
         elif kind == TranslatableKinds.ATTRIBUTE_VALUE:
             return resolve_attribute_values(info)
         elif kind == TranslatableKinds.VARIANT:
-            return resolve_product_variants(info)
+            return resolve_room_variants(info)
         elif kind == TranslatableKinds.MENU_ITEM:
             return resolve_menu_items(info, query=None)
         elif kind == TranslatableKinds.SALE:
@@ -113,12 +113,12 @@ class TranslationQueries(graphene.ObjectType):
         if not _type == kind:
             return None
         models = {
-            TranslatableKinds.PRODUCT.value: Product,
+            TranslatableKinds.ROOM.value: Room,
             TranslatableKinds.COLLECTION.value: Collection,
             TranslatableKinds.CATEGORY.value: Category,
             TranslatableKinds.ATTRIBUTE.value: Attribute,
             TranslatableKinds.ATTRIBUTE_VALUE.value: AttributeValue,
-            TranslatableKinds.VARIANT.value: ProductVariant,
+            TranslatableKinds.VARIANT.value: RoomVariant,
             TranslatableKinds.PAGE.value: Page,
             TranslatableKinds.SHIPPING_METHOD.value: ShippingMethod,
             TranslatableKinds.SALE.value: Sale,

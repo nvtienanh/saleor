@@ -10,14 +10,14 @@ from ..account.models import User
 from ..core.taxes import zero_money
 from ..core.weight import zero_weight
 from ..discount.models import NotApplicable, Voucher, VoucherType
-from ..discount.utils import get_products_voucher_discount, validate_voucher_in_order
+from ..discount.utils import get_rooms_voucher_discount, validate_voucher_in_order
 from ..order import OrderStatus
 from ..order.models import Order, OrderLine
 from ..plugins.manager import get_plugins_manager
-from ..product.utils.digital_products import get_default_digital_content_settings
+from ..room.utils.digital_rooms import get_default_digital_content_settings
 from ..shipping.models import ShippingMethod
-from ..warehouse.management import deallocate_stock, increase_stock
-from ..warehouse.models import Warehouse
+from ..hotel.management import deallocate_stock, increase_stock
+from ..hotel.models import Hotel
 from . import events
 
 
@@ -46,7 +46,7 @@ def order_line_needs_automatic_fulfillment(line: OrderLine) -> bool:
 
 
 def order_needs_automatic_fulfillment(order: Order) -> bool:
-    """Check if order has digital products which should be automatically fulfilled."""
+    """Check if order has digital rooms which should be automatically fulfilled."""
     for line in order.lines.digital():
         if order_line_needs_automatic_fulfillment(line):
             return True
@@ -116,11 +116,11 @@ def update_order_prices(order, discounts):
     channel = order.channel
     for line in order:  # type: OrderLine
         if line.variant:
-            product = line.variant.product
+            room = line.variant.room
             channel_listing = line.variant.channel_listings.get(channel=channel)
-            collections = product.collections.all()
+            collections = room.collections.all()
             unit_price = line.variant.get_price(
-                product, collections, channel, channel_listing, discounts
+                room, collections, channel, channel_listing, discounts
             )
             unit_price = TaxedMoney(unit_price, unit_price)
             line.unit_price = unit_price
@@ -137,7 +137,7 @@ def update_order_prices(order, discounts):
                 line.unit_price = price
                 if price.tax and price.net:
                     line.tax_rate = manager.get_order_line_tax_rate(
-                        order, product, None, price
+                        order, room, None, price
                     )
                 line.save()
 
@@ -187,29 +187,29 @@ def add_variant_to_draft_order(order, variant, quantity, discounts=None):
         line.quantity += quantity
         line.save(update_fields=["quantity"])
     except OrderLine.DoesNotExist:
-        product = variant.product
-        collections = product.collections.all()
+        room = variant.room
+        collections = room.collections.all()
         channel = order.channel
         channel_listing = variant.channel_listings.get(channel=channel)
         unit_price = variant.get_price(
-            product, collections, channel, channel_listing, discounts
+            room, collections, channel, channel_listing, discounts
         )
         unit_price = TaxedMoney(net=unit_price, gross=unit_price)
         total_price = unit_price * quantity
-        product_name = str(product)
+        room_name = str(room)
         variant_name = str(variant)
-        translated_product_name = str(product.translated)
+        translated_room_name = str(room.translated)
         translated_variant_name = str(variant.translated)
-        if translated_product_name == product_name:
-            translated_product_name = ""
+        if translated_room_name == room_name:
+            translated_room_name = ""
         if translated_variant_name == variant_name:
             translated_variant_name = ""
         line = order.lines.create(
-            product_name=product_name,
+            room_name=room_name,
             variant_name=variant_name,
-            translated_product_name=translated_product_name,
+            translated_room_name=translated_room_name,
             translated_variant_name=translated_variant_name,
-            product_sku=variant.sku,
+            room_sku=variant.sku,
             is_shipping_required=variant.is_shipping_required(),
             quantity=quantity,
             unit_price=unit_price,
@@ -220,7 +220,7 @@ def add_variant_to_draft_order(order, variant, quantity, discounts=None):
         unit_price = manager.calculate_order_line_unit(line)
         line.unit_price = unit_price
         line.tax_rate = manager.get_order_line_tax_rate(
-            order, product, None, unit_price
+            order, room, None, unit_price
         )
         line.save(
             update_fields=[
@@ -264,11 +264,11 @@ def change_order_line_quantity(user, line, old_quantity, new_quantity):
 
     # Create the removal event
     if quantity_diff > 0:
-        events.draft_order_removed_products_event(
+        events.draft_order_removed_rooms_event(
             order=line.order, user=user, order_lines=[(quantity_diff, line)]
         )
     elif quantity_diff < 0:
-        events.draft_order_added_products_event(
+        events.draft_order_added_rooms_event(
             order=line.order, user=user, order_lines=[(quantity_diff * -1, line)]
         )
 
@@ -279,9 +279,9 @@ def delete_order_line(line):
 
 
 def restock_order_lines(order):
-    """Return ordered products to corresponding stocks."""
+    """Return ordered rooms to corresponding stocks."""
     country = get_order_country(order)
-    default_warehouse = Warehouse.objects.filter(
+    default_hotel = Hotel.objects.filter(
         shipping_zones__countries__contains=country
     ).first()
 
@@ -291,25 +291,25 @@ def restock_order_lines(order):
                 deallocate_stock(line, line.quantity_unfulfilled)
             if line.quantity_fulfilled > 0:
                 allocation = line.allocations.first()
-                warehouse = (
-                    allocation.stock.warehouse if allocation else default_warehouse
+                hotel = (
+                    allocation.stock.hotel if allocation else default_hotel
                 )
-                increase_stock(line, warehouse, line.quantity_fulfilled)
+                increase_stock(line, hotel, line.quantity_fulfilled)
 
         if line.quantity_fulfilled > 0:
             line.quantity_fulfilled = 0
             line.save(update_fields=["quantity_fulfilled"])
 
 
-def restock_fulfillment_lines(fulfillment, warehouse):
-    """Return fulfilled products to corresponding stocks.
+def restock_fulfillment_lines(fulfillment, hotel):
+    """Return fulfilled rooms to corresponding stocks.
 
-    Return products to stocks and update order lines quantity fulfilled values.
+    Return rooms to stocks and update order lines quantity fulfilled values.
     """
     order_lines = []
     for line in fulfillment:
         if line.order_line.variant and line.order_line.variant.track_inventory:
-            increase_stock(line.order_line, warehouse, line.quantity, allocate=True)
+            increase_stock(line.order_line, hotel, line.quantity, allocate=True)
         order_line = line.order_line
         order_line.quantity_fulfilled -= line.quantity
         order_lines.append(order_line)
@@ -336,38 +336,38 @@ def get_valid_shipping_methods_for_order(order: Order):
 
 
 def get_discounted_lines(lines, voucher):
-    discounted_products = voucher.products.all()
+    discounted_rooms = voucher.rooms.all()
     discounted_categories = set(voucher.categories.all())
     discounted_collections = set(voucher.collections.all())
 
     discounted_lines = []
-    if discounted_products or discounted_collections or discounted_categories:
+    if discounted_rooms or discounted_collections or discounted_categories:
         for line in lines:
-            line_product = line.variant.product
-            line_category = line.variant.product.category
-            line_collections = set(line.variant.product.collections.all())
+            line_room = line.variant.room
+            line_category = line.variant.room.category
+            line_collections = set(line.variant.room.collections.all())
             if line.variant and (
-                line_product in discounted_products
+                line_room in discounted_rooms
                 or line_category in discounted_categories
                 or line_collections.intersection(discounted_collections)
             ):
                 discounted_lines.append(line)
     else:
-        # If there's no discounted products, collections or categories,
-        # it means that all products are discounted
+        # If there's no discounted rooms, collections or categories,
+        # it means that all rooms are discounted
         discounted_lines.extend(list(lines))
     return discounted_lines
 
 
-def get_prices_of_discounted_specific_product(
+def get_prices_of_discounted_specific_room(
     lines: Iterable[OrderLine],
     voucher: Voucher,
 ) -> List[Money]:
-    """Get prices of variants belonging to the discounted specific products.
+    """Get prices of variants belonging to the discounted specific rooms.
 
-    Specific products are products, collections and categories.
-    Product must be assigned directly to the discounted category, assigning
-    product to child category won't work.
+    Specific rooms are rooms, collections and categories.
+    Room must be assigned directly to the discounted category, assigning
+    room to child category won't work.
     """
     line_prices = []
     discounted_lines = get_discounted_lines(lines, voucher)
@@ -378,16 +378,16 @@ def get_prices_of_discounted_specific_product(
     return line_prices
 
 
-def get_products_voucher_discount_for_order(order: Order) -> Money:
-    """Calculate products discount value for a voucher, depending on its type."""
+def get_rooms_voucher_discount_for_order(order: Order) -> Money:
+    """Calculate rooms discount value for a voucher, depending on its type."""
     prices = None
     voucher = order.voucher
-    if voucher and voucher.type == VoucherType.SPECIFIC_PRODUCT:
-        prices = get_prices_of_discounted_specific_product(order.lines.all(), voucher)
+    if voucher and voucher.type == VoucherType.SPECIFIC_ROOM:
+        prices = get_prices_of_discounted_specific_room(order.lines.all(), voucher)
     if not prices:
         msg = "This offer is only valid for selected items."
         raise NotApplicable(msg)
-    return get_products_voucher_discount(voucher, prices, order.channel)  # type: ignore
+    return get_rooms_voucher_discount(voucher, prices, order.channel)  # type: ignore
 
 
 def get_voucher_discount_for_order(order: Order) -> Money:
@@ -405,8 +405,8 @@ def get_voucher_discount_for_order(order: Order) -> Money:
         return order.voucher.get_discount_amount_for(
             order.shipping_price, order.channel
         )
-    if order.voucher.type == VoucherType.SPECIFIC_PRODUCT:
-        return get_products_voucher_discount_for_order(order)
+    if order.voucher.type == VoucherType.SPECIFIC_ROOM:
+        return get_rooms_voucher_discount_for_order(order)
     raise NotImplementedError("Unknown discount type")
 
 

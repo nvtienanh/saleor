@@ -1,11 +1,11 @@
 import graphene
 from django.core.exceptions import ValidationError
 
-from ...product.error_codes import ProductErrorCode
-from ...product.utils import get_products_ids_without_variants
+from ...room.error_codes import RoomErrorCode
+from ...room.utils import get_rooms_ids_without_variants
 from ..core.mutations import BaseMutation
 from ..core.types.common import WishlistError
-from ..product.types import Product, ProductVariant
+from ..room.types import Room, RoomVariant
 from .resolvers import resolve_wishlist_from_info
 from .types import WishlistItem
 
@@ -23,61 +23,61 @@ class _BaseWishlistMutation(BaseMutation):
         return context.user.is_authenticated
 
 
-class _BaseWishlistProductMutation(_BaseWishlistMutation):
+class _BaseWishlistRoomMutation(_BaseWishlistMutation):
     class Meta:
         abstract = True
 
     class Arguments:
-        product_id = graphene.ID(description="The ID of the product.", required=True)
+        room_id = graphene.ID(description="The ID of the room.", required=True)
 
 
-class WishlistAddProductMutation(_BaseWishlistProductMutation):
+class WishlistAddRoomMutation(_BaseWishlistRoomMutation):
     class Meta:
-        description = "Add product to the current user's wishlist."
+        description = "Add room to the current user's wishlist."
         error_type_class = WishlistError
         error_type_field = "wishlist_errors"
 
     @classmethod
-    def perform_mutation(cls, _root, info, product_id):  # pylint: disable=W0221
+    def perform_mutation(cls, _root, info, room_id):  # pylint: disable=W0221
         wishlist = resolve_wishlist_from_info(info)
-        product = cls.get_node_or_error(
-            info, product_id, only_type=Product, field="product_id"
+        room = cls.get_node_or_error(
+            info, room_id, only_type=Room, field="room_id"
         )
-        cls.clean_products([product])
-        wishlist.add_product(product)
+        cls.clean_rooms([room])
+        wishlist.add_room(room)
         wishlist_items = wishlist.items.all()
-        return WishlistAddProductMutation(wishlist=wishlist_items)
+        return WishlistAddRoomMutation(wishlist=wishlist_items)
 
     @classmethod
-    def clean_products(cls, products):
-        products_ids_without_variants = get_products_ids_without_variants(products)
-        if products_ids_without_variants:
+    def clean_rooms(cls, rooms):
+        rooms_ids_without_variants = get_rooms_ids_without_variants(rooms)
+        if rooms_ids_without_variants:
             raise ValidationError(
                 {
-                    "products": ValidationError(
-                        "Cannot manage products without variants.",
-                        code=ProductErrorCode.CANNOT_MANAGE_PRODUCT_WITHOUT_VARIANT,
-                        params={"products": products_ids_without_variants},
+                    "rooms": ValidationError(
+                        "Cannot manage rooms without variants.",
+                        code=RoomErrorCode.CANNOT_MANAGE_ROOM_WITHOUT_VARIANT,
+                        params={"rooms": rooms_ids_without_variants},
                     )
                 }
             )
 
 
-class WishlistRemoveProductMutation(_BaseWishlistProductMutation):
+class WishlistRemoveRoomMutation(_BaseWishlistRoomMutation):
     class Meta:
-        description = "Remove product from the current user's wishlist."
+        description = "Remove room from the current user's wishlist."
         error_type_class = WishlistError
         error_type_field = "wishlist_errors"
 
     @classmethod
-    def perform_mutation(cls, _root, info, product_id):  # pylint: disable=W0221
+    def perform_mutation(cls, _root, info, room_id):  # pylint: disable=W0221
         wishlist = resolve_wishlist_from_info(info)
-        product = cls.get_node_or_error(
-            info, product_id, only_type=Product, field="product_id"
+        room = cls.get_node_or_error(
+            info, room_id, only_type=Room, field="room_id"
         )
-        wishlist.remove_product(product)
+        wishlist.remove_room(room)
         wishlist_items = wishlist.items.all()
-        return WishlistRemoveProductMutation(wishlist=wishlist_items)
+        return WishlistRemoveRoomMutation(wishlist=wishlist_items)
 
 
 class _BaseWishlistVariantMutation(_BaseWishlistMutation):
@@ -86,13 +86,13 @@ class _BaseWishlistVariantMutation(_BaseWishlistMutation):
 
     class Arguments:
         variant_id = graphene.ID(
-            description="The ID of the product variant.", required=True
+            description="The ID of the room variant.", required=True
         )
 
 
-class WishlistAddProductVariantMutation(_BaseWishlistVariantMutation):
+class WishlistAddRoomVariantMutation(_BaseWishlistVariantMutation):
     class Meta:
-        description = "Add product variant to the current user's wishlist."
+        description = "Add room variant to the current user's wishlist."
         error_type_class = WishlistError
         error_type_field = "wishlist_errors"
 
@@ -100,16 +100,16 @@ class WishlistAddProductVariantMutation(_BaseWishlistVariantMutation):
     def perform_mutation(cls, _root, info, variant_id):  # pylint: disable=W0221
         wishlist = resolve_wishlist_from_info(info)
         variant = cls.get_node_or_error(
-            info, variant_id, only_type=ProductVariant, field="variant_id"
+            info, variant_id, only_type=RoomVariant, field="variant_id"
         )
         wishlist.add_variant(variant)
         wishlist_items = wishlist.items.all()
-        return WishlistAddProductVariantMutation(wishlist=wishlist_items)
+        return WishlistAddRoomVariantMutation(wishlist=wishlist_items)
 
 
-class WishlistRemoveProductVariantMutation(_BaseWishlistVariantMutation):
+class WishlistRemoveRoomVariantMutation(_BaseWishlistVariantMutation):
     class Meta:
-        description = "Remove product variant from the current user's wishlist."
+        description = "Remove room variant from the current user's wishlist."
         error_type_class = WishlistError
         error_type_field = "wishlist_errors"
 
@@ -117,8 +117,8 @@ class WishlistRemoveProductVariantMutation(_BaseWishlistVariantMutation):
     def perform_mutation(cls, _root, info, variant_id):  # pylint: disable=W0221
         wishlist = resolve_wishlist_from_info(info)
         variant = cls.get_node_or_error(
-            info, variant_id, only_type=ProductVariant, field="variant_id"
+            info, variant_id, only_type=RoomVariant, field="variant_id"
         )
         wishlist.remove_variant(variant)
         wishlist_items = wishlist.items.all()
-        return WishlistRemoveProductVariantMutation(wishlist=wishlist_items)
+        return WishlistRemoveRoomVariantMutation(wishlist=wishlist_items)

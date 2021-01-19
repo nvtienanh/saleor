@@ -38,9 +38,9 @@ SITE_ID = 1
 
 PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
-ROOT_URLCONF = "saleor.urls"
+ROOT_URLCONF = "vanphong.urls"
 
-WSGI_APPLICATION = "saleor.wsgi.application"
+WSGI_APPLICATION = "vanphong.wsgi.application"
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -179,7 +179,7 @@ context_processors = [
     "django.template.context_processors.debug",
     "django.template.context_processors.media",
     "django.template.context_processors.static",
-    "saleor.site.context_processors.site",
+    "vanphong.site.context_processors.site",
 ]
 
 loaders = [
@@ -210,14 +210,14 @@ if not SECRET_KEY and DEBUG:
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "saleor.core.middleware.request_time",
-    "saleor.core.middleware.discounts",
-    "saleor.core.middleware.google_analytics",
-    "saleor.core.middleware.country",
-    "saleor.core.middleware.currency",
-    "saleor.core.middleware.site",
-    "saleor.core.middleware.plugins",
-    "saleor.core.middleware.jwt_refresh_token_middleware",
+    "vanphong.core.middleware.request_time",
+    "vanphong.core.middleware.discounts",
+    "vanphong.core.middleware.google_analytics",
+    "vanphong.core.middleware.country",
+    "vanphong.core.middleware.currency",
+    "vanphong.core.middleware.site",
+    "vanphong.core.middleware.plugins",
+    "vanphong.core.middleware.jwt_refresh_token_middleware",
 ]
 
 INSTALLED_APPS = [
@@ -230,30 +230,30 @@ INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.postgres",
     # Local apps
-    "saleor.plugins",
-    "saleor.account",
-    "saleor.discount",
-    "saleor.giftcard",
-    "saleor.product",
-    "saleor.attribute",
-    "saleor.channel",
-    "saleor.checkout",
-    "saleor.core",
-    "saleor.csv",
-    "saleor.graphql",
-    "saleor.menu",
-    "saleor.order",
-    "saleor.invoice",
-    "saleor.seo",
-    "saleor.shipping",
-    "saleor.search",
-    "saleor.site",
-    "saleor.page",
-    "saleor.payment",
-    "saleor.warehouse",
-    "saleor.webhook",
-    "saleor.wishlist",
-    "saleor.app",
+    "vanphong.plugins",
+    "vanphong.account",
+    "vanphong.discount",
+    "vanphong.giftcard",
+    "vanphong.room",
+    "vanphong.attribute",
+    "vanphong.channel",
+    "vanphong.checkout",
+    "vanphong.core",
+    "vanphong.csv",
+    "vanphong.graphql",
+    "vanphong.menu",
+    "vanphong.order",
+    "vanphong.invoice",
+    "vanphong.seo",
+    "vanphong.shipping",
+    "vanphong.search",
+    "vanphong.site",
+    "vanphong.page",
+    "vanphong.payment",
+    "vanphong.hotel",
+    "vanphong.webhook",
+    "vanphong.wishlist",
+    "vanphong.app",
     # External apps
     "versatileimagefield",
     "django_measurement",
@@ -281,7 +281,7 @@ if ENABLE_DEBUG_TOOLBAR:
         warnings.warn(msg)
     else:
         INSTALLED_APPS += ["django.forms", "debug_toolbar", "graphiql_debug_toolbar"]
-        MIDDLEWARE.append("saleor.graphql.middleware.DebugToolbarMiddleware")
+        MIDDLEWARE.append("vanphong.graphql.middleware.DebugToolbarMiddleware")
 
         DEBUG_TOOLBAR_PANELS = [
             "ddt_request_history.panels.request_history.RequestHistoryPanel",
@@ -304,7 +304,7 @@ LOGGING = {
             "style": "{",
         },
         "json": {
-            "()": "saleor.core.logging.JsonFormatter",
+            "()": "vanphong.core.logging.JsonFormatter",
             "datefmt": "%Y-%m-%dT%H:%M:%SZ",
             "format": (
                 "%(asctime)s %(levelname)s %(lineno)s %(message)s %(name)s "
@@ -337,7 +337,7 @@ LOGGING = {
             "propagate": False,
         },
         "saleor": {"level": "DEBUG", "propagate": True},
-        "saleor.graphql.errors.handled": {
+        "vanphong.graphql.errors.handled": {
             "handlers": ["default"],
             "level": "INFO",
             "propagate": False,
@@ -385,7 +385,7 @@ PAYMENT_MODEL = "order.Payment"
 
 MAX_CHECKOUT_LINE_QUANTITY = int(os.environ.get("MAX_CHECKOUT_LINE_QUANTITY", 50))
 
-TEST_RUNNER = "saleor.tests.runner.PytestTestRunner"
+TEST_RUNNER = "vanphong.tests.runner.PytestTestRunner"
 
 
 PLAYGROUND_ENABLED = get_bool_from_env("PLAYGROUND_ENABLED", True)
@@ -431,27 +431,27 @@ elif GS_STORAGE_BUCKET_NAME:
     STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
 
 if AWS_MEDIA_BUCKET_NAME:
-    DEFAULT_FILE_STORAGE = "saleor.core.storages.S3MediaStorage"
+    DEFAULT_FILE_STORAGE = "vanphong.core.storages.S3MediaStorage"
     THUMBNAIL_DEFAULT_STORAGE = DEFAULT_FILE_STORAGE
 elif GS_MEDIA_BUCKET_NAME:
-    DEFAULT_FILE_STORAGE = "saleor.core.storages.GCSMediaStorage"
+    DEFAULT_FILE_STORAGE = "vanphong.core.storages.GCSMediaStorage"
     THUMBNAIL_DEFAULT_STORAGE = DEFAULT_FILE_STORAGE
 
 VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {
-    "products": [
-        ("product_gallery", "thumbnail__540x540"),
-        ("product_gallery_2x", "thumbnail__1080x1080"),
-        ("product_small", "thumbnail__60x60"),
-        ("product_small_2x", "thumbnail__120x120"),
-        ("product_list", "thumbnail__255x255"),
-        ("product_list_2x", "thumbnail__510x510"),
+    "rooms": [
+        ("room_gallery", "thumbnail__540x540"),
+        ("room_gallery_2x", "thumbnail__1080x1080"),
+        ("room_small", "thumbnail__60x60"),
+        ("room_small_2x", "thumbnail__120x120"),
+        ("room_list", "thumbnail__255x255"),
+        ("room_list_2x", "thumbnail__510x510"),
     ],
     "background_images": [("header_image", "thumbnail__1080x440")],
     "user_avatars": [("default", "thumbnail__445x445")],
 }
 
 VERSATILEIMAGEFIELD_SETTINGS = {
-    # Images should be pre-generated on Production environment
+    # Images should be pre-generated on Roomion environment
     "create_images_on_demand": get_bool_from_env("CREATE_IMAGES_ON_DEMAND", DEBUG)
 }
 
@@ -465,10 +465,10 @@ PLACEHOLDER_IMAGES = {
 
 DEFAULT_PLACEHOLDER = "images/placeholder255x255.png"
 
-SEARCH_BACKEND = "saleor.search.backends.postgresql"
+SEARCH_BACKEND = "vanphong.search.backends.postgresql"
 
 AUTHENTICATION_BACKENDS = [
-    "saleor.core.auth_backend.JSONWebTokenBackend",
+    "vanphong.core.auth_backend.JSONWebTokenBackend",
 ]
 
 # CELERY SETTINGS
@@ -505,29 +505,29 @@ GRAPHENE = {
     "RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST": True,
     "RELAY_CONNECTION_MAX_LIMIT": 100,
     "MIDDLEWARE": [
-        "saleor.graphql.middleware.OpentracingGrapheneMiddleware",
-        "saleor.graphql.middleware.JWTMiddleware",
-        "saleor.graphql.middleware.app_middleware",
+        "vanphong.graphql.middleware.OpentracingGrapheneMiddleware",
+        "vanphong.graphql.middleware.JWTMiddleware",
+        "vanphong.graphql.middleware.app_middleware",
     ],
 }
 
-PLUGINS_MANAGER = "saleor.plugins.manager.PluginsManager"
+PLUGINS_MANAGER = "vanphong.plugins.manager.PluginsManager"
 
 PLUGINS = [
-    "saleor.plugins.avatax.plugin.AvataxPlugin",
-    "saleor.plugins.vatlayer.plugin.VatlayerPlugin",
-    "saleor.plugins.webhook.plugin.WebhookPlugin",
-    "saleor.payment.gateways.dummy.plugin.DummyGatewayPlugin",
-    "saleor.payment.gateways.dummy_credit_card.plugin.DummyCreditCardGatewayPlugin",
-    "saleor.payment.gateways.stripe.plugin.StripeGatewayPlugin",
-    "saleor.payment.gateways.braintree.plugin.BraintreeGatewayPlugin",
-    "saleor.payment.gateways.razorpay.plugin.RazorpayGatewayPlugin",
-    "saleor.payment.gateways.adyen.plugin.AdyenGatewayPlugin",
-    "saleor.plugins.invoicing.plugin.InvoicingPlugin",
+    "vanphong.plugins.avatax.plugin.AvataxPlugin",
+    "vanphong.plugins.vatlayer.plugin.VatlayerPlugin",
+    "vanphong.plugins.webhook.plugin.WebhookPlugin",
+    "vanphong.payment.gateways.dummy.plugin.DummyGatewayPlugin",
+    "vanphong.payment.gateways.dummy_credit_card.plugin.DummyCreditCardGatewayPlugin",
+    "vanphong.payment.gateways.stripe.plugin.StripeGatewayPlugin",
+    "vanphong.payment.gateways.braintree.plugin.BraintreeGatewayPlugin",
+    "vanphong.payment.gateways.razorpay.plugin.RazorpayGatewayPlugin",
+    "vanphong.payment.gateways.adyen.plugin.AdyenGatewayPlugin",
+    "vanphong.plugins.invoicing.plugin.InvoicingPlugin",
 ]
 
 # Plugin discovery
-installed_plugins = pkg_resources.iter_entry_points("saleor.plugins")
+installed_plugins = pkg_resources.iter_entry_points("vanphong.plugins")
 for entry_point in installed_plugins:
     plugin_path = "{}.{}".format(entry_point.module_name, entry_point.attrs[0])
     if plugin_path not in PLUGINS:
@@ -548,7 +548,7 @@ if (
 # Initialize a simple and basic Jaeger Tracing integration
 # for open-tracing if enabled.
 #
-# Refer to our guide on https://docs.saleor.io/docs/next/guides/opentracing-jaeger/.
+# Refer to our guide on https://docs.vanphong.io/docs/next/guides/opentracing-jaeger/.
 #
 # If running locally, set:
 #   JAEGER_AGENT_HOST=localhost

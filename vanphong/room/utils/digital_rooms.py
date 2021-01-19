@@ -11,7 +11,7 @@ def get_default_digital_content_settings() -> dict:
     site = Site.objects.get_current()
     settings = site.settings
     return {
-        "automatic_fulfillment": (settings.automatic_fulfillment_digital_products),
+        "automatic_fulfillment": (settings.automatic_fulfillment_digital_rooms),
         "max_downloads": settings.default_digital_max_downloads,
         "url_valid_days": settings.default_digital_url_valid_days,
     }
@@ -20,7 +20,7 @@ def get_default_digital_content_settings() -> dict:
 def digital_content_url_is_valid(content_url: DigitalContentUrl) -> bool:
     """Check if digital url is still valid for customer.
 
-    It takes default settings or digital product's settings
+    It takes default settings or digital room's settings
     to check if url is still valid.
     """
     if content_url.content.use_default_settings:

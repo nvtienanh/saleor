@@ -4,7 +4,7 @@ from prices import Money, TaxedMoney
 
 from ...checkout.utils import fetch_checkout_lines
 from ...plugins.manager import get_plugins_manager
-from ...product.models import Category
+from ...room.models import Category
 from .. import calculations, utils
 from ..models import Checkout
 from ..utils import add_variant_to_checkout
@@ -23,14 +23,14 @@ def test_get_user_checkout(
     assert checkout == user_checkout
 
 
-def test_adding_zero_quantity(checkout, product):
-    variant = product.variants.get()
+def test_adding_zero_quantity(checkout, room):
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, 0)
     assert checkout.lines.count() == 0
 
 
-def test_adding_same_variant(checkout, product):
-    variant = product.variants.get()
+def test_adding_same_variant(checkout, room):
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, 1)
     add_variant_to_checkout(checkout, variant, 2)
     assert checkout.lines.count() == 1
@@ -49,59 +49,59 @@ def test_adding_same_variant(checkout, product):
     )
 
 
-def test_replacing_same_variant(checkout, product):
-    variant = product.variants.get()
+def test_replacing_same_variant(checkout, room):
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, 1, replace=True)
     add_variant_to_checkout(checkout, variant, 2, replace=True)
     assert checkout.lines.count() == 1
     assert checkout.quantity == 2
 
 
-def test_adding_invalid_quantity(checkout, product):
-    variant = product.variants.get()
+def test_adding_invalid_quantity(checkout, room):
+    variant = room.variants.get()
     with pytest.raises(ValueError):
         add_variant_to_checkout(checkout, variant, -1)
 
 
-def test_getting_line(checkout, product):
-    variant = product.variants.get()
+def test_getting_line(checkout, room):
+    variant = room.variants.get()
     assert checkout.get_line(variant) is None
     add_variant_to_checkout(checkout, variant)
     assert checkout.lines.get() == checkout.get_line(variant)
 
 
-def test_shipping_detection(checkout, product):
+def test_shipping_detection(checkout, room):
     assert not checkout.is_shipping_required()
-    variant = product.variants.get()
+    variant = room.variants.get()
     add_variant_to_checkout(checkout, variant, replace=True)
     assert checkout.is_shipping_required()
 
 
-def test_get_prices_of_discounted_specific_product(
-    checkout_with_item, collection, voucher_specific_product_type
+def test_get_prices_of_discounted_specific_room(
+    checkout_with_item, collection, voucher_specific_room_type
 ):
     checkout = checkout_with_item
-    voucher = voucher_specific_product_type
+    voucher = voucher_specific_room_type
     line = checkout.lines.first()
-    product = line.variant.product
-    category = product.category
+    room = line.variant.room
+    category = room.category
     channel = checkout.channel
     variant_channel_listing = line.variant.channel_listings.get(channel=channel)
 
-    product.collections.add(collection)
-    voucher.products.add(product)
+    room.collections.add(collection)
+    voucher.rooms.add(room)
     voucher.collections.add(collection)
     voucher.categories.add(category)
 
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout)
-    prices = utils.get_prices_of_discounted_specific_product(
+    prices = utils.get_prices_of_discounted_specific_room(
         manager, checkout, lines, voucher, channel
     )
 
     excepted_value = [
         line.variant.get_price(
-            product, [collection], channel, variant_channel_listing, []
+            room, [collection], channel, variant_channel_listing, []
         )
         for item in range(line.quantity)
     ]
@@ -109,28 +109,28 @@ def test_get_prices_of_discounted_specific_product(
     assert prices == excepted_value
 
 
-def test_get_prices_of_discounted_specific_product_only_product(
-    checkout_with_item, voucher_specific_product_type, product_with_default_variant
+def test_get_prices_of_discounted_specific_room_only_room(
+    checkout_with_item, voucher_specific_room_type, room_with_default_variant
 ):
     checkout = checkout_with_item
-    voucher = voucher_specific_product_type
+    voucher = voucher_specific_room_type
     line = checkout.lines.first()
-    product = line.variant.product
-    product2 = product_with_default_variant
+    room = line.variant.room
+    room2 = room_with_default_variant
     channel = checkout.channel
     variant_channel_listing = line.variant.channel_listings.get(channel=channel)
 
-    add_variant_to_checkout(checkout, product2.variants.get(), 1)
-    voucher.products.add(product)
+    add_variant_to_checkout(checkout, room2.variants.get(), 1)
+    voucher.rooms.add(room)
 
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout)
-    prices = utils.get_prices_of_discounted_specific_product(
+    prices = utils.get_prices_of_discounted_specific_room(
         manager, checkout, lines, voucher, channel
     )
 
     excepted_value = [
-        line.variant.get_price(product, [], channel, variant_channel_listing, [])
+        line.variant.get_price(room, [], channel, variant_channel_listing, [])
         for item in range(line.quantity)
     ]
 
@@ -138,33 +138,33 @@ def test_get_prices_of_discounted_specific_product_only_product(
     assert prices == excepted_value
 
 
-def test_get_prices_of_discounted_specific_product_only_collection(
+def test_get_prices_of_discounted_specific_room_only_collection(
     checkout_with_item,
     collection,
-    voucher_specific_product_type,
-    product_with_default_variant,
+    voucher_specific_room_type,
+    room_with_default_variant,
 ):
     checkout = checkout_with_item
-    voucher = voucher_specific_product_type
+    voucher = voucher_specific_room_type
     line = checkout.lines.first()
-    product = line.variant.product
-    product2 = product_with_default_variant
+    room = line.variant.room
+    room2 = room_with_default_variant
     channel = checkout.channel
     variant_channel_listing = line.variant.channel_listings.get(channel=channel)
 
-    add_variant_to_checkout(checkout, product2.variants.get(), 1)
-    product.collections.add(collection)
+    add_variant_to_checkout(checkout, room2.variants.get(), 1)
+    room.collections.add(collection)
     voucher.collections.add(collection)
 
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout)
-    prices = utils.get_prices_of_discounted_specific_product(
+    prices = utils.get_prices_of_discounted_specific_room(
         manager, checkout, lines, voucher, checkout.channel
     )
 
     excepted_value = [
         line.variant.get_price(
-            product, [collection], channel, variant_channel_listing, []
+            room, [collection], channel, variant_channel_listing, []
         )
         for item in range(line.quantity)
     ]
@@ -173,32 +173,32 @@ def test_get_prices_of_discounted_specific_product_only_collection(
     assert prices == excepted_value
 
 
-def test_get_prices_of_discounted_specific_product_only_category(
-    checkout_with_item, voucher_specific_product_type, product_with_default_variant
+def test_get_prices_of_discounted_specific_room_only_category(
+    checkout_with_item, voucher_specific_room_type, room_with_default_variant
 ):
     checkout = checkout_with_item
-    voucher = voucher_specific_product_type
+    voucher = voucher_specific_room_type
     line = checkout.lines.first()
-    product = line.variant.product
-    product2 = product_with_default_variant
-    category = product.category
+    room = line.variant.room
+    room2 = room_with_default_variant
+    category = room.category
     category2 = Category.objects.create(name="Cat", slug="cat")
     channel = checkout.channel
     variant_channel_listing = line.variant.channel_listings.get(channel=channel)
 
-    product2.category = category2
-    product2.save()
-    add_variant_to_checkout(checkout, product2.variants.get(), 1)
+    room2.category = category2
+    room2.save()
+    add_variant_to_checkout(checkout, room2.variants.get(), 1)
     voucher.categories.add(category)
 
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout)
-    prices = utils.get_prices_of_discounted_specific_product(
+    prices = utils.get_prices_of_discounted_specific_room(
         manager, checkout, lines, voucher, channel
     )
 
     excepted_value = [
-        line.variant.get_price(product, [], channel, variant_channel_listing, [])
+        line.variant.get_price(room, [], channel, variant_channel_listing, [])
         for item in range(line.quantity)
     ]
 
@@ -206,24 +206,24 @@ def test_get_prices_of_discounted_specific_product_only_category(
     assert prices == excepted_value
 
 
-def test_get_prices_of_discounted_specific_product_all_products(
-    checkout_with_item, voucher_specific_product_type
+def test_get_prices_of_discounted_specific_room_all_rooms(
+    checkout_with_item, voucher_specific_room_type
 ):
     checkout = checkout_with_item
-    voucher = voucher_specific_product_type
+    voucher = voucher_specific_room_type
     line = checkout.lines.first()
-    product = line.variant.product
+    room = line.variant.room
     channel = checkout.channel
     variant_channel_listing = line.variant.channel_listings.get(channel=channel)
 
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout)
-    prices = utils.get_prices_of_discounted_specific_product(
+    prices = utils.get_prices_of_discounted_specific_room(
         manager, checkout, lines, voucher, channel
     )
 
     excepted_value = [
-        line.variant.get_price(product, [], channel, variant_channel_listing, [])
+        line.variant.get_price(room, [], channel, variant_channel_listing, [])
         for item in range(line.quantity)
     ]
 
@@ -238,8 +238,8 @@ def test_checkout_repr():
     assert repr(checkout) == "Checkout(quantity=1)"
 
 
-def test_checkout_line_repr(product, checkout_with_single_item):
-    variant = product.variants.get()
+def test_checkout_line_repr(room, checkout_with_single_item):
+    variant = room.variants.get()
     line = checkout_with_single_item.lines.first()
     assert repr(line) == "CheckoutLine(variant=%r, quantity=%r)" % (
         variant,
@@ -247,8 +247,8 @@ def test_checkout_line_repr(product, checkout_with_single_item):
     )
 
 
-def test_checkout_line_state(product, checkout_with_single_item):
-    variant = product.variants.get()
+def test_checkout_line_state(room, checkout_with_single_item):
+    variant = room.variants.get()
     line = checkout_with_single_item.lines.first()
 
     assert line.__getstate__() == (variant, line.quantity)

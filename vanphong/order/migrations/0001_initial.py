@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("product", "0001_initial"),
+        ("room", "0001_initial"),
         ("account", "__first__"),
     ]
 
@@ -167,10 +167,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "product_name",
-                    models.CharField(max_length=128, verbose_name="product name"),
+                    "room_name",
+                    models.CharField(max_length=128, verbose_name="room name"),
                 ),
-                ("product_sku", models.CharField(max_length=32, verbose_name="sku")),
+                ("room_sku", models.CharField(max_length=32, verbose_name="sku")),
                 (
                     "quantity",
                     models.IntegerField(
@@ -205,13 +205,13 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "product",
+                    "room",
                     models.ForeignKey(
                         related_name="+",
                         on_delete=django.db.models.deletion.SET_NULL,
-                        verbose_name="product",
+                        verbose_name="room",
                         blank=True,
-                        to="product.Product",
+                        to="room.Room",
                         null=True,
                     ),
                 ),

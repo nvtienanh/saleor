@@ -8,8 +8,8 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.utils import timezone
 from graphene import InputField
 
-from ....product.models import Category, Product, ProductChannelListing
-from ...product import types as product_types
+from ....room.models import Category, Room, RoomChannelListing
+from ...room import types as room_types
 from ...tests.utils import get_graphql_content, get_graphql_content_from_response
 from ...utils import get_database_id, requestor_is_superuser
 from ...utils.filters import filter_range_field, reporting_period_to_date
@@ -35,7 +35,7 @@ def test_clean_seo_fields():
 
 
 def test_user_error_field_name_for_related_object(
-    staff_api_client, permission_manage_products
+    staff_api_client, permission_manage_rooms
 ):
     query = """
     mutation {
@@ -51,7 +51,7 @@ def test_user_error_field_name_for_related_object(
     }
     """
     response = staff_api_client.post_graphql(
-        query, permissions=[permission_manage_products]
+        query, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryCreate"]["category"]
@@ -60,15 +60,15 @@ def test_user_error_field_name_for_related_object(
     assert error["field"] == "parent"
 
 
-def test_get_database_id(product):
+def test_get_database_id(room):
     info = Mock(
         schema=Mock(
-            get_type=Mock(return_value=Mock(graphene_type=product_types.Product))
+            get_type=Mock(return_value=Mock(graphene_type=room_types.Room))
         )
     )
-    node_id = graphene.Node.to_global_id("Product", product.pk)
-    pk = get_database_id(info, node_id, product_types.Product)
-    assert int(pk) == product.pk
+    node_id = graphene.Node.to_global_id("Room", room.pk)
+    pk = get_database_id(info, node_id, room_types.Room)
+    assert int(pk) == room.pk
 
 
 def test_snake_to_camel_case():
@@ -98,7 +98,7 @@ def test_reporting_period_to_date():
 def test_require_pagination(api_client):
     query = """
     query {
-        products {
+        rooms {
             edges {
                 node {
                     name
@@ -112,21 +112,21 @@ def test_require_pagination(api_client):
     assert "errors" in content
     assert content["errors"][0]["message"] == (
         "You must provide a `first` or `last` value to properly paginate the "
-        "`products` connection."
+        "`rooms` connection."
     )
 
 
-def test_total_count_query(api_client, product, channel_USD):
+def test_total_count_query(api_client, room, channel_USD):
     query = """
     query ($channel: String){
-        products (channel: $channel){
+        rooms (channel: $channel){
             totalCount
         }
     }
     """
     response = api_client.post_graphql(query, {"channel": channel_USD.slug})
     content = get_graphql_content(response)
-    assert content["data"]["products"]["totalCount"] == Product.objects.count()
+    assert content["data"]["rooms"]["totalCount"] == Room.objects.count()
 
 
 def test_filter_input():
@@ -134,13 +134,13 @@ def test_filter_input():
         WEEK = "week"
         YEAR = "year"
 
-    class TestProductFilter(django_filters.FilterSet):
+    class TestRoomFilter(django_filters.FilterSet):
         name = django_filters.CharFilter()
         created = EnumFilter(input_class=CreatedEnum, method="created_filter")
 
         class Meta:
-            model = Product
-            fields = {"product_type__id": ["exact"]}
+            model = Room
+            fields = {"room_type__id": ["exact"]}
 
         def created_filter(self, queryset, _, value):
             if CreatedEnum.WEEK == value:
@@ -151,15 +151,15 @@ def test_filter_input():
 
     class TestFilter(FilterInputObjectType):
         class Meta:
-            filterset_class = TestProductFilter
+            filterset_class = TestRoomFilter
 
     test_filter = TestFilter()
     fields = test_filter._meta.fields
 
-    assert "product_type__id" in fields
-    product_type_id = fields["product_type__id"]
-    assert isinstance(product_type_id, InputField)
-    assert product_type_id.type == graphene.ID
+    assert "room_type__id" in fields
+    room_type_id = fields["room_type__id"]
+    assert isinstance(room_type_id, InputField)
+    assert room_type_id.type == graphene.ID
 
     assert "name" in fields
     name = fields["name"]
@@ -233,7 +233,7 @@ def test_validate_slug_and_generate_if_needed_generate_slug(cleaned_input):
 
 
 @pytest.mark.parametrize(
-    "value, count, product_indexes",
+    "value, count, room_indexes",
     [
         ({"lte": 50, "gte": 25}, 1, [2]),
         ({"lte": 25}, 2, [0, 1]),
@@ -241,15 +241,15 @@ def test_validate_slug_and_generate_if_needed_generate_slug(cleaned_input):
         ({"gte": 40}, 0, []),
     ],
 )
-def test_filter_range_field(value, count, product_indexes, product_list):
-    qs = ProductChannelListing.objects.all().order_by("pk")
+def test_filter_range_field(value, count, room_indexes, room_list):
+    qs = RoomChannelListing.objects.all().order_by("pk")
     field = "discounted_price_amount"
 
     result = filter_range_field(qs, field, value)
 
-    expected_products = [qs[index] for index in product_indexes]
+    expected_rooms = [qs[index] for index in room_indexes]
     assert result.count() == count
-    assert list(result) == expected_products
+    assert list(result) == expected_rooms
 
 
 def test_get_duplicated_values():

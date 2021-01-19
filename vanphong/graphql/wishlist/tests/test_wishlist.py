@@ -20,7 +20,7 @@ def test_wishlist_add_variant_to_anonymous_user(api_client, variant):
         }
     }
     """
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"variant_id": variant_id}
     response = api_client.post_graphql(query, variables=variables)
     assert_no_permission(response)
@@ -45,7 +45,7 @@ def test_wishlist_add_variant_to_logged_user(user_api_client, variant):
         }
     }
     """
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"variant_id": variant_id}
     response = user_api_client.post_graphql(query, variables=variables)
     content = get_graphql_content(response)
@@ -79,7 +79,7 @@ def test_wishlist_remove_variant_from_anonymous_user(
     }
     """
     variant = customer_wishlist_item.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"variant_id": variant_id}
     response = api_client.post_graphql(query, variables=variables)
     assert_no_permission(response)
@@ -108,7 +108,7 @@ def test_wishlist_remove_variant_from_logged_user(
     }
     """
     variant = customer_wishlist_item.variants.first()
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     variables = {"variant_id": variant_id}
     response = user_api_client.post_graphql(query, variables=variables)
     content = get_graphql_content(response)
@@ -119,14 +119,14 @@ def test_wishlist_remove_variant_from_logged_user(
 
 
 @pytest.mark.skip(reason="Wishlist temporary removed from api")
-def test_wishlist_add_product_to_logged_user(user_api_client, product):
+def test_wishlist_add_room_to_logged_user(user_api_client, room):
     user = user_api_client.user
     # Assert that user doesn't have a wishlist
     with pytest.raises(Wishlist.DoesNotExist):
         user.wishlist
     query = """
-    mutation WishlistAddProduct($product_id: ID!) {
-        wishlistAddProduct(productId: $product_id) {
+    mutation WishlistAddRoom($room_id: ID!) {
+        wishlistAddRoom(roomId: $room_id) {
             errors{
                 field
                 message
@@ -137,11 +137,11 @@ def test_wishlist_add_product_to_logged_user(user_api_client, product):
         }
     }
     """
-    product_id = graphene.Node.to_global_id("Product", product.pk)
-    variables = {"product_id": product_id}
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    variables = {"room_id": room_id}
     response = user_api_client.post_graphql(query, variables=variables)
     content = get_graphql_content(response)
-    items = content["data"]["wishlistAddProduct"]["wishlist"]
+    items = content["data"]["wishlistAddRoom"]["wishlist"]
     assert len(items) == 1
     _, item_id = graphene.Node.from_global_id(items[0]["id"])
     # Assert that user has a single wishlist item
@@ -153,7 +153,7 @@ def test_wishlist_add_product_to_logged_user(user_api_client, product):
 
 
 @pytest.mark.skip(reason="Wishlist temporary removed from api")
-def test_wishlist_remove_product_from_logged_user(
+def test_wishlist_remove_room_from_logged_user(
     user_api_client, customer_wishlist_item
 ):
     user = user_api_client.user
@@ -162,8 +162,8 @@ def test_wishlist_remove_product_from_logged_user(
     assert user.wishlist == wishlist
     assert wishlist.items.count() == 1
     query = """
-    mutation WishlistRemoveProduct($product_id: ID!) {
-        wishlistRemoveProduct(productId: $product_id) {
+    mutation WishlistRemoveRoom($room_id: ID!) {
+        wishlistRemoveRoom(roomId: $room_id) {
             errors{
                 field
                 message
@@ -174,12 +174,12 @@ def test_wishlist_remove_product_from_logged_user(
         }
     }
     """
-    product = customer_wishlist_item.product
-    product_id = graphene.Node.to_global_id("Product", product.pk)
-    variables = {"product_id": product_id}
+    room = customer_wishlist_item.room
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    variables = {"room_id": room_id}
     response = user_api_client.post_graphql(query, variables=variables)
     content = get_graphql_content(response)
-    items = content["data"]["wishlistRemoveProduct"]["wishlist"]
+    items = content["data"]["wishlistRemoveRoom"]["wishlist"]
     assert len(items) == 0
     # Check that the wishlist_item was removed
     assert wishlist.items.count() == 0

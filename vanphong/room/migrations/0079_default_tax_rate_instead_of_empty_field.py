@@ -4,18 +4,18 @@ from django.db import migrations, models
 
 
 def add_default_tax_rate_instead_of_empty_field(apps, schema_editor):
-    ProductType = apps.get_model("product", "ProductType")
-    product_types = ProductType.objects.filter(tax_rate="")
-    product_types.update(tax_rate="standard")
+    RoomType = apps.get_model("room", "RoomType")
+    room_types = RoomType.objects.filter(tax_rate="")
+    room_types.update(tax_rate="standard")
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0078_auto_20181120_0437")]
+    dependencies = [("room", "0078_auto_20181120_0437")]
 
     operations = [
         migrations.AlterField(
-            model_name="producttype",
+            model_name="roomtype",
             name="tax_rate",
             field=models.CharField(
                 choices=[

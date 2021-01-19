@@ -2,10 +2,10 @@ import pytest
 from django.utils.text import slugify
 
 from ...account.models import Address
-from ...product.models import Product, ProductChannelListing
+from ...room.models import Room, RoomChannelListing
 from ...search.backends.postgresql import search_storefront
 
-PRODUCTS = [
+ROOMS = [
     ("Arabica Coffee", "The best grains in galactic"),
     ("Cool T-Shirt", "Blue and big."),
     ("Roasted chicken", "Fabulous vertebrate"),
@@ -13,23 +13,23 @@ PRODUCTS = [
 
 
 @pytest.fixture
-def named_products(category, product_type, channel_USD):
-    def gen_product(name, description):
-        product = Product.objects.create(
+def named_rooms(category, room_type, channel_USD):
+    def gen_room(name, description):
+        room = Room.objects.create(
             name=name,
             slug=slugify(name),
             description=description,
-            product_type=product_type,
+            room_type=room_type,
             category=category,
         )
-        ProductChannelListing.objects.create(
-            product=product,
+        RoomChannelListing.objects.create(
+            room=room,
             channel=channel_USD,
             is_published=True,
         )
-        return product
+        return room
 
-    return [gen_product(name, desc) for name, desc in PRODUCTS]
+    return [gen_room(name, desc) for name, desc in ROOMS]
 
 
 def execute_search(phrase):
@@ -38,7 +38,7 @@ def execute_search(phrase):
 
 
 @pytest.mark.parametrize(
-    "phrase,product_num",
+    "phrase,room_num",
     [
         ("Arabika", 0),
         ("Aarabica", 0),
@@ -51,10 +51,10 @@ def execute_search(phrase):
 )
 @pytest.mark.integration
 @pytest.mark.django_db
-def test_storefront_product_fuzzy_name_search(named_products, phrase, product_num):
+def test_storefront_room_fuzzy_name_search(named_rooms, phrase, room_num):
     results = execute_search(phrase)
     assert 1 == len(results)
-    assert named_products[product_num] in results
+    assert named_rooms[room_num] in results
 
 
 USERS = [

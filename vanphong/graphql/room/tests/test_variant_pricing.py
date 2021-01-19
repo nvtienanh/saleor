@@ -3,13 +3,13 @@ from unittest.mock import Mock
 from prices import Money, TaxedMoney
 
 from ....plugins.manager import PluginsManager
-from ....product.models import ProductVariant
-from ....product.utils.availability import get_variant_availability
+from ....room.models import RoomVariant
+from ....room.utils.availability import get_variant_availability
 from ...tests.utils import get_graphql_content
 
 QUERY_GET_VARIANT_PRICING = """
 query ($channel: String) {
-  products(first: 1, channel: $channel) {
+  rooms(first: 1, channel: $channel) {
     edges {
       node {
         variants {
@@ -42,8 +42,8 @@ query ($channel: String) {
 """
 
 
-def test_get_variant_pricing_on_sale(api_client, sale, product, channel_USD):
-    price = product.variants.first().channel_listings.get().price
+def test_get_variant_pricing_on_sale(api_client, sale, room, channel_USD):
+    price = room.variants.first().channel_listings.get().price
     sale_discounted_value = sale.channel_listings.get().discount_value
     discounted_price = price.amount - sale_discounted_value
 
@@ -52,7 +52,7 @@ def test_get_variant_pricing_on_sale(api_client, sale, product, channel_USD):
     )
     content = get_graphql_content(response)
 
-    pricing = content["data"]["products"]["edges"][0]["node"]["variants"][0]["pricing"]
+    pricing = content["data"]["rooms"]["edges"][0]["node"]["variants"][0]["pricing"]
 
     # ensure the availability was correctly retrieved and sent
     assert pricing
@@ -73,15 +73,15 @@ def test_get_variant_pricing_on_sale(api_client, sale, product, channel_USD):
     assert pricing["price"]["net"]["amount"] == discounted_price
 
 
-def test_get_variant_pricing_not_on_sale(api_client, product, channel_USD):
-    price = product.variants.first().channel_listings.get().price
+def test_get_variant_pricing_not_on_sale(api_client, room, channel_USD):
+    price = room.variants.first().channel_listings.get().price
 
     response = api_client.post_graphql(
         QUERY_GET_VARIANT_PRICING, {"channel": channel_USD.slug}
     )
     content = get_graphql_content(response)
 
-    pricing = content["data"]["products"]["edges"][0]["node"]["variants"][0]["pricing"]
+    pricing = content["data"]["rooms"]["edges"][0]["node"]["variants"][0]["pricing"]
 
     # ensure the availability was correctly retrieved and sent
     assert pricing
@@ -102,22 +102,22 @@ def test_get_variant_pricing_not_on_sale(api_client, product, channel_USD):
 
 
 def test_variant_pricing(
-    variant: ProductVariant, monkeypatch, settings, stock, channel_USD
+    variant: RoomVariant, monkeypatch, settings, stock, channel_USD
 ):
     taxed_price = TaxedMoney(Money("10.0", "USD"), Money("12.30", "USD"))
     monkeypatch.setattr(
-        PluginsManager, "apply_taxes_to_product", Mock(return_value=taxed_price)
+        PluginsManager, "apply_taxes_to_room", Mock(return_value=taxed_price)
     )
 
-    product = variant.product
-    product_channel_listing = product.channel_listings.get()
+    room = variant.room
+    room_channel_listing = room.channel_listings.get()
     variant_channel_listing = variant.channel_listings.get()
 
     pricing = get_variant_availability(
         variant=variant,
         variant_channel_listing=variant_channel_listing,
-        product=product,
-        product_channel_listing=product_channel_listing,
+        room=room,
+        room_channel_listing=room_channel_listing,
         collections=[],
         discounts=[],
         channel=channel_USD,
@@ -136,8 +136,8 @@ def test_variant_pricing(
     pricing = get_variant_availability(
         variant=variant,
         variant_channel_listing=variant_channel_listing,
-        product=product,
-        product_channel_listing=product_channel_listing,
+        room=room,
+        room_channel_listing=room_channel_listing,
         collections=[],
         discounts=[],
         channel=channel_USD,
@@ -149,8 +149,8 @@ def test_variant_pricing(
     pricing = get_variant_availability(
         variant=variant,
         variant_channel_listing=variant_channel_listing,
-        product=product,
-        product_channel_listing=product_channel_listing,
+        room=room,
+        room_channel_listing=room_channel_listing,
         collections=[],
         discounts=[],
         channel=channel_USD,

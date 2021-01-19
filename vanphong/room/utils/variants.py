@@ -4,17 +4,17 @@ from ...attribute import AttributeInputType, AttributeType
 
 if TYPE_CHECKING:
     from ...attribute.models import AssignedVariantAttribute
-    from ..models import ProductVariant
+    from ..models import RoomVariant
 
 
-def generate_and_set_variant_name(variant: "ProductVariant", sku: str):
-    """Generate ProductVariant's name based on its attributes."""
+def generate_and_set_variant_name(variant: "RoomVariant", sku: str):
+    """Generate RoomVariant's name based on its attributes."""
     attributes_display = []
 
     variant_selection_input_types = AttributeInputType.ALLOWED_IN_VARIANT_SELECTION
     variant_selection_attributes = variant.attributes.filter(
         assignment__attribute__input_type__in=variant_selection_input_types,
-        assignment__attribute__type=AttributeType.PRODUCT_TYPE,
+        assignment__attribute__type=AttributeType.ROOM_TYPE,
     )
     for (
         attribute_rel
@@ -34,12 +34,12 @@ def generate_and_set_variant_name(variant: "ProductVariant", sku: str):
 def get_variant_selection_attributes(attributes):
     """Return attributes that can be used in variant selection.
 
-    Attribute must be product attribute and attribute input type must be
+    Attribute must be room attribute and attribute input type must be
     in ALLOWED_IN_VARIANT_SELECTION list.
     """
     return [
         attribute
         for attribute in attributes
         if attribute.input_type in AttributeInputType.ALLOWED_IN_VARIANT_SELECTION
-        and attribute.type == AttributeType.PRODUCT_TYPE
+        and attribute.type == AttributeType.ROOM_TYPE
     ]

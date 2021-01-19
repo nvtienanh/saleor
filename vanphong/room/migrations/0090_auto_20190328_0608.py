@@ -5,11 +5,11 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0089_auto_20190225_0252")]
+    dependencies = [("room", "0089_auto_20190225_0252")]
 
     operations = [
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="tax_rate",
             field=models.CharField(
                 blank=True,
@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="producttype",
+            model_name="roomtype",
             name="tax_rate",
             field=models.CharField(
                 choices=[

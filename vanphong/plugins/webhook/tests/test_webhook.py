@@ -9,7 +9,7 @@ from ....webhook.payloads import (
     generate_customer_payload,
     generate_invoice_payload,
     generate_order_payload,
-    generate_product_payload,
+    generate_room_payload,
 )
 from ...manager import get_plugins_manager
 from ...webhook.tasks import trigger_webhooks_for_event
@@ -21,7 +21,7 @@ third_url = "http://www.example.com/third/"
 @pytest.mark.parametrize(
     "event_name, total_webhook_calls, expected_target_urls",
     [
-        (WebhookEventType.PRODUCT_CREATED, 1, {first_url}),
+        (WebhookEventType.ROOM_CREATED, 1, {first_url}),
         (WebhookEventType.ORDER_FULLY_PAID, 2, {first_url, third_url}),
         (WebhookEventType.ORDER_FULFILLED, 1, {third_url}),
         (WebhookEventType.ORDER_CANCELLED, 1, {third_url}),
@@ -41,15 +41,15 @@ def test_trigger_webhooks_for_event_calls_expected_events(
     order_with_lines,
     permission_manage_orders,
     permission_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     """Confirm that Saleor executes only valid and allowed webhook events."""
 
     app.permissions.add(permission_manage_orders)
-    app.permissions.add(permission_manage_products)
+    app.permissions.add(permission_manage_rooms)
     webhook = app.webhooks.create(target_url="http://www.example.com/first/")
     webhook.events.create(event_type=WebhookEventType.CUSTOMER_CREATED)
-    webhook.events.create(event_type=WebhookEventType.PRODUCT_CREATED)
+    webhook.events.create(event_type=WebhookEventType.ROOM_CREATED)
     webhook.events.create(event_type=WebhookEventType.ORDER_FULLY_PAID)
 
     app_without_permissions = App.objects.create()
@@ -58,7 +58,7 @@ def test_trigger_webhooks_for_event_calls_expected_events(
         target_url="http://www.example.com/wrong"
     )
     second_webhook.events.create(event_type=WebhookEventType.ANY)
-    second_webhook.events.create(event_type=WebhookEventType.PRODUCT_CREATED)
+    second_webhook.events.create(event_type=WebhookEventType.ROOM_CREATED)
     second_webhook.events.create(event_type=WebhookEventType.CUSTOMER_CREATED)
 
     app_with_partial_permissions = App.objects.create()
@@ -124,26 +124,26 @@ def test_order_fully_paid(mocked_webhook_trigger, settings, order_with_lines):
 
 
 @mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
-def test_product_created(mocked_webhook_trigger, settings, product):
+def test_room_created(mocked_webhook_trigger, settings, room):
     settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
-    manager.product_created(product)
+    manager.room_created(room)
 
-    expected_data = generate_product_payload(product)
+    expected_data = generate_room_payload(room)
     mocked_webhook_trigger.assert_called_once_with(
-        WebhookEventType.PRODUCT_CREATED, expected_data
+        WebhookEventType.ROOM_CREATED, expected_data
     )
 
 
 @mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
-def test_product_updated(mocked_webhook_trigger, settings, product):
+def test_room_updated(mocked_webhook_trigger, settings, room):
     settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
-    manager.product_updated(product)
+    manager.room_updated(room)
 
-    expected_data = generate_product_payload(product)
+    expected_data = generate_room_payload(room)
     mocked_webhook_trigger.assert_called_once_with(
-        WebhookEventType.PRODUCT_UPDATED, expected_data
+        WebhookEventType.ROOM_UPDATED, expected_data
     )
 
 

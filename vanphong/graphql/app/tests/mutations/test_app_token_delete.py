@@ -26,13 +26,13 @@ def test_app_token_delete(
     staff_api_client,
     staff_user,
     app,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
 
     query = APP_TOKEN_DELETE_MUTATION
     token = app.tokens.get()
-    staff_user.user_permissions.add(permission_manage_products)
-    app.permissions.add(permission_manage_products)
+    staff_user.user_permissions.add(permission_manage_rooms)
+    app.permissions.add(permission_manage_rooms)
     id = graphene.Node.to_global_id("AppToken", token.id)
     staff_user.user_permissions.add(permission_manage_apps)
 
@@ -45,15 +45,15 @@ def test_app_token_delete(
 def test_app_token_delete_for_app(
     permission_manage_apps,
     app_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     app = App.objects.create(name="New_app", is_active=True)
     token = AppToken.objects.create(app=app)
     query = APP_TOKEN_DELETE_MUTATION
     token = app.tokens.get()
     requestor = app_api_client.app
-    requestor.permissions.add(permission_manage_products)
-    app.permissions.add(permission_manage_products)
+    requestor.permissions.add(permission_manage_rooms)
+    app.permissions.add(permission_manage_rooms)
     id = graphene.Node.to_global_id("AppToken", token.id)
 
     variables = {"id": id}
@@ -81,12 +81,12 @@ def test_app_token_delete_out_of_scope_app(
     staff_api_client,
     staff_user,
     app,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     """Ensure user can't delete app token with wider scope of permissions."""
     query = APP_TOKEN_DELETE_MUTATION
     token = app.tokens.get()
-    app.permissions.add(permission_manage_products)
+    app.permissions.add(permission_manage_rooms)
     id = graphene.Node.to_global_id("AppToken", token.id)
 
     variables = {"id": id}
@@ -112,12 +112,12 @@ def test_app_token_delete_superuser_can_delete_token_for_any_app(
     permission_manage_apps,
     superuser_api_client,
     app,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     """Ensure superuser can delete app token for app with any scope of permissions."""
     query = APP_TOKEN_DELETE_MUTATION
     token = app.tokens.get()
-    app.permissions.add(permission_manage_products)
+    app.permissions.add(permission_manage_rooms)
     id = graphene.Node.to_global_id("AppToken", token.id)
 
     variables = {"id": id}
@@ -136,12 +136,12 @@ def test_app_token_delete_superuser_can_delete_token_for_any_app(
 def test_app_token_delete_for_app_out_of_scope_app(
     permission_manage_apps,
     app_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     app = App.objects.create(name="New_app", is_active=True)
     token = AppToken.objects.create(app=app)
     query = APP_TOKEN_DELETE_MUTATION
-    app.permissions.add(permission_manage_products)
+    app.permissions.add(permission_manage_rooms)
     id = graphene.Node.to_global_id("AppToken", token.id)
 
     variables = {"id": id}

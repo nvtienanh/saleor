@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                         related_name="children",
                         verbose_name="parent",
                         blank=True,
-                        to="product.Category",
+                        to="room.Category",
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                     ),
@@ -91,7 +91,7 @@ class Migration(migrations.Migration):
             options={"verbose_name_plural": "categories"},
         ),
         migrations.CreateModel(
-            name="FixedProductDiscount",
+            name="FixedRoomDiscount",
             fields=[
                 (
                     "id",
@@ -112,7 +112,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name="Product",
+            name="Room",
             fields=[
                 (
                     "id",
@@ -146,7 +146,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name="ProductAttribute",
+            name="RoomAttribute",
             fields=[
                 (
                     "id",
@@ -166,7 +166,7 @@ class Migration(migrations.Migration):
             options={"ordering": ["name"]},
         ),
         migrations.CreateModel(
-            name="ProductImage",
+            name="RoomImage",
             fields=[
                 (
                     "id",
@@ -180,7 +180,7 @@ class Migration(migrations.Migration):
                 (
                     "image",
                     versatileimagefield.fields.VersatileImageField(
-                        upload_to="products"
+                        upload_to="rooms"
                     ),
                 ),
                 (
@@ -197,10 +197,10 @@ class Migration(migrations.Migration):
                 ),
                 ("order", models.PositiveIntegerField(editable=False)),
                 (
-                    "product",
+                    "room",
                     models.ForeignKey(
                         related_name="images",
-                        to="product.Product",
+                        to="room.Room",
                         on_delete=django.db.models.deletion.CASCADE,
                     ),
                 ),
@@ -208,7 +208,7 @@ class Migration(migrations.Migration):
             options={"ordering": ["order"]},
         ),
         migrations.CreateModel(
-            name="ProductVariant",
+            name="RoomVariant",
             fields=[
                 (
                     "id",
@@ -254,10 +254,10 @@ class Migration(migrations.Migration):
                     models.TextField(default="{}", verbose_name="attributes"),
                 ),
                 (
-                    "product",
+                    "room",
                     models.ForeignKey(
                         related_name="variants",
-                        to="product.Product",
+                        to="room.Room",
                         on_delete=django.db.models.deletion.CASCADE,
                     ),
                 ),
@@ -299,42 +299,42 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         related_name="stock",
                         verbose_name="variant",
-                        to="product.ProductVariant",
+                        to="room.RoomVariant",
                         on_delete=django.db.models.deletion.CASCADE,
                     ),
                 ),
             ],
         ),
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="attributes",
             field=models.ManyToManyField(
-                related_name="products",
+                related_name="rooms",
                 null=True,
-                to="product.ProductAttribute",
+                to="room.RoomAttribute",
                 blank=True,
             ),
         ),
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="categories",
             field=models.ManyToManyField(
-                related_name="products",
+                related_name="rooms",
                 verbose_name="categories",
-                to="product.Category",
+                to="room.Category",
             ),
         ),
         migrations.AddField(
-            model_name="fixedproductdiscount",
-            name="products",
-            field=models.ManyToManyField(to="product.Product", blank=True),
+            model_name="fixedroomdiscount",
+            name="rooms",
+            field=models.ManyToManyField(to="room.Room", blank=True),
         ),
         migrations.AddField(
             model_name="attributechoicevalue",
             name="attribute",
             field=models.ForeignKey(
                 related_name="values",
-                to="product.ProductAttribute",
+                to="room.RoomAttribute",
                 on_delete=django.db.models.deletion.CASCADE,
             ),
         ),

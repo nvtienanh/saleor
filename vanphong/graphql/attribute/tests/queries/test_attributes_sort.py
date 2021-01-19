@@ -9,7 +9,7 @@ from .....attribute.utils import associate_attribute_values_to_instance
 from ....tests.utils import get_graphql_content
 
 if TYPE_CHECKING:
-    from .....product.models import Product, ProductVariant
+    from .....room.models import Room, RoomVariant
 
 
 ATTRIBUTES_SORT_QUERY = """
@@ -28,8 +28,8 @@ ATTRIBUTES_SORT_QUERY = """
 def test_sort_attributes_by_slug(api_client):
     Attribute.objects.bulk_create(
         [
-            Attribute(name="MyAttribute", slug="b", type=AttributeType.PRODUCT_TYPE),
-            Attribute(name="MyAttribute", slug="a", type=AttributeType.PRODUCT_TYPE),
+            Attribute(name="MyAttribute", slug="b", type=AttributeType.ROOM_TYPE),
+            Attribute(name="MyAttribute", slug="a", type=AttributeType.ROOM_TYPE),
         ]
     )
 
@@ -48,8 +48,8 @@ def test_sort_attributes_by_default_sorting(api_client):
     """Don't provide any sorting, this should sort by slug by default."""
     Attribute.objects.bulk_create(
         [
-            Attribute(name="A", slug="b", type=AttributeType.PRODUCT_TYPE),
-            Attribute(name="B", slug="a", type=AttributeType.PRODUCT_TYPE),
+            Attribute(name="A", slug="b", type=AttributeType.ROOM_TYPE),
+            Attribute(name="B", slug="a", type=AttributeType.ROOM_TYPE),
         ]
     )
 
@@ -63,17 +63,17 @@ def test_sort_attributes_by_default_sorting(api_client):
 
 
 @pytest.mark.parametrize("is_variant", (True, False))
-def test_attributes_of_products_are_sorted(
-    user_api_client, product, color_attribute, is_variant, channel_USD
+def test_attributes_of_rooms_are_sorted(
+    user_api_client, room, color_attribute, is_variant, channel_USD
 ):
-    """Ensures the attributes of products and variants are sorted."""
+    """Ensures the attributes of rooms and variants are sorted."""
 
-    variant = product.variants.first()
+    variant = room.variants.first()
 
     if is_variant:
         query = """
             query($id: ID!, $channel: String) {
-              productVariant(id: $id, channel: $channel) {
+              roomVariant(id: $id, channel: $channel) {
                 attributes {
                   attribute {
                     id
@@ -85,7 +85,7 @@ def test_attributes_of_products_are_sorted(
     else:
         query = """
             query($id: ID!, $channel: String) {
-              product(id: $id, channel: $channel) {
+              room(id: $id, channel: $channel) {
                 attributes {
                   attribute {
                     id
@@ -100,24 +100,24 @@ def test_attributes_of_products_are_sorted(
     # when sorted by ID. Thus, we are sure the query is actually passing the test.
     other_attribute = Attribute.objects.create(name="Other", slug="other")
 
-    # Add the attribute to the product type
+    # Add the attribute to the room type
     if is_variant:
-        product.product_type.variant_attributes.set([color_attribute, other_attribute])
+        room.room_type.variant_attributes.set([color_attribute, other_attribute])
     else:
-        product.product_type.product_attributes.set([color_attribute, other_attribute])
+        room.room_type.room_attributes.set([color_attribute, other_attribute])
 
-    # Retrieve the M2M object for the attribute vs the product type
+    # Retrieve the M2M object for the attribute vs the room type
     if is_variant:
         m2m_rel_other_attr = other_attribute.attributevariant.last()
     else:
-        m2m_rel_other_attr = other_attribute.attributeproduct.last()
+        m2m_rel_other_attr = other_attribute.attributeroom.last()
 
     # Push the last attribute to the top and let the others to None
     m2m_rel_other_attr.sort_order = 0
     m2m_rel_other_attr.save(update_fields=["sort_order"])
 
-    # Assign attributes to the product
-    node = variant if is_variant else product  # type: Union[Product, ProductVariant]
+    # Assign attributes to the room
+    node = variant if is_variant else room  # type: Union[Room, RoomVariant]
     node.attributesrelated.clear()
     associate_attribute_values_to_instance(
         node, color_attribute, color_attribute.values.first()
@@ -128,9 +128,9 @@ def test_attributes_of_products_are_sorted(
 
     # Make the node ID
     if is_variant:
-        node_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+        node_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     else:
-        node_id = graphene.Node.to_global_id("Product", product.pk)
+        node_id = graphene.Node.to_global_id("Room", room.pk)
 
     # Retrieve the attributes
     data = get_graphql_content(
@@ -138,7 +138,7 @@ def test_attributes_of_products_are_sorted(
             query, {"id": node_id, "channel": channel_USD.slug}
         )
     )["data"]
-    attributes = data["productVariant" if is_variant else "product"]["attributes"]
+    attributes = data["roomVariant" if is_variant else "room"]["attributes"]
     actual_order = [
         int(graphene.Node.from_global_id(attr["attribute"]["id"])[1])
         for attr in attributes

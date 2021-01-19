@@ -1,30 +1,30 @@
 from unittest.mock import patch
 
 from ..models import Category
-from ..utils import collect_categories_tree_products, delete_categories
+from ..utils import collect_categories_tree_rooms, delete_categories
 
 
-def test_collect_categories_tree_products(categories_tree):
+def test_collect_categories_tree_rooms(categories_tree):
     parent = categories_tree
     child = parent.children.first()
-    products = parent.products.all() | child.products.all()
+    rooms = parent.rooms.all() | child.rooms.all()
 
-    result = collect_categories_tree_products(parent)
+    result = collect_categories_tree_rooms(parent)
 
-    assert len(result) == len(products)
+    assert len(result) == len(rooms)
     assert set(result.values_list("pk", flat=True)) == set(
-        products.values_list("pk", flat=True)
+        rooms.values_list("pk", flat=True)
     )
 
 
-@patch("saleor.product.utils.update_products_discounted_prices_task")
+@patch("saleor.room.utils.update_rooms_discounted_prices_task")
 def test_delete_categories(
-    mock_update_products_discounted_prices_task,
-    categories_tree_with_published_products,
+    mock_update_rooms_discounted_prices_task,
+    categories_tree_with_published_rooms,
 ):
-    parent = categories_tree_with_published_products
+    parent = categories_tree_with_published_rooms
     child = parent.children.first()
-    product_list = [child.products.first(), parent.products.first()]
+    room_list = [child.rooms.first(), parent.rooms.first()]
 
     delete_categories([parent.pk])
 
@@ -32,14 +32,14 @@ def test_delete_categories(
         id__in=[category.id for category in [parent, child]]
     ).exists()
 
-    calls = mock_update_products_discounted_prices_task.mock_calls
+    calls = mock_update_rooms_discounted_prices_task.mock_calls
     assert len(calls) == 1
     call_kwargs = calls[0].kwargs
-    assert set(call_kwargs["product_ids"]) == {p.pk for p in product_list}
+    assert set(call_kwargs["room_ids"]) == {p.pk for p in room_list}
 
-    for product in product_list:
-        product.refresh_from_db()
-        assert not product.category
-        for product_channel_listing in product.channel_listings.all():
-            assert not product_channel_listing.is_published
-            assert not product_channel_listing.publication_date
+    for room in room_list:
+        room.refresh_from_db()
+        assert not room.category
+        for room_channel_listing in room.channel_listings.all():
+            assert not room_channel_listing.is_published
+            assert not room_channel_listing.publication_date

@@ -1,5 +1,5 @@
-class ProductExportFields:
-    """Data structure with fields for product export."""
+class RoomExportFields:
+    """Data structure with fields for room export."""
 
     HEADERS_TO_FIELDS_MAPPING = {
         "fields": {
@@ -7,20 +7,20 @@ class ProductExportFields:
             "name": "name",
             "description": "description",
             "category": "category__slug",
-            "product type": "product_type__name",
+            "room type": "room_type__name",
             "charge taxes": "charge_taxes",
-            "product weight": "product_weight",
+            "room weight": "room_weight",
             "variant sku": "variants__sku",
             "variant weight": "variant_weight",
         },
-        "product_many_to_many": {
+        "room_many_to_many": {
             "collections": "collections__slug",
-            "product images": "images__image",
+            "room images": "images__image",
         },
         "variant_many_to_many": {"variant images": "variants__images__image"},
     }
 
-    PRODUCT_ATTRIBUTE_FIELDS = {
+    ROOM_ATTRIBUTE_FIELDS = {
         "value": "attributes__values__slug",
         "file_url": "attributes__values__file_url",
         "slug": "attributes__assignment__attribute__slug",
@@ -28,20 +28,20 @@ class ProductExportFields:
         "attribute_pk": "attributes__assignment__attribute__pk",
     }
 
-    PRODUCT_CHANNEL_LISTING_FIELDS = {
+    ROOM_CHANNEL_LISTING_FIELDS = {
         "channel_pk": "channel_listings__channel__pk",
         "slug": "channel_listings__channel__slug",
-        "product_currency_code": "channel_listings__currency",
+        "room_currency_code": "channel_listings__currency",
         "published": "channel_listings__is_published",
         "publication_date": "channel_listings__publication_date",
         "searchable": "channel_listings__visible_in_listings",
         "available for purchase": "channel_listings__available_for_purchase",
     }
 
-    WAREHOUSE_FIELDS = {
-        "slug": "variants__stocks__warehouse__slug",
+    HOTEL_FIELDS = {
+        "slug": "variants__stocks__hotel__slug",
         "quantity": "variants__stocks__quantity",
-        "warehouse_pk": "variants__stocks__warehouse__id",
+        "hotel_pk": "variants__stocks__hotel__id",
     }
 
     VARIANT_ATTRIBUTE_FIELDS = {

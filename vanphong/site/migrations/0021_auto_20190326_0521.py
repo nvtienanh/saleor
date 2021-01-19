@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="sitesettings",
-            name="automatic_fulfillment_digital_products",
+            name="automatic_fulfillment_digital_rooms",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(

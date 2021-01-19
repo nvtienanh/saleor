@@ -1,6 +1,6 @@
 from django.core.files.storage import default_storage
 
-from ....product.tests.utils import create_image
+from ....room.tests.utils import create_image
 from ...tests.utils import (
     assert_no_permission,
     get_graphql_content,

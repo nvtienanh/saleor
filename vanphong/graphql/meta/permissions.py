@@ -13,8 +13,8 @@ from ...core.permissions import (
     OrderPermissions,
     PagePermissions,
     PageTypePermissions,
-    ProductPermissions,
-    ProductTypePermissions,
+    RoomPermissions,
+    RoomTypePermissions,
     ShippingPermissions,
 )
 
@@ -49,12 +49,12 @@ def private_user_permissions(_info, user_pk: int) -> List[BasePermissionEnum]:
     return [AccountPermissions.MANAGE_USERS]
 
 
-def product_permissions(_info, _object_pk: Any) -> List[BasePermissionEnum]:
-    return [ProductPermissions.MANAGE_PRODUCTS]
+def room_permissions(_info, _object_pk: Any) -> List[BasePermissionEnum]:
+    return [RoomPermissions.MANAGE_ROOMS]
 
 
-def product_type_permissions(_info, _object_pk: Any) -> List[BasePermissionEnum]:
-    return [ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES]
+def room_type_permissions(_info, _object_pk: Any) -> List[BasePermissionEnum]:
+    return [RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES]
 
 
 def order_permissions(_info, _object_pk: Any) -> List[BasePermissionEnum]:
@@ -90,7 +90,7 @@ def attribute_permissions(_info, attribute_pk: int):
     if attribute.type == AttributeType.PAGE_TYPE:
         return page_type_permissions(_info, attribute_pk)
     else:
-        return product_type_permissions(_info, attribute_pk)
+        return room_type_permissions(_info, attribute_pk)
 
 
 def shipping_permissions(_info, _object_pk: Any) -> List[BasePermissionEnum]:
@@ -99,10 +99,10 @@ def shipping_permissions(_info, _object_pk: Any) -> List[BasePermissionEnum]:
 
 PUBLIC_META_PERMISSION_MAP = {
     "Attribute": attribute_permissions,
-    "Category": product_permissions,
+    "Category": room_permissions,
     "Checkout": no_permissions,
-    "Collection": product_permissions,
-    "DigitalContent": product_permissions,
+    "Collection": room_permissions,
+    "DigitalContent": room_permissions,
     "Fulfillment": order_permissions,
     "Menu": menu_permissions,
     "MenuItem": menu_permissions,
@@ -110,9 +110,9 @@ PUBLIC_META_PERMISSION_MAP = {
     "Invoice": invoice_permissions,
     "Page": page_permissions,
     "PageType": page_type_permissions,
-    "Product": product_permissions,
-    "ProductType": product_type_permissions,
-    "ProductVariant": product_permissions,
+    "Room": room_permissions,
+    "RoomType": room_type_permissions,
+    "RoomVariant": room_permissions,
     "ShippingMethod": shipping_permissions,
     "ShippingZone": shipping_permissions,
     "App": app_permissions,
@@ -122,10 +122,10 @@ PUBLIC_META_PERMISSION_MAP = {
 
 PRIVATE_META_PERMISSION_MAP = {
     "Attribute": attribute_permissions,
-    "Category": product_permissions,
+    "Category": room_permissions,
     "Checkout": checkout_permissions,
-    "Collection": product_permissions,
-    "DigitalContent": product_permissions,
+    "Collection": room_permissions,
+    "DigitalContent": room_permissions,
     "Fulfillment": order_permissions,
     "Menu": menu_permissions,
     "MenuItem": menu_permissions,
@@ -133,9 +133,9 @@ PRIVATE_META_PERMISSION_MAP = {
     "Invoice": invoice_permissions,
     "Page": page_permissions,
     "PageType": page_type_permissions,
-    "Product": product_permissions,
-    "ProductType": product_type_permissions,
-    "ProductVariant": product_permissions,
+    "Room": room_permissions,
+    "RoomType": room_type_permissions,
+    "RoomVariant": room_permissions,
     "ShippingMethod": shipping_permissions,
     "ShippingZone": shipping_permissions,
     "App": app_permissions,

@@ -11,7 +11,7 @@ def test_query_page_type(
     staff_api_client,
     author_page_attribute,
     permission_manage_pages,
-    permission_manage_products,
+    permission_manage_rooms,
     count_queries,
 ):
     query = """
@@ -60,7 +60,7 @@ def test_query_page_type(
     response = staff_api_client.post_graphql(
         query,
         variables,
-        permissions=[permission_manage_products, permission_manage_pages],
+        permissions=[permission_manage_rooms, permission_manage_pages],
     )
     content = get_graphql_content(response)
     data = content["data"]["pageType"]
@@ -74,7 +74,7 @@ def test_query_page_types(
     staff_api_client,
     author_page_attribute,
     permission_manage_pages,
-    permission_manage_products,
+    permission_manage_rooms,
     count_queries,
 ):
     query = """
@@ -126,7 +126,7 @@ def test_query_page_types(
     response = staff_api_client.post_graphql(
         query,
         {},
-        permissions=[permission_manage_products, permission_manage_pages],
+        permissions=[permission_manage_rooms, permission_manage_pages],
     )
     content = get_graphql_content(response)
     data = content["data"]["pageTypes"]

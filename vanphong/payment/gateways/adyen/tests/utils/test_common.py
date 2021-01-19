@@ -58,7 +58,7 @@ def test_append_klarna_data(
         "countryCode": country_code,
         "lineItems": [
             {
-                "description": f"{line.variant.product.name}, {line.variant.name}",
+                "description": f"{line.variant.room.name}, {line.variant.name}",
                 "quantity": line.quantity,
                 "id": line.variant.sku,
                 "taxAmount": "0",
@@ -113,7 +113,7 @@ def test_append_klarna_data_tax_included(
         "countryCode": country_code,
         "lineItems": [
             {
-                "description": f"{line.variant.product.name}, {line.variant.name}",
+                "description": f"{line.variant.room.name}, {line.variant.name}",
                 "quantity": line.quantity,
                 "id": line.variant.sku,
                 "taxAmount": to_adyen_price((gross - net).amount, "USD"),

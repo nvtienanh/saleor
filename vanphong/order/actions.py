@@ -18,7 +18,7 @@ from ..payment import (
 from ..payment.models import Payment, Transaction
 from ..payment.utils import create_payment
 from ..plugins.manager import get_plugins_manager
-from ..warehouse.management import (
+from ..hotel.management import (
     deallocate_stock,
     deallocate_stock_for_order,
     decrease_stock,
@@ -41,7 +41,7 @@ from .utils import (
 
 if TYPE_CHECKING:
     from ..account.models import User
-    from ..warehouse.models import Warehouse
+    from ..hotel.models import Hotel
     from .models import Order
 
 logger = logging.getLogger(__name__)
@@ -201,14 +201,14 @@ def fulfillment_tracking_updated(
 
 @transaction.atomic
 def cancel_fulfillment(
-    fulfillment: "Fulfillment", user: "User", warehouse: "Warehouse"
+    fulfillment: "Fulfillment", user: "User", hotel: "Hotel"
 ):
     """Cancel fulfillment.
 
-    Return products to corresponding stocks.
+    Return rooms to corresponding stocks.
     """
     fulfillment = Fulfillment.objects.select_for_update().get(pk=fulfillment.pk)
-    restock_fulfillment_lines(fulfillment, warehouse)
+    restock_fulfillment_lines(fulfillment, hotel)
     events.fulfillment_canceled_event(
         order=fulfillment.order, user=user, fulfillment=fulfillment
     )
@@ -216,7 +216,7 @@ def cancel_fulfillment(
         order=fulfillment.order,
         user=user,
         fulfillment=fulfillment,
-        warehouse_pk=warehouse.pk,
+        hotel_pk=hotel.pk,
     )
     fulfillment.status = FulfillmentStatus.CANCELED
     fulfillment.save(update_fields=["status"])
@@ -273,10 +273,10 @@ def clean_mark_order_as_paid(order: "Order"):
         )
 
 
-def fulfill_order_line(order_line, quantity, warehouse_pk):
+def fulfill_order_line(order_line, quantity, hotel_pk):
     """Fulfill order line with given quantity."""
     if order_line.variant and order_line.variant.track_inventory:
-        decrease_stock(order_line, quantity, warehouse_pk)
+        decrease_stock(order_line, quantity, hotel_pk)
     order_line.quantity_fulfilled += quantity
     order_line.save(update_fields=["quantity_fulfilled"])
 
@@ -304,9 +304,9 @@ def automatically_fulfill_digital_lines(order: "Order"):
         FulfillmentLine.objects.create(
             fulfillment=fulfillment, order_line=line, quantity=quantity
         )
-        warehouse_pk = line.allocations.first().stock.warehouse.pk  # type: ignore
+        hotel_pk = line.allocations.first().stock.hotel.pk  # type: ignore
         fulfill_order_line(
-            order_line=line, quantity=quantity, warehouse_pk=warehouse_pk
+            order_line=line, quantity=quantity, hotel_pk=hotel_pk
         )
     emails.send_fulfillment_confirmation_to_customer(
         order, fulfillment, user=order.user
@@ -315,13 +315,13 @@ def automatically_fulfill_digital_lines(order: "Order"):
 
 
 def _create_fulfillment_lines(
-    fulfillment: Fulfillment, warehouse_pk: str, lines: List[Dict]
+    fulfillment: Fulfillment, hotel_pk: str, lines: List[Dict]
 ) -> List[FulfillmentLine]:
     """Modify stocks and allocations. Return list of unsaved FulfillmentLines.
 
     Args:
         fulfillment (Fulfillment): Fulfillment to create lines
-        warehouse_pk (str): Warehouse to fulfill order.
+        hotel_pk (str): Hotel to fulfill order.
         lines (List[Dict]): List with information from which system
             create FulfillmentLines. Example:
                 [
@@ -345,11 +345,11 @@ def _create_fulfillment_lines(
         quantity = line["quantity"]
         order_line = line["order_line"]
         if quantity > 0:
-            stock = order_line.variant.stocks.filter(warehouse=warehouse_pk).first()
+            stock = order_line.variant.stocks.filter(hotel=hotel_pk).first()
             if stock is None:
-                error_context = {"order_line": order_line, "warehouse_pk": warehouse_pk}
+                error_context = {"order_line": order_line, "hotel_pk": hotel_pk}
                 raise InsufficientStock(order_line.variant, error_context)
-            fulfill_order_line(order_line, quantity, warehouse_pk)
+            fulfill_order_line(order_line, quantity, hotel_pk)
             if order_line.is_digital:
                 order_line.variant.digital_content.urls.create(line=order_line)
             fulfillment_lines.append(
@@ -367,7 +367,7 @@ def _create_fulfillment_lines(
 def create_fulfillments(
     requester: "User",
     order: "Order",
-    fulfillment_lines_for_warehouses: Dict,
+    fulfillment_lines_for_hotels: Dict,
     notify_customer: bool = True,
 ) -> List[Fulfillment]:
     """Fulfill order.
@@ -378,10 +378,10 @@ def create_fulfillments(
     Args:
         requester (User): Requester who trigger this action.
         order (Order): Order to fulfill
-        fulfillment_lines_for_warehouses (Dict): Dict with information from which
+        fulfillment_lines_for_hotels (Dict): Dict with information from which
             system create fulfillments. Example:
                 {
-                    (Warehouse.pk): [
+                    (Hotel.pk): [
                         {
                             "order_line": (OrderLine),
                             "quantity": (int),
@@ -394,7 +394,7 @@ def create_fulfillments(
 
     Return:
         List[Fulfillment]: Fulfillmet with lines created for this order
-            based on information form `fulfillment_lines_for_warehouses`
+            based on information form `fulfillment_lines_for_hotels`
 
 
     Raise:
@@ -403,14 +403,14 @@ def create_fulfillments(
     """
     fulfillments: List[Fulfillment] = []
     fulfillment_lines: List[FulfillmentLine] = []
-    for warehouse_pk in fulfillment_lines_for_warehouses:
+    for hotel_pk in fulfillment_lines_for_hotels:
         fulfillment = Fulfillment.objects.create(order=order)
         fulfillments.append(fulfillment)
         fulfillment_lines.extend(
             _create_fulfillment_lines(
                 fulfillment,
-                warehouse_pk,
-                fulfillment_lines_for_warehouses[warehouse_pk],
+                hotel_pk,
+                fulfillment_lines_for_hotels[hotel_pk],
             )
         )
 
@@ -604,15 +604,15 @@ def create_refund_fulfillment(
     amount=None,
     refund_shipping_costs=False,
 ):
-    """Proceed with all steps required for refunding products.
+    """Proceed with all steps required for refunding rooms.
 
-    Calculate refunds for products based on the order's order lines and fulfillment
+    Calculate refunds for rooms based on the order's order lines and fulfillment
     lines.  The logic takes the list of order lines, fulfillment lines, and their
     quantities which is used to create the refund fulfillment. The stock for
     unfulfilled lines will be deallocated. It creates only single refund fulfillment
     for each order. Calling the method N-time will increase the quantity of the already
     refunded line. The refund fulfillment can have assigned lines with the same
-    products but with the different stocks.
+    rooms but with the different stocks.
     """
     with transaction.atomic():
         refunded_fulfillment, _ = Fulfillment.objects.get_or_create(

@@ -6,14 +6,14 @@ import graphene
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from ....core.permissions import ProductPermissions
-from ....product.error_codes import CollectionErrorCode, ProductErrorCode
-from ....product.models import (
+from ....core.permissions import RoomPermissions
+from ....room.error_codes import CollectionErrorCode, RoomErrorCode
+from ....room.models import (
     CollectionChannelListing,
-    ProductChannelListing,
-    ProductVariantChannelListing,
+    RoomChannelListing,
+    RoomVariantChannelListing,
 )
-from ....product.tasks import update_product_discounted_price_task
+from ....room.tasks import update_room_discounted_price_task
 from ...channel import ChannelContext
 from ...channel.mutations import BaseChannelListingMutation
 from ...channel.types import Channel
@@ -21,17 +21,17 @@ from ...core.mutations import BaseMutation
 from ...core.scalars import PositiveDecimal
 from ...core.types.common import (
     CollectionChannelListingError,
-    ProductChannelListingError,
+    RoomChannelListingError,
 )
 from ...core.utils import get_duplicated_values
 from ...core.validators import validate_price_precision
-from ..types.products import Collection, Product, ProductVariant
+from ..types.rooms import Collection, Room, RoomVariant
 
 if TYPE_CHECKING:
     from ....channel.models import Channel as ChannelModel
-    from ....product.models import Collection as CollectionModel
-    from ....product.models import Product as ProductModel
-    from ....product.models import ProductVariant as ProductVariantModel
+    from ....room.models import Collection as CollectionModel
+    from ....room.models import Room as RoomModel
+    from ....room.models import RoomVariant as RoomVariantModel
 
 ErrorType = DefaultDict[str, List[ValidationError]]
 
@@ -46,53 +46,53 @@ class PublishableChannelListingInput(graphene.InputObjectType):
     )
 
 
-class ProductChannelListingAddInput(PublishableChannelListingInput):
+class RoomChannelListingAddInput(PublishableChannelListingInput):
     visible_in_listings = graphene.Boolean(
         description=(
-            "Determines if product is visible in product listings "
-            "(doesn't apply to product collections)."
+            "Determines if room is visible in room listings "
+            "(doesn't apply to room collections)."
         )
     )
     is_available_for_purchase = graphene.Boolean(
-        description="Determine if product should be available for purchase.",
+        description="Determine if room should be available for purchase.",
     )
     available_for_purchase_date = graphene.Date(
         description=(
-            "A start date from which a product will be available for purchase. "
+            "A start date from which a room will be available for purchase. "
             "When not set and isAvailable is set to True, "
             "the current day is assumed."
         )
     )
 
 
-class ProductChannelListingUpdateInput(graphene.InputObjectType):
+class RoomChannelListingUpdateInput(graphene.InputObjectType):
     add_channels = graphene.List(
-        graphene.NonNull(ProductChannelListingAddInput),
-        description="List of channels to which the product should be assigned.",
+        graphene.NonNull(RoomChannelListingAddInput),
+        description="List of channels to which the room should be assigned.",
         required=False,
     )
     remove_channels = graphene.List(
         graphene.NonNull(graphene.ID),
-        description="List of channels from which the product should be unassigned.",
+        description="List of channels from which the room should be unassigned.",
         required=False,
     )
 
 
-class ProductChannelListingUpdate(BaseChannelListingMutation):
-    product = graphene.Field(Product, description="An updated product instance.")
+class RoomChannelListingUpdate(BaseChannelListingMutation):
+    room = graphene.Field(Room, description="An updated room instance.")
 
     class Arguments:
-        id = graphene.ID(required=True, description="ID of a product to update.")
-        input = ProductChannelListingUpdateInput(
+        id = graphene.ID(required=True, description="ID of a room to update.")
+        input = RoomChannelListingUpdateInput(
             required=True,
-            description="Fields required to create or update product channel listings.",
+            description="Fields required to create or update room channel listings.",
         )
 
     class Meta:
-        description = "Manage product's availability in channels."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductChannelListingError
-        error_type_field = "product_channel_listing_errors"
+        description = "Manage room's availability in channels."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomChannelListingError
+        error_type_field = "room_channel_listing_errors"
 
     @classmethod
     def clean_available_for_purchase(cls, cleaned_input, errors: ErrorType):
@@ -112,32 +112,32 @@ class ProductChannelListingUpdate(BaseChannelListingMutation):
             errors["available_for_purchase_date"].append(
                 ValidationError(
                     error_msg,
-                    code=ProductErrorCode.INVALID.value,
+                    code=RoomErrorCode.INVALID.value,
                     params={"channels": channels_with_invalid_available_for_purchase},
                 )
             )
 
     @classmethod
-    def validate_product_without_category(cls, cleaned_input, errors: ErrorType):
-        channels_with_published_product_without_category = []
+    def validate_room_without_category(cls, cleaned_input, errors: ErrorType):
+        channels_with_published_room_without_category = []
         for add_channel in cleaned_input.get("add_channels", []):
             if add_channel.get("is_published") is True:
-                channels_with_published_product_without_category.append(
+                channels_with_published_room_without_category.append(
                     add_channel["channel_id"]
                 )
-        if channels_with_published_product_without_category:
+        if channels_with_published_room_without_category:
             errors["is_published"].append(
                 ValidationError(
                     "You must select a category to be able to publish.",
-                    code=ProductErrorCode.PRODUCT_WITHOUT_CATEGORY.value,
+                    code=RoomErrorCode.ROOM_WITHOUT_CATEGORY.value,
                     params={
-                        "channels": channels_with_published_product_without_category
+                        "channels": channels_with_published_room_without_category
                     },
                 )
             )
 
     @classmethod
-    def add_channels(cls, product: "ProductModel", add_channels: List[Dict]):
+    def add_channels(cls, room: "RoomModel", add_channels: List[Dict]):
         for add_channel in add_channels:
             channel = add_channel["channel"]
             defaults = {"currency": channel.currency_code}
@@ -156,51 +156,51 @@ class ProductChannelListingUpdate(BaseChannelListingMutation):
                     defaults["available_for_purchase"] = datetime.date.today()
                 else:
                     defaults["available_for_purchase"] = available_for_purchase_date
-            ProductChannelListing.objects.update_or_create(
-                product=product, channel=channel, defaults=defaults
+            RoomChannelListing.objects.update_or_create(
+                room=room, channel=channel, defaults=defaults
             )
 
     @classmethod
-    def remove_channels(cls, product: "ProductModel", remove_channels: List[int]):
-        ProductChannelListing.objects.filter(
-            product=product, channel_id__in=remove_channels
+    def remove_channels(cls, room: "RoomModel", remove_channels: List[int]):
+        RoomChannelListing.objects.filter(
+            room=room, channel_id__in=remove_channels
         ).delete()
-        ProductVariantChannelListing.objects.filter(
-            variant__product_id=product.pk, channel_id__in=remove_channels
+        RoomVariantChannelListing.objects.filter(
+            variant__room_id=room.pk, channel_id__in=remove_channels
         ).delete()
 
     @classmethod
     @transaction.atomic()
-    def save(cls, info, product: "ProductModel", cleaned_input: Dict):
-        cls.add_channels(product, cleaned_input.get("add_channels", []))
-        cls.remove_channels(product, cleaned_input.get("remove_channels", []))
-        info.context.plugins.product_updated(product)
+    def save(cls, info, room: "RoomModel", cleaned_input: Dict):
+        cls.add_channels(room, cleaned_input.get("add_channels", []))
+        cls.remove_channels(room, cleaned_input.get("remove_channels", []))
+        info.context.plugins.room_updated(room)
 
     @classmethod
     def perform_mutation(cls, _root, info, id, input):
-        product = cls.get_node_or_error(info, id, only_type=Product, field="id")
+        room = cls.get_node_or_error(info, id, only_type=Room, field="id")
         errors = defaultdict(list)
 
         cleaned_input = cls.clean_channels(
             info,
             input,
             errors,
-            ProductErrorCode.DUPLICATED_INPUT_ITEM.value,
+            RoomErrorCode.DUPLICATED_INPUT_ITEM.value,
         )
         cls.clean_publication_date(cleaned_input)
         cls.clean_available_for_purchase(cleaned_input, errors)
-        if not product.category:
-            cls.validate_product_without_category(cleaned_input, errors)
+        if not room.category:
+            cls.validate_room_without_category(cleaned_input, errors)
         if errors:
             raise ValidationError(errors)
 
-        cls.save(info, product, cleaned_input)
-        return ProductChannelListingUpdate(
-            product=ChannelContext(node=product, channel_slug=None)
+        cls.save(info, room, cleaned_input)
+        return RoomChannelListingUpdate(
+            room=ChannelContext(node=room, channel_slug=None)
         )
 
 
-class ProductVariantChannelListingAddInput(graphene.InputObjectType):
+class RoomVariantChannelListingAddInput(graphene.InputObjectType):
     channel_id = graphene.ID(required=True, description="ID of a channel.")
     price = PositiveDecimal(
         required=True, description="Price of the particular variant in channel."
@@ -208,29 +208,29 @@ class ProductVariantChannelListingAddInput(graphene.InputObjectType):
     cost_price = PositiveDecimal(description="Cost price of the variant in channel.")
 
 
-class ProductVariantChannelListingUpdate(BaseMutation):
+class RoomVariantChannelListingUpdate(BaseMutation):
     variant = graphene.Field(
-        ProductVariant, description="An updated product variant instance."
+        RoomVariant, description="An updated room variant instance."
     )
 
     class Arguments:
         id = graphene.ID(
-            required=True, description="ID of a product variant to update."
+            required=True, description="ID of a room variant to update."
         )
         input = graphene.List(
-            graphene.NonNull(ProductVariantChannelListingAddInput),
+            graphene.NonNull(RoomVariantChannelListingAddInput),
             required=True,
             description=(
-                "List of fields required to create or upgrade product variant ",
+                "List of fields required to create or upgrade room variant ",
                 "channel listings.",
             ),
         )
 
     class Meta:
-        description = "Manage product variant prices in channels."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductChannelListingError
-        error_type_field = "product_channel_listing_errors"
+        description = "Manage room variant prices in channels."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomChannelListingError
+        error_type_field = "room_channel_listing_errors"
 
     @classmethod
     def clean_channels(cls, info, input, errors: ErrorType) -> List:
@@ -244,7 +244,7 @@ class ProductVariantChannelListingUpdate(BaseMutation):
             errors["channelId"].append(
                 ValidationError(
                     "Duplicated channel ID.",
-                    code=ProductErrorCode.DUPLICATED_INPUT_ITEM.value,
+                    code=RoomErrorCode.DUPLICATED_INPUT_ITEM.value,
                     params={"channels": duplicates},
                 )
             )
@@ -260,32 +260,32 @@ class ProductVariantChannelListingUpdate(BaseMutation):
         return cleaned_input
 
     @classmethod
-    def validate_product_assigned_to_channel(
-        cls, variant: "ProductVariantModel", cleaned_input: List, errors: ErrorType
+    def validate_room_assigned_to_channel(
+        cls, variant: "RoomVariantModel", cleaned_input: List, errors: ErrorType
     ):
         channel_pks = [
             channel_listing_data["channel"].pk for channel_listing_data in cleaned_input
         ]
-        channels_assigned_to_product = list(
-            ProductChannelListing.objects.filter(
-                product=variant.product_id
+        channels_assigned_to_room = list(
+            RoomChannelListing.objects.filter(
+                room=variant.room_id
             ).values_list("channel_id", flat=True)
         )
-        channels_not_assigned_to_product = set(channel_pks) - set(
-            channels_assigned_to_product
+        channels_not_assigned_to_room = set(channel_pks) - set(
+            channels_assigned_to_room
         )
-        if channels_not_assigned_to_product:
+        if channels_not_assigned_to_room:
             channel_global_ids = []
             for channel_listing_data in cleaned_input:
                 if (
                     channel_listing_data["channel"].pk
-                    in channels_not_assigned_to_product
+                    in channels_not_assigned_to_room
                 ):
                     channel_global_ids.append(channel_listing_data["channel_id"])
             errors["input"].append(
                 ValidationError(
-                    "Product not available in channels.",
-                    code=ProductErrorCode.PRODUCT_NOT_ASSIGNED_TO_CHANNEL.value,
+                    "Room not available in channels.",
+                    code=RoomErrorCode.ROOM_NOT_ASSIGNED_TO_CHANNEL.value,
                     params={"channels": channel_global_ids},
                 )
             )
@@ -295,7 +295,7 @@ class ProductVariantChannelListingUpdate(BaseMutation):
         try:
             validate_price_precision(price, currency)
         except ValidationError as error:
-            error.code = ProductErrorCode.INVALID.value
+            error.code = RoomErrorCode.INVALID.value
             error.params = {
                 "channels": [channel_id],
             }
@@ -316,7 +316,7 @@ class ProductVariantChannelListingUpdate(BaseMutation):
 
     @classmethod
     @transaction.atomic()
-    def save(cls, info, variant: "ProductVariantModel", cleaned_input: List):
+    def save(cls, info, variant: "RoomVariantModel", cleaned_input: List):
         for channel_listing_data in cleaned_input:
             channel = channel_listing_data["channel"]
             defaults = {"currency": channel.currency_code}
@@ -326,23 +326,23 @@ class ProductVariantChannelListingUpdate(BaseMutation):
                 defaults["cost_price_amount"] = channel_listing_data.get(
                     "cost_price", None
                 )
-            ProductVariantChannelListing.objects.update_or_create(
+            RoomVariantChannelListing.objects.update_or_create(
                 variant=variant,
                 channel=channel,
                 defaults=defaults,
             )
-        update_product_discounted_price_task.delay(variant.product_id)
-        info.context.plugins.product_updated(variant.product)
+        update_room_discounted_price_task.delay(variant.room_id)
+        info.context.plugins.room_updated(variant.room)
 
     @classmethod
     def perform_mutation(cls, _root, info, id, input):
-        variant: "ProductVariantModel" = cls.get_node_or_error(  # type: ignore
-            info, id, only_type=ProductVariant, field="id"
+        variant: "RoomVariantModel" = cls.get_node_or_error(  # type: ignore
+            info, id, only_type=RoomVariant, field="id"
         )
         errors = defaultdict(list)
 
         cleaned_input = cls.clean_channels(info, input, errors)
-        cls.validate_product_assigned_to_channel(variant, cleaned_input, errors)
+        cls.validate_room_assigned_to_channel(variant, cleaned_input, errors)
         cleaned_input = cls.clean_prices(info, cleaned_input, errors)
 
         if errors:
@@ -350,7 +350,7 @@ class ProductVariantChannelListingUpdate(BaseMutation):
 
         cls.save(info, variant, cleaned_input)
 
-        return ProductVariantChannelListingUpdate(
+        return RoomVariantChannelListingUpdate(
             variant=ChannelContext(node=variant, channel_slug=None)
         )
 
@@ -384,7 +384,7 @@ class CollectionChannelListingUpdate(BaseChannelListingMutation):
 
     class Meta:
         description = "Manage collection's availability in channels."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = CollectionChannelListingError
         error_type_field = "collection_channel_listing_errors"
 

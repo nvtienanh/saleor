@@ -16,8 +16,8 @@ from ....payment import ChargeStatus, PaymentError, TransactionKind
 from ....payment.gateways.dummy_credit_card import TOKEN_VALIDATION_MAPPING
 from ....payment.interface import GatewayResponse
 from ....plugins.manager import PluginsManager, get_plugins_manager
-from ....warehouse.models import Stock
-from ....warehouse.tests.utils import get_available_quantity_for_stock
+from ....hotel.models import Stock
+from ....hotel.tests.utils import get_available_quantity_for_stock
 from ...tests.utils import get_graphql_content
 
 MUTATION_CHECKOUT_COMPLETE = """
@@ -682,7 +682,7 @@ def test_checkout_complete_insufficient_stock(
 ):
     checkout = checkout_with_item
     checkout_line = checkout.lines.first()
-    stock = Stock.objects.get(product_variant=checkout_line.variant)
+    stock = Stock.objects.get(room_variant=checkout_line.variant)
     quantity_available = get_available_quantity_for_stock(stock)
     checkout_line.quantity = quantity_available + 1
     checkout_line.save()
@@ -710,7 +710,7 @@ def test_checkout_complete_insufficient_stock(
     response = user_api_client.post_graphql(MUTATION_CHECKOUT_COMPLETE, variables)
     content = get_graphql_content(response)
     data = content["data"]["checkoutComplete"]
-    assert data["checkoutErrors"][0]["message"] == "Insufficient product stock: 123"
+    assert data["checkoutErrors"][0]["message"] == "Insufficient room stock: 123"
     assert orders_count == Order.objects.count()
 
 
@@ -726,7 +726,7 @@ def test_checkout_complete_insufficient_stock_payment_refunded(
     # given
     checkout = checkout_with_item
     checkout_line = checkout.lines.first()
-    stock = Stock.objects.get(product_variant=checkout_line.variant)
+    stock = Stock.objects.get(room_variant=checkout_line.variant)
     quantity_available = get_available_quantity_for_stock(stock)
     checkout_line.quantity = quantity_available + 1
     checkout_line.save()
@@ -762,7 +762,7 @@ def test_checkout_complete_insufficient_stock_payment_refunded(
     content = get_graphql_content(response)
     data = content["data"]["checkoutComplete"]
 
-    assert data["checkoutErrors"][0]["message"] == "Insufficient product stock: 123"
+    assert data["checkoutErrors"][0]["message"] == "Insufficient room stock: 123"
     assert orders_count == Order.objects.count()
 
     gateway_refund_mock.assert_called_once_with(payment)
@@ -780,7 +780,7 @@ def test_checkout_complete_insufficient_stock_payment_voided(
     # given
     checkout = checkout_with_item
     checkout_line = checkout.lines.first()
-    stock = Stock.objects.get(product_variant=checkout_line.variant)
+    stock = Stock.objects.get(room_variant=checkout_line.variant)
     quantity_available = get_available_quantity_for_stock(stock)
     checkout_line.quantity = quantity_available + 1
     checkout_line.save()
@@ -816,7 +816,7 @@ def test_checkout_complete_insufficient_stock_payment_voided(
     content = get_graphql_content(response)
     data = content["data"]["checkoutComplete"]
 
-    assert data["checkoutErrors"][0]["message"] == "Insufficient product stock: 123"
+    assert data["checkoutErrors"][0]["message"] == "Insufficient room stock: 123"
     assert orders_count == Order.objects.count()
 
     gateway_void_mock.assert_called_once_with(payment)
@@ -1063,9 +1063,9 @@ def test_checkout_complete_0_total_value(
     checkout_line_quantity = checkout_line.quantity
     checkout_line_variant = checkout_line.variant
 
-    product_type = checkout_line_variant.product.product_type
-    product_type.is_shipping_required = False
-    product_type.save(update_fields=["is_shipping_required"])
+    room_type = checkout_line_variant.room.room_type
+    room_type.is_shipping_required = False
+    room_type.save(update_fields=["is_shipping_required"])
 
     checkout_line_variant.cost_price_amount = Decimal(0)
     checkout_line_variant.price_amount = Decimal(0)

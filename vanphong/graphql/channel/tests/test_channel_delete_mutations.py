@@ -32,7 +32,7 @@ def test_channel_delete_mutation_as_staff_user(
     staff_api_client,
     channel_USD,
     other_channel_USD,
-    product,
+    room,
 ):
     # given
     order = order_list[0]

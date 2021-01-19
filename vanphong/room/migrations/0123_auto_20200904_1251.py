@@ -5,11 +5,11 @@ from django.db.models import Count
 
 
 def remove_variant_image_duplicates(apps, schema_editor):
-    ProductImage = apps.get_model("product", "ProductImage")
-    VariantImage = apps.get_model("product", "VariantImage")
+    RoomImage = apps.get_model("room", "RoomImage")
+    VariantImage = apps.get_model("room", "VariantImage")
 
     duplicated_images = (
-        ProductImage.objects.values("pk", "variant_images__variant")
+        RoomImage.objects.values("pk", "variant_images__variant")
         .annotate(variant_count=Count("variant_images__variant"))
         .filter(variant_count__gte=2)
     )
@@ -28,7 +28,7 @@ def remove_variant_image_duplicates(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0122_auto_20200828_1135"),
+        ("room", "0122_auto_20200828_1135"),
     ]
 
     operations = [

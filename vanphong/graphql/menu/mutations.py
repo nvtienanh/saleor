@@ -11,7 +11,7 @@ from ...core.permissions import MenuPermissions, SitePermissions
 from ...menu import models
 from ...menu.error_codes import MenuErrorCode
 from ...page import models as page_models
-from ...product import models as product_models
+from ...room import models as room_models
 from ..channel import ChannelContext
 from ..core.mutations import BaseMutation, ModelDeleteMutation, ModelMutation
 from ..core.types.common import MenuError
@@ -21,7 +21,7 @@ from ..core.utils import (
 )
 from ..core.utils.reordering import perform_reordering
 from ..page.types import Page
-from ..product.types import Category, Collection
+from ..room.types import Category, Collection
 from .enums import NavigationType
 from .types import Menu, MenuItem, MenuItemMoveInput
 
@@ -227,9 +227,9 @@ class MenuItemCreate(ModelMutation):
 
         _validate_menu_item_instance(cleaned_input, "page", page_models.Page)
         _validate_menu_item_instance(
-            cleaned_input, "collection", product_models.Collection
+            cleaned_input, "collection", room_models.Collection
         )
-        _validate_menu_item_instance(cleaned_input, "category", product_models.Category)
+        _validate_menu_item_instance(cleaned_input, "category", room_models.Category)
 
         items = [
             cleaned_input.get("page"),

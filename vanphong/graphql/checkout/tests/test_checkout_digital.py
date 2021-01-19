@@ -29,8 +29,8 @@ def test_create_checkout(
 
     address_count = Address.objects.count()
 
-    variant = digital_content.product_variant
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant = digital_content.room_variant
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
 
     checkout_input = {
         "channel": channel_USD.slug,
@@ -166,11 +166,11 @@ def test_remove_shipping_method_if_only_digital_in_checkout(
     assert not checkout.shipping_method
 
 
-def test_checkout_lines_update_remove_shipping_if_removed_product_with_shipping(
+def test_checkout_lines_update_remove_shipping_if_removed_room_with_shipping(
     user_api_client, checkout_with_item, digital_content, address, shipping_method
 ):
     checkout = checkout_with_item
-    digital_variant = digital_content.product_variant
+    digital_variant = digital_content.room_variant
     checkout.shipping_address = address
     checkout.shipping_method = shipping_method
     checkout.save()
@@ -178,7 +178,7 @@ def test_checkout_lines_update_remove_shipping_if_removed_product_with_shipping(
     line = checkout.lines.first()
     variant = line.variant
 
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
     variables = {
@@ -195,11 +195,11 @@ def test_checkout_lines_update_remove_shipping_if_removed_product_with_shipping(
     assert not checkout.shipping_method
 
 
-def test_checkout_line_delete_remove_shipping_if_removed_product_with_shipping(
+def test_checkout_line_delete_remove_shipping_if_removed_room_with_shipping(
     user_api_client, checkout_with_item, digital_content, address, shipping_method
 ):
     checkout = checkout_with_item
-    digital_variant = digital_content.product_variant
+    digital_variant = digital_content.room_variant
     checkout.shipping_address = address
     checkout.shipping_method = shipping_method
     checkout.save()

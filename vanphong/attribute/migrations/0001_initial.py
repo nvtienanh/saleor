@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("product", "0136_add_attribute_type_and_page_to_attribute_relation"),
+        ("room", "0136_add_attribute_type_and_page_to_attribute_relation"),
         ("page", "0017_pagetype"),
     ]
 
@@ -29,10 +29,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "product_assignedpageattribute"},
+            options={"db_table": "room_assignedpageattribute"},
         ),
         migrations.CreateModel(
-            name="AssignedProductAttribute",
+            name="AssignedRoomAttribute",
             fields=[
                 (
                     "id",
@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "product_assignedproductattribute"},
+            options={"db_table": "room_assignedroomattribute"},
         ),
         migrations.CreateModel(
             name="AssignedVariantAttribute",
@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"db_table": "product_assignedvariantattribute"},
+            options={"db_table": "room_assignedvariantattribute"},
         ),
         migrations.CreateModel(
             name="Attribute",
@@ -100,7 +100,7 @@ class Migration(migrations.Migration):
                     "type",
                     models.CharField(
                         choices=[
-                            ("product-type", "Product type"),
+                            ("room-type", "Room type"),
                             ("page-type", "Page type"),
                         ],
                         max_length=50,
@@ -138,7 +138,7 @@ class Migration(migrations.Migration):
                 ("available_in_grid", models.BooleanField(blank=True, default=True)),
             ],
             options={
-                "db_table": "product_attribute",
+                "db_table": "room_attribute",
                 "ordering": ("storefront_search_position", "slug"),
             },
         ),
@@ -171,7 +171,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "db_table": "product_attributevalue",
+                "db_table": "room_attributevalue",
                 "ordering": ("sort_order", "pk"),
                 "unique_together": {("slug", "attribute")},
             },
@@ -198,7 +198,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         related_name="attributesrelated",
                         through="attribute.AssignedVariantAttribute",
-                        to="product.ProductVariant",
+                        to="room.RoomVariant",
                     ),
                 ),
                 (
@@ -210,22 +210,22 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "product_type",
+                    "room_type",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="attributevariant",
-                        to="product.producttype",
+                        to="room.roomtype",
                     ),
                 ),
             ],
             options={
-                "db_table": "product_attributevariant",
+                "db_table": "room_attributevariant",
                 "ordering": ("sort_order", "pk"),
-                "unique_together": {("attribute", "product_type")},
+                "unique_together": {("attribute", "room_type")},
             },
         ),
         migrations.CreateModel(
-            name="AttributeProduct",
+            name="AttributeRoom",
             fields=[
                 (
                     "id",
@@ -241,35 +241,35 @@ class Migration(migrations.Migration):
                     models.IntegerField(db_index=True, editable=False, null=True),
                 ),
                 (
-                    "assigned_products",
+                    "assigned_rooms",
                     models.ManyToManyField(
                         blank=True,
                         related_name="attributesrelated",
-                        through="attribute.AssignedProductAttribute",
-                        to="product.Product",
+                        through="attribute.AssignedRoomAttribute",
+                        to="room.Room",
                     ),
                 ),
                 (
                     "attribute",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="attributeproduct",
+                        related_name="attributeroom",
                         to="attribute.attribute",
                     ),
                 ),
                 (
-                    "product_type",
+                    "room_type",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="attributeproduct",
-                        to="product.producttype",
+                        related_name="attributeroom",
+                        to="room.roomtype",
                     ),
                 ),
             ],
             options={
-                "db_table": "product_attributeproduct",
+                "db_table": "room_attributeroom",
                 "ordering": ("sort_order", "pk"),
-                "unique_together": {("attribute", "product_type")},
+                "unique_together": {("attribute", "room_type")},
             },
         ),
         migrations.CreateModel(
@@ -315,7 +315,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "db_table": "product_attributepage",
+                "db_table": "room_attributepage",
                 "ordering": ("sort_order", "pk"),
                 "unique_together": {("attribute", "page_type")},
             },
@@ -332,22 +332,22 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="attribute",
-            name="product_types",
+            name="room_types",
             field=models.ManyToManyField(
                 blank=True,
-                related_name="product_attributes",
-                through="attribute.AttributeProduct",
-                to="product.ProductType",
+                related_name="room_attributes",
+                through="attribute.AttributeRoom",
+                to="room.RoomType",
             ),
         ),
         migrations.AddField(
             model_name="attribute",
-            name="product_variant_types",
+            name="room_variant_types",
             field=models.ManyToManyField(
                 blank=True,
                 related_name="variant_attributes",
                 through="attribute.AttributeVariant",
-                to="product.ProductType",
+                to="room.RoomType",
             ),
         ),
         migrations.AddField(
@@ -370,29 +370,29 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="attributes",
-                to="product.productvariant",
+                to="room.roomvariant",
             ),
         ),
         migrations.AddField(
-            model_name="assignedproductattribute",
+            model_name="assignedroomattribute",
             name="assignment",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="productassignments",
-                to="attribute.attributeproduct",
+                related_name="roomassignments",
+                to="attribute.attributeroom",
             ),
         ),
         migrations.AddField(
-            model_name="assignedproductattribute",
-            name="product",
+            model_name="assignedroomattribute",
+            name="room",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="attributes",
-                to="product.product",
+                to="room.room",
             ),
         ),
         migrations.AddField(
-            model_name="assignedproductattribute",
+            model_name="assignedroomattribute",
             name="values",
             field=models.ManyToManyField(to="attribute.AttributeValue"),
         ),
@@ -443,7 +443,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "db_table": "product_attributevaluetranslation",
+                "db_table": "room_attributevaluetranslation",
                 "unique_together": {("language_code", "attribute_value")},
             },
         ),
@@ -471,7 +471,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "db_table": "product_attributetranslation",
+                "db_table": "room_attributetranslation",
                 "unique_together": {("language_code", "attribute")},
             },
         ),
@@ -480,8 +480,8 @@ class Migration(migrations.Migration):
             unique_together={("variant", "assignment")},
         ),
         migrations.AlterUniqueTogether(
-            name="assignedproductattribute",
-            unique_together={("product", "assignment")},
+            name="assignedroomattribute",
+            unique_together={("room", "assignment")},
         ),
         migrations.AlterUniqueTogether(
             name="assignedpageattribute",

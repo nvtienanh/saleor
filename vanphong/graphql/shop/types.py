@@ -149,8 +149,8 @@ class Shop(graphene.ObjectType):
     )
     default_weight_unit = WeightUnitsEnum(description="Default weight unit.")
     translation = TranslationField(ShopTranslation, type_name="shop", resolver=None)
-    automatic_fulfillment_digital_products = graphene.Boolean(
-        description="Enable automatic fulfillment for all digital products."
+    automatic_fulfillment_digital_rooms = graphene.Boolean(
+        description="Enable automatic fulfillment for all digital rooms."
     )
 
     default_digital_max_downloads = graphene.Int(
@@ -322,9 +322,9 @@ class Shop(graphene.ObjectType):
 
     @staticmethod
     @permission_required(SitePermissions.MANAGE_SETTINGS)
-    def resolve_automatic_fulfillment_digital_products(_, info):
+    def resolve_automatic_fulfillment_digital_rooms(_, info):
         site_settings = info.context.site.settings
-        return site_settings.automatic_fulfillment_digital_products
+        return site_settings.automatic_fulfillment_digital_rooms
 
     @staticmethod
     @permission_required(SitePermissions.MANAGE_SETTINGS)

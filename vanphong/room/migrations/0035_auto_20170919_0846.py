@@ -7,7 +7,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0034_product_is_published")]
+    dependencies = [("room", "0034_room_is_published")]
 
     operations = [
         migrations.AlterModelOptions(
@@ -22,14 +22,14 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AlterModelOptions(
-            name="product",
+            name="room",
             options={
                 "permissions": (
-                    ("view_product", "Can view products"),
-                    ("edit_product", "Can edit products"),
+                    ("view_room", "Can view rooms"),
+                    ("edit_room", "Can edit rooms"),
                 ),
-                "verbose_name": "product",
-                "verbose_name_plural": "products",
+                "verbose_name": "room",
+                "verbose_name_plural": "rooms",
             },
         ),
         migrations.AlterModelOptions(

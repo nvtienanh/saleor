@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("product", "0109_auto_20191006_1433"),
+        ("room", "0109_auto_20191006_1433"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -60,11 +60,11 @@ class Migration(migrations.Migration):
                 ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 (
-                    "product",
+                    "room",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="wishlist_items",
-                        to="product.Product",
+                        to="room.Room",
                     ),
                 ),
                 (
@@ -72,7 +72,7 @@ class Migration(migrations.Migration):
                     models.ManyToManyField(
                         blank=True,
                         related_name="wishlist_items",
-                        to="product.ProductVariant",
+                        to="room.RoomVariant",
                     ),
                 ),
                 (
@@ -84,6 +84,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"unique_together": {("wishlist", "product")}},
+            options={"unique_together": {("wishlist", "room")}},
         ),
     ]

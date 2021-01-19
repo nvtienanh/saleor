@@ -3,16 +3,16 @@ from datetime import date
 from django.db import migrations
 
 
-def set_missing_product_publication_date(apps, schema_editor):
-    Product = apps.get_model("product", "Product")
-    published_product = Product.objects.filter(
+def set_missing_room_publication_date(apps, schema_editor):
+    Room = apps.get_model("room", "Room")
+    published_room = Room.objects.filter(
         publication_date__isnull=True, is_published=True
     )
-    published_product.update(publication_date=date.today())
+    published_room.update(publication_date=date.today())
 
 
 def set_missing_collection_publication_date(apps, schema_editor):
-    Collection = apps.get_model("product", "Collection")
+    Collection = apps.get_model("room", "Collection")
     published_collection = Collection.objects.filter(
         publication_date__isnull=True, is_published=True
     )
@@ -21,10 +21,10 @@ def set_missing_collection_publication_date(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("product", "0127_auto_20201001_0933"),
+        ("room", "0127_auto_20201001_0933"),
     ]
 
     operations = [
-        migrations.RunPython(set_missing_product_publication_date),
+        migrations.RunPython(set_missing_room_publication_date),
         migrations.RunPython(set_missing_collection_publication_date),
     ]

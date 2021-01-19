@@ -11,7 +11,7 @@ class DiscountValueTypeEnum(graphene.Enum):
 class VoucherTypeEnum(graphene.Enum):
     SHIPPING = VoucherType.SHIPPING
     ENTIRE_ORDER = VoucherType.ENTIRE_ORDER
-    SPECIFIC_PRODUCT = VoucherType.SPECIFIC_PRODUCT
+    SPECIFIC_ROOM = VoucherType.SPECIFIC_ROOM
 
 
 class DiscountStatusEnum(graphene.Enum):

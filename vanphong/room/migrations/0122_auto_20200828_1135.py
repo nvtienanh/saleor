@@ -4,11 +4,11 @@ import datetime
 from django.db import migrations, models
 
 
-def set_all_published_products_as_searchable_and_available_for_purchase(
+def set_all_published_rooms_as_searchable_and_available_for_purchase(
     apps, schema_editor
 ):
-    Product = apps.get_model("product", "Product")
-    Product.objects.filter(is_published=True).update(
+    Room = apps.get_model("room", "Room")
+    Room.objects.filter(is_published=True).update(
         visible_in_listings=True, available_for_purchase=datetime.datetime.today()
     )
 
@@ -16,22 +16,22 @@ def set_all_published_products_as_searchable_and_available_for_purchase(
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0121_auto_20200810_1415"),
+        ("room", "0121_auto_20200810_1415"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="available_for_purchase",
             field=models.DateField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="visible_in_listings",
             field=models.BooleanField(default=False),
         ),
         migrations.RunPython(
-            set_all_published_products_as_searchable_and_available_for_purchase,
+            set_all_published_rooms_as_searchable_and_available_for_purchase,
             migrations.RunPython.noop,
         ),
     ]

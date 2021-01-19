@@ -17,7 +17,7 @@ def test_trigger_webhooks_with_aws_sqs(
     order_with_lines,
     permission_manage_orders,
     permission_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     monkeypatch,
 ):
     mocked_client = MagicMock(spec=AsyncSQSConnection)
@@ -64,7 +64,7 @@ def test_trigger_webhooks_with_aws_sqs_and_secret_key(
     order_with_lines,
     permission_manage_orders,
     permission_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     monkeypatch,
 ):
     mocked_client = MagicMock(spec=AsyncSQSConnection)
@@ -116,7 +116,7 @@ def test_trigger_webhooks_with_google_pub_sub(
     order_with_lines,
     permission_manage_orders,
     permission_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     monkeypatch,
 ):
     mocked_publisher = MagicMock(spec=PublisherClient)
@@ -145,7 +145,7 @@ def test_trigger_webhooks_with_google_pub_sub_and_secret_key(
     order_with_lines,
     permission_manage_orders,
     permission_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     monkeypatch,
 ):
     mocked_publisher = MagicMock(spec=PublisherClient)
@@ -180,7 +180,7 @@ def test_trigger_webhooks_with_http(
     order_with_lines,
     permission_manage_orders,
     permission_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     webhook.app.permissions.add(permission_manage_orders)
     webhook.target_url = "https://webhook.site/48978b64-4efb-43d5-a334-451a1d164009"

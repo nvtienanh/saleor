@@ -3,20 +3,20 @@ from typing import Dict, List, Mapping, Union
 import graphene
 from django.core.exceptions import ValidationError
 
-from ...core.permissions import ProductPermissions
+from ...core.permissions import RoomPermissions
 from ...csv import models as csv_models
 from ...csv.events import export_started_event
-from ...csv.tasks import export_products_task
+from ...csv.tasks import export_rooms_task
 from ..attribute.types import Attribute
 from ..channel.types import Channel
 from ..core.enums import ExportErrorCode
 from ..core.mutations import BaseMutation
 from ..core.types.common import ExportError
-from ..product.filters import ProductFilterInput
-from ..product.types import Product
+from ..room.filters import RoomFilterInput
+from ..room.types import Room
 from ..utils import resolve_global_ids_to_primary_keys
-from ..warehouse.types import Warehouse
-from .enums import ExportScope, FileTypeEnum, ProductFieldEnum
+from ..hotel.types import Hotel
+from .enums import ExportScope, FileTypeEnum, RoomFieldEnum
 from .types import ExportFile
 
 
@@ -25,30 +25,30 @@ class ExportInfoInput(graphene.InputObjectType):
         graphene.NonNull(graphene.ID),
         description="List of attribute ids witch should be exported.",
     )
-    warehouses = graphene.List(
+    hotels = graphene.List(
         graphene.NonNull(graphene.ID),
-        description="List of warehouse ids witch should be exported.",
+        description="List of hotel ids witch should be exported.",
     )
     channels = graphene.List(
         graphene.NonNull(graphene.ID),
         description="List of channels ids which should be exported.",
     )
     fields = graphene.List(
-        graphene.NonNull(ProductFieldEnum),
-        description="List of product fields witch should be exported.",
+        graphene.NonNull(RoomFieldEnum),
+        description="List of room fields witch should be exported.",
     )
 
 
-class ExportProductsInput(graphene.InputObjectType):
+class ExportRoomsInput(graphene.InputObjectType):
     scope = ExportScope(
-        description="Determine which products should be exported.", required=True
+        description="Determine which rooms should be exported.", required=True
     )
-    filter = ProductFilterInput(
-        description="Filtering options for products.", required=False
+    filter = RoomFilterInput(
+        description="Filtering options for rooms.", required=False
     )
     ids = graphene.List(
         graphene.NonNull(graphene.ID),
-        description="List of products IDS to export.",
+        description="List of rooms IDS to export.",
         required=False,
     )
     export_info = ExportInfoInput(
@@ -58,7 +58,7 @@ class ExportProductsInput(graphene.InputObjectType):
     file_type = FileTypeEnum(description="Type of exported file.", required=True)
 
 
-class ExportProducts(BaseMutation):
+class ExportRooms(BaseMutation):
     export_file = graphene.Field(
         ExportFile,
         description=(
@@ -67,20 +67,20 @@ class ExportProducts(BaseMutation):
     )
 
     class Arguments:
-        input = ExportProductsInput(
-            required=True, description="Fields required to export product data"
+        input = ExportRoomsInput(
+            required=True, description="Fields required to export room data"
         )
 
     class Meta:
-        description = "Export products to csv file."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        description = "Export rooms to csv file."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = ExportError
         error_type_field = "export_errors"
 
     @classmethod
     def perform_mutation(cls, root, info, **data):
         input = data["input"]
-        scope = cls.get_products_scope(input)
+        scope = cls.get_rooms_scope(input)
         export_info = cls.get_export_info(input["export_info"])
         file_type = input["file_type"]
 
@@ -89,13 +89,13 @@ class ExportProducts(BaseMutation):
 
         export_file = csv_models.ExportFile.objects.create(**kwargs)
         export_started_event(export_file=export_file, **kwargs)
-        export_products_task.delay(export_file.pk, scope, export_info, file_type)
+        export_rooms_task.delay(export_file.pk, scope, export_info, file_type)
 
         export_file.refresh_from_db()
         return cls(export_file=export_file)
 
     @classmethod
-    def get_products_scope(cls, input) -> Mapping[str, Union[list, dict, str]]:
+    def get_rooms_scope(cls, input) -> Mapping[str, Union[list, dict, str]]:
         scope = input["scope"]
         if scope == ExportScope.IDS.value:  # type: ignore
             return cls.clean_ids(input)
@@ -110,12 +110,12 @@ class ExportProducts(BaseMutation):
             raise ValidationError(
                 {
                     "ids": ValidationError(
-                        "You must provide at least one product id.",
+                        "You must provide at least one room id.",
                         code=ExportErrorCode.REQUIRED.value,
                     )
                 }
             )
-        _, pks = resolve_global_ids_to_primary_keys(ids, graphene_type=Product)
+        _, pks = resolve_global_ids_to_primary_keys(ids, graphene_type=Room)
         return {"ids": pks}
 
     @staticmethod
@@ -141,7 +141,7 @@ class ExportProducts(BaseMutation):
 
         for field, graphene_type in [
             ("attributes", Attribute),
-            ("warehouses", Warehouse),
+            ("hotels", Hotel),
             ("channels", Channel),
         ]:
             pks = cls.get_items_pks(field, export_info_input, graphene_type)

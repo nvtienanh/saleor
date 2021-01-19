@@ -16,12 +16,12 @@ from ...utils.random_data import (
     create_page,
     create_page_type,
     create_permission_groups,
-    create_product_sales,
-    create_products_by_schema,
+    create_room_sales,
+    create_rooms_by_schema,
     create_shipping_zones,
     create_users,
     create_vouchers,
-    create_warehouses,
+    create_hotels,
 )
 
 
@@ -42,7 +42,7 @@ class Command(BaseCommand):
             action="store_true",
             dest="withoutimages",
             default=False,
-            help="Don't create product images",
+            help="Don't create room images",
         )
         parser.add_argument(
             "--withoutsearch",
@@ -62,8 +62,8 @@ class Command(BaseCommand):
     def make_database_faster(self):
         """Sacrifice some of the safeguards of sqlite3 for speed.
 
-        Users are not likely to run this command in a production environment.
-        They are even less likely to run it in production while using sqlite3.
+        Users are not likely to run this command in a roomion environment.
+        They are even less likely to run it in roomion while using sqlite3.
         """
         if "sqlite3" in connection.settings_dict["ENGINE"]:
             cursor = connection.cursor()
@@ -100,15 +100,15 @@ class Command(BaseCommand):
             self.stdout.write(msg)
         for msg in create_shipping_zones():
             self.stdout.write(msg)
-        create_warehouses()
-        self.stdout.write("Created warehouses")
+        create_hotels()
+        self.stdout.write("Created hotels")
         for msg in create_page_type():
             self.stdout.write(msg)
         for msg in create_page():
             self.stdout.write(msg)
-        create_products_by_schema(self.placeholders_dir, create_images)
-        self.stdout.write("Created products")
-        for msg in create_product_sales(5):
+        create_rooms_by_schema(self.placeholders_dir, create_images)
+        self.stdout.write("Created rooms")
+        for msg in create_room_sales(5):
             self.stdout.write(msg)
         for msg in create_vouchers():
             self.stdout.write(msg)

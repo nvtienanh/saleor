@@ -7,15 +7,15 @@ from django.utils.text import slugify
 
 def migrate_variant_price_data(apps, schema_editor):
     Channel = apps.get_model("channel", "Channel")
-    ProductVariant = apps.get_model("product", "ProductVariant")
-    ProductVariantChannelListing = apps.get_model(
-        "product", "ProductVariantChannelListing"
+    RoomVariant = apps.get_model("room", "RoomVariant")
+    RoomVariantChannelListing = apps.get_model(
+        "room", "RoomVariantChannelListing"
     )
 
-    if ProductVariant.objects.exists():
+    if RoomVariant.objects.exists():
         channels_dict = {}
 
-        for variant in ProductVariant.objects.iterator():
+        for variant in RoomVariant.objects.iterator():
             currency = variant.currency
             channel = channels_dict.get(currency)
             if not channel:
@@ -25,7 +25,7 @@ def migrate_variant_price_data(apps, schema_editor):
                     defaults={"name": name, "slug": slugify(name)},
                 )
                 channels_dict[currency] = channel
-            ProductVariantChannelListing.objects.create(
+            RoomVariantChannelListing.objects.create(
                 variant=variant,
                 channel=channel,
                 currency=currency,
@@ -39,12 +39,12 @@ class Migration(migrations.Migration):
     dependencies = [
         ("channel", "0001_initial"),
         ("checkout", "0030_checkout_channel_listing"),
-        ("product", "0132_product_rating"),
+        ("room", "0132_room_rating"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="ProductVariantChannelListing",
+            name="RoomVariantChannelListing",
             fields=[
                 (
                     "id",
@@ -75,7 +75,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="channel_listings",
-                        to="product.ProductVariant",
+                        to="room.RoomVariant",
                     ),
                 ),
                 (
@@ -89,15 +89,15 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(migrate_variant_price_data),
         migrations.RemoveField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="price_amount",
         ),
         migrations.RemoveField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="cost_price_amount",
         ),
         migrations.RemoveField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="currency",
         ),
     ]

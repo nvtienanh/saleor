@@ -11,8 +11,8 @@ from ...attribute.error_codes import AttributeErrorCode
 from ...core.exceptions import PermissionDenied
 from ...core.permissions import (
     PageTypePermissions,
-    ProductPermissions,
-    ProductTypePermissions,
+    RoomPermissions,
+    RoomTypePermissions,
 )
 from ..attribute.types import Attribute, AttributeValue
 from ..core.inputs import ReorderInput
@@ -285,8 +285,8 @@ class AttributeCreate(AttributeMixin, ModelMutation):
     def perform_mutation(cls, _root, info, **data):
         input = data.get("input")
         # check permissions based on attribute type
-        if input["type"] == AttributeTypeEnum.PRODUCT_TYPE.value:
-            permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
+        if input["type"] == AttributeTypeEnum.ROOM_TYPE.value:
+            permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
         else:
             permissions = (PageTypePermissions.MANAGE_PAGE_TYPES_AND_ATTRIBUTES,)
         if not cls.check_permissions(info.context, permissions):
@@ -327,7 +327,7 @@ class AttributeUpdate(AttributeMixin, ModelMutation):
     class Meta:
         model = models.Attribute
         description = "Updates attribute."
-        permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
+        permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
         error_type_class = AttributeError
         error_type_field = "attribute_errors"
 
@@ -382,7 +382,7 @@ class AttributeDelete(ModelDeleteMutation):
     class Meta:
         model = models.Attribute
         description = "Deletes an attribute."
-        permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
+        permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
         error_type_class = AttributeError
         error_type_field = "attribute_errors"
 
@@ -417,7 +417,7 @@ class AttributeValueCreate(ModelMutation):
     class Meta:
         model = models.AttributeValue
         description = "Creates a value for an attribute."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = AttributeError
         error_type_field = "attribute_errors"
 
@@ -459,7 +459,7 @@ class AttributeValueUpdate(ModelMutation):
     class Meta:
         model = models.AttributeValue
         description = "Updates value of an attribute."
-        permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
+        permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
         error_type_class = AttributeError
         error_type_field = "attribute_errors"
 
@@ -491,7 +491,7 @@ class AttributeValueDelete(ModelDeleteMutation):
     class Meta:
         model = models.AttributeValue
         description = "Deletes a value of an attribute."
-        permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
+        permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
         error_type_class = AttributeError
         error_type_field = "attribute_errors"
 
@@ -509,7 +509,7 @@ class AttributeReorderValues(BaseMutation):
 
     class Meta:
         description = "Reorder the values of an attribute."
-        permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
+        permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
         error_type_class = AttributeError
         error_type_field = "attribute_errors"
 

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 EXPORT_TEMPLATES = {
-    "export_products_success": "csv/export_products_file",
+    "export_rooms_success": "csv/export_rooms_file",
     "export_failed": "csv/export_failed",
 }
 

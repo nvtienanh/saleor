@@ -21,7 +21,7 @@ from ....checkout import AddressType
 from ....core.jwt import create_token
 from ....core.permissions import AccountPermissions, OrderPermissions
 from ....order.models import FulfillmentStatus, Order
-from ....product.tests.utils import create_image
+from ....room.tests.utils import create_image
 from ...core.utils import str_to_enum
 from ...tests.utils import (
     assert_graphql_error_with_message,
@@ -296,7 +296,7 @@ def test_query_staff_user(
     permission_manage_users,
     media_root,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_staff,
     permission_manage_menus,
 ):
@@ -312,7 +312,7 @@ def test_query_staff_user(
     )
     group1, group2, group3, group4 = groups
 
-    group1.permissions.add(permission_manage_users, permission_manage_products)
+    group1.permissions.add(permission_manage_users, permission_manage_rooms)
 
     # user groups
     staff_user.groups.add(group1, group2)
@@ -1633,13 +1633,13 @@ def test_staff_create(
     staff_user,
     media_root,
     permission_group_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_staff,
     permission_manage_users,
 ):
     group = permission_group_manage_users
-    group.permissions.add(permission_manage_products)
-    staff_user.user_permissions.add(permission_manage_products, permission_manage_users)
+    group.permissions.add(permission_manage_rooms)
+    staff_user.user_permissions.add(permission_manage_rooms, permission_manage_users)
     email = "api_user@example.com"
     variables = {
         "email": email,
@@ -1658,7 +1658,7 @@ def test_staff_create(
     assert data["user"]["isActive"]
 
     expected_perms = {
-        permission_manage_products.codename,
+        permission_manage_rooms.codename,
         permission_manage_users.codename,
     }
     permissions = data["user"]["userPermissions"]
@@ -1686,13 +1686,13 @@ def test_staff_create_app_no_permission(
     staff_user,
     media_root,
     permission_group_manage_users,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_staff,
     permission_manage_users,
 ):
     group = permission_group_manage_users
-    group.permissions.add(permission_manage_products)
-    staff_user.user_permissions.add(permission_manage_products, permission_manage_users)
+    group.permissions.add(permission_manage_rooms)
+    staff_user.user_permissions.add(permission_manage_rooms, permission_manage_users)
     email = "api_user@example.com"
     variables = {
         "email": email,
@@ -1948,7 +1948,7 @@ def test_staff_update_groups_and_permissions(
     permission_manage_staff,
     permission_manage_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     query = STAFF_UPDATE_MUTATIONS
     groups = Group.objects.bulk_create(
@@ -1973,7 +1973,7 @@ def test_staff_update_groups_and_permissions(
     }
 
     staff_api_client.user.user_permissions.add(
-        permission_manage_users, permission_manage_orders, permission_manage_products
+        permission_manage_users, permission_manage_orders, permission_manage_rooms
     )
 
     response = staff_api_client.post_graphql(
@@ -2038,7 +2038,7 @@ def test_staff_update_out_of_scope_groups(
     media_root,
     permission_manage_users,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     """Ensure that staff user cannot add to groups which permission scope is wider
     than user's scope.
@@ -2050,14 +2050,14 @@ def test_staff_update_out_of_scope_groups(
         [
             Group(name="manage users"),
             Group(name="manage orders"),
-            Group(name="manage products"),
+            Group(name="manage rooms"),
         ]
     )
     group1, group2, group3 = groups
 
     group1.permissions.add(permission_manage_users)
     group2.permissions.add(permission_manage_orders)
-    group3.permissions.add(permission_manage_products)
+    group3.permissions.add(permission_manage_rooms)
 
     staff_user = User.objects.create(email="staffuser@example.com", is_staff=True)
     staff_api_client.user.user_permissions.add(permission_manage_orders)
@@ -2347,7 +2347,7 @@ def test_staff_delete_out_of_scope_user(
     staff_api_client,
     superuser_api_client,
     permission_manage_staff,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     """Ensure staff user cannot delete users even when some of user permissions are
     out of requestor scope.
@@ -2355,7 +2355,7 @@ def test_staff_delete_out_of_scope_user(
     """
     query = STAFF_DELETE_MUTATION
     staff_user = User.objects.create(email="staffuser@example.com", is_staff=True)
-    staff_user.user_permissions.add(permission_manage_products)
+    staff_user.user_permissions.add(permission_manage_rooms)
     user_id = graphene.Node.to_global_id("User", staff_user.id)
     variables = {"id": user_id}
 

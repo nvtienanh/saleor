@@ -8,7 +8,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0011_stock_quantity_allocated")]
+    dependencies = [("room", "0011_stock_quantity_allocated")]
 
     operations = [
         migrations.CreateModel(
@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="variant_images",
-                        to="product.ProductImage",
+                        to="room.RoomImage",
                     ),
                 ),
                 (
@@ -36,16 +36,16 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="variant_images",
-                        to="product.ProductVariant",
+                        to="room.RoomVariant",
                     ),
                 ),
             ],
         ),
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="images",
             field=models.ManyToManyField(
-                through="product.VariantImage", to="product.ProductImage"
+                through="room.VariantImage", to="room.RoomImage"
             ),
         ),
     ]

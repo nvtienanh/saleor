@@ -6,16 +6,16 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-def get_or_create_warehouse(apps):
-    Warehouse = apps.get_model("warehouse", "Warehouse")
+def get_or_create_hotel(apps):
+    Hotel = apps.get_model("hotel", "Hotel")
     ShippingZone = apps.get_model("shipping", "ShippingZone")
     Site = apps.get_model("sites", "Site")
 
-    warehouses = Warehouse.objects.annotate(
+    hotels = Hotel.objects.annotate(
         zones_count=models.Count("shipping_zones")
     ).filter(zones_count=ShippingZone.objects.count())
-    if warehouses.first() is not None:
-        return warehouses.first()
+    if hotels.first() is not None:
+        return hotels.first()
 
     site_settings = Site.objects.get_current().settings
     address = getattr(site_settings, "company_address", None)
@@ -23,44 +23,44 @@ def get_or_create_warehouse(apps):
         Address = apps.get_model("account", "Address")
         address = Address.objects.create()
 
-    warehouse = Warehouse.objects.create(name="Default warehouse", address=address)
-    warehouse.shipping_zones.add(*ShippingZone.objects.all())
-    return warehouse
+    hotel = Hotel.objects.create(name="Default hotel", address=address)
+    hotel.shipping_zones.add(*ShippingZone.objects.all())
+    return hotel
 
 
 def forward(apps, schema_editor):
-    ProductVariant = apps.get_model("product", "ProductVariant")
-    Stock = apps.get_model("warehouse", "Stock")
+    RoomVariant = apps.get_model("room", "RoomVariant")
+    Stock = apps.get_model("hotel", "Stock")
 
-    if not ProductVariant.objects.exists():
+    if not RoomVariant.objects.exists():
         return
 
-    product_variants = ProductVariant.objects.all()
-    warehouse = get_or_create_warehouse(apps)
+    room_variants = RoomVariant.objects.all()
+    hotel = get_or_create_hotel(apps)
     stocks = [
         Stock(
-            product_variant=variant,
-            warehouse=warehouse,
+            room_variant=variant,
+            hotel=hotel,
             quantity=variant.quantity,
             quantity_allocated=variant.quantity_allocated,
         )
-        for variant in product_variants.iterator()
+        for variant in room_variants.iterator()
     ]
     Stock.objects.bulk_create(stocks)
 
 
 def backward(apps, schema_editor):
-    ProductVariant = apps.get_model("product", "ProductVariant")
-    Stock = apps.get_model("warehouse", "Stock")
+    RoomVariant = apps.get_model("room", "RoomVariant")
+    Stock = apps.get_model("hotel", "Stock")
 
     stocks = (
-        Stock.objects.values("product_variant_id")
+        Stock.objects.values("room_variant_id")
         .annotate(quantity_sum=models.Sum("quantity"))
         .annotate(quantity_allocated_sum=models.Sum("quantity_allocated"))
     )
-    product_variants = ProductVariant.objects.all()
-    for variant in product_variants.iterator():
-        variant_dict = stocks.get(product_variant=variant)
+    room_variants = RoomVariant.objects.all()
+    for variant in room_variants.iterator():
+        variant_dict = stocks.get(room_variant=variant)
         variant.quantity = variant_dict["quantity_sum"]
         variant.quantity_allocated = variant_dict["quantity_allocated_sum"]
         variant.save(update_fields=["quantity", "quantity_allocated"])
@@ -75,13 +75,13 @@ class Migration(migrations.Migration):
     dependencies = [
         ("account", "0037_auto_20191219_0944"),
         ("shipping", "0017_django_price_2"),
-        ("product", "0110_auto_20191108_0340"),
+        ("room", "0110_auto_20191108_0340"),
         ("site", "0025_auto_20191024_0552"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="Warehouse",
+            name="Hotel",
             fields=[
                 (
                     "id",
@@ -91,7 +91,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "name",
-                    models.CharField(max_length=255, verbose_name="Warehouse name"),
+                    models.CharField(max_length=255, verbose_name="Hotel name"),
                 ),
                 (
                     "company_name",
@@ -137,22 +137,22 @@ class Migration(migrations.Migration):
                 ("quantity", models.PositiveIntegerField(default=0)),
                 ("quantity_allocated", models.PositiveIntegerField(default=0)),
                 (
-                    "product_variant",
+                    "room_variant",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="stock",
-                        to="product.ProductVariant",
+                        to="room.RoomVariant",
                     ),
                 ),
                 (
-                    "warehouse",
+                    "hotel",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="warehouse.Warehouse",
+                        to="hotel.Hotel",
                     ),
                 ),
             ],
-            options={"unique_together": {("warehouse", "product_variant")}},
+            options={"unique_together": {("hotel", "room_variant")}},
         ),
         migrations.RunPython(forward, backward),
     ]

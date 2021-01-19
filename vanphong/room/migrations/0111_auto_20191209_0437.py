@@ -6,11 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0110_auto_20191108_0340"),
-        ("warehouse", "0001_initial"),
+        ("room", "0110_auto_20191108_0340"),
+        ("hotel", "0001_initial"),
     ]
 
     operations = [
-        migrations.RemoveField(model_name="productvariant", name="quantity"),
-        migrations.RemoveField(model_name="productvariant", name="quantity_allocated"),
+        migrations.RemoveField(model_name="roomvariant", name="quantity"),
+        migrations.RemoveField(model_name="roomvariant", name="quantity_allocated"),
     ]

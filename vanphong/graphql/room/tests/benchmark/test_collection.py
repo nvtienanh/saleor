@@ -8,7 +8,7 @@ from ....tests.utils import get_graphql_content
 @pytest.mark.count_queries(autouse=False)
 def test_collection_view(api_client, published_collection, count_queries, channel_USD):
     query = """
-        fragment BasicProductFields on Product {
+        fragment BasicRoomFields on Room {
           id
           name
           thumbnail {
@@ -31,7 +31,7 @@ def test_collection_view(api_client, published_collection, count_queries, channe
           }
         }
 
-        fragment ProductPricingField on Product {
+        fragment RoomPricingField on Room {
           pricing {
             onSale
             priceRangeUndiscounted {
@@ -64,7 +64,7 @@ def test_collection_view(api_client, published_collection, count_queries, channe
               url
             }
           }
-          products (
+          rooms (
             first: $pageSize,
             filter: {collections: [$id]},
             channel: $channel
@@ -72,8 +72,8 @@ def test_collection_view(api_client, published_collection, count_queries, channe
             totalCount
             edges {
               node {
-                ...BasicProductFields
-                ...ProductPricingField
+                ...BasicRoomFields
+                ...RoomPricingField
                 category {
                   id
                   name
@@ -114,10 +114,10 @@ def test_collection_view(api_client, published_collection, count_queries, channe
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
 def test_retrieve_collection_channel_listings(
-    product_list_with_many_channels,
+    room_list_with_many_channels,
     staff_api_client,
     count_queries,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     query = """
@@ -147,7 +147,7 @@ def test_retrieve_collection_channel_listings(
         staff_api_client.post_graphql(
             query,
             variables,
-            permissions=(permission_manage_products,),
+            permissions=(permission_manage_rooms,),
             check_no_permissions=False,
         )
     )

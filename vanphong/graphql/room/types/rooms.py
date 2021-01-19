@@ -8,20 +8,20 @@ from graphene_federation import key
 from graphql.error import GraphQLError
 
 from ....attribute import models as attribute_models
-from ....core.permissions import OrderPermissions, ProductPermissions
+from ....core.permissions import OrderPermissions, RoomPermissions
 from ....core.weight import convert_weight_to_default_weight_unit
-from ....product import models
-from ....product.templatetags.product_images import (
-    get_product_image_thumbnail,
+from ....room import models
+from ....room.templatetags.room_images import (
+    get_room_image_thumbnail,
     get_thumbnail,
 )
-from ....product.utils import calculate_revenue_for_variant
-from ....product.utils.availability import (
-    get_product_availability,
+from ....room.utils import calculate_revenue_for_variant
+from ....room.utils.availability import (
+    get_room_availability,
     get_variant_availability,
 )
-from ....product.utils.variants import get_variant_selection_attributes
-from ....warehouse.availability import is_product_in_stock
+from ....room.utils.variants import get_variant_selection_attributes
+from ....hotel.availability import is_room_in_stock
 from ...account.enums import CountryCodeEnum
 from ...attribute.filters import AttributeFilterInput
 from ...attribute.resolvers import resolve_attributes
@@ -49,43 +49,43 @@ from ...translations.fields import TranslationField
 from ...translations.types import (
     CategoryTranslation,
     CollectionTranslation,
-    ProductTranslation,
-    ProductVariantTranslation,
+    RoomTranslation,
+    RoomVariantTranslation,
 )
 from ...utils import get_database_id, get_user_or_app_from_context
 from ...utils.filters import reporting_period_to_date
-from ...warehouse.dataloaders import (
-    AvailableQuantityByProductVariantIdAndCountryCodeLoader,
+from ...hotel.dataloaders import (
+    AvailableQuantityByRoomVariantIdAndCountryCodeLoader,
 )
-from ...warehouse.types import Stock
+from ...hotel.types import Stock
 from ..dataloaders import (
     CategoryByIdLoader,
     CollectionChannelListingByCollectionIdAndChannelSlugLoader,
     CollectionChannelListingByCollectionIdLoader,
-    CollectionsByProductIdLoader,
-    ImagesByProductIdLoader,
-    ImagesByProductVariantIdLoader,
-    ProductAttributesByProductTypeIdLoader,
-    ProductByIdLoader,
-    ProductChannelListingByProductIdAndChannelSlugLoader,
-    ProductChannelListingByProductIdLoader,
-    ProductTypeByIdLoader,
-    ProductVariantByIdLoader,
-    ProductVariantsByProductIdLoader,
-    SelectedAttributesByProductIdLoader,
-    SelectedAttributesByProductVariantIdLoader,
-    VariantAttributesByProductTypeIdLoader,
+    CollectionsByRoomIdLoader,
+    ImagesByRoomIdLoader,
+    ImagesByRoomVariantIdLoader,
+    RoomAttributesByRoomTypeIdLoader,
+    RoomByIdLoader,
+    RoomChannelListingByRoomIdAndChannelSlugLoader,
+    RoomChannelListingByRoomIdLoader,
+    RoomTypeByIdLoader,
+    RoomVariantByIdLoader,
+    RoomVariantsByRoomIdLoader,
+    SelectedAttributesByRoomIdLoader,
+    SelectedAttributesByRoomVariantIdLoader,
+    VariantAttributesByRoomTypeIdLoader,
     VariantChannelListingByVariantIdAndChannelSlugLoader,
     VariantChannelListingByVariantIdLoader,
-    VariantsChannelListingByProductIdAndChanneSlugLoader,
+    VariantsChannelListingByRoomIdAndChanneSlugLoader,
 )
 from ..enums import VariantAttributeScope
-from ..filters import ProductFilterInput
-from ..sorters import ProductOrder
+from ..filters import RoomFilterInput
+from ..sorters import RoomOrder
 from .channels import (
     CollectionChannelListing,
-    ProductChannelListing,
-    ProductVariantChannelListing,
+    RoomChannelListing,
+    RoomVariantChannelListing,
 )
 from .digital_contents import DigitalContent
 
@@ -123,32 +123,32 @@ class VariantPricingInfo(BasePricingInfo):
         description = "Represents availability of a variant in the storefront."
 
 
-class ProductPricingInfo(BasePricingInfo):
+class RoomPricingInfo(BasePricingInfo):
     price_range = graphene.Field(
         TaxedMoneyRange,
-        description="The discounted price range of the product variants.",
+        description="The discounted price range of the room variants.",
     )
     price_range_undiscounted = graphene.Field(
         TaxedMoneyRange,
-        description="The undiscounted price range of the product variants.",
+        description="The undiscounted price range of the room variants.",
     )
     price_range_local_currency = graphene.Field(
         TaxedMoneyRange,
         description=(
-            "The discounted price range of the product variants "
+            "The discounted price range of the room variants "
             "in the local currency."
         ),
     )
 
     class Meta:
-        description = "Represents availability of a product in the storefront."
+        description = "Represents availability of a room in the storefront."
 
 
 @key(fields="id")
-class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
+class RoomVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     channel_listings = graphene.List(
-        graphene.NonNull(ProductVariantChannelListing),
-        description="List of price information in channels for the product.",
+        graphene.NonNull(RoomVariantChannelListing),
+        description="List of price information in channels for the room.",
     )
     pricing = graphene.Field(
         VariantPricingInfo,
@@ -174,24 +174,24 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         period=graphene.Argument(ReportingPeriod),
         description=(
             "Total revenue generated by a variant in given period of time. Note: this "
-            "field should be queried using `reportProductSales` query as it uses "
+            "field should be queried using `reportRoomSales` query as it uses "
             "optimizations suitable for such calculations."
         ),
     )
     images = graphene.List(
-        lambda: ProductImage, description="List of images for the product variant."
+        lambda: RoomImage, description="List of images for the room variant."
     )
     translation = TranslationField(
-        ProductVariantTranslation,
-        type_name="product variant",
+        RoomVariantTranslation,
+        type_name="room variant",
         resolver=ChannelContextType.resolve_translation,
     )
     digital_content = graphene.Field(
-        DigitalContent, description="Digital content for the product variant."
+        DigitalContent, description="Digital content for the room variant."
     )
     stocks = graphene.Field(
         graphene.List(Stock),
-        description="Stocks for the product variant.",
+        description="Stocks for the room variant.",
         country_code=graphene.Argument(
             CountryCodeEnum,
             description="Two-letter ISO 3166-1 country code.",
@@ -200,12 +200,12 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     )
     quantity_available = graphene.Int(
         required=True,
-        description="Quantity of a product available for sale in one checkout.",
+        description="Quantity of a room available for sale in one checkout.",
         country_code=graphene.Argument(
             CountryCodeEnum,
             description=(
                 "Two-letter ISO 3166-1 country code. When provided, the exact quantity "
-                "from a warehouse operating in shipping zones that contain this "
+                "from a hotel operating in shipping zones that contain this "
                 "country will be returned. Otherwise, it will return the maximum "
                 "quantity from all shipping zones."
             ),
@@ -215,18 +215,18 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     class Meta:
         default_resolver = ChannelContextType.resolver_with_context
         description = (
-            "Represents a version of a product such as different size or color."
+            "Represents a version of a room such as different size or color."
         )
-        only_fields = ["id", "name", "product", "sku", "track_inventory", "weight"]
+        only_fields = ["id", "name", "room", "sku", "track_inventory", "weight"]
         interfaces = [relay.Node, ObjectWithMetadata]
-        model = models.ProductVariant
+        model = models.RoomVariant
 
     @staticmethod
     @one_of_permissions_required(
-        [ProductPermissions.MANAGE_PRODUCTS, OrderPermissions.MANAGE_ORDERS]
+        [RoomPermissions.MANAGE_ROOMS, OrderPermissions.MANAGE_ORDERS]
     )
     def resolve_stocks(
-        root: ChannelContext[models.ProductVariant], info, country_code=None
+        root: ChannelContext[models.RoomVariant], info, country_code=None
     ):
         if not country_code:
             return root.node.stocks.annotate_available_quantity()
@@ -234,23 +234,23 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
     @staticmethod
     def resolve_quantity_available(
-        root: ChannelContext[models.ProductVariant], info, country_code=None
+        root: ChannelContext[models.RoomVariant], info, country_code=None
     ):
         if not root.node.track_inventory:
             return settings.MAX_CHECKOUT_LINE_QUANTITY
 
-        return AvailableQuantityByProductVariantIdAndCountryCodeLoader(
+        return AvailableQuantityByRoomVariantIdAndCountryCodeLoader(
             info.context
         ).load((root.node.id, country_code))
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
-    def resolve_digital_content(root: ChannelContext[models.ProductVariant], *_args):
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
+    def resolve_digital_content(root: ChannelContext[models.RoomVariant], *_args):
         return getattr(root.node, "digital_content", None)
 
     @staticmethod
     def resolve_attributes(
-        root: ChannelContext[models.ProductVariant],
+        root: ChannelContext[models.RoomVariant],
         info,
         variant_selection: Optional[str] = None,
     ):
@@ -275,55 +275,55 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             ]
 
         return (
-            SelectedAttributesByProductVariantIdLoader(info.context)
+            SelectedAttributesByRoomVariantIdLoader(info.context)
             .load(root.node.id)
             .then(apply_variant_selection_filter)
         )
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def resolve_channel_listings(
-        root: ChannelContext[models.ProductVariant], info, **_kwargs
+        root: ChannelContext[models.RoomVariant], info, **_kwargs
     ):
         return VariantChannelListingByVariantIdLoader(info.context).load(root.node.id)
 
     @staticmethod
-    def resolve_pricing(root: ChannelContext[models.ProductVariant], info):
+    def resolve_pricing(root: ChannelContext[models.RoomVariant], info):
         if not root.channel_slug:
             return None
 
         channel_slug = str(root.channel_slug)
         context = info.context
-        product = ProductByIdLoader(context).load(root.node.product_id)
-        product_channel_listing = ProductChannelListingByProductIdAndChannelSlugLoader(
+        room = RoomByIdLoader(context).load(root.node.room_id)
+        room_channel_listing = RoomChannelListingByRoomIdAndChannelSlugLoader(
             context
-        ).load((root.node.product_id, channel_slug))
+        ).load((root.node.room_id, channel_slug))
         variant_channel_listing = VariantChannelListingByVariantIdAndChannelSlugLoader(
             context
         ).load((root.node.id, channel_slug))
-        collections = CollectionsByProductIdLoader(context).load(root.node.product_id)
+        collections = CollectionsByRoomIdLoader(context).load(root.node.room_id)
         channel = ChannelBySlugLoader(context).load(channel_slug)
 
         def calculate_pricing_info(discounts):
             def calculate_pricing_with_channel(channel):
-                def calculate_pricing_with_product_variant_channel_listings(
+                def calculate_pricing_with_room_variant_channel_listings(
                     variant_channel_listing,
                 ):
-                    def calculate_pricing_with_product(product):
-                        def calculate_pricing_with_product_channel_listings(
-                            product_channel_listing,
+                    def calculate_pricing_with_room(room):
+                        def calculate_pricing_with_room_channel_listings(
+                            room_channel_listing,
                         ):
                             def calculate_pricing_with_collections(collections):
                                 if (
                                     not variant_channel_listing
-                                    or not product_channel_listing
+                                    or not room_channel_listing
                                 ):
                                     return None
                                 availability = get_variant_availability(
                                     variant=root.node,
                                     variant_channel_listing=variant_channel_listing,
-                                    product=product,
-                                    product_channel_listing=product_channel_listing,
+                                    room=room,
+                                    room_channel_listing=room_channel_listing,
                                     collections=collections,
                                     discounts=discounts,
                                     channel=channel,
@@ -335,14 +335,14 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
                             return collections.then(calculate_pricing_with_collections)
 
-                        return product_channel_listing.then(
-                            calculate_pricing_with_product_channel_listings
+                        return room_channel_listing.then(
+                            calculate_pricing_with_room_channel_listings
                         )
 
-                    return product.then(calculate_pricing_with_product)
+                    return room.then(calculate_pricing_with_room)
 
                 return variant_channel_listing.then(
-                    calculate_pricing_with_product_variant_channel_listings
+                    calculate_pricing_with_room_variant_channel_listings
                 )
 
             return channel.then(calculate_pricing_with_channel)
@@ -354,22 +354,22 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         )
 
     @staticmethod
-    def resolve_product(root: ChannelContext[models.ProductVariant], info):
-        product = ProductByIdLoader(info.context).load(root.node.product_id)
-        return product.then(
-            lambda product: ChannelContext(node=product, channel_slug=root.channel_slug)
+    def resolve_room(root: ChannelContext[models.RoomVariant], info):
+        room = RoomByIdLoader(info.context).load(root.node.room_id)
+        return room.then(
+            lambda room: ChannelContext(node=room, channel_slug=root.channel_slug)
         )
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
-    def resolve_quantity_ordered(root: ChannelContext[models.ProductVariant], *_args):
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
+    def resolve_quantity_ordered(root: ChannelContext[models.RoomVariant], *_args):
         # This field is added through annotation when using the
-        # `resolve_report_product_sales` resolver.
+        # `resolve_report_room_sales` resolver.
         return getattr(root.node, "quantity_ordered", None)
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
-    def resolve_revenue(root: ChannelContext[models.ProductVariant], info, period):
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
+    def resolve_revenue(root: ChannelContext[models.RoomVariant], info, period):
         start_date = reporting_period_to_date(period)
         variant = root.node
         channel_slug = root.channel_slug
@@ -409,41 +409,41 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         )
 
     @staticmethod
-    def resolve_images(root: ChannelContext[models.ProductVariant], info, *_args):
-        return ImagesByProductVariantIdLoader(info.context).load(root.node.id)
+    def resolve_images(root: ChannelContext[models.RoomVariant], info, *_args):
+        return ImagesByRoomVariantIdLoader(info.context).load(root.node.id)
 
     @staticmethod
     def __resolve_reference(
-        root: ChannelContext[models.ProductVariant], _info, **_kwargs
+        root: ChannelContext[models.RoomVariant], _info, **_kwargs
     ):
         return graphene.Node.get_node_from_global_id(_info, root.node.id)
 
     @staticmethod
-    def resolve_weight(root: ChannelContext[models.ProductVariant], _info, **_kwargs):
+    def resolve_weight(root: ChannelContext[models.RoomVariant], _info, **_kwargs):
         return convert_weight_to_default_weight_unit(root.node.weight)
 
 
 @key(fields="id")
-class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
+class Room(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     url = graphene.String(
-        description="The storefront URL for the product.",
+        description="The storefront URL for the room.",
         required=True,
         deprecation_reason="This field will be removed after 2020-07-31.",
     )
     thumbnail = graphene.Field(
         Image,
-        description="The main thumbnail for a product.",
+        description="The main thumbnail for a room.",
         size=graphene.Argument(graphene.Int, description="Size of thumbnail."),
     )
     pricing = graphene.Field(
-        ProductPricingInfo,
+        RoomPricingInfo,
         description=(
-            "Lists the storefront product's pricing, the current price and discounts, "
+            "Lists the storefront room's pricing, the current price and discounts, "
             "only meant for displaying."
         ),
     )
     is_available = graphene.Boolean(
-        description="Whether the product is in stock and visible or not."
+        description="Whether the room is in stock and visible or not."
     )
     tax_type = graphene.Field(
         TaxType, description="A type of tax. Assigned by enabled tax gateway"
@@ -451,43 +451,43 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     attributes = graphene.List(
         graphene.NonNull(SelectedAttribute),
         required=True,
-        description="List of attributes assigned to this product.",
+        description="List of attributes assigned to this room.",
     )
     channel_listings = graphene.List(
-        graphene.NonNull(ProductChannelListing),
-        description="List of availability in channels for the product.",
+        graphene.NonNull(RoomChannelListing),
+        description="List of availability in channels for the room.",
     )
     image_by_id = graphene.Field(
-        lambda: ProductImage,
-        id=graphene.Argument(graphene.ID, description="ID of a product image."),
-        description="Get a single product image by ID.",
+        lambda: RoomImage,
+        id=graphene.Argument(graphene.ID, description="ID of a room image."),
+        description="Get a single room image by ID.",
     )
     variants = graphene.List(
-        ProductVariant, description="List of variants for the product."
+        RoomVariant, description="List of variants for the room."
     )
     images = graphene.List(
-        lambda: ProductImage, description="List of images for the product."
+        lambda: RoomImage, description="List of images for the room."
     )
     collections = graphene.List(
-        lambda: Collection, description="List of collections for the product."
+        lambda: Collection, description="List of collections for the room."
     )
     translation = TranslationField(
-        ProductTranslation,
-        type_name="product",
+        RoomTranslation,
+        type_name="room",
         resolver=ChannelContextType.resolve_translation,
     )
     available_for_purchase = graphene.Date(
-        description="Date when product is available for purchase. "
+        description="Date when room is available for purchase. "
     )
     is_available_for_purchase = graphene.Boolean(
-        description="Whether the product is available for purchase."
+        description="Whether the room is available for purchase."
     )
 
     class Meta:
         default_resolver = ChannelContextType.resolver_with_context
         description = "Represents an individual item for sale in the storefront."
         interfaces = [relay.Node, ObjectWithMetadata]
-        model = models.Product
+        model = models.Room
         only_fields = [
             "category",
             "charge_taxes",
@@ -496,7 +496,7 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             "id",
             "name",
             "slug",
-            "product_type",
+            "room_type",
             "seo_description",
             "seo_title",
             "updated_at",
@@ -506,7 +506,7 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         ]
 
     @staticmethod
-    def resolve_default_variant(root: ChannelContext[models.Product], info):
+    def resolve_default_variant(root: ChannelContext[models.Room], info):
         default_variant_id = root.node.default_variant_id
         if default_variant_id is None:
             return None
@@ -515,35 +515,35 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             return ChannelContext(node=variant, channel_slug=root.channel_slug)
 
         return (
-            ProductVariantByIdLoader(info.context)
+            RoomVariantByIdLoader(info.context)
             .load(default_variant_id)
             .then(return_default_variant_with_channel_context)
         )
 
     @staticmethod
-    def resolve_category(root: ChannelContext[models.Product], info):
+    def resolve_category(root: ChannelContext[models.Room], info):
         category_id = root.node.category_id
         if category_id is None:
             return None
         return CategoryByIdLoader(info.context).load(category_id)
 
     @staticmethod
-    def resolve_tax_type(root: ChannelContext[models.Product], info):
+    def resolve_tax_type(root: ChannelContext[models.Room], info):
         tax_data = info.context.plugins.get_tax_code_from_object_meta(root.node)
         return TaxType(tax_code=tax_data.code, description=tax_data.description)
 
     @staticmethod
-    def resolve_thumbnail(root: ChannelContext[models.Product], info, *, size=255):
+    def resolve_thumbnail(root: ChannelContext[models.Room], info, *, size=255):
         def return_first_thumbnail(images):
             image = images[0] if images else None
             if image:
-                url = get_product_image_thumbnail(image, size, method="thumbnail")
+                url = get_room_image_thumbnail(image, size, method="thumbnail")
                 alt = image.alt
                 return Image(alt=alt, url=info.context.build_absolute_uri(url))
             return None
 
         return (
-            ImagesByProductIdLoader(info.context)
+            ImagesByRoomIdLoader(info.context)
             .load(root.node.id)
             .then(return_first_thumbnail)
         )
@@ -553,26 +553,26 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         return ""
 
     @staticmethod
-    def resolve_pricing(root: ChannelContext[models.Product], info):
+    def resolve_pricing(root: ChannelContext[models.Room], info):
         if not root.channel_slug:
             return None
 
         context = info.context
         channel_slug = str(root.channel_slug)
-        product_channel_listing = ProductChannelListingByProductIdAndChannelSlugLoader(
+        room_channel_listing = RoomChannelListingByRoomIdAndChannelSlugLoader(
             context
         ).load((root.node.id, channel_slug))
-        variants = ProductVariantsByProductIdLoader(context).load(root.node.id)
-        variants_channel_listing = VariantsChannelListingByProductIdAndChanneSlugLoader(
+        variants = RoomVariantsByRoomIdLoader(context).load(root.node.id)
+        variants_channel_listing = VariantsChannelListingByRoomIdAndChanneSlugLoader(
             context
         ).load((root.node.id, channel_slug))
-        collections = CollectionsByProductIdLoader(context).load(root.node.id)
+        collections = CollectionsByRoomIdLoader(context).load(root.node.id)
         channel = ChannelBySlugLoader(context).load(channel_slug)
 
         def calculate_pricing_info(discounts):
             def calculate_pricing_with_channel(channel):
-                def calculate_pricing_with_product_channel_listings(
-                    product_channel_listing,
+                def calculate_pricing_with_room_channel_listings(
+                    room_channel_listing,
                 ):
                     def calculate_pricing_with_variants(variants):
                         def calculate_pricing_with_variants_channel_listings(
@@ -581,9 +581,9 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
                             def calculate_pricing_with_collections(collections):
                                 if not variants_channel_listing:
                                     return None
-                                availability = get_product_availability(
-                                    product=root.node,
-                                    product_channel_listing=product_channel_listing,
+                                availability = get_room_availability(
+                                    room=root.node,
+                                    room_channel_listing=room_channel_listing,
                                     variants=variants,
                                     variants_channel_listing=variants_channel_listing,
                                     collections=collections,
@@ -593,7 +593,7 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
                                     local_currency=context.currency,
                                     plugins=context.plugins,
                                 )
-                                return ProductPricingInfo(**asdict(availability))
+                                return RoomPricingInfo(**asdict(availability))
 
                             return collections.then(calculate_pricing_with_collections)
 
@@ -603,8 +603,8 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
                     return variants.then(calculate_pricing_with_variants)
 
-                return product_channel_listing.then(
-                    calculate_pricing_with_product_channel_listings
+                return room_channel_listing.then(
+                    calculate_pricing_with_room_channel_listings
                 )
 
             return channel.then(calculate_pricing_with_channel)
@@ -616,45 +616,45 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         )
 
     @staticmethod
-    def resolve_is_available(root: ChannelContext[models.Product], info):
+    def resolve_is_available(root: ChannelContext[models.Room], info):
         if not root.channel_slug:
             return None
         channel_slug = str(root.channel_slug)
 
-        def calculate_is_available(product_channel_listing):
+        def calculate_is_available(room_channel_listing):
             country = info.context.country
-            in_stock = is_product_in_stock(root.node, country)
+            in_stock = is_room_in_stock(root.node, country)
             is_visible = False
-            if product_channel_listing:
-                is_visible = product_channel_listing.is_available_for_purchase()
+            if room_channel_listing:
+                is_visible = room_channel_listing.is_available_for_purchase()
             return is_visible and in_stock
 
         return (
-            ProductChannelListingByProductIdAndChannelSlugLoader(info.context)
+            RoomChannelListingByRoomIdAndChannelSlugLoader(info.context)
             .load((root.node.id, channel_slug))
             .then(calculate_is_available)
         )
 
     @staticmethod
-    def resolve_attributes(root: ChannelContext[models.Product], info):
-        return SelectedAttributesByProductIdLoader(info.context).load(root.node.id)
+    def resolve_attributes(root: ChannelContext[models.Room], info):
+        return SelectedAttributesByRoomIdLoader(info.context).load(root.node.id)
 
     @staticmethod
-    def resolve_image_by_id(root: ChannelContext[models.Product], info, id):
-        pk = get_database_id(info, id, ProductImage)
+    def resolve_image_by_id(root: ChannelContext[models.Room], info, id):
+        pk = get_database_id(info, id, RoomImage)
         try:
             return root.node.images.get(pk=pk)
-        except models.ProductImage.DoesNotExist:
-            raise GraphQLError("Product image not found.")
+        except models.RoomImage.DoesNotExist:
+            raise GraphQLError("Room image not found.")
 
     @staticmethod
-    def resolve_images(root: ChannelContext[models.Product], info, **_kwargs):
-        return ImagesByProductIdLoader(info.context).load(root.node.id)
+    def resolve_images(root: ChannelContext[models.Room], info, **_kwargs):
+        return ImagesByRoomIdLoader(info.context).load(root.node.id)
 
     @staticmethod
-    def resolve_variants(root: ChannelContext[models.Product], info, **_kwargs):
+    def resolve_variants(root: ChannelContext[models.Room], info, **_kwargs):
         return (
-            ProductVariantsByProductIdLoader(info.context)
+            RoomVariantsByRoomIdLoader(info.context)
             .load(root.node.id)
             .then(
                 lambda variants: [
@@ -665,12 +665,12 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         )
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
-    def resolve_channel_listings(root: ChannelContext[models.Product], info, **_kwargs):
-        return ProductChannelListingByProductIdLoader(info.context).load(root.node.id)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
+    def resolve_channel_listings(root: ChannelContext[models.Room], info, **_kwargs):
+        return RoomChannelListingByRoomIdLoader(info.context).load(root.node.id)
 
     @staticmethod
-    def resolve_collections(root: ChannelContext[models.Product], info, **_kwargs):
+    def resolve_collections(root: ChannelContext[models.Room], info, **_kwargs):
         requestor = get_user_or_app_from_context(info.context)
         requestor_has_access_to_all = models.Collection.objects.user_has_access_to_all(
             requestor
@@ -714,68 +714,68 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             return channel_listings.then(return_visible_collections)
 
         return (
-            CollectionsByProductIdLoader(info.context)
+            CollectionsByRoomIdLoader(info.context)
             .load(root.node.id)
             .then(return_collections)
         )
 
     @staticmethod
-    def __resolve_reference(root: ChannelContext[models.Product], _info, **_kwargs):
+    def __resolve_reference(root: ChannelContext[models.Room], _info, **_kwargs):
         return graphene.Node.get_node_from_global_id(_info, root.node.id)
 
     @staticmethod
-    def resolve_weight(root: ChannelContext[models.Product], _info, **_kwargs):
+    def resolve_weight(root: ChannelContext[models.Room], _info, **_kwargs):
         return convert_weight_to_default_weight_unit(root.node.weight)
 
     @staticmethod
-    def resolve_is_available_for_purchase(root: ChannelContext[models.Product], info):
+    def resolve_is_available_for_purchase(root: ChannelContext[models.Room], info):
         if not root.channel_slug:
             return None
         channel_slug = str(root.channel_slug)
 
-        def calculate_is_available_for_purchase(product_channel_listing):
-            if not product_channel_listing:
+        def calculate_is_available_for_purchase(room_channel_listing):
+            if not room_channel_listing:
                 return None
-            return product_channel_listing.is_available_for_purchase()
+            return room_channel_listing.is_available_for_purchase()
 
         return (
-            ProductChannelListingByProductIdAndChannelSlugLoader(info.context)
+            RoomChannelListingByRoomIdAndChannelSlugLoader(info.context)
             .load((root.node.id, channel_slug))
             .then(calculate_is_available_for_purchase)
         )
 
     @staticmethod
-    def resolve_available_for_purchase(root: ChannelContext[models.Product], info):
+    def resolve_available_for_purchase(root: ChannelContext[models.Room], info):
         if not root.channel_slug:
             return None
         channel_slug = str(root.channel_slug)
 
-        def calculate_available_for_purchase(product_channel_listing):
-            if not product_channel_listing:
+        def calculate_available_for_purchase(room_channel_listing):
+            if not room_channel_listing:
                 return None
-            return product_channel_listing.available_for_purchase
+            return room_channel_listing.available_for_purchase
 
         return (
-            ProductChannelListingByProductIdAndChannelSlugLoader(info.context)
+            RoomChannelListingByRoomIdAndChannelSlugLoader(info.context)
             .load((root.node.id, channel_slug))
             .then(calculate_available_for_purchase)
         )
 
     @staticmethod
-    def resolve_product_type(root: ChannelContext[models.Product], info):
-        return ProductTypeByIdLoader(info.context).load(root.node.product_type_id)
+    def resolve_room_type(root: ChannelContext[models.Room], info):
+        return RoomTypeByIdLoader(info.context).load(root.node.room_type_id)
 
 
 @key(fields="id")
-class ProductType(CountableDjangoObjectType):
-    products = ChannelContextFilterConnectionField(
-        Product,
+class RoomType(CountableDjangoObjectType):
+    rooms = ChannelContextFilterConnectionField(
+        Room,
         channel=graphene.String(
             description="Slug of a channel for which the data should be returned."
         ),
-        description="List of products of this type.",
+        description="List of rooms of this type.",
         deprecation_reason=(
-            "Use the top-level `products` query with the `productTypes` filter."
+            "Use the top-level `rooms` query with the `roomTypes` filter."
         ),
     )
     tax_rate = TaxRateType(description="A type of tax rate.")
@@ -784,14 +784,14 @@ class ProductType(CountableDjangoObjectType):
     )
     variant_attributes = graphene.List(
         Attribute,
-        description="Variant attributes of that product type.",
+        description="Variant attributes of that room type.",
         variant_selection=graphene.Argument(
             VariantAttributeScope,
             description="Define scope of returned attributes.",
         ),
     )
-    product_attributes = graphene.List(
-        Attribute, description="Product attributes of that product type."
+    room_attributes = graphene.List(
+        Attribute, description="Room attributes of that room type."
     )
     available_attributes = FilterInputConnectionField(
         Attribute, filter=AttributeFilterInput()
@@ -799,11 +799,11 @@ class ProductType(CountableDjangoObjectType):
 
     class Meta:
         description = (
-            "Represents a type of product. It defines what attributes are available to "
-            "products of this type."
+            "Represents a type of room. It defines what attributes are available to "
+            "rooms of this type."
         )
         interfaces = [relay.Node, ObjectWithMetadata]
-        model = models.ProductType
+        model = models.RoomType
         only_fields = [
             "has_variants",
             "id",
@@ -816,24 +816,24 @@ class ProductType(CountableDjangoObjectType):
         ]
 
     @staticmethod
-    def resolve_tax_type(root: models.ProductType, info):
+    def resolve_tax_type(root: models.RoomType, info):
         tax_data = info.context.plugins.get_tax_code_from_object_meta(root)
         return TaxType(tax_code=tax_data.code, description=tax_data.description)
 
     @staticmethod
-    def resolve_tax_rate(root: models.ProductType, _info, **_kwargs):
+    def resolve_tax_rate(root: models.RoomType, _info, **_kwargs):
         # FIXME this resolver should be dropped after we drop tax_rate from API
         if not hasattr(root, "meta"):
             return None
         return root.get_value_from_metadata("vatlayer.code")
 
     @staticmethod
-    def resolve_product_attributes(root: models.ProductType, info):
-        return ProductAttributesByProductTypeIdLoader(info.context).load(root.pk)
+    def resolve_room_attributes(root: models.RoomType, info):
+        return RoomAttributesByRoomTypeIdLoader(info.context).load(root.pk)
 
     @staticmethod
     def resolve_variant_attributes(
-        root: models.ProductType,
+        root: models.RoomType,
         info,
         variant_selection: Optional[str] = None,
     ):
@@ -846,23 +846,23 @@ class ProductType(CountableDjangoObjectType):
             return [attr for attr in attributes if attr not in variant_selection_attrs]
 
         return (
-            VariantAttributesByProductTypeIdLoader(info.context)
+            VariantAttributesByRoomTypeIdLoader(info.context)
             .load(root.pk)
             .then(apply_variant_selection_filter)
         )
 
     @staticmethod
-    def resolve_products(root: models.ProductType, info, channel=None, **_kwargs):
+    def resolve_rooms(root: models.RoomType, info, channel=None, **_kwargs):
         user = info.context.user
         if channel is None:
             channel = get_default_channel_slug_or_graphql_error()
-        qs = root.products.visible_to_user(user, channel)
+        qs = root.rooms.visible_to_user(user, channel)
         return ChannelQsContext(qs=qs, channel_slug=channel)
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
-    def resolve_available_attributes(root: models.ProductType, info, **kwargs):
-        qs = attribute_models.Attribute.objects.get_unassigned_product_type_attributes(
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
+    def resolve_available_attributes(root: models.RoomType, info, **kwargs):
+        qs = attribute_models.Attribute.objects.get_unassigned_room_type_attributes(
             root.pk
         )
         return resolve_attributes(info, qs=qs, **kwargs)
@@ -872,17 +872,17 @@ class ProductType(CountableDjangoObjectType):
         return graphene.Node.get_node_from_global_id(_info, root.id)
 
     @staticmethod
-    def resolve_weight(root: models.ProductType, _info, **_kwargs):
+    def resolve_weight(root: models.RoomType, _info, **_kwargs):
         return convert_weight_to_default_weight_unit(root.weight)
 
 
 @key(fields="id")
 class Collection(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
-    products = ChannelContextFilterConnectionField(
-        Product,
-        filter=ProductFilterInput(description="Filtering options for products."),
-        sort_by=ProductOrder(description="Sort products."),
-        description="List of products in this collection.",
+    rooms = ChannelContextFilterConnectionField(
+        Room,
+        filter=RoomFilterInput(description="Filtering options for rooms."),
+        sort_by=RoomOrder(description="Sort rooms."),
+        description="List of rooms in this collection.",
     )
     background_image = graphene.Field(
         Image, size=graphene.Int(description="Size of the image.")
@@ -899,7 +899,7 @@ class Collection(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
     class Meta:
         default_resolver = ChannelContextType.resolver_with_context
-        description = "Represents a collection of products."
+        description = "Represents a collection of rooms."
         only_fields = [
             "description",
             "description_json",
@@ -927,13 +927,13 @@ class Collection(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             )
 
     @staticmethod
-    def resolve_products(root: ChannelContext[models.Collection], info, **kwargs):
+    def resolve_rooms(root: ChannelContext[models.Collection], info, **kwargs):
         user = info.context.user
-        qs = root.node.products.visible_to_user(user, root.channel_slug)
+        qs = root.node.rooms.visible_to_user(user, root.channel_slug)
         return ChannelQsContext(qs=qs, channel_slug=root.channel_slug)
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def resolve_channel_listings(root: ChannelContext[models.Collection], info):
         return CollectionChannelListingByCollectionIdLoader(info.context).load(
             root.node.id
@@ -949,12 +949,12 @@ class Category(CountableDjangoObjectType):
     ancestors = PrefetchingConnectionField(
         lambda: Category, description="List of ancestors of the category."
     )
-    products = ChannelContextFilterConnectionField(
-        Product,
+    rooms = ChannelContextFilterConnectionField(
+        Room,
         channel=graphene.String(
             description="Slug of a channel for which the data should be returned."
         ),
-        description="List of products in the category.",
+        description="List of rooms in the category.",
     )
     url = graphene.String(
         description="The storefront's URL for the category.",
@@ -970,8 +970,8 @@ class Category(CountableDjangoObjectType):
 
     class Meta:
         description = (
-            "Represents a single category of products. Categories allow to organize "
-            "products in a tree-hierarchies which can be used for navigation in the "
+            "Represents a single category of rooms. Categories allow to organize "
+            "rooms in a tree-hierarchies which can be used for navigation in the "
             "storefront."
         )
         only_fields = [
@@ -1012,15 +1012,15 @@ class Category(CountableDjangoObjectType):
         return ""
 
     @staticmethod
-    def resolve_products(root: models.Category, info, channel=None, **_kwargs):
+    def resolve_rooms(root: models.Category, info, channel=None, **_kwargs):
         requestor = get_user_or_app_from_context(info.context)
-        requestor_has_access_to_all = models.Product.objects.user_has_access_to_all(
+        requestor_has_access_to_all = models.Room.objects.user_has_access_to_all(
             requestor
         )
         tree = root.get_descendants(include_self=True)
         if channel is None and not requestor_has_access_to_all:
             channel = get_default_channel_slug_or_graphql_error()
-        qs = models.Product.objects.all()
+        qs = models.Room.objects.all()
         if not requestor_has_access_to_all:
             qs = (
                 qs.published(channel)
@@ -1040,7 +1040,7 @@ class Category(CountableDjangoObjectType):
 
 
 @key(fields="id")
-class ProductImage(CountableDjangoObjectType):
+class RoomImage(CountableDjangoObjectType):
     url = graphene.String(
         required=True,
         description="The URL of the image.",
@@ -1048,13 +1048,13 @@ class ProductImage(CountableDjangoObjectType):
     )
 
     class Meta:
-        description = "Represents a product image."
+        description = "Represents a room image."
         only_fields = ["alt", "id", "sort_order"]
         interfaces = [relay.Node]
-        model = models.ProductImage
+        model = models.RoomImage
 
     @staticmethod
-    def resolve_url(root: models.ProductImage, info, *, size=None):
+    def resolve_url(root: models.RoomImage, info, *, size=None):
         if size:
             url = get_thumbnail(root.image, size, method="thumbnail")
         else:

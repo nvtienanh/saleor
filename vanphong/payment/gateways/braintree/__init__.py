@@ -91,7 +91,7 @@ def get_braintree_gateway(sandbox_mode, merchant_id, public_key, private_key):
         raise ImproperlyConfigured("Incorrectly configured Braintree gateway.")
     environment = braintree_sdk.Environment.Sandbox
     if not sandbox_mode:
-        environment = braintree_sdk.Environment.Production
+        environment = braintree_sdk.Environment.Roomion
 
     config = braintree_sdk.Configuration(
         environment=environment,

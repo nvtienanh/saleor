@@ -24,7 +24,7 @@ UPDATE_ATTRIBUTE_MUTATION = """
                 name
                 slug
             }
-            productTypes(first: 10) {
+            roomTypes(first: 10) {
                 edges {
                     node {
                         id
@@ -38,7 +38,7 @@ UPDATE_ATTRIBUTE_MUTATION = """
 
 
 def test_update_attribute_name(
-    staff_api_client, color_attribute, permission_manage_product_types_and_attributes
+    staff_api_client, color_attribute, permission_manage_room_types_and_attributes
 ):
     # given
     query = UPDATE_ATTRIBUTE_MUTATION
@@ -53,7 +53,7 @@ def test_update_attribute_name(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -62,11 +62,11 @@ def test_update_attribute_name(
     data = content["data"]["attributeUpdate"]
     assert data["attribute"]["name"] == name == attribute.name
     assert data["attribute"]["slug"] == slug == attribute.slug
-    assert data["attribute"]["productTypes"]["edges"] == []
+    assert data["attribute"]["roomTypes"]["edges"] == []
 
 
 def test_update_attribute_remove_and_add_values(
-    staff_api_client, color_attribute, permission_manage_product_types_and_attributes
+    staff_api_client, color_attribute, permission_manage_room_types_and_attributes
 ):
     # given
     query = UPDATE_ATTRIBUTE_MUTATION
@@ -87,7 +87,7 @@ def test_update_attribute_remove_and_add_values(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -103,7 +103,7 @@ def test_update_attribute_remove_and_add_values(
 def test_update_empty_attribute_and_add_values(
     staff_api_client,
     color_attribute_without_values,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     query = UPDATE_ATTRIBUTE_MUTATION
@@ -122,7 +122,7 @@ def test_update_empty_attribute_and_add_values(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -135,7 +135,7 @@ def test_update_empty_attribute_and_add_values(
 def test_update_attribute_with_file_input_type(
     staff_api_client,
     file_attribute_with_file_input_type_without_values,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     query = UPDATE_ATTRIBUTE_MUTATION
@@ -150,7 +150,7 @@ def test_update_attribute_with_file_input_type(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -164,7 +164,7 @@ def test_update_attribute_with_file_input_type(
 def test_update_attribute_with_file_input_type_and_values(
     staff_api_client,
     file_attribute_with_file_input_type_without_values,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     query = UPDATE_ATTRIBUTE_MUTATION
@@ -184,7 +184,7 @@ def test_update_attribute_with_file_input_type_and_values(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -201,7 +201,7 @@ def test_update_attribute_with_file_input_type_and_values(
 def test_update_attribute_with_file_input_type_invalid_settings(
     staff_api_client,
     file_attribute_with_file_input_type_without_values,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     query = UPDATE_ATTRIBUTE_MUTATION
@@ -224,7 +224,7 @@ def test_update_attribute_with_file_input_type_invalid_settings(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -275,7 +275,7 @@ UPDATE_ATTRIBUTE_SLUG_MUTATION = """
 def test_update_attribute_slug(
     staff_api_client,
     color_attribute,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
     input_slug,
     expected_slug,
     error_message,
@@ -294,7 +294,7 @@ def test_update_attribute_slug(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -315,7 +315,7 @@ def test_update_attribute_slug(
 def test_update_attribute_slug_exists(
     staff_api_client,
     color_attribute,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     query = UPDATE_ATTRIBUTE_SLUG_MUTATION
@@ -336,7 +336,7 @@ def test_update_attribute_slug_exists(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -365,7 +365,7 @@ def test_update_attribute_slug_exists(
 def test_update_attribute_slug_and_name(
     staff_api_client,
     color_attribute,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
     input_slug,
     expected_slug,
     input_name,
@@ -405,7 +405,7 @@ def test_update_attribute_slug_and_name(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -446,7 +446,7 @@ def test_update_attribute_and_add_attribute_values_errors(
     error_msg,
     error_code,
     color_attribute,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     query = UPDATE_ATTRIBUTE_MUTATION
@@ -463,7 +463,7 @@ def test_update_attribute_and_add_attribute_values_errors(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then
@@ -479,7 +479,7 @@ def test_update_attribute_and_remove_others_attribute_value(
     staff_api_client,
     color_attribute,
     size_attribute,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     query = UPDATE_ATTRIBUTE_MUTATION
@@ -494,7 +494,7 @@ def test_update_attribute_and_remove_others_attribute_value(
 
     # when
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then

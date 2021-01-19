@@ -13,7 +13,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0043_auto_20171207_0839")]
+    dependencies = [("room", "0043_auto_20171207_0839")]
 
     operations = [
         migrations.AlterField(
@@ -55,162 +55,162 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="children",
-                to="product.Category",
+                to="room.Category",
             ),
         ),
         migrations.AlterField(
             model_name="category", name="slug", field=models.SlugField()
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="attributes",
             field=django.contrib.postgres.fields.hstore.HStoreField(default={}),
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="available_on",
             field=models.DateField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="categories",
             field=models.ManyToManyField(
-                related_name="products", to="product.Category"
+                related_name="rooms", to="room.Category"
             ),
         ),
         migrations.AlterField(
-            model_name="product", name="description", field=models.TextField()
+            model_name="room", name="description", field=models.TextField()
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="is_featured",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="is_published",
             field=models.BooleanField(default=True),
         ),
         migrations.AlterField(
-            model_name="product", name="name", field=models.CharField(max_length=128)
+            model_name="room", name="name", field=models.CharField(max_length=128)
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="price",
             field=models.DecimalField(decimal_places=2, max_digits=12),
         ),
         migrations.AlterField(
-            model_name="product",
-            name="product_class",
+            model_name="room",
+            name="room_class",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="products",
-                to="product.ProductClass",
+                related_name="rooms",
+                to="room.RoomClass",
             ),
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="updated_at",
             field=models.DateTimeField(auto_now=True, null=True),
         ),
         migrations.AlterField(
-            model_name="productattribute",
+            model_name="roomattribute",
             name="name",
             field=models.CharField(max_length=100),
         ),
         migrations.AlterField(
-            model_name="productattribute",
+            model_name="roomattribute",
             name="slug",
             field=models.SlugField(unique=True),
         ),
         migrations.AlterField(
-            model_name="productclass",
+            model_name="roomclass",
             name="has_variants",
             field=models.BooleanField(default=True),
         ),
         migrations.AlterField(
-            model_name="productclass",
+            model_name="roomclass",
             name="is_shipping_required",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name="productclass",
+            model_name="roomclass",
             name="name",
             field=models.CharField(max_length=128),
         ),
         migrations.AlterField(
-            model_name="productclass",
-            name="product_attributes",
+            model_name="roomclass",
+            name="room_attributes",
             field=models.ManyToManyField(
-                blank=True, related_name="products_class", to="product.ProductAttribute"
+                blank=True, related_name="rooms_class", to="room.RoomAttribute"
             ),
         ),
         migrations.AlterField(
-            model_name="productclass",
+            model_name="roomclass",
             name="variant_attributes",
             field=models.ManyToManyField(
                 blank=True,
-                related_name="product_variants_class",
-                to="product.ProductAttribute",
+                related_name="room_variants_class",
+                to="room.RoomAttribute",
             ),
         ),
         migrations.AlterField(
-            model_name="productimage",
+            model_name="roomimage",
             name="alt",
             field=models.CharField(blank=True, max_length=128),
         ),
         migrations.AlterField(
-            model_name="productimage",
+            model_name="roomimage",
             name="image",
-            field=versatileimagefield.fields.VersatileImageField(upload_to="products"),
+            field=versatileimagefield.fields.VersatileImageField(upload_to="rooms"),
         ),
         migrations.AlterField(
-            model_name="productimage",
+            model_name="roomimage",
             name="order",
             field=models.PositiveIntegerField(editable=False),
         ),
         migrations.AlterField(
-            model_name="productimage",
+            model_name="roomimage",
             name="ppoi",
             field=versatileimagefield.fields.PPOIField(
                 default="0.5x0.5", editable=False, max_length=20
             ),
         ),
         migrations.AlterField(
-            model_name="productimage",
-            name="product",
+            model_name="roomimage",
+            name="room",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="images",
-                to="product.Product",
+                to="room.Room",
             ),
         ),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="attributes",
             field=django.contrib.postgres.fields.hstore.HStoreField(default={}),
         ),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="images",
             field=models.ManyToManyField(
-                through="product.VariantImage", to="product.ProductImage"
+                through="room.VariantImage", to="room.RoomImage"
             ),
         ),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="name",
             field=models.CharField(blank=True, max_length=100),
         ),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="price_override",
             field=models.DecimalField(
                 blank=True, decimal_places=2, max_digits=12, null=True
             ),
         ),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="sku",
             field=models.CharField(max_length=32, unique=True),
         ),
@@ -243,7 +243,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="stock",
-                to="product.ProductVariant",
+                to="room.RoomVariant",
             ),
         ),
         migrations.AlterField(
@@ -257,7 +257,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="variant_images",
-                to="product.ProductImage",
+                to="room.RoomImage",
             ),
         ),
         migrations.AlterField(
@@ -266,7 +266,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="variant_images",
-                to="product.ProductVariant",
+                to="room.RoomVariant",
             ),
         ),
     ]

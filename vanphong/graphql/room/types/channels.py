@@ -2,25 +2,25 @@ from dataclasses import asdict
 
 import graphene
 
-from saleor.graphql.product.dataloaders.products import ProductByIdLoader
+from saleor.graphql.room.dataloaders.rooms import RoomByIdLoader
 
-from ....core.permissions import ProductPermissions
+from ....core.permissions import RoomPermissions
 from ....graphql.core.types import Money, MoneyRange
-from ....product import models
-from ....product.utils.availability import get_product_availability
-from ....product.utils.costs import (
+from ....room import models
+from ....room.utils.availability import get_room_availability
+from ....room.utils.costs import (
     get_margin_for_variant_channel_listing,
-    get_product_costs_data,
+    get_room_costs_data,
 )
 from ...channel.dataloaders import ChannelByIdLoader
 from ...core.connection import CountableDjangoObjectType
 from ...decorators import permission_required
 from ...discount.dataloaders import DiscountsByDateTimeLoader
 from ..dataloaders import (
-    CollectionsByProductIdLoader,
-    ProductVariantsByProductIdLoader,
+    CollectionsByRoomIdLoader,
+    RoomVariantsByRoomIdLoader,
     VariantChannelListingByVariantIdAndChannelSlugLoader,
-    VariantsChannelListingByProductIdAndChanneSlugLoader,
+    VariantsChannelListingByRoomIdAndChanneSlugLoader,
 )
 
 
@@ -29,26 +29,26 @@ class Margin(graphene.ObjectType):
     stop = graphene.Int()
 
 
-class ProductChannelListing(CountableDjangoObjectType):
+class RoomChannelListing(CountableDjangoObjectType):
     discounted_price = graphene.Field(
         Money, description="The price of the cheapest variant (including discounts)."
     )
-    purchase_cost = graphene.Field(MoneyRange, description="Purchase cost of product.")
+    purchase_cost = graphene.Field(MoneyRange, description="Purchase cost of room.")
     margin = graphene.Field(Margin, description="Range of margin percentage value.")
     is_available_for_purchase = graphene.Boolean(
-        description="Whether the product is available for purchase."
+        description="Whether the room is available for purchase."
     )
     pricing = graphene.Field(
-        "saleor.graphql.product.types.products.ProductPricingInfo",
+        "saleor.graphql.room.types.rooms.RoomPricingInfo",
         description=(
-            "Lists the storefront product's pricing, the current price and discounts, "
+            "Lists the storefront room's pricing, the current price and discounts, "
             "only meant for displaying."
         ),
     )
 
     class Meta:
-        description = "Represents product channel listing."
-        model = models.ProductChannelListing
+        description = "Represents room channel listing."
+        model = models.RoomChannelListing
         interfaces = [graphene.relay.Node]
         only_fields = [
             "id",
@@ -60,12 +60,12 @@ class ProductChannelListing(CountableDjangoObjectType):
         ]
 
     @staticmethod
-    def resolve_channel(root: models.ProductChannelListing, info, **_kwargs):
+    def resolve_channel(root: models.RoomChannelListing, info, **_kwargs):
         return ChannelByIdLoader(info.context).load(root.channel_id)
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
-    def resolve_purchase_cost(root: models.ProductChannelListing, info, *_kwargs):
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
+    def resolve_purchase_cost(root: models.RoomChannelListing, info, *_kwargs):
         channel = ChannelByIdLoader(info.context).load(root.channel_id)
 
         def calculate_margin_with_variants(variants):
@@ -78,7 +78,7 @@ class ProductChannelListing(CountableDjangoObjectType):
                         return None
 
                     has_variants = True if len(variant_ids_channel_slug) > 0 else False
-                    purchase_cost, _margin = get_product_costs_data(
+                    purchase_cost, _margin = get_room_costs_data(
                         variant_channel_listings, has_variants, root.currency
                     )
                     return purchase_cost
@@ -95,14 +95,14 @@ class ProductChannelListing(CountableDjangoObjectType):
             return channel.then(calculate_margin_with_channel)
 
         return (
-            ProductVariantsByProductIdLoader(info.context)
-            .load(root.product_id)
+            RoomVariantsByRoomIdLoader(info.context)
+            .load(root.room_id)
             .then(calculate_margin_with_variants)
         )
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
-    def resolve_margin(root: models.ProductChannelListing, info, *_kwargs):
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
+    def resolve_margin(root: models.RoomChannelListing, info, *_kwargs):
         channel = ChannelByIdLoader(info.context).load(root.channel_id)
 
         def calculate_margin_with_variants(variants):
@@ -115,7 +115,7 @@ class ProductChannelListing(CountableDjangoObjectType):
                         return None
 
                     has_variants = True if len(variant_ids_channel_slug) > 0 else False
-                    _purchase_cost, margin = get_product_costs_data(
+                    _purchase_cost, margin = get_room_costs_data(
                         variant_channel_listings, has_variants, root.currency
                     )
                     return Margin(margin[0], margin[1])
@@ -132,22 +132,22 @@ class ProductChannelListing(CountableDjangoObjectType):
             return channel.then(calculate_margin_with_channel)
 
         return (
-            ProductVariantsByProductIdLoader(info.context)
-            .load(root.product_id)
+            RoomVariantsByRoomIdLoader(info.context)
+            .load(root.room_id)
             .then(calculate_margin_with_variants)
         )
 
     @staticmethod
-    def resolve_is_available_for_purchase(root: models.ProductChannelListing, _info):
+    def resolve_is_available_for_purchase(root: models.RoomChannelListing, _info):
         return root.is_available_for_purchase()
 
     @staticmethod
-    def resolve_pricing(root: models.ProductChannelListing, info):
+    def resolve_pricing(root: models.RoomChannelListing, info):
         context = info.context
 
         def calculate_pricing_info(discounts):
             def calculate_pricing_with_channel(channel):
-                def calculate_pricing_with_product(product):
+                def calculate_pricing_with_room(room):
                     def calculate_pricing_with_variants(variants):
                         def calculate_pricing_with_variants_channel_listings(
                             variants_channel_listing,
@@ -155,9 +155,9 @@ class ProductChannelListing(CountableDjangoObjectType):
                             def calculate_pricing_with_collections(collections):
                                 if not variants_channel_listing:
                                     return None
-                                availability = get_product_availability(
-                                    product=product,
-                                    product_channel_listing=root,
+                                availability = get_room_availability(
+                                    room=room,
+                                    room_channel_listing=root,
                                     variants=variants,
                                     variants_channel_listing=variants_channel_listing,
                                     collections=collections,
@@ -167,34 +167,34 @@ class ProductChannelListing(CountableDjangoObjectType):
                                     local_currency=context.currency,
                                     plugins=context.plugins,
                                 )
-                                from .products import ProductPricingInfo
+                                from .rooms import RoomPricingInfo
 
-                                return ProductPricingInfo(**asdict(availability))
+                                return RoomPricingInfo(**asdict(availability))
 
                             return (
-                                CollectionsByProductIdLoader(context)
-                                .load(root.product_id)
+                                CollectionsByRoomIdLoader(context)
+                                .load(root.room_id)
                                 .then(calculate_pricing_with_collections)
                             )
 
                         return (
-                            VariantsChannelListingByProductIdAndChanneSlugLoader(
+                            VariantsChannelListingByRoomIdAndChanneSlugLoader(
                                 context
                             )
-                            .load((root.product_id, channel.slug))
+                            .load((root.room_id, channel.slug))
                             .then(calculate_pricing_with_variants_channel_listings)
                         )
 
                     return (
-                        ProductVariantsByProductIdLoader(context)
-                        .load(root.product_id)
+                        RoomVariantsByRoomIdLoader(context)
+                        .load(root.room_id)
                         .then(calculate_pricing_with_variants)
                     )
 
                 return (
-                    ProductByIdLoader(context)
-                    .load(root.product_id)
-                    .then(calculate_pricing_with_product)
+                    RoomByIdLoader(context)
+                    .load(root.room_id)
+                    .then(calculate_pricing_with_room)
                 )
 
             return (
@@ -210,23 +210,23 @@ class ProductChannelListing(CountableDjangoObjectType):
         )
 
 
-class ProductVariantChannelListing(CountableDjangoObjectType):
+class RoomVariantChannelListing(CountableDjangoObjectType):
     cost_price = graphene.Field(Money, description="Cost price of the variant.")
     margin = graphene.Int(description="Gross margin percentage value.")
 
     class Meta:
-        description = "Represents product varaint channel listing."
-        model = models.ProductVariantChannelListing
+        description = "Represents room varaint channel listing."
+        model = models.RoomVariantChannelListing
         interfaces = [graphene.relay.Node]
         only_fields = ["id", "channel", "price", "cost_price"]
 
     @staticmethod
-    def resolve_channel(root: models.ProductVariantChannelListing, info, **_kwargs):
+    def resolve_channel(root: models.RoomVariantChannelListing, info, **_kwargs):
         return ChannelByIdLoader(info.context).load(root.channel_id)
 
     @staticmethod
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
-    def resolve_margin(root: models.ProductVariantChannelListing, *_args):
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
+    def resolve_margin(root: models.RoomVariantChannelListing, *_args):
         return get_margin_for_variant_channel_listing(root)
 
 
@@ -238,5 +238,5 @@ class CollectionChannelListing(CountableDjangoObjectType):
         only_fields = ["id", "channel", "is_published", "publication_date"]
 
     @staticmethod
-    def resolve_channel(root: models.ProductChannelListing, info, **_kwargs):
+    def resolve_channel(root: models.RoomChannelListing, info, **_kwargs):
         return ChannelByIdLoader(info.context).load(root.channel_id)

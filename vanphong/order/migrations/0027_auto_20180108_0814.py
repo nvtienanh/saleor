@@ -200,23 +200,23 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name="orderline",
-            name="product",
+            name="room",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="+",
-                to="product.Product",
+                to="room.Room",
             ),
         ),
         migrations.AlterField(
             model_name="orderline",
-            name="product_name",
+            name="room_name",
             field=models.CharField(max_length=128),
         ),
         migrations.AlterField(
             model_name="orderline",
-            name="product_sku",
+            name="room_sku",
             field=models.CharField(max_length=32),
         ),
         migrations.AlterField(
@@ -235,7 +235,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                to="product.Stock",
+                to="room.Stock",
             ),
         ),
         migrations.AlterField(

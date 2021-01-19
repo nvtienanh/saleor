@@ -3,7 +3,7 @@ from graphene import relay
 
 from ...core.permissions import PagePermissions
 from ...menu import models
-from ...product.models import Collection
+from ...room.models import Collection
 from ..channel.dataloaders import ChannelBySlugLoader
 from ..channel.types import (
     ChannelContext,
@@ -13,7 +13,7 @@ from ..channel.types import (
 from ..core.connection import CountableDjangoObjectType
 from ..meta.types import ObjectWithMetadata
 from ..page.dataloaders import PageByIdLoader
-from ..product.dataloaders import (
+from ..room.dataloaders import (
     CategoryByIdLoader,
     CollectionByIdLoader,
     CollectionChannelListingByCollectionIdAndChannelSlugLoader,

@@ -8,24 +8,24 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0105_product_minimal_variant_price")]
+    dependencies = [("room", "0105_room_minimal_variant_price")]
 
     operations = [
         migrations.RenameField(
-            model_name="product", old_name="price", new_name="price_amount"
+            model_name="room", old_name="price", new_name="price_amount"
         ),
         migrations.RenameField(
-            model_name="productvariant",
+            model_name="roomvariant",
             old_name="cost_price",
             new_name="cost_price_amount",
         ),
         migrations.RenameField(
-            model_name="productvariant",
+            model_name="roomvariant",
             old_name="price_override",
             new_name="price_override_amount",
         ),
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="currency",
             field=models.CharField(
                 default=os.environ.get("DEFAULT_CURRENCY", "USD"),
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="currency",
             field=models.CharField(
                 blank=True,

@@ -26,12 +26,12 @@ if TYPE_CHECKING:
     from ..discount import DiscountInfo
     from ..invoice.models import Invoice
     from ..order.models import Fulfillment, Order, OrderLine
-    from ..product.models import (
+    from ..room.models import (
         Collection,
-        Product,
-        ProductType,
-        ProductVariant,
-        ProductVariantChannelListing,
+        Room,
+        RoomType,
+        RoomVariant,
+        RoomVariantChannelListing,
     )
 
 
@@ -151,12 +151,12 @@ class BasePlugin:
         self,
         checkout: "Checkout",
         checkout_line: "CheckoutLine",
-        variant: "ProductVariant",
-        product: "Product",
+        variant: "RoomVariant",
+        room: "Room",
         collections: List["Collection"],
         address: Optional["Address"],
         channel: "Channel",
-        channel_listing: "ProductVariantChannelListing",
+        channel_listing: "RoomVariantChannelListing",
         discounts: List["DiscountInfo"],
         previous_value: TaxedMoney,
     ) -> TaxedMoney:
@@ -198,7 +198,7 @@ class BasePlugin:
     def get_order_line_tax_rate(
         self,
         order: "Order",
-        product: "Product",
+        room: "Room",
         address: Optional["Address"],
         previous_value: Decimal,
     ) -> Decimal:
@@ -223,8 +223,8 @@ class BasePlugin:
         """Return list of all tax categories.
 
         The returned list will be used to provide staff users with the possibility to
-        assign tax categories to a product. It can be used by tax plugins to properly
-        calculate taxes for products.
+        assign tax categories to a room. It can be used by tax plugins to properly
+        calculate taxes for rooms.
         Overwrite this method in case your plugin provides a list of tax categories.
         """
         return NotImplemented
@@ -256,16 +256,16 @@ class BasePlugin:
         """
         return NotImplemented
 
-    def apply_taxes_to_product(
+    def apply_taxes_to_room(
         self,
-        product: "Product",
+        room: "Room",
         price: Money,
         country: Country,
         previous_value: TaxedMoney,
     ) -> TaxedMoney:
-        """Apply taxes to the product price based on the customer country.
+        """Apply taxes to the room price based on the customer country.
 
-        Overwrite this method if you want to show products with taxes.
+        Overwrite this method if you want to show rooms with taxes.
         """
         return NotImplemented
 
@@ -322,7 +322,7 @@ class BasePlugin:
 
     def assign_tax_code_to_object_meta(
         self,
-        obj: Union["Product", "ProductType"],
+        obj: Union["Room", "RoomType"],
         tax_code: Optional[str],
         previous_value: Any,
     ):
@@ -330,13 +330,13 @@ class BasePlugin:
         return NotImplemented
 
     def get_tax_code_from_object_meta(
-        self, obj: Union["Product", "ProductType"], previous_value: "TaxType"
+        self, obj: Union["Room", "RoomType"], previous_value: "TaxType"
     ) -> "TaxType":
         """Return tax code from object meta."""
         return NotImplemented
 
     def get_tax_rate_percentage_value(
-        self, obj: Union["Product", "ProductType"], country: Country, previous_value
+        self, obj: Union["Room", "RoomType"], country: Country, previous_value
     ) -> Decimal:
         """Return tax rate percentage value for a given tax rate type in a country.
 
@@ -352,18 +352,18 @@ class BasePlugin:
         """
         return NotImplemented
 
-    def product_created(self, product: "Product", previous_value: Any) -> Any:
-        """Trigger when product is created.
+    def room_created(self, room: "Room", previous_value: Any) -> Any:
+        """Trigger when room is created.
 
-        Overwrite this method if you need to trigger specific logic after a product is
+        Overwrite this method if you need to trigger specific logic after a room is
         created.
         """
         return NotImplemented
 
-    def product_updated(self, product: "Product", previous_value: Any) -> Any:
-        """Trigger when product is updated.
+    def room_updated(self, room: "Room", previous_value: Any) -> Any:
+        """Trigger when room is updated.
 
-        Overwrite this method if you need to trigger specific logic after a product is
+        Overwrite this method if you need to trigger specific logic after a room is
         updated.
         """
         return NotImplemented

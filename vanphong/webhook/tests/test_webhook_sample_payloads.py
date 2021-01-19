@@ -10,7 +10,7 @@ from ..payloads import (
     generate_checkout_payload,
     generate_fulfillment_payload,
     generate_order_payload,
-    generate_product_payload,
+    generate_room_payload,
     generate_sample_payload,
 )
 
@@ -109,8 +109,8 @@ def test_generate_sample_payload_fulfillment_created(fulfillment):
         WebhookEventType.ORDER_CANCELLED,
         WebhookEventType.ORDER_FULFILLED,
         WebhookEventType.ORDER_FULLY_PAID,
-        WebhookEventType.PRODUCT_CREATED,
-        WebhookEventType.PRODUCT_UPDATED,
+        WebhookEventType.ROOM_CREATED,
+        WebhookEventType.ROOM_UPDATED,
         "Non_existing_event",
         None,
         "",
@@ -127,11 +127,11 @@ def test_generate_sample_customer_payload(customer_user):
     assert payload[0]["email"] != customer_user.email
 
 
-def test_generate_sample_product_payload(variant):
-    payload = generate_sample_payload(WebhookEventType.PRODUCT_CREATED)
-    product = variant.product
-    product.refresh_from_db()
-    assert payload == json.loads(generate_product_payload(variant.product))
+def test_generate_sample_room_payload(variant):
+    payload = generate_sample_payload(WebhookEventType.ROOM_CREATED)
+    room = variant.room
+    room.refresh_from_db()
+    assert payload == json.loads(generate_room_payload(variant.room))
 
 
 def _remove_anonymized_checkout_data(checkout_data: dict) -> dict:

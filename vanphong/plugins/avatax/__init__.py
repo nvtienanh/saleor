@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     # flake8: noqa
     from ...checkout.models import Checkout, CheckoutLine
     from ...order.models import Order
-    from ...product.models import Product, ProductType, ProductVariant
+    from ...room.models import Room, RoomType, RoomVariant
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class CustomerErrors:
 
 
 def get_api_url(use_sandbox=True) -> str:
-    """Based on settings return sanbox or production url."""
+    """Based on settings return sanbox or roomion url."""
     if use_sandbox:
         return "https://sandbox-rest.avatax.com/api/v2/"
     return "https://rest.avatax.com/api/v2/"
@@ -229,26 +229,26 @@ def get_checkout_lines_data(
 ) -> List[Dict[str, Union[str, int, bool, None]]]:
     data: List[Dict[str, Union[str, int, bool, None]]] = []
     lines = checkout.lines.prefetch_related(
-        "variant__product__category",
-        "variant__product__collections",
-        "variant__product__product_type",
-    ).filter(variant__product__charge_taxes=True)
+        "variant__room__category",
+        "variant__room__collections",
+        "variant__room__room_type",
+    ).filter(variant__room__charge_taxes=True)
     channel = checkout.channel
     for line in lines:
-        name = line.variant.product.name
-        product = line.variant.product
-        collections = product.collections.all()
+        name = line.variant.room.name
+        room = line.variant.room
+        collections = room.collections.all()
         channel_listing = line.variant.channel_listings.get(channel=channel)
-        product_type = line.variant.product.product_type
-        tax_code = retrieve_tax_code_from_meta(product, default=None)
-        tax_code = tax_code or retrieve_tax_code_from_meta(product_type)
+        room_type = line.variant.room.room_type
+        tax_code = retrieve_tax_code_from_meta(room, default=None)
+        tax_code = tax_code or retrieve_tax_code_from_meta(room_type)
         append_line_to_data(
             data=data,
             quantity=line.quantity,
             amount=base_calculations.base_checkout_line_total(
                 line,
                 line.variant,
-                product,
+                room,
                 collections,
                 channel,
                 channel_listing,
@@ -268,18 +268,18 @@ def get_order_lines_data(
 ) -> List[Dict[str, Union[str, int, bool, None]]]:
     data: List[Dict[str, Union[str, int, bool, None]]] = []
     lines = order.lines.prefetch_related(
-        "variant__product__category",
-        "variant__product__collections",
-        "variant__product__product_type",
-    ).filter(variant__product__charge_taxes=True)
+        "variant__room__category",
+        "variant__room__collections",
+        "variant__room__room_type",
+    ).filter(variant__room__charge_taxes=True)
     system_tax_included = Site.objects.get_current().settings.include_taxes_in_prices
     for line in lines:
         if not line.variant:
             continue
-        product = line.variant.product
-        product_type = line.variant.product.product_type
-        tax_code = retrieve_tax_code_from_meta(product, default=None)
-        tax_code = tax_code or retrieve_tax_code_from_meta(product_type)
+        room = line.variant.room
+        room_type = line.variant.room.room_type
+        tax_code = retrieve_tax_code_from_meta(room, default=None)
+        tax_code = tax_code or retrieve_tax_code_from_meta(room_type)
 
         # Confirm if line doesn't have included taxes in the price. If not then, we
         # check if the current Saleor config doesn't assume that taxes are included in
@@ -295,7 +295,7 @@ def get_order_lines_data(
             amount=line.unit_price_gross_amount * line.quantity,
             tax_code=tax_code,
             item_code=line.variant.sku,
-            name=line.variant.product.name,
+            name=line.variant.room.name,
             tax_included=tax_included,
         )
     if order.discount_amount:
@@ -488,7 +488,7 @@ def get_cached_tax_codes_or_fetch(
 
 
 def retrieve_tax_code_from_meta(
-    obj: Union["Product", "ProductVariant", "ProductType"],
+    obj: Union["Room", "RoomVariant", "RoomType"],
     default: Optional[str] = DEFAULT_TAX_CODE,
 ):
     tax_code = obj.get_value_from_metadata(META_CODE_KEY, default)

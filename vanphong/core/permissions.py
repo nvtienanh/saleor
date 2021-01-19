@@ -55,12 +55,12 @@ class PageTypePermissions(BasePermissionEnum):
     MANAGE_PAGE_TYPES_AND_ATTRIBUTES = "page.manage_page_types_and_attributes"
 
 
-class ProductPermissions(BasePermissionEnum):
-    MANAGE_PRODUCTS = "product.manage_products"
+class RoomPermissions(BasePermissionEnum):
+    MANAGE_ROOMS = "room.manage_rooms"
 
 
-class ProductTypePermissions(BasePermissionEnum):
-    MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES = "product.manage_product_types_and_attributes"
+class RoomTypePermissions(BasePermissionEnum):
+    MANAGE_ROOM_TYPES_AND_ATTRIBUTES = "room.manage_room_types_and_attributes"
 
 
 class ShippingPermissions(BasePermissionEnum):
@@ -83,8 +83,8 @@ PERMISSIONS_ENUMS = [
     OrderPermissions,
     PagePermissions,
     PageTypePermissions,
-    ProductPermissions,
-    ProductTypePermissions,
+    RoomPermissions,
+    RoomTypePermissions,
     ShippingPermissions,
     SitePermissions,
     CheckoutPermissions,

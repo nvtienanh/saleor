@@ -1,6 +1,6 @@
 """Clear the database preserving shop's configuration.
 
-This command clears the database from data such as orders, products or customer
+This command clears the database from data such as orders, rooms or customer
 accounts. It doesn't remove shop's configuration, such as: staff accounts, service
 accounts, plugin configurations, site settings or navigation menus.
 """
@@ -17,9 +17,9 @@ from ....giftcard.models import GiftCard
 from ....order.models import Order
 from ....page.models import Page
 from ....payment.models import Payment, Transaction
-from ....product.models import Category, Collection, Product, ProductType
+from ....room.models import Category, Collection, Room, RoomType
 from ....shipping.models import ShippingMethod, ShippingZone
-from ....warehouse.models import Warehouse
+from ....hotel.models import Hotel
 from ....webhook.models import Webhook
 
 
@@ -55,11 +55,11 @@ class Command(BaseCommand):
         Order.objects.all().delete()
         self.stdout.write("Removed orders")
 
-        Product.objects.all().delete()
-        self.stdout.write("Removed products")
+        Room.objects.all().delete()
+        self.stdout.write("Removed rooms")
 
-        ProductType.objects.all().delete()
-        self.stdout.write("Removed product types")
+        RoomType.objects.all().delete()
+        self.stdout.write("Removed room types")
 
         Attribute.objects.all().delete()
         self.stdout.write("Removed attributes")
@@ -85,8 +85,8 @@ class Command(BaseCommand):
         GiftCard.objects.all().delete()
         self.stdout.write("Removed gift cards")
 
-        self.stdout.write("Removed warehouses")
-        Warehouse.objects.all().delete()
+        self.stdout.write("Removed hotels")
+        Hotel.objects.all().delete()
 
         Page.objects.all().delete()
         self.stdout.write("Removed pages")

@@ -6,13 +6,13 @@ from ...core.permissions import SitePermissions
 from ...discount import models as discount_models
 from ...menu import models as menu_models
 from ...page import models as page_models
-from ...product import models as product_models
+from ...room import models as room_models
 from ...shipping import models as shipping_models
 from ..channel import ChannelContext
 from ..core.mutations import BaseMutation, ModelMutation, registry
 from ..core.types.common import TranslationError
 from ..core.utils import from_global_id_strict_type
-from ..product.types import Product, ProductVariant
+from ..room.types import Room, RoomVariant
 from ..shop.types import Shop
 from .enums import LanguageCodeEnum
 
@@ -67,22 +67,22 @@ class CategoryTranslate(BaseTranslateMutation):
 
     class Meta:
         description = "Creates/Updates translations for Category."
-        model = product_models.Category
+        model = room_models.Category
         error_type_class = TranslationError
         error_type_field = "translation_errors"
 
 
-class ProductTranslate(BaseTranslateMutation):
+class RoomTranslate(BaseTranslateMutation):
     class Arguments:
-        id = graphene.ID(required=True, description="Product ID.")
+        id = graphene.ID(required=True, description="Room ID.")
         language_code = graphene.Argument(
             LanguageCodeEnum, required=True, description="Translation language code."
         )
         input = TranslationInput(required=True)
 
     class Meta:
-        description = "Creates/Updates translations for Product."
-        model = product_models.Product
+        description = "Creates/Updates translations for Room."
+        model = room_models.Room
         error_type_class = TranslationError
         error_type_field = "translation_errors"
 
@@ -93,13 +93,13 @@ class ProductTranslate(BaseTranslateMutation):
                 {"id": ValidationError("This field is required", code="required")}
             )
 
-        product_pk = from_global_id_strict_type(data["id"], Product, field="id")
-        product = product_models.Product.objects.get(pk=product_pk)
-        product.translations.update_or_create(
+        room_pk = from_global_id_strict_type(data["id"], Room, field="id")
+        room = room_models.Room.objects.get(pk=room_pk)
+        room.translations.update_or_create(
             language_code=data["language_code"], defaults=data["input"]
         )
-        product = ChannelContext(node=product, channel_slug=None)
-        return cls(**{cls._meta.return_field_name: product})
+        room = ChannelContext(node=room, channel_slug=None)
+        return cls(**{cls._meta.return_field_name: room})
 
 
 class CollectionTranslate(BaseTranslateMutation):
@@ -112,7 +112,7 @@ class CollectionTranslate(BaseTranslateMutation):
 
     class Meta:
         description = "Creates/Updates translations for collection."
-        model = product_models.Collection
+        model = room_models.Collection
         error_type_class = TranslationError
         error_type_field = "translation_errors"
 
@@ -123,17 +123,17 @@ class CollectionTranslate(BaseTranslateMutation):
         return cls(**{cls._meta.return_field_name: instance})
 
 
-class ProductVariantTranslate(BaseTranslateMutation):
+class RoomVariantTranslate(BaseTranslateMutation):
     class Arguments:
-        id = graphene.ID(required=True, description="Product Variant ID.")
+        id = graphene.ID(required=True, description="Room Variant ID.")
         language_code = graphene.Argument(
             LanguageCodeEnum, required=True, description="Translation language code."
         )
         input = NameTranslationInput(required=True)
 
     class Meta:
-        description = "Creates/Updates translations for Product Variant."
-        model = product_models.ProductVariant
+        description = "Creates/Updates translations for Room Variant."
+        model = room_models.RoomVariant
         error_type_class = TranslationError
         error_type_field = "translation_errors"
 
@@ -144,8 +144,8 @@ class ProductVariantTranslate(BaseTranslateMutation):
                 {"id": ValidationError("This field is required", code="required")}
             )
 
-        variant_pk = from_global_id_strict_type(data["id"], ProductVariant, field="id")
-        variant = product_models.ProductVariant.objects.get(pk=variant_pk)
+        variant_pk = from_global_id_strict_type(data["id"], RoomVariant, field="id")
+        variant = room_models.RoomVariant.objects.get(pk=variant_pk)
         variant.translations.update_or_create(
             language_code=data["language_code"], defaults=data["input"]
         )

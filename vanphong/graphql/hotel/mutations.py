@@ -1,19 +1,19 @@
 import graphene
 from django.core.exceptions import ValidationError
 
-from ...core.permissions import ProductPermissions
-from ...warehouse import models
-from ...warehouse.error_codes import WarehouseErrorCode
-from ...warehouse.validation import validate_warehouse_count  # type: ignore
+from ...core.permissions import RoomPermissions
+from ...hotel import models
+from ...hotel.error_codes import HotelErrorCode
+from ...hotel.validation import validate_hotel_count  # type: ignore
 from ..account.i18n import I18nMixin
 from ..core.mutations import ModelDeleteMutation, ModelMutation
-from ..core.types.common import WarehouseError
+from ..core.types.common import HotelError
 from ..core.utils import (
     validate_required_string_field,
     validate_slug_and_generate_if_needed,
 )
 from ..shipping.types import ShippingZone
-from .types import Warehouse, WarehouseCreateInput, WarehouseUpdateInput
+from .types import Hotel, HotelCreateInput, HotelUpdateInput
 
 ADDRESS_FIELDS = [
     "street_address_1",
@@ -27,7 +27,7 @@ ADDRESS_FIELDS = [
 ]
 
 
-class WarehouseMixin:
+class HotelMixin:
     @classmethod
     def clean_input(cls, info, instance, data, input_cls=None):
         cleaned_input = super().clean_input(info, instance, data)
@@ -36,21 +36,21 @@ class WarehouseMixin:
                 instance, "name", cleaned_input
             )
         except ValidationError as error:
-            error.code = WarehouseErrorCode.REQUIRED.value
+            error.code = HotelErrorCode.REQUIRED.value
             raise ValidationError({"slug": error})
 
         if "name" in cleaned_input:
             try:
                 cleaned_input = validate_required_string_field(cleaned_input, "name")
             except ValidationError as error:
-                error.code = WarehouseErrorCode.REQUIRED.value
+                error.code = HotelErrorCode.REQUIRED.value
                 raise ValidationError({"name": error})
 
         shipping_zones = cleaned_input.get("shipping_zones", [])
-        if not validate_warehouse_count(shipping_zones, instance):
-            msg = "Shipping zone can be assigned only to one warehouse."
+        if not validate_hotel_count(shipping_zones, instance):
+            msg = "Shipping zone can be assigned only to one hotel."
             raise ValidationError(
-                {"shipping_zones": msg}, code=WarehouseErrorCode.INVALID
+                {"shipping_zones": msg}, code=HotelErrorCode.INVALID
             )
         return cleaned_input
 
@@ -60,18 +60,18 @@ class WarehouseMixin:
         return super().construct_instance(instance, cleaned_data)
 
 
-class WarehouseCreate(WarehouseMixin, ModelMutation, I18nMixin):
+class HotelCreate(HotelMixin, ModelMutation, I18nMixin):
     class Arguments:
-        input = WarehouseCreateInput(
-            required=True, description="Fields required to create warehouse."
+        input = HotelCreateInput(
+            required=True, description="Fields required to create hotel."
         )
 
     class Meta:
-        description = "Creates new warehouse."
-        model = models.Warehouse
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = WarehouseError
-        error_type_field = "warehouse_errors"
+        description = "Creates new hotel."
+        model = models.Hotel
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = HotelError
+        error_type_field = "hotel_errors"
 
     @classmethod
     def prepare_address(cls, cleaned_data, *args):
@@ -79,16 +79,16 @@ class WarehouseCreate(WarehouseMixin, ModelMutation, I18nMixin):
         return address_form.save()
 
 
-class WarehouseShippingZoneAssign(WarehouseMixin, ModelMutation, I18nMixin):
+class HotelShippingZoneAssign(HotelMixin, ModelMutation, I18nMixin):
     class Meta:
-        model = models.Warehouse
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        description = "Add shipping zone to given warehouse."
-        error_type_class = WarehouseError
-        error_type_field = "warehouse_errors"
+        model = models.Hotel
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        description = "Add shipping zone to given hotel."
+        error_type_class = HotelError
+        error_type_field = "hotel_errors"
 
     class Arguments:
-        id = graphene.ID(description="ID of a warehouse to update.", required=True)
+        id = graphene.ID(description="ID of a hotel to update.", required=True)
         shipping_zone_ids = graphene.List(
             graphene.NonNull(graphene.ID),
             required=True,
@@ -97,24 +97,24 @@ class WarehouseShippingZoneAssign(WarehouseMixin, ModelMutation, I18nMixin):
 
     @classmethod
     def perform_mutation(cls, _root, info, **data):
-        warehouse = cls.get_node_or_error(info, data.get("id"), only_type=Warehouse)
+        hotel = cls.get_node_or_error(info, data.get("id"), only_type=Hotel)
         shipping_zones = cls.get_nodes_or_error(
             data.get("shipping_zone_ids"), "shipping_zone_id", only_type=ShippingZone
         )
-        warehouse.shipping_zones.add(*shipping_zones)
-        return WarehouseShippingZoneAssign(warehouse=warehouse)
+        hotel.shipping_zones.add(*shipping_zones)
+        return HotelShippingZoneAssign(hotel=hotel)
 
 
-class WarehouseShippingZoneUnassign(WarehouseMixin, ModelMutation, I18nMixin):
+class HotelShippingZoneUnassign(HotelMixin, ModelMutation, I18nMixin):
     class Meta:
-        model = models.Warehouse
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        description = "Remove shipping zone from given warehouse."
-        error_type_class = WarehouseError
-        error_type_field = "warehouse_errors"
+        model = models.Hotel
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        description = "Remove shipping zone from given hotel."
+        error_type_class = HotelError
+        error_type_field = "hotel_errors"
 
     class Arguments:
-        id = graphene.ID(description="ID of a warehouse to update.", required=True)
+        id = graphene.ID(description="ID of a hotel to update.", required=True)
         shipping_zone_ids = graphene.List(
             graphene.NonNull(graphene.ID),
             required=True,
@@ -123,26 +123,26 @@ class WarehouseShippingZoneUnassign(WarehouseMixin, ModelMutation, I18nMixin):
 
     @classmethod
     def perform_mutation(cls, _root, info, **data):
-        warehouse = cls.get_node_or_error(info, data.get("id"), only_type=Warehouse)
+        hotel = cls.get_node_or_error(info, data.get("id"), only_type=Hotel)
         shipping_zones = cls.get_nodes_or_error(
             data.get("shipping_zone_ids"), "shipping_zone_id", only_type=ShippingZone
         )
-        warehouse.shipping_zones.remove(*shipping_zones)
-        return WarehouseShippingZoneAssign(warehouse=warehouse)
+        hotel.shipping_zones.remove(*shipping_zones)
+        return HotelShippingZoneAssign(hotel=hotel)
 
 
-class WarehouseUpdate(WarehouseMixin, ModelMutation, I18nMixin):
+class HotelUpdate(HotelMixin, ModelMutation, I18nMixin):
     class Meta:
-        model = models.Warehouse
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        description = "Updates given warehouse."
-        error_type_class = WarehouseError
-        error_type_field = "warehouse_errors"
+        model = models.Hotel
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        description = "Updates given hotel."
+        error_type_class = HotelError
+        error_type_field = "hotel_errors"
 
     class Arguments:
-        id = graphene.ID(description="ID of a warehouse to update.", required=True)
-        input = WarehouseUpdateInput(
-            required=True, description="Fields required to update warehouse."
+        id = graphene.ID(description="ID of a hotel to update.", required=True)
+        input = HotelUpdateInput(
+            required=True, description="Fields required to update hotel."
         )
 
     @classmethod
@@ -155,13 +155,13 @@ class WarehouseUpdate(WarehouseMixin, ModelMutation, I18nMixin):
         return address_form.save()
 
 
-class WarehouseDelete(ModelDeleteMutation):
+class HotelDelete(ModelDeleteMutation):
     class Meta:
-        model = models.Warehouse
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        description = "Deletes selected warehouse."
-        error_type_class = WarehouseError
-        error_type_field = "warehouse_errors"
+        model = models.Hotel
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        description = "Deletes selected hotel."
+        error_type_class = HotelError
+        error_type_field = "hotel_errors"
 
     class Arguments:
-        id = graphene.ID(description="ID of a warehouse to delete.", required=True)
+        id = graphene.ID(description="ID of a hotel to delete.", required=True)

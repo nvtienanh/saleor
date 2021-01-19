@@ -3,7 +3,7 @@ import uuid
 from django.db import models, transaction
 
 from ..account.models import User
-from ..product.models import Product, ProductVariant
+from ..room.models import Room, RoomVariant
 
 
 class Wishlist(models.Model):
@@ -18,25 +18,25 @@ class Wishlist(models.Model):
         self.save()
 
     def get_all_variants(self):
-        return ProductVariant.objects.filter(
+        return RoomVariant.objects.filter(
             wishlist_items__wishlist_id=self.pk
         ).distinct()
 
-    def add_product(self, product: Product):
-        item, _is_created = self.items.get_or_create(product_id=product.pk)
+    def add_room(self, room: Room):
+        item, _is_created = self.items.get_or_create(room_id=room.pk)
         return item
 
-    def remove_product(self, product: Product):
-        self.items.filter(product_id=product.pk).delete()
+    def remove_room(self, room: Room):
+        self.items.filter(room_id=room.pk).delete()
 
-    def add_variant(self, variant: ProductVariant):
-        item, _is_created = self.items.get_or_create(product_id=variant.product_id)
+    def add_variant(self, variant: RoomVariant):
+        item, _is_created = self.items.get_or_create(room_id=variant.room_id)
         item.variants.add(variant)
         return item
 
-    def remove_variant(self, variant: ProductVariant):
+    def remove_variant(self, variant: RoomVariant):
         try:
-            item = self.items.get(product_id=variant.product_id)
+            item = self.items.get(room_id=variant.room_id)
         except WishlistItem.DoesNotExist:
             return
         else:
@@ -51,17 +51,17 @@ class WishlistItemQuerySet(models.QuerySet):
     def move_items_between_wishlists(self, src_wishlist, dst_wishlist):
         dst_wishlist_map = {}
         for dst_item in dst_wishlist.items.all():
-            dst_wishlist_map[dst_item.product_id] = dst_item
+            dst_wishlist_map[dst_item.room_id] = dst_item
         # Copying the items from the source to the destination wishlist.
         for src_item in src_wishlist.items.all():
-            if src_item.product_id in dst_wishlist_map:
-                # This wishlist item's product already exist.
+            if src_item.room_id in dst_wishlist_map:
+                # This wishlist item's room already exist.
                 # Adding and the variants, "add" already handles duplicates.
-                dst_item = dst_wishlist_map[src_item.product_id]
+                dst_item = dst_wishlist_map[src_item.room_id]
                 dst_item.variants.add(*src_item.variants.all())
                 src_item.delete()
             else:
-                # This wishlist item contains a new product.
+                # This wishlist item contains a new room.
                 # It can be reassigned to the destination wishlist.
                 src_item.wishlist = dst_wishlist
                 src_item.save()
@@ -72,18 +72,18 @@ class WishlistItem(models.Model):
     wishlist = models.ForeignKey(
         Wishlist, related_name="items", on_delete=models.CASCADE
     )
-    product = models.ForeignKey(
-        Product, related_name="wishlist_items", on_delete=models.CASCADE
+    room = models.ForeignKey(
+        Room, related_name="wishlist_items", on_delete=models.CASCADE
     )
     variants = models.ManyToManyField(
-        ProductVariant, related_name="wishlist_items", blank=True
+        RoomVariant, related_name="wishlist_items", blank=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = WishlistItemQuerySet.as_manager()
 
     class Meta:
-        unique_together = ("wishlist", "product")
+        unique_together = ("wishlist", "room")
 
     def __str__(self):
-        return "WishlistItem (%s, %s)" % (self.wishlist.user, self.product)
+        return "WishlistItem (%s, %s)" % (self.wishlist.user, self.room)

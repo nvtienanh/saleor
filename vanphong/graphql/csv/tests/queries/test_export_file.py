@@ -37,7 +37,7 @@ EXPORT_FILE_QUERY = """
 def test_query_export_file(
     staff_api_client,
     user_export_file,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     user_export_event,
 ):
@@ -49,7 +49,7 @@ def test_query_export_file(
     response = staff_api_client.post_graphql(
         query,
         variables=variables,
-        permissions=[permission_manage_products, permission_manage_apps],
+        permissions=[permission_manage_rooms, permission_manage_apps],
     )
 
     # then
@@ -74,7 +74,7 @@ def test_query_export_file(
 def test_query_export_file_by_app(
     app_api_client,
     user_export_file,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     permission_manage_staff,
     user_export_event,
@@ -88,7 +88,7 @@ def test_query_export_file_by_app(
         query,
         variables=variables,
         permissions=[
-            permission_manage_products,
+            permission_manage_rooms,
             permission_manage_apps,
             permission_manage_staff,
         ],
@@ -117,7 +117,7 @@ def test_query_export_file_export_file_with_app(
     app,
     staff_api_client,
     app_export_file,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_apps,
     permission_manage_staff,
     app_export_event,
@@ -131,7 +131,7 @@ def test_query_export_file_export_file_with_app(
         query,
         variables=variables,
         permissions=[
-            permission_manage_products,
+            permission_manage_rooms,
             permission_manage_staff,
             permission_manage_apps,
         ],
@@ -159,7 +159,7 @@ def test_query_export_file_export_file_with_app(
 def test_query_export_file_as_app(
     app_api_client,
     user_export_file,
-    permission_manage_products,
+    permission_manage_rooms,
     permission_manage_staff,
     permission_manage_apps,
     user_export_event,
@@ -173,7 +173,7 @@ def test_query_export_file_as_app(
         query,
         variables=variables,
         permissions=[
-            permission_manage_products,
+            permission_manage_rooms,
             permission_manage_staff,
             permission_manage_apps,
         ],

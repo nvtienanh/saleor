@@ -56,7 +56,7 @@ query GetSales($channel: String){
             }
           }
         }
-        products(first: 10) {
+        rooms(first: 10) {
           edges {
             node {
               id

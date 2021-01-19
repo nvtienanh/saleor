@@ -219,7 +219,7 @@ def test_permission_group_delete(
     staff_users,
     permission_manage_staff,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     staff_api_client,
     count_queries,
 ):
@@ -248,15 +248,15 @@ def test_permission_group_delete(
     """
     staff_user1, staff_user2, _ = staff_users
     staff_user1.user_permissions.add(
-        permission_manage_orders, permission_manage_products
+        permission_manage_orders, permission_manage_rooms
     )
     groups = Group.objects.bulk_create(
-        [Group(name="manage orders"), Group(name="manage orders and products")]
+        [Group(name="manage orders"), Group(name="manage orders and rooms")]
     )
     group1, group2 = groups
     group1.permissions.add(permission_manage_orders, permission_manage_staff)
     group2.permissions.add(
-        permission_manage_orders, permission_manage_products, permission_manage_staff
+        permission_manage_orders, permission_manage_rooms, permission_manage_staff
     )
 
     staff_user2.groups.add(group1, group2)

@@ -3,34 +3,34 @@
 from django.db import migrations, models
 
 
-def populate_product_minimal_variant_price(apps, schema_editor):
-    Product = apps.get_model("product", "Product")
-    for product in Product.objects.iterator():
-        # Set the "minimal variant price" to the default product's price
+def populate_room_minimal_variant_price(apps, schema_editor):
+    Room = apps.get_model("room", "Room")
+    for room in Room.objects.iterator():
+        # Set the "minimal variant price" to the default room's price
         # We don't calculate the "minimal variant price" here because the logic
         # depends on models' methods and we would have to copy all the code into
         # this migration. Instead we should manually run the management command:
-        # - "update_all_products_minimal_variant_prices"
-        product.minimal_variant_price_amount = product.price
-        product.save(update_fields=["minimal_variant_price_amount"])
+        # - "update_all_rooms_minimal_variant_prices"
+        room.minimal_variant_price_amount = room.price
+        room.save(update_fields=["minimal_variant_price_amount"])
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0104_fix_invalid_attributes_map")]
+    dependencies = [("room", "0104_fix_invalid_attributes_map")]
 
     operations = [
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="minimal_variant_price_amount",
             field=models.DecimalField(decimal_places=2, max_digits=12, null=True),
         ),
         migrations.RunPython(
-            populate_product_minimal_variant_price,
+            populate_room_minimal_variant_price,
             reverse_code=migrations.RunPython.noop,
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="minimal_variant_price_amount",
             field=models.DecimalField(decimal_places=2, max_digits=12),
         ),

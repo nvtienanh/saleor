@@ -15,7 +15,7 @@ def vouchers_for_sorting_with_channels(db, channel_USD, channel_PLN):
                 name="Voucher1",
                 discount_value_type=DiscountValueType.PERCENTAGE,
                 usage_limit=10,
-                type=VoucherType.SPECIFIC_PRODUCT,
+                type=VoucherType.SPECIFIC_ROOM,
             ),
             Voucher(
                 code="Code2",
@@ -36,7 +36,7 @@ def vouchers_for_sorting_with_channels(db, channel_USD, channel_PLN):
                 code="Code4",
                 name="Voucher4",
                 usage_limit=100,
-                type=VoucherType.SPECIFIC_PRODUCT,
+                type=VoucherType.SPECIFIC_ROOM,
             ),
             Voucher(
                 code="Code15",

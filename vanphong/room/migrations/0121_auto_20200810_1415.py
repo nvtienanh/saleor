@@ -8,7 +8,7 @@ import saleor.core.utils.json_serializer
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0120_auto_20200714_0539"),
+        ("room", "0120_auto_20200714_0539"),
     ]
 
     operations = [
@@ -113,7 +113,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="metadata",
             field=models.JSONField(
                 blank=True,
@@ -123,7 +123,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="private_metadata",
             field=models.JSONField(
                 blank=True,
@@ -133,7 +133,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="producttype",
+            model_name="roomtype",
             name="metadata",
             field=models.JSONField(
                 blank=True,
@@ -143,7 +143,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="producttype",
+            model_name="roomtype",
             name="private_metadata",
             field=models.JSONField(
                 blank=True,
@@ -153,7 +153,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="metadata",
             field=models.JSONField(
                 blank=True,
@@ -163,7 +163,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="productvariant",
+            model_name="roomvariant",
             name="private_metadata",
             field=models.JSONField(
                 blank=True,

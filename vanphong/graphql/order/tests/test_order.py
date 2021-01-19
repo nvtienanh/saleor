@@ -20,8 +20,8 @@ from ....payment import ChargeStatus, CustomPaymentChoices, PaymentError
 from ....payment.models import Payment
 from ....plugins.manager import PluginsManager
 from ....shipping.models import ShippingMethod
-from ....warehouse.models import Allocation, Stock
-from ....warehouse.tests.utils import get_available_quantity_for_stock
+from ....hotel.models import Allocation, Stock
+from ....hotel.tests.utils import get_available_quantity_for_stock
 from ...order.mutations.orders import (
     clean_order_cancel,
     clean_order_capture,
@@ -129,7 +129,7 @@ def test_orderline_query(staff_api_client, permission_manage_orders, fulfilled_o
                             allocations {
                                 id
                                 quantity
-                                warehouse {
+                                hotel {
                                     id
                                 }
                             }
@@ -159,7 +159,7 @@ def test_orderline_query(staff_api_client, permission_manage_orders, fulfilled_o
     content = get_graphql_content(response)
     order_data = content["data"]["orders"]["edges"][0]["node"]
     first_order_data_line = order_data["lines"][0]
-    variant_id = graphene.Node.to_global_id("ProductVariant", line.variant.pk)
+    variant_id = graphene.Node.to_global_id("RoomVariant", line.variant.pk)
 
     assert first_order_data_line["thumbnail"] is None
     assert first_order_data_line["variant"]["id"] == variant_id
@@ -181,11 +181,11 @@ def test_orderline_query(staff_api_client, permission_manage_orders, fulfilled_o
 
     allocation = line.allocations.first()
     allocation_id = graphene.Node.to_global_id("Allocation", allocation.pk)
-    warehouse_id = graphene.Node.to_global_id(
-        "Warehouse", allocation.stock.warehouse.pk
+    hotel_id = graphene.Node.to_global_id(
+        "Hotel", allocation.stock.hotel.pk
     )
     assert first_order_data_line["allocations"] == [
-        {"id": allocation_id, "quantity": 0, "warehouse": {"id": warehouse_id}}
+        {"id": allocation_id, "quantity": 0, "hotel": {"id": hotel_id}}
     ]
 
 
@@ -206,7 +206,7 @@ def test_order_line_with_allocations(
                             allocations {
                                 id
                                 quantity
-                                warehouse {
+                                hotel {
                                     id
                                 }
                             }
@@ -766,7 +766,7 @@ def test_nested_order_events_query(
     fulfilled_order,
     fulfillment,
     staff_user,
-    warehouse,
+    hotel,
 ):
     query = """
         query OrdersQuery {
@@ -789,13 +789,13 @@ def test_nested_order_events_query(
                             fulfilledItems {
                                 quantity
                                 orderLine {
-                                    productName
+                                    roomName
                                     variantName
                                 }
                             }
                             paymentId
                             paymentGateway
-                            warehouse {
+                            hotel {
                                 name
                             }
                         }
@@ -817,7 +817,7 @@ def test_nested_order_events_query(
             "amount": "80.00",
             "quantity": "10",
             "composed_id": "10-10",
-            "warehouse": warehouse.pk,
+            "hotel": hotel.pk,
         }
     )
     event.save()
@@ -839,7 +839,7 @@ def test_nested_order_events_query(
         {
             "quantity": line.quantity,
             "orderLine": {
-                "productName": line.order_line.product_name,
+                "roomName": line.order_line.room_name,
                 "variantName": line.order_line.variant_name,
             },
         }
@@ -847,7 +847,7 @@ def test_nested_order_events_query(
     ]
     assert data["paymentId"] is None
     assert data["paymentGateway"] is None
-    assert data["warehouse"]["name"] == warehouse.name
+    assert data["hotel"]["name"] == hotel.name
 
 
 def test_payment_information_order_events_query(
@@ -964,8 +964,8 @@ DRAFT_ORDER_CREATE_MUTATION = """
                         discountName
                         redirectUrl
                         lines {
-                            productName
-                            productSku
+                            roomName
+                            roomSku
                             quantity
                         }
                         status
@@ -984,7 +984,7 @@ def test_draft_order_create(
     permission_manage_orders,
     staff_user,
     customer_user,
-    product_without_shipping,
+    room_without_shipping,
     shipping_method,
     variant,
     voucher,
@@ -998,11 +998,11 @@ def test_draft_order_create(
     assert not OrderEvent.objects.exists()
 
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_0_id = graphene.Node.to_global_id("ProductVariant", variant_0.id)
-    variant_1 = product_without_shipping.variants.first()
+    variant_0_id = graphene.Node.to_global_id("RoomVariant", variant_0.id)
+    variant_1 = room_without_shipping.variants.first()
     variant_1.quantity = 2
     variant_1.save()
-    variant_1_id = graphene.Node.to_global_id("ProductVariant", variant_1.id)
+    variant_1_id = graphene.Node.to_global_id("RoomVariant", variant_1.id)
     discount = "10"
     customer_note = "Test note"
     variant_list = [
@@ -1061,7 +1061,7 @@ def test_draft_order_create_with_inactive_channel(
     permission_manage_orders,
     staff_user,
     customer_user,
-    product_without_shipping,
+    room_without_shipping,
     shipping_method,
     variant,
     voucher,
@@ -1077,11 +1077,11 @@ def test_draft_order_create_with_inactive_channel(
     user_id = graphene.Node.to_global_id("User", customer_user.id)
     channel_USD.is_active = False
     channel_USD.save()
-    variant_0_id = graphene.Node.to_global_id("ProductVariant", variant_0.id)
-    variant_1 = product_without_shipping.variants.first()
+    variant_0_id = graphene.Node.to_global_id("RoomVariant", variant_0.id)
+    variant_1 = room_without_shipping.variants.first()
     variant_1.quantity = 2
     variant_1.save()
-    variant_1_id = graphene.Node.to_global_id("ProductVariant", variant_1.id)
+    variant_1_id = graphene.Node.to_global_id("RoomVariant", variant_1.id)
     discount = "10"
     customer_note = "Test note"
     variant_list = [
@@ -1136,7 +1136,7 @@ def test_draft_order_create_variant_with_0_price(
     permission_manage_orders,
     staff_user,
     customer_user,
-    product_without_shipping,
+    room_without_shipping,
     shipping_method,
     variant,
     voucher,
@@ -1149,13 +1149,13 @@ def test_draft_order_create_variant_with_0_price(
     assert not OrderEvent.objects.exists()
 
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_0_id = graphene.Node.to_global_id("ProductVariant", variant_0.id)
+    variant_0_id = graphene.Node.to_global_id("RoomVariant", variant_0.id)
     channel_id = graphene.Node.to_global_id("Channel", channel_USD.id)
-    variant_1 = product_without_shipping.variants.first()
+    variant_1 = room_without_shipping.variants.first()
     variant_1.quantity = 2
     variant.price = Money(0, "USD")
     variant_1.save()
-    variant_1_id = graphene.Node.to_global_id("ProductVariant", variant_1.id)
+    variant_1_id = graphene.Node.to_global_id("RoomVariant", variant_1.id)
     variant_list = [
         {"variantId": variant_0_id, "quantity": 2},
         {"variantId": variant_1_id, "quantity": 1},
@@ -1203,7 +1203,7 @@ def test_draft_order_create_tax_error(
     permission_manage_orders,
     staff_user,
     customer_user,
-    product_without_shipping,
+    room_without_shipping,
     shipping_method,
     variant,
     voucher,
@@ -1219,11 +1219,11 @@ def test_draft_order_create_tax_error(
 
     channel_id = graphene.Node.to_global_id("Channel", channel_USD.id)
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_0_id = graphene.Node.to_global_id("ProductVariant", variant_0.id)
-    variant_1 = product_without_shipping.variants.first()
+    variant_0_id = graphene.Node.to_global_id("RoomVariant", variant_0.id)
+    variant_1 = room_without_shipping.variants.first()
     variant_1.quantity = 2
     variant_1.save()
-    variant_1_id = graphene.Node.to_global_id("ProductVariant", variant_1.id)
+    variant_1_id = graphene.Node.to_global_id("RoomVariant", variant_1.id)
     discount = "10"
     customer_note = "Test note"
     variant_list = [
@@ -1273,7 +1273,7 @@ def test_draft_order_create_with_voucher_not_assigned_to_order_channel(
 
     channel_id = graphene.Node.to_global_id("Channel", channel_USD.id)
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     discount = "10"
     customer_note = "Test note"
     variant_list = [
@@ -1303,7 +1303,7 @@ def test_draft_order_create_with_voucher_not_assigned_to_order_channel(
     assert error["field"] == "voucher"
 
 
-def test_draft_order_create_with_product_and_variant_not_assigned_to_order_channel(
+def test_draft_order_create_with_room_and_variant_not_assigned_to_order_channel(
     staff_api_client,
     permission_manage_orders,
     customer_user,
@@ -1314,7 +1314,7 @@ def test_draft_order_create_with_product_and_variant_not_assigned_to_order_chann
 ):
     query = DRAFT_ORDER_CREATE_MUTATION
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     discount = "10"
     customer_note = "Test note"
     variant_list = [
@@ -1323,7 +1323,7 @@ def test_draft_order_create_with_product_and_variant_not_assigned_to_order_chann
     shipping_address = graphql_address_data
     shipping_id = graphene.Node.to_global_id("ShippingMethod", shipping_method.id)
     channel_id = graphene.Node.to_global_id("Channel", channel_USD.id)
-    variant.product.channel_listings.all().delete()
+    variant.room.channel_listings.all().delete()
     variant.channel_listings.all().delete()
     variables = {
         "user": user_id,
@@ -1339,7 +1339,7 @@ def test_draft_order_create_with_product_and_variant_not_assigned_to_order_chann
     )
     content = get_graphql_content(response)
     error = content["data"]["draftOrderCreate"]["orderErrors"][0]
-    assert error["code"] == OrderErrorCode.PRODUCT_NOT_PUBLISHED.name
+    assert error["code"] == OrderErrorCode.ROOM_NOT_PUBLISHED.name
     assert error["field"] == "lines"
     assert error["variants"] == [variant_id]
 
@@ -1356,7 +1356,7 @@ def test_draft_order_create_with_variant_not_assigned_to_order_channel(
     query = DRAFT_ORDER_CREATE_MUTATION
 
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     discount = "10"
     customer_note = "Test note"
     variant_list = [
@@ -1390,7 +1390,7 @@ def test_draft_order_create_without_channel(
     permission_manage_orders,
     staff_user,
     customer_user,
-    product_without_shipping,
+    room_without_shipping,
     shipping_method,
     variant,
     voucher,
@@ -1400,11 +1400,11 @@ def test_draft_order_create_without_channel(
     query = DRAFT_ORDER_CREATE_MUTATION
 
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_0_id = graphene.Node.to_global_id("ProductVariant", variant_0.id)
-    variant_1 = product_without_shipping.variants.first()
+    variant_0_id = graphene.Node.to_global_id("RoomVariant", variant_0.id)
+    variant_1 = room_without_shipping.variants.first()
     variant_1.quantity = 2
     variant_1.save()
-    variant_1_id = graphene.Node.to_global_id("ProductVariant", variant_1.id)
+    variant_1_id = graphene.Node.to_global_id("RoomVariant", variant_1.id)
     variant_list = [
         {"variantId": variant_0_id, "quantity": 2},
         {"variantId": variant_1_id, "quantity": 1},
@@ -1422,12 +1422,12 @@ def test_draft_order_create_without_channel(
     assert error["field"] == "channel"
 
 
-def test_draft_order_create_with_channel_with_unpublished_product(
+def test_draft_order_create_with_channel_with_unpublished_room(
     staff_api_client,
     permission_manage_orders,
     staff_user,
     customer_user,
-    product_without_shipping,
+    room_without_shipping,
     shipping_method,
     variant,
     voucher,
@@ -1441,15 +1441,15 @@ def test_draft_order_create_with_channel_with_unpublished_product(
     assert not OrderEvent.objects.exists()
 
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_0_id = graphene.Node.to_global_id("ProductVariant", variant_0.id)
-    variant_1 = product_without_shipping.variants.first()
-    channel_listing = variant_1.product.channel_listings.get()
+    variant_0_id = graphene.Node.to_global_id("RoomVariant", variant_0.id)
+    variant_1 = room_without_shipping.variants.first()
+    channel_listing = variant_1.room.channel_listings.get()
     channel_listing.is_published = False
     channel_listing.save()
 
     variant_1.quantity = 2
     variant_1.save()
-    variant_1_id = graphene.Node.to_global_id("ProductVariant", variant_1.id)
+    variant_1_id = graphene.Node.to_global_id("RoomVariant", variant_1.id)
     discount = "10"
     customer_note = "Test note"
     variant_list = [
@@ -1478,16 +1478,16 @@ def test_draft_order_create_with_channel_with_unpublished_product(
     error = content["data"]["draftOrderCreate"]["orderErrors"][0]
 
     assert error["field"] == "lines"
-    assert error["code"] == OrderErrorCode.PRODUCT_NOT_PUBLISHED.name
+    assert error["code"] == OrderErrorCode.ROOM_NOT_PUBLISHED.name
     assert error["variants"] == [variant_1_id]
 
 
-def test_draft_order_create_with_channel_with_unpublished_product_by_date(
+def test_draft_order_create_with_channel_with_unpublished_room_by_date(
     staff_api_client,
     permission_manage_orders,
     staff_user,
     customer_user,
-    product_without_shipping,
+    room_without_shipping,
     shipping_method,
     variant,
     voucher,
@@ -1501,15 +1501,15 @@ def test_draft_order_create_with_channel_with_unpublished_product_by_date(
     assert not OrderEvent.objects.exists()
     next_day = date.today() + timedelta(days=1)
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_0_id = graphene.Node.to_global_id("ProductVariant", variant_0.id)
-    variant_1 = product_without_shipping.variants.first()
-    channel_listing = variant_1.product.channel_listings.get()
+    variant_0_id = graphene.Node.to_global_id("RoomVariant", variant_0.id)
+    variant_1 = room_without_shipping.variants.first()
+    channel_listing = variant_1.room.channel_listings.get()
     channel_listing.publication_date = next_day
     channel_listing.save()
 
     variant_1.quantity = 2
     variant_1.save()
-    variant_1_id = graphene.Node.to_global_id("ProductVariant", variant_1.id)
+    variant_1_id = graphene.Node.to_global_id("RoomVariant", variant_1.id)
     discount = "10"
     customer_note = "Test note"
     variant_list = [
@@ -1538,7 +1538,7 @@ def test_draft_order_create_with_channel_with_unpublished_product_by_date(
     error = content["data"]["draftOrderCreate"]["orderErrors"][0]
 
     assert error["field"] == "lines"
-    assert error["code"] == "PRODUCT_NOT_PUBLISHED"
+    assert error["code"] == "ROOM_NOT_PUBLISHED"
     assert error["variants"] == [variant_1_id]
 
 
@@ -1547,7 +1547,7 @@ def test_draft_order_create_with_channel(
     permission_manage_orders,
     staff_user,
     customer_user,
-    product_without_shipping,
+    room_without_shipping,
     shipping_method,
     variant,
     voucher,
@@ -1561,12 +1561,12 @@ def test_draft_order_create_with_channel(
     assert not OrderEvent.objects.exists()
 
     user_id = graphene.Node.to_global_id("User", customer_user.id)
-    variant_0_id = graphene.Node.to_global_id("ProductVariant", variant_0.id)
-    variant_1 = product_without_shipping.variants.first()
+    variant_0_id = graphene.Node.to_global_id("RoomVariant", variant_0.id)
+    variant_1 = room_without_shipping.variants.first()
 
     variant_1.quantity = 2
     variant_1.save()
-    variant_1_id = graphene.Node.to_global_id("ProductVariant", variant_1.id)
+    variant_1_id = graphene.Node.to_global_id("RoomVariant", variant_1.id)
     discount = "10"
     customer_note = "Test note"
     variant_list = [
@@ -1882,7 +1882,7 @@ def test_can_finalize_order_no_order_lines(
     assert content["data"]["order"]["canFinalize"] is False
 
 
-def test_can_finalize_order_product_unavailable_for_purchase(
+def test_can_finalize_order_room_unavailable_for_purchase(
     staff_api_client, permission_manage_orders, draft_order
 ):
     # given
@@ -1891,8 +1891,8 @@ def test_can_finalize_order_product_unavailable_for_purchase(
     order.status = OrderStatus.DRAFT
     order.save(update_fields=["status"])
 
-    product = order.lines.first().variant.product
-    product.channel_listings.update(available_for_purchase=None)
+    room = order.lines.first().variant.room
+    room.channel_listings.update(available_for_purchase=None)
 
     order_id = graphene.Node.to_global_id("Order", order.id)
     variables = {"id": order_id}
@@ -1906,7 +1906,7 @@ def test_can_finalize_order_product_unavailable_for_purchase(
     assert content["data"]["order"]["canFinalize"] is False
 
 
-def test_can_finalize_order_product_available_for_purchase_from_tomorrow(
+def test_can_finalize_order_room_available_for_purchase_from_tomorrow(
     staff_api_client, permission_manage_orders, draft_order
 ):
     # given
@@ -1915,8 +1915,8 @@ def test_can_finalize_order_product_available_for_purchase_from_tomorrow(
     order.status = OrderStatus.DRAFT
     order.save(update_fields=["status"])
 
-    product = order.lines.first().variant.product
-    product.channel_listings.update(
+    room = order.lines.first().variant.room
+    room.channel_listings.update(
         available_for_purchase=date.today() + timedelta(days=1)
     )
 
@@ -1953,7 +1953,7 @@ def test_validate_draft_order_no_order_lines(order, shipping_method):
     order.shipping_method = shipping_method
     with pytest.raises(ValidationError) as e:
         validate_draft_order(order, "US")
-    msg = "Could not create order without any products."
+    msg = "Could not create order without any rooms."
     assert e.value.error_dict["lines"][0].message == msg
 
 
@@ -1967,62 +1967,62 @@ def test_validate_draft_order_non_existing_variant(draft_order):
 
     with pytest.raises(ValidationError) as e:
         validate_draft_order(order, "US")
-    msg = "Could not create orders with non-existing products."
+    msg = "Could not create orders with non-existing rooms."
     assert e.value.error_dict["lines"][0].message == msg
 
 
-def test_validate_draft_order_with_unpublished_product(draft_order):
+def test_validate_draft_order_with_unpublished_room(draft_order):
     order = draft_order
     line = order.lines.first()
     variant = line.variant
-    product_channel_listing = variant.product.channel_listings.get()
-    product_channel_listing.is_published = False
-    product_channel_listing.save(update_fields=["is_published"])
+    room_channel_listing = variant.room.channel_listings.get()
+    room_channel_listing.is_published = False
+    room_channel_listing.save(update_fields=["is_published"])
     line.refresh_from_db()
 
     with pytest.raises(ValidationError) as e:
         validate_draft_order(order, "US")
-    msg = "Can't finalize draft with unpublished product."
+    msg = "Can't finalize draft with unpublished room."
     error = e.value.error_dict["lines"][0]
 
     assert error.message == msg
-    assert error.code == OrderErrorCode.PRODUCT_NOT_PUBLISHED
+    assert error.code == OrderErrorCode.ROOM_NOT_PUBLISHED
 
 
-def test_validate_draft_order_with_unavailable_for_purchase_product(draft_order):
+def test_validate_draft_order_with_unavailable_for_purchase_room(draft_order):
     order = draft_order
     line = order.lines.first()
     variant = line.variant
-    variant.product.channel_listings.update(available_for_purchase=None)
+    variant.room.channel_listings.update(available_for_purchase=None)
     line.refresh_from_db()
 
     with pytest.raises(ValidationError) as e:
         validate_draft_order(order, "US")
-    msg = "Can't finalize draft with product unavailable for purchase."
+    msg = "Can't finalize draft with room unavailable for purchase."
     error = e.value.error_dict["lines"][0]
 
     assert error.message == msg
-    assert error.code == OrderErrorCode.PRODUCT_UNAVAILABLE_FOR_PURCHASE
+    assert error.code == OrderErrorCode.ROOM_UNAVAILABLE_FOR_PURCHASE
 
 
-def test_validate_draft_order_with_product_available_for_purchase_in_future(
+def test_validate_draft_order_with_room_available_for_purchase_in_future(
     draft_order,
 ):
     order = draft_order
     line = order.lines.first()
     variant = line.variant
-    variant.product.channel_listings.update(
+    variant.room.channel_listings.update(
         available_for_purchase=date.today() + timedelta(days=2)
     )
     line.refresh_from_db()
 
     with pytest.raises(ValidationError) as e:
         validate_draft_order(order, "US")
-    msg = "Can't finalize draft with product unavailable for purchase."
+    msg = "Can't finalize draft with room unavailable for purchase."
     error = e.value.error_dict["lines"][0]
 
     assert error.message == msg
-    assert error.code == OrderErrorCode.PRODUCT_UNAVAILABLE_FOR_PURCHASE
+    assert error.code == OrderErrorCode.ROOM_UNAVAILABLE_FOR_PURCHASE
 
 
 def test_validate_draft_order_out_of_stock_variant(draft_order):
@@ -2036,7 +2036,7 @@ def test_validate_draft_order_out_of_stock_variant(draft_order):
 
     with pytest.raises(ValidationError) as e:
         validate_draft_order(order, "US")
-    msg = "Insufficient product stock: SKU_AA"
+    msg = "Insufficient room stock: SKU_AA"
     assert e.value.error_dict["lines"][0].message == msg
 
 
@@ -2174,7 +2174,7 @@ def test_draft_order_complete_with_inactive_channel(
     assert data["orderErrors"][0]["field"] == "channel"
 
 
-def test_draft_order_complete_product_without_inventory_tracking(
+def test_draft_order_complete_room_without_inventory_tracking(
     staff_api_client,
     shipping_method,
     permission_manage_orders,
@@ -2230,7 +2230,7 @@ def test_draft_order_complete_out_of_stock_variant(
     assert not OrderEvent.objects.exists()
 
     line_1, _ = order.lines.order_by("-quantity").all()
-    stock_1 = Stock.objects.get(product_variant=line_1.variant)
+    stock_1 = Stock.objects.get(room_variant=line_1.variant)
     line_1.quantity = get_available_quantity_for_stock(stock_1) + 1
     line_1.save(update_fields=["quantity"])
 
@@ -2336,8 +2336,8 @@ def test_draft_order_complete_unavailable_for_purchase(
     # Ensure no events were created
     assert not OrderEvent.objects.exists()
 
-    product = order.lines.first().variant.product
-    product.channel_listings.update(
+    room = order.lines.first().variant.room
+    room.channel_listings.update(
         available_for_purchase=date.today() + timedelta(days=5)
     )
 
@@ -2356,7 +2356,7 @@ def test_draft_order_complete_unavailable_for_purchase(
     assert order.status == OrderStatus.DRAFT
 
     assert error["field"] == "lines"
-    assert error["code"] == OrderErrorCode.PRODUCT_UNAVAILABLE_FOR_PURCHASE.name
+    assert error["code"] == OrderErrorCode.ROOM_UNAVAILABLE_FOR_PURCHASE.name
 
 
 DRAFT_ORDER_LINES_CREATE_MUTATION = """
@@ -2373,7 +2373,7 @@ DRAFT_ORDER_LINES_CREATE_MUTATION = """
             orderLines {
                 id
                 quantity
-                productSku
+                roomSku
             }
             order {
                 total {
@@ -2397,7 +2397,7 @@ def test_draft_order_lines_create(
     old_quantity = line.quantity
     quantity = 1
     order_id = graphene.Node.to_global_id("Order", order.id)
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     variables = {"orderId": order_id, "variantId": variant_id, "quantity": quantity}
 
     # mutation should fail without proper permissions
@@ -2409,7 +2409,7 @@ def test_draft_order_lines_create(
     response = staff_api_client.post_graphql(query, variables)
     content = get_graphql_content(response)
     data = content["data"]["draftOrderLinesCreate"]
-    assert data["orderLines"][0]["productSku"] == variant.sku
+    assert data["orderLines"][0]["roomSku"] == variant.sku
     assert data["orderLines"][0]["quantity"] == old_quantity + quantity
 
     # mutation should fail when quantity is lower than 1
@@ -2421,7 +2421,7 @@ def test_draft_order_lines_create(
     assert data["orderErrors"][0]["field"] == "quantity"
 
 
-def test_draft_order_lines_create_with_product_and_variant_not_assigned_to_channel(
+def test_draft_order_lines_create_with_room_and_variant_not_assigned_to_channel(
     draft_order, permission_manage_orders, staff_api_client, variant
 ):
     query = DRAFT_ORDER_LINES_CREATE_MUTATION
@@ -2429,9 +2429,9 @@ def test_draft_order_lines_create_with_product_and_variant_not_assigned_to_chann
     line = order.lines.first()
     assert variant != line.variant
     order_id = graphene.Node.to_global_id("Order", order.id)
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     variables = {"orderId": order_id, "variantId": variant_id, "quantity": 1}
-    variant.product.channel_listings.all().delete()
+    variant.room.channel_listings.all().delete()
     variant.channel_listings.all().delete()
 
     response = staff_api_client.post_graphql(
@@ -2439,7 +2439,7 @@ def test_draft_order_lines_create_with_product_and_variant_not_assigned_to_chann
     )
     content = get_graphql_content(response)
     error = content["data"]["draftOrderLinesCreate"]["orderErrors"][0]
-    assert error["code"] == OrderErrorCode.PRODUCT_NOT_PUBLISHED.name
+    assert error["code"] == OrderErrorCode.ROOM_NOT_PUBLISHED.name
     assert error["field"] == "input"
     assert error["variants"] == [variant_id]
 
@@ -2459,7 +2459,7 @@ def test_draft_order_lines_create_with_variant_not_assigned_to_channel(
     line = order.lines.first()
     assert variant != line.variant
     order_id = graphene.Node.to_global_id("Order", order.id)
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     variables = {"orderId": order_id, "variantId": variant_id, "quantity": 1}
     variant.channel_listings.all().delete()
 
@@ -2481,7 +2481,7 @@ def test_require_draft_order_when_creating_lines(
     line = order.lines.first()
     variant = line.variant
     order_id = graphene.Node.to_global_id("Order", order.id)
-    variant_id = graphene.Node.to_global_id("ProductVariant", variant.id)
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     variables = {"orderId": order_id, "variantId": variant_id, "quantity": 1}
     response = staff_api_client.post_graphql(
         query, variables, permissions=[permission_manage_orders]
@@ -2543,7 +2543,7 @@ def test_draft_order_line_update(
     assert data["orderLine"]["quantity"] == new_quantity
 
     removed_items_event = OrderEvent.objects.last()  # type: OrderEvent
-    assert removed_items_event.type == order_events.OrderEvents.DRAFT_REMOVED_PRODUCTS
+    assert removed_items_event.type == order_events.OrderEvents.DRAFT_REMOVED_ROOMS
     assert removed_items_event.user == staff_user
     assert removed_items_event.parameters == {
         "lines": [{"quantity": removed_quantity, "line_pk": line.pk, "item": str(line)}]
@@ -2605,7 +2605,7 @@ def test_retrieving_event_lines_with_deleted_line(
     quantities_per_lines = [(line.quantity, line) for line in lines]
 
     # Create the test event
-    order_events.draft_order_added_products_event(
+    order_events.draft_order_added_rooms_event(
         order=order, user=staff_user, order_lines=quantities_per_lines
     )
 
@@ -2644,7 +2644,7 @@ def test_retrieving_event_lines_with_missing_line_pk_in_data(
     quantities_per_lines = [(line.quantity, line)]
 
     # Create the test event
-    event = order_events.draft_order_added_products_event(
+    event = order_events.draft_order_added_rooms_event(
         order=order, user=staff_user, order_lines=quantities_per_lines
     )
     del event.parameters["lines"][0]["line_pk"]
@@ -4865,7 +4865,7 @@ def test_get_variant_from_order_line_variant_published_as_customer(
 
 
 def test_get_variant_from_order_line_variant_published_as_admin(
-    staff_api_client, order_line, permission_manage_products
+    staff_api_client, order_line, permission_manage_rooms
 ):
     # given
     order = order_line.order
@@ -4876,7 +4876,7 @@ def test_get_variant_from_order_line_variant_published_as_admin(
     response = staff_api_client.post_graphql(
         QUERY_GET_VARIANTS_FROM_ORDER,
         {},
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
         check_no_permissions=False,
     )
 
@@ -4890,8 +4890,8 @@ def test_get_variant_from_order_line_variant_not_published_as_customer(
     user_api_client, order_line
 ):
     # given
-    product = order_line.variant.product
-    product.channel_listings.update(is_published=False)
+    room = order_line.variant.room
+    room.channel_listings.update(is_published=False)
 
     # when
     response = user_api_client.post_graphql(QUERY_GET_VARIANTS_FROM_ORDER, {})
@@ -4903,20 +4903,20 @@ def test_get_variant_from_order_line_variant_not_published_as_customer(
 
 
 def test_get_variant_from_order_line_variant_not_published_as_admin(
-    staff_api_client, order_line, permission_manage_products
+    staff_api_client, order_line, permission_manage_rooms
 ):
     # given
     order = order_line.order
     order.user = staff_api_client.user
     order.save()
-    product = order_line.variant.product
-    product.channel_listings.update(is_published=False)
+    room = order_line.variant.room
+    room.channel_listings.update(is_published=False)
 
     # when
     response = staff_api_client.post_graphql(
         QUERY_GET_VARIANTS_FROM_ORDER,
         {},
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
         check_no_permissions=False,
     )
 
@@ -4930,8 +4930,8 @@ def test_get_variant_from_order_line_variant_not_assigned_to_channel_as_customer
     user_api_client, order_line
 ):
     # given
-    product = order_line.variant.product
-    product.channel_listings.all().delete()
+    room = order_line.variant.room
+    room.channel_listings.all().delete()
 
     # when
     response = user_api_client.post_graphql(QUERY_GET_VARIANTS_FROM_ORDER, {})
@@ -4943,20 +4943,20 @@ def test_get_variant_from_order_line_variant_not_assigned_to_channel_as_customer
 
 
 def test_get_variant_from_order_line_variant_not_assigned_to_channel_as_admin(
-    staff_api_client, order_line, permission_manage_products
+    staff_api_client, order_line, permission_manage_rooms
 ):
     # given
     order = order_line.order
     order.user = staff_api_client.user
     order.save()
-    product = order_line.variant.product
-    product.channel_listings.all().delete()
+    room = order_line.variant.room
+    room.channel_listings.all().delete()
 
     # when
     response = staff_api_client.post_graphql(
         QUERY_GET_VARIANTS_FROM_ORDER,
         {},
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
         check_no_permissions=False,
     )
 
@@ -4970,8 +4970,8 @@ def test_get_variant_from_order_line_variant_not_visible_in_listings_as_customer
     user_api_client, order_line
 ):
     # given
-    product = order_line.variant.product
-    product.channel_listings.update(visible_in_listings=False)
+    room = order_line.variant.room
+    room.channel_listings.update(visible_in_listings=False)
 
     # when
     response = user_api_client.post_graphql(QUERY_GET_VARIANTS_FROM_ORDER, {})
@@ -4983,20 +4983,20 @@ def test_get_variant_from_order_line_variant_not_visible_in_listings_as_customer
 
 
 def test_get_variant_from_order_line_variant_not_visible_in_listings_as_admin(
-    staff_api_client, order_line, permission_manage_products
+    staff_api_client, order_line, permission_manage_rooms
 ):
     # given
     order = order_line.order
     order.user = staff_api_client.user
     order.save()
-    product = order_line.variant.product
-    product.channel_listings.update(visible_in_listings=False)
+    room = order_line.variant.room
+    room.channel_listings.update(visible_in_listings=False)
 
     # when
     response = staff_api_client.post_graphql(
         QUERY_GET_VARIANTS_FROM_ORDER,
         {},
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
         check_no_permissions=False,
     )
 
@@ -5023,7 +5023,7 @@ def test_get_variant_from_order_line_variant_not_exists_as_customer(
 
 
 def test_get_variant_from_order_line_variant_not_exists_as_staff(
-    staff_api_client, order_line, permission_manage_products
+    staff_api_client, order_line, permission_manage_rooms
 ):
     # given
     order = order_line.order
@@ -5036,7 +5036,7 @@ def test_get_variant_from_order_line_variant_not_exists_as_staff(
     response = staff_api_client.post_graphql(
         QUERY_GET_VARIANTS_FROM_ORDER,
         {},
-        permissions=(permission_manage_products,),
+        permissions=(permission_manage_rooms,),
         check_no_permissions=False,
     )
 

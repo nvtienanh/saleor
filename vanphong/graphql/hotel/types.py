@@ -2,15 +2,15 @@ import graphene
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 
-from ...core.permissions import OrderPermissions, ProductPermissions
-from ...warehouse import models
+from ...core.permissions import OrderPermissions, RoomPermissions
+from ...hotel import models
 from ..account.enums import CountryCodeEnum
 from ..channel import ChannelContext
 from ..core.connection import CountableDjangoObjectType
 from ..decorators import one_of_permissions_required
 
 
-class WarehouseAddressInput(graphene.InputObjectType):
+class HotelAddressInput(graphene.InputObjectType):
     street_address_1 = graphene.String(description="Address.", required=True)
     street_address_2 = graphene.String(description="Address.")
     city = graphene.String(description="City.", required=True)
@@ -21,33 +21,33 @@ class WarehouseAddressInput(graphene.InputObjectType):
     phone = graphene.String(description="Phone number.")
 
 
-class WarehouseInput(graphene.InputObjectType):
-    slug = graphene.String(description="Warehouse slug.")
+class HotelInput(graphene.InputObjectType):
+    slug = graphene.String(description="Hotel slug.")
     company_name = graphene.String(description="Company name.")
-    email = graphene.String(description="The email address of the warehouse.")
+    email = graphene.String(description="The email address of the hotel.")
 
 
-class WarehouseCreateInput(WarehouseInput):
-    name = graphene.String(description="Warehouse name.", required=True)
-    address = WarehouseAddressInput(
-        description="Address of the warehouse.", required=True
+class HotelCreateInput(HotelInput):
+    name = graphene.String(description="Hotel name.", required=True)
+    address = HotelAddressInput(
+        description="Address of the hotel.", required=True
     )
     shipping_zones = graphene.List(
-        graphene.ID, description="Shipping zones supported by the warehouse."
+        graphene.ID, description="Shipping zones supported by the hotel."
     )
 
 
-class WarehouseUpdateInput(WarehouseInput):
-    name = graphene.String(description="Warehouse name.", required=False)
-    address = WarehouseAddressInput(
-        description="Address of the warehouse.", required=False
+class HotelUpdateInput(HotelInput):
+    name = graphene.String(description="Hotel name.", required=False)
+    address = HotelAddressInput(
+        description="Address of the hotel.", required=False
     )
 
 
-class Warehouse(CountableDjangoObjectType):
+class Hotel(CountableDjangoObjectType):
     class Meta:
-        description = "Represents warehouse."
-        model = models.Warehouse
+        description = "Represents hotel."
+        model = models.Hotel
         interfaces = [graphene.relay.Node]
         only_fields = [
             "id",
@@ -72,7 +72,7 @@ class Warehouse(CountableDjangoObjectType):
 class Stock(CountableDjangoObjectType):
     quantity = graphene.Int(
         required=True,
-        description="Quantity of a product in the warehouse's possession, "
+        description="Quantity of a room in the hotel's possession, "
         "including the allocated stock that is waiting for shipment.",
     )
     quantity_allocated = graphene.Int(
@@ -83,18 +83,18 @@ class Stock(CountableDjangoObjectType):
         description = "Represents stock."
         model = models.Stock
         interfaces = [graphene.relay.Node]
-        only_fields = ["warehouse", "product_variant", "quantity", "quantity_allocated"]
+        only_fields = ["hotel", "room_variant", "quantity", "quantity_allocated"]
 
     @staticmethod
     @one_of_permissions_required(
-        [ProductPermissions.MANAGE_PRODUCTS, OrderPermissions.MANAGE_ORDERS]
+        [RoomPermissions.MANAGE_ROOMS, OrderPermissions.MANAGE_ORDERS]
     )
     def resolve_quantity(root, *_args):
         return root.quantity
 
     @staticmethod
     @one_of_permissions_required(
-        [ProductPermissions.MANAGE_PRODUCTS, OrderPermissions.MANAGE_ORDERS]
+        [RoomPermissions.MANAGE_ROOMS, OrderPermissions.MANAGE_ORDERS]
     )
     def resolve_quantity_allocated(root, *_args):
         return root.allocations.aggregate(
@@ -102,14 +102,14 @@ class Stock(CountableDjangoObjectType):
         )["quantity_allocated"]
 
     @staticmethod
-    def resolve_product_variant(root, *_args):
-        return ChannelContext(node=root.product_variant, channel_slug=None)
+    def resolve_room_variant(root, *_args):
+        return ChannelContext(node=root.room_variant, channel_slug=None)
 
 
 class Allocation(CountableDjangoObjectType):
     quantity = graphene.Int(required=True, description="Quantity allocated for orders.")
-    warehouse = graphene.Field(
-        Warehouse, required=True, description="The warehouse were items were allocated."
+    hotel = graphene.Field(
+        Hotel, required=True, description="The hotel were items were allocated."
     )
 
     class Meta:
@@ -120,14 +120,14 @@ class Allocation(CountableDjangoObjectType):
 
     @staticmethod
     @one_of_permissions_required(
-        [ProductPermissions.MANAGE_PRODUCTS, OrderPermissions.MANAGE_ORDERS]
+        [RoomPermissions.MANAGE_ROOMS, OrderPermissions.MANAGE_ORDERS]
     )
-    def resolve_warehouse(root, *_args):
-        return root.stock.warehouse
+    def resolve_hotel(root, *_args):
+        return root.stock.hotel
 
     @staticmethod
     @one_of_permissions_required(
-        [ProductPermissions.MANAGE_PRODUCTS, OrderPermissions.MANAGE_ORDERS]
+        [RoomPermissions.MANAGE_ROOMS, OrderPermissions.MANAGE_ORDERS]
     )
     def resolve_quantity(root, *_args):
         return root.quantity_allocated

@@ -6,20 +6,20 @@ import pytest
 from ....attribute import AttributeInputType, AttributeType
 from ....attribute.models import (
     Attribute,
-    AttributeProduct,
+    AttributeRoom,
     AttributeValue,
     AttributeVariant,
 )
-from ....product.error_codes import ProductErrorCode
-from ....product.models import ProductType
+from ....room.error_codes import RoomErrorCode
+from ....room.models import RoomType
 from ...attribute.enums import AttributeTypeEnum
 from ...core.utils import snake_to_camel_case
 from ...tests.utils import get_graphql_content
-from ..enums import ProductAttributeType
+from ..enums import RoomAttributeType
 
-QUERY_PRODUCT_AND_VARIANTS_ATTRIBUTES = """
+QUERY_ROOM_AND_VARIANTS_ATTRIBUTES = """
     query ($channel: String){
-      products(first: 1, channel: $channel) {
+      rooms(first: 1, channel: $channel) {
         edges {
           node {
             attributes {
@@ -53,171 +53,171 @@ QUERY_PRODUCT_AND_VARIANTS_ATTRIBUTES = """
 def test_resolve_attributes_with_hidden(
     user_api_client,
     staff_api_client,
-    product,
+    room,
     color_attribute,
     size_attribute,
     is_staff,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     """Ensure non-staff users don't see hidden attributes, and staff users having
-    the 'manage product' permission can.
+    the 'manage room' permission can.
     """
     variables = {"channel": channel_USD.slug}
-    query = QUERY_PRODUCT_AND_VARIANTS_ATTRIBUTES
+    query = QUERY_ROOM_AND_VARIANTS_ATTRIBUTES
     api_client = user_api_client
 
-    variant = product.variants.first()
+    variant = room.variants.first()
 
-    product_attribute = color_attribute
+    room_attribute = color_attribute
     variant_attribute = size_attribute
 
-    expected_product_attribute_count = product.attributes.count() - 1
+    expected_room_attribute_count = room.attributes.count() - 1
     expected_variant_attribute_count = variant.attributes.count() - 1
 
     if is_staff:
         api_client = staff_api_client
-        api_client.user.user_permissions.add(permission_manage_products)
-        expected_product_attribute_count += 1
+        api_client.user.user_permissions.add(permission_manage_rooms)
+        expected_room_attribute_count += 1
         expected_variant_attribute_count += 1
 
-    # Hide one product and variant attribute from the storefront
-    for attribute in (product_attribute, variant_attribute):
+    # Hide one room and variant attribute from the storefront
+    for attribute in (room_attribute, variant_attribute):
         attribute.visible_in_storefront = False
         attribute.save(update_fields=["visible_in_storefront"])
 
-    product = get_graphql_content(api_client.post_graphql(query, variables))["data"][
-        "products"
+    room = get_graphql_content(api_client.post_graphql(query, variables))["data"][
+        "rooms"
     ]["edges"][0]["node"]
 
-    assert len(product["attributes"]) == expected_product_attribute_count
-    assert len(product["variants"][0]["attributes"]) == expected_variant_attribute_count
+    assert len(room["attributes"]) == expected_room_attribute_count
+    assert len(room["variants"][0]["attributes"]) == expected_variant_attribute_count
 
 
-def test_resolve_attribute_values(user_api_client, product, staff_user, channel_USD):
+def test_resolve_attribute_values(user_api_client, room, staff_user, channel_USD):
     """Ensure the attribute values are properly resolved."""
     variables = {"channel": channel_USD.slug}
-    query = QUERY_PRODUCT_AND_VARIANTS_ATTRIBUTES
+    query = QUERY_ROOM_AND_VARIANTS_ATTRIBUTES
     api_client = user_api_client
 
-    variant = product.variants.first()
+    variant = room.variants.first()
 
-    assert product.attributes.count() == 1
+    assert room.attributes.count() == 1
     assert variant.attributes.count() == 1
 
-    product_attribute_values = list(
-        product.attributes.first().values.values_list("slug", flat=True)
+    room_attribute_values = list(
+        room.attributes.first().values.values_list("slug", flat=True)
     )
     variant_attribute_values = list(
         variant.attributes.first().values.values_list("slug", flat=True)
     )
 
-    assert len(product_attribute_values) == 1
+    assert len(room_attribute_values) == 1
     assert len(variant_attribute_values) == 1
 
-    product = get_graphql_content(api_client.post_graphql(query, variables))["data"][
-        "products"
+    room = get_graphql_content(api_client.post_graphql(query, variables))["data"][
+        "rooms"
     ]["edges"][0]["node"]
 
-    product_attributes = product["attributes"]
-    variant_attributes = product["variants"][0]["attributes"]
+    room_attributes = room["attributes"]
+    variant_attributes = room["variants"][0]["attributes"]
 
-    assert len(product_attributes) == len(product_attribute_values)
+    assert len(room_attributes) == len(room_attribute_values)
     assert len(variant_attributes) == len(variant_attribute_values)
 
-    assert product_attributes[0]["attribute"]["slug"] == "color"
+    assert room_attributes[0]["attribute"]["slug"] == "color"
     assert (
-        product_attributes[0]["attribute"]["type"]
-        == AttributeTypeEnum.PRODUCT_TYPE.name
+        room_attributes[0]["attribute"]["type"]
+        == AttributeTypeEnum.ROOM_TYPE.name
     )
-    assert product_attributes[0]["values"][0]["slug"] == product_attribute_values[0]
+    assert room_attributes[0]["values"][0]["slug"] == room_attribute_values[0]
 
     assert variant_attributes[0]["attribute"]["slug"] == "size"
     assert (
         variant_attributes[0]["attribute"]["type"]
-        == AttributeTypeEnum.PRODUCT_TYPE.name
+        == AttributeTypeEnum.ROOM_TYPE.name
     )
 
 
 def test_resolve_attribute_values_non_assigned_to_node(
-    user_api_client, product, staff_user, channel_USD
+    user_api_client, room, staff_user, channel_USD
 ):
     """Ensure the attribute values are properly resolved when an attribute is part
-    of the product type but not of the node (product/variant), thus no values should be
+    of the room type but not of the node (room/variant), thus no values should be
     resolved.
     """
     variables = {"channel": channel_USD.slug}
-    query = QUERY_PRODUCT_AND_VARIANTS_ATTRIBUTES
+    query = QUERY_ROOM_AND_VARIANTS_ATTRIBUTES
     api_client = user_api_client
 
-    variant = product.variants.first()
-    product_type = product.product_type
+    variant = room.variants.first()
+    room_type = room.room_type
 
     # Create dummy attributes
-    unassigned_product_attribute = Attribute.objects.create(
-        name="P", slug="product", type=AttributeType.PRODUCT_TYPE
+    unassigned_room_attribute = Attribute.objects.create(
+        name="P", slug="room", type=AttributeType.ROOM_TYPE
     )
     unassigned_variant_attribute = Attribute.objects.create(
-        name="V", slug="variant", type=AttributeType.PRODUCT_TYPE
+        name="V", slug="variant", type=AttributeType.ROOM_TYPE
     )
 
     # Create a value for each dummy attribute to ensure they are not returned
-    # by the product or variant as they are not associated to them
+    # by the room or variant as they are not associated to them
     AttributeValue.objects.bulk_create(
         [
-            AttributeValue(slug="a", name="A", attribute=unassigned_product_attribute),
-            AttributeValue(slug="b", name="B", attribute=unassigned_product_attribute),
+            AttributeValue(slug="a", name="A", attribute=unassigned_room_attribute),
+            AttributeValue(slug="b", name="B", attribute=unassigned_room_attribute),
         ]
     )
 
-    # Assign the dummy attributes to the product type and push them at the top
+    # Assign the dummy attributes to the room type and push them at the top
     # through a sort_order=0 as the other attributes have sort_order=null
-    AttributeProduct.objects.create(
-        attribute=unassigned_product_attribute, product_type=product_type, sort_order=0
+    AttributeRoom.objects.create(
+        attribute=unassigned_room_attribute, room_type=room_type, sort_order=0
     )
     AttributeVariant.objects.create(
-        attribute=unassigned_variant_attribute, product_type=product_type, sort_order=0
+        attribute=unassigned_variant_attribute, room_type=room_type, sort_order=0
     )
 
-    assert product.attributes.count() == 1
+    assert room.attributes.count() == 1
     assert variant.attributes.count() == 1
 
-    product = get_graphql_content(api_client.post_graphql(query, variables))["data"][
-        "products"
+    room = get_graphql_content(api_client.post_graphql(query, variables))["data"][
+        "rooms"
     ]["edges"][0]["node"]
 
-    product_attributes = product["attributes"]
-    variant_attributes = product["variants"][0]["attributes"]
+    room_attributes = room["attributes"]
+    variant_attributes = room["variants"][0]["attributes"]
 
-    assert len(product_attributes) == 2, "Non-assigned attr from the PT may be missing"
+    assert len(room_attributes) == 2, "Non-assigned attr from the PT may be missing"
     assert len(variant_attributes) == 2, "Non-assigned attr from the PT may be missing"
 
-    assert product_attributes[0]["attribute"]["slug"] == "product"
-    assert product_attributes[0]["values"] == []
+    assert room_attributes[0]["attribute"]["slug"] == "room"
+    assert room_attributes[0]["values"] == []
 
     assert variant_attributes[0]["attribute"]["slug"] == "variant"
     assert variant_attributes[0]["values"] == []
 
 
 def test_resolve_assigned_attribute_without_values(
-    api_client, product_type, product, channel_USD
+    api_client, room_type, room, channel_USD
 ):
-    """Ensure the attributes assigned to a product type are resolved even if
-    the product doesn't provide any value for it or is not directly associated to it.
+    """Ensure the attributes assigned to a room type are resolved even if
+    the room doesn't provide any value for it or is not directly associated to it.
     """
-    # Retrieve the product's variant
-    variant = product.variants.get()
+    # Retrieve the room's variant
+    variant = room.variants.get()
 
-    # Remove all attributes and values from the product and its variant
-    product.attributesrelated.clear()
+    # Remove all attributes and values from the room and its variant
+    room.attributesrelated.clear()
     variant.attributesrelated.clear()
 
-    # Retrieve the product and variant's attributes
-    products = get_graphql_content(
+    # Retrieve the room and variant's attributes
+    rooms = get_graphql_content(
         api_client.post_graphql(
             """
         query ($channel: String) {
-          products(first: 10, channel: $channel) {
+          rooms(first: 10, channel: $channel) {
             edges {
               node {
                 attributes {
@@ -245,38 +245,38 @@ def test_resolve_assigned_attribute_without_values(
     """,
             {"channel": channel_USD.slug},
         )
-    )["data"]["products"]["edges"]
+    )["data"]["rooms"]["edges"]
 
-    # Ensure we are only working on one product and variant, the ones we are testing
-    assert len(products) == 1
-    assert len(products[0]["node"]["variants"]) == 1
+    # Ensure we are only working on one room and variant, the ones we are testing
+    assert len(rooms) == 1
+    assert len(rooms[0]["node"]["variants"]) == 1
 
     # Retrieve the nodes data
-    product = products[0]["node"]
-    variant = product["variants"][0]
+    room = rooms[0]["node"]
+    variant = room["variants"][0]
 
-    # Ensure the product attributes values are all None
-    assert len(product["attributes"]) == 1
-    assert product["attributes"][0]["attribute"]["slug"] == "color"
-    assert product["attributes"][0]["values"] == []
+    # Ensure the room attributes values are all None
+    assert len(room["attributes"]) == 1
+    assert room["attributes"][0]["attribute"]["slug"] == "color"
+    assert room["attributes"][0]["values"] == []
 
     # Ensure the variant attributes values are all None
     assert variant["attributes"][0]["attribute"]["slug"] == "size"
     assert variant["attributes"][0]["values"] == []
 
 
-PRODUCT_ASSIGN_ATTR_QUERY = """
-    mutation assign($productTypeId: ID!, $operations: [ProductAttributeAssignInput]!) {
-      productAttributeAssign(productTypeId: $productTypeId, operations: $operations) {
-        productErrors {
+ROOM_ASSIGN_ATTR_QUERY = """
+    mutation assign($roomTypeId: ID!, $operations: [RoomAttributeAssignInput]!) {
+      roomAttributeAssign(roomTypeId: $roomTypeId, operations: $operations) {
+        roomErrors {
           field
           code
           message
           attributes
         }
-        productType {
+        roomType {
           id
-          productAttributes {
+          roomAttributes {
             id
           }
           variantAttributes {
@@ -288,24 +288,24 @@ PRODUCT_ASSIGN_ATTR_QUERY = """
 """
 
 
-def test_assign_attributes_to_product_type(
+def test_assign_attributes_to_room_type(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    product_type_attribute_list,
+    permission_manage_room_types_and_attributes,
+    room_type_attribute_list,
 ):
-    product_type = ProductType.objects.create(name="Default Type", has_variants=True)
-    product_type_global_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type = RoomType.objects.create(name="Default Type", has_variants=True)
+    room_type_global_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
-    query = PRODUCT_ASSIGN_ATTR_QUERY
+    query = ROOM_ASSIGN_ATTR_QUERY
     operations = []
-    variables = {"productTypeId": product_type_global_id, "operations": operations}
+    variables = {"roomTypeId": room_type_global_id, "operations": operations}
 
-    product_attributes_ids = {attr.pk for attr in product_type_attribute_list[:2]}
-    variant_attributes_ids = {attr.pk for attr in product_type_attribute_list[2:]}
+    room_attributes_ids = {attr.pk for attr in room_type_attribute_list[:2]}
+    variant_attributes_ids = {attr.pk for attr in room_type_attribute_list[2:]}
 
-    for attr_id in product_attributes_ids:
+    for attr_id in room_attributes_ids:
         operations.append(
-            {"type": "PRODUCT", "id": graphene.Node.to_global_id("Attribute", attr_id)}
+            {"type": "ROOM", "id": graphene.Node.to_global_id("Attribute", attr_id)}
         )
 
     for attr_id in variant_attributes_ids:
@@ -317,97 +317,97 @@ def test_assign_attributes_to_product_type(
         staff_api_client.post_graphql(
             query,
             variables,
-            permissions=[permission_manage_product_types_and_attributes],
+            permissions=[permission_manage_room_types_and_attributes],
         )
-    )["data"]["productAttributeAssign"]
-    assert not content["productErrors"], "Should have succeeded"
+    )["data"]["roomAttributeAssign"]
+    assert not content["roomErrors"], "Should have succeeded"
 
-    assert content["productType"]["id"] == product_type_global_id
-    assert len(content["productType"]["productAttributes"]) == len(
-        product_attributes_ids
+    assert content["roomType"]["id"] == room_type_global_id
+    assert len(content["roomType"]["roomAttributes"]) == len(
+        room_attributes_ids
     )
-    assert len(content["productType"]["variantAttributes"]) == len(
+    assert len(content["roomType"]["variantAttributes"]) == len(
         variant_attributes_ids
     )
 
-    found_product_attrs_ids = {
+    found_room_attrs_ids = {
         int(graphene.Node.from_global_id(attr["id"])[1])
-        for attr in content["productType"]["productAttributes"]
+        for attr in content["roomType"]["roomAttributes"]
     }
     found_variant_attrs_ids = {
         int(graphene.Node.from_global_id(attr["id"])[1])
-        for attr in content["productType"]["variantAttributes"]
+        for attr in content["roomType"]["variantAttributes"]
     }
 
-    assert found_product_attrs_ids == product_attributes_ids
+    assert found_room_attrs_ids == room_attributes_ids
     assert found_variant_attrs_ids == variant_attributes_ids
 
 
-def test_assign_non_existing_attributes_to_product_type(
+def test_assign_non_existing_attributes_to_room_type(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    product_type_attribute_list,
+    permission_manage_room_types_and_attributes,
+    room_type_attribute_list,
 ):
-    product_type = ProductType.objects.create(name="Default Type", has_variants=True)
-    product_type_global_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type = RoomType.objects.create(name="Default Type", has_variants=True)
+    room_type_global_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
-    query = PRODUCT_ASSIGN_ATTR_QUERY
+    query = ROOM_ASSIGN_ATTR_QUERY
     attribute_id = graphene.Node.to_global_id("Attribute", "55511155593")
-    operations = [{"type": "PRODUCT", "id": attribute_id}]
-    variables = {"productTypeId": product_type_global_id, "operations": operations}
+    operations = [{"type": "ROOM", "id": attribute_id}]
+    variables = {"roomTypeId": room_type_global_id, "operations": operations}
 
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
     content = get_graphql_content(response)
-    content = content["data"]["productAttributeAssign"]
-    assert content["productErrors"][0]["code"] == ProductErrorCode.NOT_FOUND.name
-    assert content["productErrors"][0]["field"] == "operations"
-    assert content["productErrors"][0]["attributes"] == [attribute_id]
+    content = content["data"]["roomAttributeAssign"]
+    assert content["roomErrors"][0]["code"] == RoomErrorCode.NOT_FOUND.name
+    assert content["roomErrors"][0]["field"] == "operations"
+    assert content["roomErrors"][0]["attributes"] == [attribute_id]
 
 
-def test_assign_variant_attribute_to_product_type_with_disabled_variants(
+def test_assign_variant_attribute_to_room_type_with_disabled_variants(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    product_type_without_variant,
+    permission_manage_room_types_and_attributes,
+    room_type_without_variant,
     color_attribute_without_values,
 ):
     """The assignAttribute mutation should raise an error when trying
     to add an attribute as a variant attribute when
-    the product type doesn't support variants"""
+    the room type doesn't support variants"""
 
-    product_type = product_type_without_variant
+    room_type = room_type_without_variant
     attribute = color_attribute_without_values
     staff_api_client.user.user_permissions.add(
-        permission_manage_product_types_and_attributes
+        permission_manage_room_types_and_attributes
     )
 
-    product_type_global_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type_global_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
-    query = PRODUCT_ASSIGN_ATTR_QUERY
+    query = ROOM_ASSIGN_ATTR_QUERY
     operations = [
         {"type": "VARIANT", "id": graphene.Node.to_global_id("Attribute", attribute.pk)}
     ]
-    variables = {"productTypeId": product_type_global_id, "operations": operations}
+    variables = {"roomTypeId": room_type_global_id, "operations": operations}
 
     content = get_graphql_content(staff_api_client.post_graphql(query, variables))[
         "data"
-    ]["productAttributeAssign"]
-    assert content["productErrors"][0]["field"] == "operations"
+    ]["roomAttributeAssign"]
+    assert content["roomErrors"][0]["field"] == "operations"
     assert (
-        content["productErrors"][0]["message"]
-        == "Variants are disabled in this product type."
+        content["roomErrors"][0]["message"]
+        == "Variants are disabled in this room type."
     )
     assert (
-        content["productErrors"][0]["code"]
-        == ProductErrorCode.ATTRIBUTE_VARIANTS_DISABLED.name
+        content["roomErrors"][0]["code"]
+        == RoomErrorCode.ATTRIBUTE_VARIANTS_DISABLED.name
     )
 
 
 def test_assign_variant_attribute_having_multiselect_input_type(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    product_type,
+    permission_manage_room_types_and_attributes,
+    room_type,
     size_attribute,
 ):
     """The assignAttribute mutation should raise an error when trying
@@ -417,134 +417,134 @@ def test_assign_variant_attribute_having_multiselect_input_type(
     attribute = size_attribute
     attribute.input_type = AttributeInputType.MULTISELECT
     attribute.save(update_fields=["input_type"])
-    product_type.variant_attributes.clear()
+    room_type.variant_attributes.clear()
 
     staff_api_client.user.user_permissions.add(
-        permission_manage_product_types_and_attributes
+        permission_manage_room_types_and_attributes
     )
 
-    product_type_global_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type_global_id = graphene.Node.to_global_id("RoomType", room_type.pk)
     attr_id = graphene.Node.to_global_id("Attribute", attribute.pk)
 
-    query = PRODUCT_ASSIGN_ATTR_QUERY
+    query = ROOM_ASSIGN_ATTR_QUERY
     operations = [{"type": "VARIANT", "id": attr_id}]
-    variables = {"productTypeId": product_type_global_id, "operations": operations}
+    variables = {"roomTypeId": room_type_global_id, "operations": operations}
 
     content = get_graphql_content(staff_api_client.post_graphql(query, variables))[
         "data"
-    ]["productAttributeAssign"]
-    assert not content["productErrors"]
-    assert content["productType"]["id"] == product_type_global_id
-    assert len(content["productType"]["variantAttributes"]) == 1
-    assert content["productType"]["variantAttributes"][0]["id"] == attr_id
+    ]["roomAttributeAssign"]
+    assert not content["roomErrors"]
+    assert content["roomType"]["id"] == room_type_global_id
+    assert len(content["roomType"]["variantAttributes"]) == 1
+    assert content["roomType"]["variantAttributes"][0]["id"] == attr_id
 
 
 @pytest.mark.parametrize(
-    "product_type_attribute_type, gql_attribute_type",
+    "room_type_attribute_type, gql_attribute_type",
     (
-        (ProductAttributeType.PRODUCT, ProductAttributeType.VARIANT),
-        (ProductAttributeType.VARIANT, ProductAttributeType.PRODUCT),
-        (ProductAttributeType.PRODUCT, ProductAttributeType.PRODUCT),
-        (ProductAttributeType.VARIANT, ProductAttributeType.VARIANT),
+        (RoomAttributeType.ROOM, RoomAttributeType.VARIANT),
+        (RoomAttributeType.VARIANT, RoomAttributeType.ROOM),
+        (RoomAttributeType.ROOM, RoomAttributeType.ROOM),
+        (RoomAttributeType.VARIANT, RoomAttributeType.VARIANT),
     ),
 )
-def test_assign_attribute_to_product_type_having_already_that_attribute(
+def test_assign_attribute_to_room_type_having_already_that_attribute(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
     color_attribute_without_values,
-    product_type_attribute_type,
+    room_type_attribute_type,
     gql_attribute_type,
 ):
     """The assignAttribute mutation should raise an error when trying
-    to add an attribute already contained in the product type."""
+    to add an attribute already contained in the room type."""
 
-    product_type = ProductType.objects.create(name="Type")
+    room_type = RoomType.objects.create(name="Type")
     attribute = color_attribute_without_values
     staff_api_client.user.user_permissions.add(
-        permission_manage_product_types_and_attributes
+        permission_manage_room_types_and_attributes
     )
 
-    product_type_global_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type_global_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
-    if product_type_attribute_type == ProductAttributeType.PRODUCT:
-        product_type.product_attributes.add(attribute)
-    elif product_type_attribute_type == ProductAttributeType.VARIANT:
-        product_type.variant_attributes.add(attribute)
+    if room_type_attribute_type == RoomAttributeType.ROOM:
+        room_type.room_attributes.add(attribute)
+    elif room_type_attribute_type == RoomAttributeType.VARIANT:
+        room_type.variant_attributes.add(attribute)
     else:
-        raise ValueError(f"Unknown: {product_type}")
+        raise ValueError(f"Unknown: {room_type}")
 
-    query = PRODUCT_ASSIGN_ATTR_QUERY
+    query = ROOM_ASSIGN_ATTR_QUERY
     operations = [
         {
             "type": gql_attribute_type.value,
             "id": graphene.Node.to_global_id("Attribute", attribute.pk),
         }
     ]
-    variables = {"productTypeId": product_type_global_id, "operations": operations}
+    variables = {"roomTypeId": room_type_global_id, "operations": operations}
 
     content = get_graphql_content(staff_api_client.post_graphql(query, variables))[
         "data"
-    ]["productAttributeAssign"]
-    assert content["productErrors"][0]["field"] == "operations"
+    ]["roomAttributeAssign"]
+    assert content["roomErrors"][0]["field"] == "operations"
     assert (
-        content["productErrors"][0]["message"]
-        == "Color (color) have already been assigned to this product type."
+        content["roomErrors"][0]["message"]
+        == "Color (color) have already been assigned to this room type."
     )
     assert (
-        content["productErrors"][0]["code"]
-        == ProductErrorCode.ATTRIBUTE_ALREADY_ASSIGNED.name
+        content["roomErrors"][0]["code"]
+        == RoomErrorCode.ATTRIBUTE_ALREADY_ASSIGNED.name
     )
 
 
-def test_assign_page_attribute_to_product_type(
+def test_assign_page_attribute_to_room_type(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
     tag_page_attribute,
-    product_type,
+    room_type,
 ):
     # given
     staff_api_client.user.user_permissions.add(
-        permission_manage_product_types_and_attributes
+        permission_manage_room_types_and_attributes
     )
 
     tag_page_attr_id = graphene.Node.to_global_id("Attribute", tag_page_attribute.pk)
 
     variables = {
-        "productTypeId": graphene.Node.to_global_id("ProductType", product_type.pk),
+        "roomTypeId": graphene.Node.to_global_id("RoomType", room_type.pk),
         "operations": [
-            {"type": ProductAttributeType.PRODUCT.value, "id": tag_page_attr_id},
+            {"type": RoomAttributeType.ROOM.value, "id": tag_page_attr_id},
         ],
     }
 
     # when
-    response = staff_api_client.post_graphql(PRODUCT_ASSIGN_ATTR_QUERY, variables)
+    response = staff_api_client.post_graphql(ROOM_ASSIGN_ATTR_QUERY, variables)
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productAttributeAssign"]
-    errors = data["productErrors"]
+    data = content["data"]["roomAttributeAssign"]
+    errors = data["roomErrors"]
 
-    assert not data["productType"]
+    assert not data["roomType"]
     assert len(errors) == 1
     assert errors[0]["field"] == "operations"
-    assert errors[0]["code"] == ProductErrorCode.INVALID.name
+    assert errors[0]["code"] == RoomErrorCode.INVALID.name
     assert errors[0]["attributes"] == [tag_page_attr_id]
 
 
-def test_assign_attribute_to_product_type_multiply_errors_returned(
+def test_assign_attribute_to_room_type_multiply_errors_returned(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
     color_attribute,
     size_attribute,
     tag_page_attribute,
 ):
     # given
-    product_type = ProductType.objects.create(name="Type")
+    room_type = RoomType.objects.create(name="Type")
     staff_api_client.user.user_permissions.add(
-        permission_manage_product_types_and_attributes
+        permission_manage_room_types_and_attributes
     )
 
-    product_type.product_attributes.add(color_attribute)
+    room_type.room_attributes.add(color_attribute)
 
     unsupported_type_attr = size_attribute
     unsupported_type_attr.input_type = AttributeInputType.MULTISELECT
@@ -557,36 +557,36 @@ def test_assign_attribute_to_product_type_multiply_errors_returned(
     tag_page_attr_id = graphene.Node.to_global_id("Attribute", tag_page_attribute.pk)
 
     variables = {
-        "productTypeId": graphene.Node.to_global_id("ProductType", product_type.pk),
+        "roomTypeId": graphene.Node.to_global_id("RoomType", room_type.pk),
         "operations": [
-            {"type": ProductAttributeType.PRODUCT.value, "id": color_attr_id},
+            {"type": RoomAttributeType.ROOM.value, "id": color_attr_id},
             {
-                "type": ProductAttributeType.VARIANT.value,
+                "type": RoomAttributeType.VARIANT.value,
                 "id": unsupported_type_attr_id,
             },
-            {"type": ProductAttributeType.PRODUCT.value, "id": tag_page_attr_id},
+            {"type": RoomAttributeType.ROOM.value, "id": tag_page_attr_id},
         ],
     }
 
     # when
-    response = staff_api_client.post_graphql(PRODUCT_ASSIGN_ATTR_QUERY, variables)
+    response = staff_api_client.post_graphql(ROOM_ASSIGN_ATTR_QUERY, variables)
 
     # then
     content = get_graphql_content(response)
-    data = content["data"]["productAttributeAssign"]
-    errors = data["productErrors"]
+    data = content["data"]["roomAttributeAssign"]
+    errors = data["roomErrors"]
 
-    assert not data["productType"]
+    assert not data["roomType"]
     assert len(errors) == 2
     expected_errors = [
         {
-            "code": ProductErrorCode.ATTRIBUTE_ALREADY_ASSIGNED.name,
+            "code": RoomErrorCode.ATTRIBUTE_ALREADY_ASSIGNED.name,
             "field": "operations",
             "message": mock.ANY,
             "attributes": [color_attr_id],
         },
         {
-            "code": ProductErrorCode.INVALID.name,
+            "code": RoomErrorCode.INVALID.name,
             "field": "operations",
             "message": mock.ANY,
             "attributes": [tag_page_attr_id],
@@ -596,23 +596,23 @@ def test_assign_attribute_to_product_type_multiply_errors_returned(
         assert error in errors
 
 
-PRODUCT_UNASSIGN_ATTR_QUERY = """
-    mutation ProductUnassignAttribute(
-      $productTypeId: ID!, $attributeIds: [ID]!
+ROOM_UNASSIGN_ATTR_QUERY = """
+    mutation RoomUnassignAttribute(
+      $roomTypeId: ID!, $attributeIds: [ID]!
     ) {
-      productAttributeUnassign(
-          productTypeId: $productTypeId, attributeIds: $attributeIds
+      roomAttributeUnassign(
+          roomTypeId: $roomTypeId, attributeIds: $attributeIds
       ) {
-        productErrors {
+        roomErrors {
           field
           message
         }
-        productType {
+        roomType {
           id
           variantAttributes {
             id
           }
-          productAttributes {
+          roomAttributes {
             id
           }
         }
@@ -621,27 +621,27 @@ PRODUCT_UNASSIGN_ATTR_QUERY = """
 """
 
 
-def test_unassign_attributes_from_product_type(
+def test_unassign_attributes_from_room_type(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
-    product_type_attribute_list,
+    permission_manage_room_types_and_attributes,
+    room_type_attribute_list,
 ):
-    product_type = ProductType.objects.create(name="Type")
-    product_type_global_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type = RoomType.objects.create(name="Type")
+    room_type_global_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
-    variant_attribute, *product_attributes = product_type_attribute_list
-    product_type.product_attributes.add(*product_attributes)
-    product_type.variant_attributes.add(variant_attribute)
+    variant_attribute, *room_attributes = room_type_attribute_list
+    room_type.room_attributes.add(*room_attributes)
+    room_type.variant_attributes.add(variant_attribute)
 
     remaining_attribute_global_id = graphene.Node.to_global_id(
-        "Attribute", product_attributes[1].pk
+        "Attribute", room_attributes[1].pk
     )
 
-    query = PRODUCT_UNASSIGN_ATTR_QUERY
+    query = ROOM_UNASSIGN_ATTR_QUERY
     variables = {
-        "productTypeId": product_type_global_id,
+        "roomTypeId": room_type_global_id,
         "attributeIds": [
-            graphene.Node.to_global_id("Attribute", product_attributes[0].pk)
+            graphene.Node.to_global_id("Attribute", room_attributes[0].pk)
         ],
     }
 
@@ -649,39 +649,39 @@ def test_unassign_attributes_from_product_type(
         staff_api_client.post_graphql(
             query,
             variables,
-            permissions=[permission_manage_product_types_and_attributes],
+            permissions=[permission_manage_room_types_and_attributes],
         )
-    )["data"]["productAttributeUnassign"]
-    assert not content["productErrors"]
+    )["data"]["roomAttributeUnassign"]
+    assert not content["roomErrors"]
 
-    assert content["productType"]["id"] == product_type_global_id
-    assert len(content["productType"]["productAttributes"]) == 1
-    assert len(content["productType"]["variantAttributes"]) == 1
+    assert content["roomType"]["id"] == room_type_global_id
+    assert len(content["roomType"]["roomAttributes"]) == 1
+    assert len(content["roomType"]["variantAttributes"]) == 1
 
     assert (
-        content["productType"]["productAttributes"][0]["id"]
+        content["roomType"]["roomAttributes"][0]["id"]
         == remaining_attribute_global_id
     )
 
 
-def test_unassign_attributes_not_in_product_type(
+def test_unassign_attributes_not_in_room_type(
     staff_api_client,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
     color_attribute_without_values,
 ):
     """The unAssignAttribute mutation should not raise any error when trying
-    to remove an attribute that is not/no longer in the product type."""
+    to remove an attribute that is not/no longer in the room type."""
 
     staff_api_client.user.user_permissions.add(
-        permission_manage_product_types_and_attributes
+        permission_manage_room_types_and_attributes
     )
 
-    product_type = ProductType.objects.create(name="Type")
-    product_type_global_id = graphene.Node.to_global_id("ProductType", product_type.pk)
+    room_type = RoomType.objects.create(name="Type")
+    room_type_global_id = graphene.Node.to_global_id("RoomType", room_type.pk)
 
-    query = PRODUCT_UNASSIGN_ATTR_QUERY
+    query = ROOM_UNASSIGN_ATTR_QUERY
     variables = {
-        "productTypeId": product_type_global_id,
+        "roomTypeId": room_type_global_id,
         "attributeIds": [
             graphene.Node.to_global_id("Attribute", color_attribute_without_values.pk)
         ],
@@ -689,20 +689,20 @@ def test_unassign_attributes_not_in_product_type(
 
     content = get_graphql_content(staff_api_client.post_graphql(query, variables))[
         "data"
-    ]["productAttributeUnassign"]
-    assert not content["productErrors"]
+    ]["roomAttributeUnassign"]
+    assert not content["roomErrors"]
 
-    assert content["productType"]["id"] == product_type_global_id
-    assert len(content["productType"]["productAttributes"]) == 0
-    assert len(content["productType"]["variantAttributes"]) == 0
+    assert content["roomType"]["id"] == room_type_global_id
+    assert len(content["roomType"]["roomAttributes"]) == 0
+    assert len(content["roomType"]["variantAttributes"]) == 0
 
 
-def test_retrieve_product_attributes_input_type(
-    staff_api_client, product, permission_manage_products, channel_USD
+def test_retrieve_room_attributes_input_type(
+    staff_api_client, room, permission_manage_rooms, channel_USD
 ):
     query = """
         query ($channel: String){
-          products(first: 10, channel: $channel) {
+          rooms(first: 10, channel: $channel) {
             edges {
               node {
                 attributes {
@@ -718,42 +718,42 @@ def test_retrieve_product_attributes_input_type(
     """
 
     variables = {"channel": channel_USD.slug}
-    found_products = get_graphql_content(
+    found_rooms = get_graphql_content(
         staff_api_client.post_graphql(
-            query, variables, permissions=[permission_manage_products]
+            query, variables, permissions=[permission_manage_rooms]
         )
-    )["data"]["products"]["edges"]
-    assert len(found_products) == 1
+    )["data"]["rooms"]["edges"]
+    assert len(found_rooms) == 1
 
-    for gql_attr in found_products[0]["node"]["attributes"]:
+    for gql_attr in found_rooms[0]["node"]["attributes"]:
         assert len(gql_attr["values"]) == 1
         assert gql_attr["values"][0]["type"] == "STRING"
         assert gql_attr["values"][0]["inputType"] == "DROPDOWN"
 
 
 ATTRIBUTES_RESORT_QUERY = """
-    mutation ProductTypeReorderAttributes(
-      $productTypeId: ID!
+    mutation RoomTypeReorderAttributes(
+      $roomTypeId: ID!
       $moves: [ReorderInput]!
-      $type: ProductAttributeType!
+      $type: RoomAttributeType!
     ) {
-      productTypeReorderAttributes(
-        productTypeId: $productTypeId
+      roomTypeReorderAttributes(
+        roomTypeId: $roomTypeId
         moves: $moves
         type: $type
       ) {
-        productType {
+        roomType {
           id
           variantAttributes {
             id
             slug
           }
-          productAttributes {
+          roomAttributes {
             id
           }
         }
 
-        productErrors {
+        roomErrors {
           field
           message
           code
@@ -764,17 +764,17 @@ ATTRIBUTES_RESORT_QUERY = """
 """
 
 
-def test_sort_attributes_within_product_type_invalid_product_type(
-    staff_api_client, permission_manage_product_types_and_attributes
+def test_sort_attributes_within_room_type_invalid_room_type(
+    staff_api_client, permission_manage_room_types_and_attributes
 ):
-    """Try to reorder an invalid product type (invalid ID)."""
+    """Try to reorder an invalid room type (invalid ID)."""
 
-    product_type_id = graphene.Node.to_global_id("ProductType", -1)
+    room_type_id = graphene.Node.to_global_id("RoomType", -1)
     attribute_id = graphene.Node.to_global_id("Attribute", -1)
 
     variables = {
         "type": "VARIANT",
-        "productTypeId": product_type_id,
+        "roomTypeId": room_type_id,
         "moves": [{"id": attribute_id, "sortOrder": 1}],
     }
 
@@ -782,33 +782,33 @@ def test_sort_attributes_within_product_type_invalid_product_type(
         staff_api_client.post_graphql(
             ATTRIBUTES_RESORT_QUERY,
             variables,
-            permissions=[permission_manage_product_types_and_attributes],
+            permissions=[permission_manage_room_types_and_attributes],
         )
-    )["data"]["productTypeReorderAttributes"]
+    )["data"]["roomTypeReorderAttributes"]
 
-    assert content["productErrors"] == [
+    assert content["roomErrors"] == [
         {
-            "field": "productTypeId",
-            "code": ProductErrorCode.NOT_FOUND.name,
-            "message": f"Couldn't resolve to a product type: {product_type_id}",
+            "field": "roomTypeId",
+            "code": RoomErrorCode.NOT_FOUND.name,
+            "message": f"Couldn't resolve to a room type: {room_type_id}",
             "attributes": None,
         }
     ]
 
 
-def test_sort_attributes_within_product_type_invalid_id(
-    staff_api_client, permission_manage_product_types_and_attributes, color_attribute
+def test_sort_attributes_within_room_type_invalid_id(
+    staff_api_client, permission_manage_room_types_and_attributes, color_attribute
 ):
-    """Try to reorder an attribute not associated to the given product type."""
+    """Try to reorder an attribute not associated to the given room type."""
 
-    product_type = ProductType.objects.create(name="Dummy Type")
-    product_type_id = graphene.Node.to_global_id("ProductType", product_type.id)
+    room_type = RoomType.objects.create(name="Dummy Type")
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.id)
 
     attribute_id = graphene.Node.to_global_id("Attribute", color_attribute.id)
 
     variables = {
         "type": "VARIANT",
-        "productTypeId": product_type_id,
+        "roomTypeId": room_type_id,
         "moves": [{"id": attribute_id, "sortOrder": 1}],
     }
 
@@ -816,16 +816,16 @@ def test_sort_attributes_within_product_type_invalid_id(
         staff_api_client.post_graphql(
             ATTRIBUTES_RESORT_QUERY,
             variables,
-            permissions=[permission_manage_product_types_and_attributes],
+            permissions=[permission_manage_room_types_and_attributes],
         )
-    )["data"]["productTypeReorderAttributes"]
+    )["data"]["roomTypeReorderAttributes"]
 
-    assert content["productErrors"] == [
+    assert content["roomErrors"] == [
         {
             "field": "moves",
             "message": "Couldn't resolve to an attribute.",
             "attributes": [attribute_id],
-            "code": ProductErrorCode.NOT_FOUND.name,
+            "code": RoomErrorCode.NOT_FOUND.name,
         }
     ]
 
@@ -834,27 +834,27 @@ def test_sort_attributes_within_product_type_invalid_id(
     "attribute_type, relation_field, backref_field",
     (
         ("VARIANT", "variant_attributes", "attributevariant"),
-        ("PRODUCT", "product_attributes", "attributeproduct"),
+        ("ROOM", "room_attributes", "attributeroom"),
     ),
 )
-def test_sort_attributes_within_product_type(
+def test_sort_attributes_within_room_type(
     staff_api_client,
-    product_type_attribute_list,
-    permission_manage_product_types_and_attributes,
+    room_type_attribute_list,
+    permission_manage_room_types_and_attributes,
     attribute_type,
     relation_field,
     backref_field,
 ):
-    attributes = product_type_attribute_list
+    attributes = room_type_attribute_list
     assert len(attributes) == 3
 
     staff_api_client.user.user_permissions.add(
-        permission_manage_product_types_and_attributes
+        permission_manage_room_types_and_attributes
     )
 
-    product_type = ProductType.objects.create(name="Dummy Type")
-    product_type_id = graphene.Node.to_global_id("ProductType", product_type.id)
-    m2m_attributes = getattr(product_type, relation_field)
+    room_type = RoomType.objects.create(name="Dummy Type")
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.id)
+    m2m_attributes = getattr(room_type, relation_field)
     m2m_attributes.set(attributes)
 
     sort_method = getattr(m2m_attributes, f"{relation_field}_sorted")
@@ -864,7 +864,7 @@ def test_sort_attributes_within_product_type(
 
     variables = {
         "type": attribute_type,
-        "productTypeId": product_type_id,
+        "roomTypeId": room_type_id,
         "moves": [
             {
                 "id": graphene.Node.to_global_id("Attribute", attributes[0].pk),
@@ -881,14 +881,14 @@ def test_sort_attributes_within_product_type(
 
     content = get_graphql_content(
         staff_api_client.post_graphql(ATTRIBUTES_RESORT_QUERY, variables)
-    )["data"]["productTypeReorderAttributes"]
-    assert not content["productErrors"]
+    )["data"]["roomTypeReorderAttributes"]
+    assert not content["roomErrors"]
 
     assert (
-        content["productType"]["id"] == product_type_id
-    ), "Did not return the correct product type"
+        content["roomType"]["id"] == room_type_id
+    ), "Did not return the correct room type"
 
-    gql_attributes = content["productType"][snake_to_camel_case(relation_field)]
+    gql_attributes = content["roomType"][snake_to_camel_case(relation_field)]
     assert len(gql_attributes) == len(expected_order)
 
     for attr, expected_pk in zip(gql_attributes, expected_order):

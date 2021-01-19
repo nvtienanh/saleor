@@ -6,7 +6,7 @@ from django.db.models import JSONField  # type: ignore
 from django.db.models import F, Max, Q
 
 from . import JobStatus
-from .permissions import ProductPermissions
+from .permissions import RoomPermissions
 from .utils.json_serializer import CustomJsonEncoder
 
 
@@ -50,7 +50,7 @@ class PublishedQuerySet(models.QuerySet):
 
     @staticmethod
     def user_has_access_to_all(user):
-        return user.is_active and user.has_perm(ProductPermissions.MANAGE_PRODUCTS)
+        return user.is_active and user.has_perm(RoomPermissions.MANAGE_ROOMS)
 
     def visible_to_user(self, user):
         if self.user_has_access_to_all(user):

@@ -7,11 +7,11 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0033_auto_20170227_0757")]
+    dependencies = [("room", "0033_auto_20170227_0757")]
 
     operations = [
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="is_published",
             field=models.BooleanField(default=True, verbose_name="is published"),
         )

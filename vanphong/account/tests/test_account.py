@@ -290,10 +290,10 @@ def test_get_full_name(email, first_name, last_name, full_name, address):
     assert user.get_full_name() == full_name
 
 
-def test_remove_staff_member_with_orders(staff_user, permission_manage_products, order):
+def test_remove_staff_member_with_orders(staff_user, permission_manage_rooms, order):
     order.user = staff_user
     order.save()
-    staff_user.user_permissions.add(permission_manage_products)
+    staff_user.user_permissions.add(permission_manage_rooms)
 
     remove_staff_member(staff_user)
     staff_user = User.objects.get(pk=staff_user.pk)

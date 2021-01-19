@@ -9,9 +9,9 @@ from weasyprint import HTML
 
 from ...invoice.models import Invoice
 
-MAX_PRODUCTS_WITH_TABLE = 3
-MAX_PRODUCTS_WITHOUT_TABLE = 4
-MAX_PRODUCTS_PER_PAGE = 13
+MAX_ROOMS_WITH_TABLE = 3
+MAX_ROOMS_WITHOUT_TABLE = 4
+MAX_ROOMS_PER_PAGE = 13
 
 
 def make_full_invoice_number(number=None, month=None, year=None):
@@ -43,23 +43,23 @@ def generate_invoice_number():
         return make_full_invoice_number()
 
 
-def chunk_products(products, product_limit):
-    """Split products to list of chunks.
+def chunk_rooms(rooms, room_limit):
+    """Split rooms to list of chunks.
 
-    Each chunk represents products per page, product_limit defines chunk size.
+    Each chunk represents rooms per page, room_limit defines chunk size.
     """
     chunks = []
-    for i in range(0, len(products), product_limit):
-        limit = i + product_limit
-        chunks.append(products[i:limit])
+    for i in range(0, len(rooms), room_limit):
+        limit = i + room_limit
+        chunks.append(rooms[i:limit])
     return chunks
 
 
-def get_product_limit_first_page(products):
-    if len(products) < MAX_PRODUCTS_WITHOUT_TABLE:
-        return MAX_PRODUCTS_WITH_TABLE
+def get_room_limit_first_page(rooms):
+    if len(rooms) < MAX_ROOMS_WITHOUT_TABLE:
+        return MAX_ROOMS_WITH_TABLE
 
-    return MAX_PRODUCTS_WITHOUT_TABLE
+    return MAX_ROOMS_WITHOUT_TABLE
 
 
 def generate_invoice_pdf(invoice):
@@ -67,13 +67,13 @@ def generate_invoice_pdf(invoice):
         settings.PROJECT_ROOT, "templates", "invoices", "inter.ttf"
     )
 
-    all_products = invoice.order.lines.all()
+    all_rooms = invoice.order.lines.all()
 
-    product_limit_first_page = get_product_limit_first_page(all_products)
+    room_limit_first_page = get_room_limit_first_page(all_rooms)
 
-    products_first_page = all_products[:product_limit_first_page]
-    rest_of_products = chunk_products(
-        all_products[product_limit_first_page:], MAX_PRODUCTS_PER_PAGE
+    rooms_first_page = all_rooms[:room_limit_first_page]
+    rest_of_rooms = chunk_rooms(
+        all_rooms[room_limit_first_page:], MAX_ROOMS_PER_PAGE
     )
     creation_date = datetime.now(tz=pytz.utc)
     rendered_template = get_template("invoices/invoice.html").render(
@@ -82,8 +82,8 @@ def generate_invoice_pdf(invoice):
             "creation_date": creation_date.strftime("%d %b %Y"),
             "order": invoice.order,
             "font_path": f"file://{font_path}",
-            "products_first_page": products_first_page,
-            "rest_of_products": rest_of_products,
+            "rooms_first_page": rooms_first_page,
+            "rest_of_rooms": rest_of_rooms,
         }
     )
     return HTML(string=rendered_template).write_pdf(), creation_date

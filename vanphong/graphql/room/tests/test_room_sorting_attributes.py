@@ -7,19 +7,19 @@ import pytest
 from ....attribute import AttributeType
 from ....attribute import models as attribute_models
 from ....attribute.utils import associate_attribute_values_to_instance
-from ....product import models as product_models
+from ....room import models as room_models
 from ...tests.utils import get_graphql_content
 
 HERE = os.path.realpath(os.path.dirname(__file__))
 
-QUERY_SORT_PRODUCTS_BY_ATTRIBUTE = """
-query products(
-  $field: ProductOrderField
+QUERY_SORT_ROOMS_BY_ATTRIBUTE = """
+query rooms(
+  $field: RoomOrderField
   $attributeId: ID
   $direction: OrderDirection!
   $channel: String
 ) {
-  products(
+  rooms(
     first: 100,
     channel: $channel,
     sortBy: { field: $field, attributeId: $attributeId, direction: $direction }
@@ -47,24 +47,24 @@ DUMMIES = ("Oopsie",)
 
 
 @pytest.fixture
-def products_structures(category, channel_USD):
+def rooms_structures(category, channel_USD):
     def attr_value(attribute, *values):
         return [attribute.values.get_or_create(name=v, slug=v)[0] for v in values]
 
-    assert product_models.Product.objects.count() == 0
+    assert room_models.Room.objects.count() == 0
 
     in_multivals = attribute_models.AttributeInputType.MULTISELECT
 
     pt_apples, pt_oranges, pt_other = list(
-        product_models.ProductType.objects.bulk_create(
+        room_models.RoomType.objects.bulk_create(
             [
-                product_models.ProductType(
+                room_models.RoomType(
                     name="Apples", slug="apples", has_variants=False
                 ),
-                product_models.ProductType(
+                room_models.RoomType(
                     name="Oranges", slug="oranges", has_variants=False
                 ),
-                product_models.ProductType(
+                room_models.RoomType(
                     name="Other attributes", slug="other", has_variants=False
                 ),
             ]
@@ -78,54 +78,54 @@ def products_structures(category, channel_USD):
                     name="Colors",
                     slug="colors",
                     input_type=in_multivals,
-                    type=AttributeType.PRODUCT_TYPE,
+                    type=AttributeType.ROOM_TYPE,
                 ),
                 attribute_models.Attribute(
-                    name="Trademark", slug="trademark", type=AttributeType.PRODUCT_TYPE
+                    name="Trademark", slug="trademark", type=AttributeType.ROOM_TYPE
                 ),
                 attribute_models.Attribute(
-                    name="Dummy", slug="dummy", type=AttributeType.PRODUCT_TYPE
+                    name="Dummy", slug="dummy", type=AttributeType.ROOM_TYPE
                 ),
             ]
         )
     )
 
-    # Manually add every attribute to given product types
+    # Manually add every attribute to given room types
     # to force the preservation of ordering
-    pt_apples.product_attributes.add(colors_attr)
-    pt_apples.product_attributes.add(trademark_attr)
+    pt_apples.room_attributes.add(colors_attr)
+    pt_apples.room_attributes.add(trademark_attr)
 
-    pt_oranges.product_attributes.add(colors_attr)
-    pt_oranges.product_attributes.add(trademark_attr)
+    pt_oranges.room_attributes.add(colors_attr)
+    pt_oranges.room_attributes.add(trademark_attr)
 
-    pt_other.product_attributes.add(dummy_attr)
+    pt_other.room_attributes.add(dummy_attr)
 
     assert len(COLORS) == len(TRADEMARKS)
 
     apples = list(
-        product_models.Product.objects.bulk_create(
+        room_models.Room.objects.bulk_create(
             [
-                product_models.Product(
+                room_models.Room(
                     name=f"{attrs[0]} Apple - {attrs[1]} ({i})",
                     slug=f"{attrs[0]}-apple-{attrs[1]}-({i})",
-                    product_type=pt_apples,
+                    room_type=pt_apples,
                     category=category,
                 )
                 for i, attrs in enumerate(zip(COLORS, TRADEMARKS))
             ]
         )
     )
-    for product_apple in apples:
-        product_models.ProductChannelListing.objects.create(
-            product=product_apple,
+    for room_apple in apples:
+        room_models.RoomChannelListing.objects.create(
+            room=room_apple,
             channel=channel_USD,
             is_published=True,
             visible_in_listings=True,
         )
-        variant = product_models.ProductVariant.objects.create(
-            product=product_apple, sku=product_apple.slug
+        variant = room_models.RoomVariant.objects.create(
+            room=room_apple, sku=room_apple.slug
         )
-        product_models.ProductVariantChannelListing.objects.create(
+        room_models.RoomVariantChannelListing.objects.create(
             variant=variant,
             channel=channel_USD,
             price_amount=Decimal(10),
@@ -133,73 +133,73 @@ def products_structures(category, channel_USD):
             currency=channel_USD.currency_code,
         )
     oranges = list(
-        product_models.Product.objects.bulk_create(
+        room_models.Room.objects.bulk_create(
             [
-                product_models.Product(
+                room_models.Room(
                     name=f"{attrs[0]} Orange - {attrs[1]} ({i})",
                     slug=f"{attrs[0]}-orange-{attrs[1]}-({i})",
-                    product_type=pt_oranges,
+                    room_type=pt_oranges,
                     category=category,
                 )
                 for i, attrs in enumerate(zip(COLORS, TRADEMARKS))
             ]
         )
     )
-    for product_orange in oranges:
-        product_models.ProductChannelListing.objects.create(
-            product=product_orange,
+    for room_orange in oranges:
+        room_models.RoomChannelListing.objects.create(
+            room=room_orange,
             channel=channel_USD,
             is_published=True,
             visible_in_listings=True,
         )
-        variant = product_models.ProductVariant.objects.create(
-            product=product_orange, sku=product_orange.slug
+        variant = room_models.RoomVariant.objects.create(
+            room=room_orange, sku=room_orange.slug
         )
-        product_models.ProductVariantChannelListing.objects.create(
+        room_models.RoomVariantChannelListing.objects.create(
             variant=variant,
             channel=channel_USD,
             cost_price_amount=Decimal(1),
             price_amount=Decimal(10),
             currency=channel_USD.currency_code,
         )
-    dummy = product_models.Product.objects.create(
+    dummy = room_models.Room.objects.create(
         name="Oopsie Dummy",
         slug="oopsie-dummy",
-        product_type=pt_other,
+        room_type=pt_other,
         category=category,
     )
-    product_models.ProductChannelListing.objects.create(
-        product=dummy,
+    room_models.RoomChannelListing.objects.create(
+        room=dummy,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
     )
-    variant = product_models.ProductVariant.objects.create(
-        product=dummy, sku=dummy.slug
+    variant = room_models.RoomVariant.objects.create(
+        room=dummy, sku=dummy.slug
     )
-    product_models.ProductVariantChannelListing.objects.create(
+    room_models.RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         cost_price_amount=Decimal(1),
         price_amount=Decimal(10),
         currency=channel_USD.currency_code,
     )
-    other_dummy = product_models.Product.objects.create(
+    other_dummy = room_models.Room.objects.create(
         name="Another Dummy but first in ASC and has no attribute value",
         slug="another-dummy",
-        product_type=pt_other,
+        room_type=pt_other,
         category=category,
     )
-    product_models.ProductChannelListing.objects.create(
-        product=other_dummy,
+    room_models.RoomChannelListing.objects.create(
+        room=other_dummy,
         channel=channel_USD,
         is_published=True,
         visible_in_listings=True,
     )
-    variant = product_models.ProductVariant.objects.create(
-        product=other_dummy, sku=other_dummy.slug
+    variant = room_models.RoomVariant.objects.create(
+        room=other_dummy, sku=other_dummy.slug
     )
-    product_models.ProductVariantChannelListing.objects.create(
+    room_models.RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         cost_price_amount=Decimal(1),
@@ -209,27 +209,27 @@ def products_structures(category, channel_USD):
     dummy_attr_value = attr_value(dummy_attr, DUMMIES[0])
     associate_attribute_values_to_instance(dummy, dummy_attr, *dummy_attr_value)
 
-    for products in (apples, oranges):
-        for product, attr_values in zip(products, COLORS):
+    for rooms in (apples, oranges):
+        for room, attr_values in zip(rooms, COLORS):
             attr_values = attr_value(colors_attr, *attr_values)
-            associate_attribute_values_to_instance(product, colors_attr, *attr_values)
+            associate_attribute_values_to_instance(room, colors_attr, *attr_values)
 
-        for product, attr_values in zip(products, TRADEMARKS):
+        for room, attr_values in zip(rooms, TRADEMARKS):
             attr_values = attr_value(trademark_attr, attr_values)
             associate_attribute_values_to_instance(
-                product, trademark_attr, *attr_values
+                room, trademark_attr, *attr_values
             )
 
     return colors_attr, trademark_attr, dummy_attr
 
 
-def test_sort_products_cannot_sort_both_by_field_and_by_attribute(
+def test_sort_rooms_cannot_sort_both_by_field_and_by_attribute(
     api_client, channel_USD
 ):
     """Ensure one cannot both sort by a supplied field and sort by a given attribute ID
     at the same time.
     """
-    query = QUERY_SORT_PRODUCTS_BY_ATTRIBUTE
+    query = QUERY_SORT_ROOMS_BY_ATTRIBUTE
     variables = {
         "field": "NAME",
         "attributeId": "SomeAttributeId",
@@ -244,17 +244,17 @@ def test_sort_products_cannot_sort_both_by_field_and_by_attribute(
 
     assert len(errors) == 1, response
     assert errors[0]["message"] == (
-        "You must provide either `field` or `attributeId` to sort the products."
+        "You must provide either `field` or `attributeId` to sort the rooms."
     )
 
 
-# Ordered by the given attribute value, then by the product name.
+# Ordered by the given attribute value, then by the room name.
 #
-# If the product doesn't have a value, it will be placed at the bottom of the products
-# having a value and will be ordered by their product name.
+# If the room doesn't have a value, it will be placed at the bottom of the rooms
+# having a value and will be ordered by their room name.
 #
-# If the product doesn't have such attribute in its product type, it will be placed
-# at the end of the other products having such attribute. They will be ordered by their
+# If the room doesn't have such attribute in its room type, it will be placed
+# at the end of the other rooms having such attribute. They will be ordered by their
 # name as well.
 EXPECTED_SORTED_DATA_SINGLE_VALUE_ASC = [
     {
@@ -496,14 +496,14 @@ EXPECTED_SORTED_DATA_MULTIPLE_VALUES_ASC = [
 
 
 @pytest.mark.parametrize("ascending", [True, False])
-def test_sort_product_by_attribute_single_value(
-    api_client, products_structures, ascending, channel_USD
+def test_sort_room_by_attribute_single_value(
+    api_client, rooms_structures, ascending, channel_USD
 ):
-    _, attribute, _ = products_structures
+    _, attribute, _ = rooms_structures
     attribute_id: str = graphene.Node.to_global_id("Attribute", attribute.pk)
     direction = "ASC" if ascending else "DESC"
 
-    query = QUERY_SORT_PRODUCTS_BY_ATTRIBUTE
+    query = QUERY_SORT_ROOMS_BY_ATTRIBUTE
     variables = {
         "attributeId": attribute_id,
         "direction": direction,
@@ -511,25 +511,25 @@ def test_sort_product_by_attribute_single_value(
     }
 
     response = get_graphql_content(api_client.post_graphql(query, variables))
-    products = response["data"]["products"]["edges"]
+    rooms = response["data"]["rooms"]["edges"]
 
-    assert len(products) == product_models.Product.objects.count()
+    assert len(rooms) == room_models.Room.objects.count()
 
     if ascending:
-        assert products == EXPECTED_SORTED_DATA_SINGLE_VALUE_ASC
+        assert rooms == EXPECTED_SORTED_DATA_SINGLE_VALUE_ASC
     else:
-        assert products == list(reversed(EXPECTED_SORTED_DATA_SINGLE_VALUE_ASC))
+        assert rooms == list(reversed(EXPECTED_SORTED_DATA_SINGLE_VALUE_ASC))
 
 
 @pytest.mark.parametrize("ascending", [True, False])
-def test_sort_product_by_attribute_multiple_values(
-    api_client, products_structures, ascending, channel_USD
+def test_sort_room_by_attribute_multiple_values(
+    api_client, rooms_structures, ascending, channel_USD
 ):
-    attribute, _, _ = products_structures
+    attribute, _, _ = rooms_structures
     attribute_id: str = graphene.Node.to_global_id("Attribute", attribute.pk)
     direction = "ASC" if ascending else "DESC"
 
-    query = QUERY_SORT_PRODUCTS_BY_ATTRIBUTE
+    query = QUERY_SORT_ROOMS_BY_ATTRIBUTE
     variables = {
         "attributeId": attribute_id,
         "direction": direction,
@@ -537,60 +537,60 @@ def test_sort_product_by_attribute_multiple_values(
     }
 
     response = get_graphql_content(api_client.post_graphql(query, variables))
-    products = response["data"]["products"]["edges"]
+    rooms = response["data"]["rooms"]["edges"]
 
-    assert len(products) == product_models.Product.objects.count()
+    assert len(rooms) == room_models.Room.objects.count()
 
     if ascending:
-        assert products == EXPECTED_SORTED_DATA_MULTIPLE_VALUES_ASC
+        assert rooms == EXPECTED_SORTED_DATA_MULTIPLE_VALUES_ASC
     else:
-        assert products == list(reversed(EXPECTED_SORTED_DATA_MULTIPLE_VALUES_ASC))
+        assert rooms == list(reversed(EXPECTED_SORTED_DATA_MULTIPLE_VALUES_ASC))
 
 
-def test_sort_product_not_having_attribute_data(api_client, category, count_queries):
-    """Test the case where a product has a given attribute assigned to their
-    product type but no attribute data assigned, i.e. the product's PT was changed
-    after the product creation.
+def test_sort_room_not_having_attribute_data(api_client, category, count_queries):
+    """Test the case where a room has a given attribute assigned to their
+    room type but no attribute data assigned, i.e. the room's PT was changed
+    after the room creation.
     """
     expected_results = ["Z", "Y", "A"]
-    product_create_kwargs = {"category": category}
+    room_create_kwargs = {"category": category}
 
-    # Create two product types, with one forced to be at the bottom (no such attribute)
-    product_type = product_models.ProductType.objects.create(
+    # Create two room types, with one forced to be at the bottom (no such attribute)
+    room_type = room_models.RoomType.objects.create(
         name="Apples", slug="apples"
     )
-    other_product_type = product_models.ProductType.objects.create(
+    other_room_type = room_models.RoomType.objects.create(
         name="Chocolates", slug="chocolates"
     )
 
-    # Assign an attribute to the product type
+    # Assign an attribute to the room type
     attribute = attribute_models.Attribute.objects.create(
-        name="Kind", slug="kind", type=AttributeType.PRODUCT_TYPE
+        name="Kind", slug="kind", type=AttributeType.ROOM_TYPE
     )
     value = attribute_models.AttributeValue.objects.create(
         name="Value", slug="value", attribute=attribute
     )
-    product_type.product_attributes.add(attribute)
+    room_type.room_attributes.add(attribute)
 
-    # Create a product with a value
-    product_having_attr_value = product_models.Product.objects.create(
-        name="Z", slug="z", product_type=product_type, **product_create_kwargs
+    # Create a room with a value
+    room_having_attr_value = room_models.Room.objects.create(
+        name="Z", slug="z", room_type=room_type, **room_create_kwargs
     )
-    associate_attribute_values_to_instance(product_having_attr_value, attribute, value)
+    associate_attribute_values_to_instance(room_having_attr_value, attribute, value)
 
-    # Create a product having the same product type but no attribute data
-    product_models.Product.objects.create(
-        name="Y", slug="y", product_type=product_type, **product_create_kwargs
-    )
-
-    # Create a new product having a name that would be ordered first in ascending
-    # as the default ordering is by name for non matching products
-    product_models.Product.objects.create(
-        name="A", slug="a", product_type=other_product_type, **product_create_kwargs
+    # Create a room having the same room type but no attribute data
+    room_models.Room.objects.create(
+        name="Y", slug="y", room_type=room_type, **room_create_kwargs
     )
 
-    # Sort the products
-    qs = product_models.Product.objects.sort_by_attribute(attribute_pk=attribute.pk)
+    # Create a new room having a name that would be ordered first in ascending
+    # as the default ordering is by name for non matching rooms
+    room_models.Room.objects.create(
+        name="A", slug="a", room_type=other_room_type, **room_create_kwargs
+    )
+
+    # Sort the rooms
+    qs = room_models.Room.objects.sort_by_attribute(attribute_pk=attribute.pk)
     qs = qs.values_list("name", flat=True)
 
     # Compare the results
@@ -606,14 +606,14 @@ def test_sort_product_not_having_attribute_data(api_client, category, count_quer
         graphene.Node.to_global_id("Attribute", -1),
     ],
 )
-def test_sort_product_by_attribute_using_invalid_attribute_id(
-    api_client, product_list_published, attribute_id, channel_USD
+def test_sort_room_by_attribute_using_invalid_attribute_id(
+    api_client, room_list_published, attribute_id, channel_USD
 ):
     """Ensure passing an empty attribute ID as sorting field does nothing."""
 
-    query = QUERY_SORT_PRODUCTS_BY_ATTRIBUTE
+    query = QUERY_SORT_ROOMS_BY_ATTRIBUTE
 
-    # Products are ordered in descending order to ensure we
+    # Rooms are ordered in descending order to ensure we
     # are not actually trying to sort them at all
     variables = {
         "attributeId": attribute_id,
@@ -622,25 +622,25 @@ def test_sort_product_by_attribute_using_invalid_attribute_id(
     }
 
     response = get_graphql_content(api_client.post_graphql(query, variables))
-    products = response["data"]["products"]["edges"]
+    rooms = response["data"]["rooms"]["edges"]
 
-    assert len(products) == product_models.Product.objects.count()
-    assert products[0]["node"]["name"] == product_models.Product.objects.first().name
+    assert len(rooms) == room_models.Room.objects.count()
+    assert rooms[0]["node"]["name"] == room_models.Room.objects.first().name
 
 
 @pytest.mark.parametrize("direction", ["ASC", "DESC"])
-def test_sort_product_by_attribute_using_attribute_having_no_products(
-    api_client, product_list_published, direction, channel_USD
+def test_sort_room_by_attribute_using_attribute_having_no_rooms(
+    api_client, room_list_published, direction, channel_USD
 ):
     """Ensure passing an empty attribute ID as sorting field does nothing."""
 
-    query = QUERY_SORT_PRODUCTS_BY_ATTRIBUTE
-    attribute_without_products = attribute_models.Attribute.objects.create(
-        name="Colors 2", slug="colors-2", type=AttributeType.PRODUCT_TYPE
+    query = QUERY_SORT_ROOMS_BY_ATTRIBUTE
+    attribute_without_rooms = attribute_models.Attribute.objects.create(
+        name="Colors 2", slug="colors-2", type=AttributeType.ROOM_TYPE
     )
 
     attribute_id: str = graphene.Node.to_global_id(
-        "Attribute", attribute_without_products.pk
+        "Attribute", attribute_without_rooms.pk
     )
     variables = {
         "attributeId": attribute_id,
@@ -649,12 +649,12 @@ def test_sort_product_by_attribute_using_attribute_having_no_products(
     }
 
     response = get_graphql_content(api_client.post_graphql(query, variables))
-    products = response["data"]["products"]["edges"]
+    rooms = response["data"]["rooms"]["edges"]
 
     if direction == "ASC":
-        expected_first_product = product_models.Product.objects.order_by("slug").first()
+        expected_first_room = room_models.Room.objects.order_by("slug").first()
     else:
-        expected_first_product = product_models.Product.objects.order_by("slug").last()
+        expected_first_room = room_models.Room.objects.order_by("slug").last()
 
-    assert len(products) == product_models.Product.objects.count()
-    assert products[0]["node"]["name"] == expected_first_product.name
+    assert len(rooms) == room_models.Room.objects.count()
+    assert rooms[0]["node"]["name"] == expected_first_room.name

@@ -7,11 +7,11 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0048_product_class_to_type")]
+    dependencies = [("room", "0048_room_class_to_type")]
 
     operations = [
         migrations.CreateModel(
-            name="CollectionProduct",
+            name="CollectionRoom",
             fields=[
                 (
                     "id",
@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                     ),
                 )
             ],
-            options={"db_table": "product_collection_products"},
+            options={"db_table": "room_collection_rooms"},
         ),
         migrations.CreateModel(
             name="Collection",
@@ -40,28 +40,28 @@ class Migration(migrations.Migration):
                 ("name", models.CharField(max_length=128, unique=True)),
                 ("slug", models.SlugField()),
                 (
-                    "products",
+                    "rooms",
                     models.ManyToManyField(
                         blank=True,
                         related_name="collections",
-                        through="product.CollectionProduct",
-                        to="product.Product",
+                        through="room.CollectionRoom",
+                        to="room.Room",
                     ),
                 ),
             ],
         ),
         migrations.AddField(
-            model_name="collectionproduct",
+            model_name="collectionroom",
             name="collection",
             field=models.ForeignKey(
-                on_delete=models.deletion.CASCADE, to="product.Collection"
+                on_delete=models.deletion.CASCADE, to="room.Collection"
             ),
         ),
         migrations.AddField(
-            model_name="collectionproduct",
-            name="product",
+            model_name="collectionroom",
+            name="room",
             field=models.ForeignKey(
-                on_delete=models.deletion.CASCADE, to="product.Product"
+                on_delete=models.deletion.CASCADE, to="room.Room"
             ),
         ),
     ]

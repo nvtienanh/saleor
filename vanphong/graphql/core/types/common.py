@@ -3,7 +3,7 @@ from urllib.parse import urljoin
 import graphene
 from django.conf import settings
 
-from ....product.templatetags.product_images import get_thumbnail
+from ....room.templatetags.room_images import get_thumbnail
 from ...translations.enums import LanguageCodeEnum
 from ..enums import (
     AccountErrorCode,
@@ -26,13 +26,13 @@ from ..enums import (
     PermissionEnum,
     PermissionGroupErrorCode,
     PluginErrorCode,
-    ProductErrorCode,
+    RoomErrorCode,
     ShippingErrorCode,
     ShopErrorCode,
     StockErrorCode,
     TranslationErrorCode,
     UploadErrorCode,
-    WarehouseErrorCode,
+    HotelErrorCode,
     WebhookErrorCode,
     WeightUnitsEnum,
     WishlistErrorCode,
@@ -125,14 +125,14 @@ class CheckoutError(Error):
     )
 
 
-class ProductWithoutVariantError(Error):
-    products = graphene.List(
+class RoomWithoutVariantError(Error):
+    rooms = graphene.List(
         graphene.NonNull(graphene.ID),
-        description="List of products IDs which causes the error.",
+        description="List of rooms IDs which causes the error.",
     )
 
 
-class DiscountError(ProductWithoutVariantError):
+class DiscountError(RoomWithoutVariantError):
     code = DiscountErrorCode(description="The error code.", required=True)
     channels = graphene.List(
         graphene.NonNull(graphene.ID),
@@ -159,8 +159,8 @@ class MetadataError(Error):
 
 class OrderError(Error):
     code = OrderErrorCode(description="The error code.", required=True)
-    warehouse = graphene.ID(
-        description="Warehouse ID which causes the error.",
+    hotel = graphene.ID(
+        description="Hotel ID which causes the error.",
         required=False,
     )
     order_line = graphene.ID(
@@ -169,7 +169,7 @@ class OrderError(Error):
     )
     variants = graphene.List(
         graphene.NonNull(graphene.ID),
-        description="List of product variants that are associated with the error",
+        description="List of room variants that are associated with the error",
         required=False,
     )
 
@@ -192,8 +192,8 @@ class PermissionGroupError(Error):
     )
 
 
-class ProductError(Error):
-    code = ProductErrorCode(description="The error code.", required=True)
+class RoomError(Error):
+    code = RoomErrorCode(description="The error code.", required=True)
     attributes = graphene.List(
         graphene.NonNull(graphene.ID),
         description="List of attributes IDs which causes the error.",
@@ -201,11 +201,11 @@ class ProductError(Error):
     )
 
 
-class CollectionError(ProductWithoutVariantError):
+class CollectionError(RoomWithoutVariantError):
     code = CollectionErrorCode(description="The error code.", required=True)
 
 
-class ProductChannelListingError(ProductError):
+class RoomChannelListingError(RoomError):
     channels = graphene.List(
         graphene.NonNull(graphene.ID),
         description="List of channels IDs which causes the error.",
@@ -213,7 +213,7 @@ class ProductChannelListingError(ProductError):
     )
 
 
-class CollectionChannelListingError(ProductError):
+class CollectionChannelListingError(RoomError):
     channels = graphene.List(
         graphene.NonNull(graphene.ID),
         description="List of channels IDs which causes the error.",
@@ -221,13 +221,13 @@ class CollectionChannelListingError(ProductError):
     )
 
 
-class BulkProductError(ProductError):
+class BulkRoomError(RoomError):
     index = graphene.Int(
         description="Index of an input list item that caused the error."
     )
-    warehouses = graphene.List(
+    hotels = graphene.List(
         graphene.NonNull(graphene.ID),
-        description="List of warehouse IDs which causes the error.",
+        description="List of hotel IDs which causes the error.",
         required=False,
     )
     channels = graphene.List(
@@ -243,9 +243,9 @@ class ShopError(Error):
 
 class ShippingError(Error):
     code = ShippingErrorCode(description="The error code.", required=True)
-    warehouses = graphene.List(
+    hotels = graphene.List(
         graphene.NonNull(graphene.ID),
-        description="List of warehouse IDs which causes the error.",
+        description="List of hotel IDs which causes the error.",
         required=False,
     )
     channels = graphene.List(
@@ -280,7 +280,7 @@ class StockError(Error):
     code = StockErrorCode(description="The error code.", required=True)
 
 
-class BulkStockError(ProductError):
+class BulkStockError(RoomError):
     index = graphene.Int(
         description="Index of an input list item that caused the error."
     )
@@ -290,15 +290,15 @@ class UploadError(Error):
     code = UploadErrorCode(description="The error code.", required=True)
 
 
-class WarehouseError(Error):
-    code = WarehouseErrorCode(description="The error code.", required=True)
+class HotelError(Error):
+    code = HotelErrorCode(description="The error code.", required=True)
 
 
 class WebhookError(Error):
     code = WebhookErrorCode(description="The error code.", required=True)
 
 
-class WishlistError(ProductWithoutVariantError):
+class WishlistError(RoomWithoutVariantError):
     code = WishlistErrorCode(description="The error code.", required=True)
 
 

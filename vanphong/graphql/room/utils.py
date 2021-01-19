@@ -6,12 +6,12 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
 
-from ...warehouse.models import Stock
+from ...hotel.models import Stock
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
 
-    from ...product.models import ProductVariant
+    from ...room.models import RoomVariant
 
 
 def get_used_attribute_values_for_variant(variant):
@@ -32,8 +32,8 @@ def get_used_attribute_values_for_variant(variant):
     return attribute_values
 
 
-def get_used_variants_attribute_values(product):
-    """Create list of attributes values for all existing `ProductVariants` for product.
+def get_used_variants_attribute_values(room):
+    """Create list of attributes values for all existing `RoomVariants` for room.
 
     Sample result is:
     [
@@ -49,7 +49,7 @@ def get_used_variants_attribute_values(product):
     ]
     """
     variants = (
-        product.variants.prefetch_related("attributes__values")
+        room.variants.prefetch_related("attributes__values")
         .prefetch_related("attributes__assignment")
         .all()
     )
@@ -62,19 +62,19 @@ def get_used_variants_attribute_values(product):
 
 @transaction.atomic
 def create_stocks(
-    variant: "ProductVariant", stocks_data: List[Dict[str, str]], warehouses: "QuerySet"
+    variant: "RoomVariant", stocks_data: List[Dict[str, str]], hotels: "QuerySet"
 ):
     try:
         Stock.objects.bulk_create(
             [
                 Stock(
-                    product_variant=variant,
-                    warehouse=warehouse,
+                    room_variant=variant,
+                    hotel=hotel,
                     quantity=stock_data["quantity"],
                 )
-                for stock_data, warehouse in zip(stocks_data, warehouses)
+                for stock_data, hotel in zip(stocks_data, hotels)
             ]
         )
     except IntegrityError:
-        msg = "Stock for one of warehouses already exists for this product variant."
+        msg = "Stock for one of hotels already exists for this room variant."
         raise ValidationError(msg)

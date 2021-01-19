@@ -11,30 +11,30 @@ from graphene.types import InputObjectType
 from ....attribute import AttributeInputType, AttributeType
 from ....attribute import models as attribute_models
 from ....core.exceptions import PermissionDenied
-from ....core.permissions import ProductPermissions, ProductTypePermissions
+from ....core.permissions import RoomPermissions, RoomTypePermissions
 from ....order import OrderStatus
 from ....order import models as order_models
-from ....product import models
-from ....product.error_codes import CollectionErrorCode, ProductErrorCode
-from ....product.tasks import (
-    update_product_discounted_price_task,
-    update_products_discounted_prices_of_catalogues_task,
+from ....room import models
+from ....room.error_codes import CollectionErrorCode, RoomErrorCode
+from ....room.tasks import (
+    update_room_discounted_price_task,
+    update_rooms_discounted_prices_of_catalogues_task,
     update_variants_names,
 )
-from ....product.thumbnails import (
+from ....room.thumbnails import (
     create_category_background_image_thumbnails,
     create_collection_background_image_thumbnails,
-    create_product_thumbnails,
+    create_room_thumbnails,
 )
-from ....product.utils import delete_categories, get_products_ids_without_variants
-from ....product.utils.variants import generate_and_set_variant_name
+from ....room.utils import delete_categories, get_rooms_ids_without_variants
+from ....room.utils.variants import generate_and_set_variant_name
 from ...attribute.utils import AttributeAssignmentMixin, AttrValuesInput
 from ...channel import ChannelContext
 from ...core.inputs import ReorderInput
 from ...core.mutations import BaseMutation, ModelDeleteMutation, ModelMutation
 from ...core.scalars import WeightScalar
 from ...core.types import SeoInput, Upload
-from ...core.types.common import CollectionError, ProductError
+from ...core.types.common import CollectionError, RoomError
 from ...core.utils import (
     clean_seo_fields,
     from_global_id_strict_type,
@@ -43,14 +43,14 @@ from ...core.utils import (
     validate_slug_and_generate_if_needed,
 )
 from ...core.utils.reordering import perform_reordering
-from ...warehouse.types import Warehouse
+from ...hotel.types import Hotel
 from ..types import (
     Category,
     Collection,
-    Product,
-    ProductImage,
-    ProductType,
-    ProductVariant,
+    Room,
+    RoomImage,
+    RoomType,
+    RoomVariant,
 )
 from ..utils import (
     create_stocks,
@@ -85,9 +85,9 @@ class CategoryCreate(ModelMutation):
     class Meta:
         description = "Creates a new category."
         model = models.Category
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def clean_input(cls, info, instance, data):
@@ -97,7 +97,7 @@ class CategoryCreate(ModelMutation):
                 instance, "name", cleaned_input
             )
         except ValidationError as error:
-            error.code = ProductErrorCode.REQUIRED.value
+            error.code = RoomErrorCode.REQUIRED.value
             raise ValidationError({"slug": error})
         parent_id = data["parent_id"]
         if parent_id:
@@ -134,9 +134,9 @@ class CategoryUpdate(CategoryCreate):
     class Meta:
         description = "Updates a category."
         model = models.Category
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
 
 class CategoryDelete(ModelDeleteMutation):
@@ -146,9 +146,9 @@ class CategoryDelete(ModelDeleteMutation):
     class Meta:
         description = "Deletes a category."
         model = models.Category
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def perform_mutation(cls, _root, info, **data):
@@ -184,10 +184,10 @@ class CollectionInput(graphene.InputObjectType):
 
 
 class CollectionCreateInput(CollectionInput):
-    products = graphene.List(
+    rooms = graphene.List(
         graphene.ID,
-        description="List of products to be added to the collection.",
-        name="products",
+        description="List of rooms to be added to the collection.",
+        name="rooms",
     )
 
 
@@ -200,7 +200,7 @@ class CollectionCreate(ModelMutation):
     class Meta:
         description = "Creates a new collection."
         model = models.Collection
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = CollectionError
         error_type_field = "collection_errors"
 
@@ -248,7 +248,7 @@ class CollectionUpdate(CollectionCreate):
     class Meta:
         description = "Updates a collection."
         model = models.Collection
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = CollectionError
         error_type_field = "collection_errors"
 
@@ -266,7 +266,7 @@ class CollectionDelete(ModelDeleteMutation):
     class Meta:
         description = "Deletes a collection."
         model = models.Collection
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = CollectionError
         error_type_field = "collection_errors"
 
@@ -278,28 +278,28 @@ class CollectionDelete(ModelDeleteMutation):
         )
 
 
-class MoveProductInput(graphene.InputObjectType):
-    product_id = graphene.ID(
-        description="The ID of the product to move.", required=True
+class MoveRoomInput(graphene.InputObjectType):
+    room_id = graphene.ID(
+        description="The ID of the room to move.", required=True
     )
     sort_order = graphene.Int(
         description=(
-            "The relative sorting position of the product (from -inf to +inf) "
-            "starting from the first given product's actual position."
+            "The relative sorting position of the room (from -inf to +inf) "
+            "starting from the first given room's actual position."
             "1 moves the item one position forward, -1 moves the item one position "
             "backward, 0 leaves the item unchanged."
         )
     )
 
 
-class CollectionReorderProducts(BaseMutation):
+class CollectionReorderRooms(BaseMutation):
     collection = graphene.Field(
-        Collection, description="Collection from which products are reordered."
+        Collection, description="Collection from which rooms are reordered."
     )
 
     class Meta:
-        description = "Reorder the products of a collection."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        description = "Reorder the rooms of a collection."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = CollectionError
         error_type_field = "collection_errors"
 
@@ -308,9 +308,9 @@ class CollectionReorderProducts(BaseMutation):
             graphene.ID, required=True, description="ID of a collection."
         )
         moves = graphene.List(
-            MoveProductInput,
+            MoveRoomInput,
             required=True,
-            description="The collection products position operations.",
+            description="The collection rooms position operations.",
         )
 
     @classmethod
@@ -321,35 +321,35 @@ class CollectionReorderProducts(BaseMutation):
 
         try:
             collection = models.Collection.objects.prefetch_related(
-                "collectionproduct"
+                "collectionroom"
             ).get(pk=pk)
         except ObjectDoesNotExist:
             raise ValidationError(
                 {
                     "collection_id": ValidationError(
                         f"Couldn't resolve to a collection: {collection_id}",
-                        code=ProductErrorCode.NOT_FOUND,
+                        code=RoomErrorCode.NOT_FOUND,
                     )
                 }
             )
 
-        m2m_related_field = collection.collectionproduct
+        m2m_related_field = collection.collectionroom
 
         operations = {}
 
-        # Resolve the products
+        # Resolve the rooms
         for move_info in moves:
-            product_pk = from_global_id_strict_type(
-                move_info.product_id, only_type=Product, field="moves"
+            room_pk = from_global_id_strict_type(
+                move_info.room_id, only_type=Room, field="moves"
             )
 
             try:
-                m2m_info = m2m_related_field.get(product_id=int(product_pk))
+                m2m_info = m2m_related_field.get(room_id=int(room_pk))
             except ObjectDoesNotExist:
                 raise ValidationError(
                     {
                         "moves": ValidationError(
-                            f"Couldn't resolve to a product: {move_info.product_id}",
+                            f"Couldn't resolve to a room: {move_info.room_id}",
                             code=CollectionErrorCode.NOT_FOUND.value,
                         )
                     }
@@ -359,94 +359,94 @@ class CollectionReorderProducts(BaseMutation):
         with transaction.atomic():
             perform_reordering(m2m_related_field, operations)
         collection = ChannelContext(node=collection, channel_slug=None)
-        return CollectionReorderProducts(collection=collection)
+        return CollectionReorderRooms(collection=collection)
 
 
-class CollectionAddProducts(BaseMutation):
+class CollectionAddRooms(BaseMutation):
     collection = graphene.Field(
-        Collection, description="Collection to which products will be added."
+        Collection, description="Collection to which rooms will be added."
     )
 
     class Arguments:
         collection_id = graphene.Argument(
             graphene.ID, required=True, description="ID of a collection."
         )
-        products = graphene.List(
-            graphene.ID, required=True, description="List of product IDs."
+        rooms = graphene.List(
+            graphene.ID, required=True, description="List of room IDs."
         )
 
     class Meta:
-        description = "Adds products to a collection."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        description = "Adds rooms to a collection."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = CollectionError
         error_type_field = "collection_errors"
 
     @classmethod
     @transaction.atomic()
-    def perform_mutation(cls, _root, info, collection_id, products):
+    def perform_mutation(cls, _root, info, collection_id, rooms):
         collection = cls.get_node_or_error(
             info, collection_id, field="collection_id", only_type=Collection
         )
-        products = cls.get_nodes_or_error(products, "products", Product)
-        cls.clean_products(products)
-        collection.products.add(*products)
+        rooms = cls.get_nodes_or_error(rooms, "rooms", Room)
+        cls.clean_rooms(rooms)
+        collection.rooms.add(*rooms)
         if collection.sale_set.exists():
-            # Updated the db entries, recalculating discounts of affected products
-            update_products_discounted_prices_of_catalogues_task.delay(
-                product_ids=[pq.pk for pq in products]
+            # Updated the db entries, recalculating discounts of affected rooms
+            update_rooms_discounted_prices_of_catalogues_task.delay(
+                room_ids=[pq.pk for pq in rooms]
             )
-        return CollectionAddProducts(
+        return CollectionAddRooms(
             collection=ChannelContext(node=collection, channel_slug=None)
         )
 
     @classmethod
-    def clean_products(cls, products):
-        products_ids_without_variants = get_products_ids_without_variants(products)
-        if products_ids_without_variants:
-            code = CollectionErrorCode.CANNOT_MANAGE_PRODUCT_WITHOUT_VARIANT.value
+    def clean_rooms(cls, rooms):
+        rooms_ids_without_variants = get_rooms_ids_without_variants(rooms)
+        if rooms_ids_without_variants:
+            code = CollectionErrorCode.CANNOT_MANAGE_ROOM_WITHOUT_VARIANT.value
             raise ValidationError(
                 {
-                    "products": ValidationError(
-                        "Cannot manage products without variants.",
+                    "rooms": ValidationError(
+                        "Cannot manage rooms without variants.",
                         code=code,
-                        params={"products": products_ids_without_variants},
+                        params={"rooms": rooms_ids_without_variants},
                     )
                 }
             )
 
 
-class CollectionRemoveProducts(BaseMutation):
+class CollectionRemoveRooms(BaseMutation):
     collection = graphene.Field(
-        Collection, description="Collection from which products will be removed."
+        Collection, description="Collection from which rooms will be removed."
     )
 
     class Arguments:
         collection_id = graphene.Argument(
             graphene.ID, required=True, description="ID of a collection."
         )
-        products = graphene.List(
-            graphene.ID, required=True, description="List of product IDs."
+        rooms = graphene.List(
+            graphene.ID, required=True, description="List of room IDs."
         )
 
     class Meta:
-        description = "Remove products from a collection."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
+        description = "Remove rooms from a collection."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
         error_type_class = CollectionError
         error_type_field = "collection_errors"
 
     @classmethod
-    def perform_mutation(cls, _root, info, collection_id, products):
+    def perform_mutation(cls, _root, info, collection_id, rooms):
         collection = cls.get_node_or_error(
             info, collection_id, field="collection_id", only_type=Collection
         )
-        products = cls.get_nodes_or_error(products, "products", only_type=Product)
-        collection.products.remove(*products)
+        rooms = cls.get_nodes_or_error(rooms, "rooms", only_type=Room)
+        collection.rooms.remove(*rooms)
         if collection.sale_set.exists():
-            # Updated the db entries, recalculating discounts of affected products
-            update_products_discounted_prices_of_catalogues_task.delay(
-                product_ids=[p.pk for p in products]
+            # Updated the db entries, recalculating discounts of affected rooms
+            update_rooms_discounted_prices_of_catalogues_task.delay(
+                room_ids=[p.pk for p in rooms]
             )
-        return CollectionRemoveProducts(
+        return CollectionRemoveRooms(
             collection=ChannelContext(node=collection, channel_slug=None)
         )
 
@@ -468,38 +468,38 @@ class AttributeValueInput(InputObjectType):
     content_type = graphene.String(required=False, description="File content type.")
 
 
-class ProductInput(graphene.InputObjectType):
+class RoomInput(graphene.InputObjectType):
     attributes = graphene.List(AttributeValueInput, description="List of attributes.")
-    category = graphene.ID(description="ID of the product's category.", name="category")
+    category = graphene.ID(description="ID of the room's category.", name="category")
     charge_taxes = graphene.Boolean(
-        description="Determine if taxes are being charged for the product."
+        description="Determine if taxes are being charged for the room."
     )
     collections = graphene.List(
         graphene.ID,
-        description="List of IDs of collections that the product belongs to.",
+        description="List of IDs of collections that the room belongs to.",
         name="collections",
     )
-    description = graphene.String(description="Product description (HTML/text).")
-    description_json = graphene.JSONString(description="Product description (JSON).")
-    name = graphene.String(description="Product name.")
-    slug = graphene.String(description="Product slug.")
+    description = graphene.String(description="Room description (HTML/text).")
+    description_json = graphene.JSONString(description="Room description (JSON).")
+    name = graphene.String(description="Room name.")
+    slug = graphene.String(description="Room slug.")
     tax_code = graphene.String(description="Tax rate for enabled tax gateway.")
     seo = SeoInput(description="Search engine optimization fields.")
-    weight = WeightScalar(description="Weight of the Product.", required=False)
-    rating = graphene.Float(description="Defines the product rating value.")
+    weight = WeightScalar(description="Weight of the Room.", required=False)
+    rating = graphene.Float(description="Defines the room rating value.")
 
 
 class StockInput(graphene.InputObjectType):
-    warehouse = graphene.ID(
-        required=True, description="Warehouse in which stock is located."
+    hotel = graphene.ID(
+        required=True, description="Hotel in which stock is located."
     )
     quantity = graphene.Int(description="Quantity of items available for sell.")
 
 
-class ProductCreateInput(ProductInput):
-    product_type = graphene.ID(
-        description="ID of the type that product belongs to.",
-        name="productType",
+class RoomCreateInput(RoomInput):
+    room_type = graphene.ID(
+        description="ID of the type that room belongs to.",
+        name="roomType",
         required=True,
     )
 
@@ -507,24 +507,24 @@ class ProductCreateInput(ProductInput):
 T_INPUT_MAP = List[Tuple[attribute_models.Attribute, AttrValuesInput]]
 
 
-class ProductCreate(ModelMutation):
+class RoomCreate(ModelMutation):
     class Arguments:
-        input = ProductCreateInput(
-            required=True, description="Fields required to create a product."
+        input = RoomCreateInput(
+            required=True, description="Fields required to create a room."
         )
 
     class Meta:
-        description = "Creates a new product."
-        model = models.Product
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Creates a new room."
+        model = models.Room
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def clean_attributes(
-        cls, attributes: dict, product_type: models.ProductType
+        cls, attributes: dict, room_type: models.RoomType
     ) -> T_INPUT_MAP:
-        attributes_qs = product_type.product_attributes
+        attributes_qs = room_type.room_attributes
         attributes = AttributeAssignmentMixin.clean_input(
             attributes, attributes_qs, is_variant=False
         )
@@ -539,28 +539,28 @@ class ProductCreate(ModelMutation):
             raise ValidationError(
                 {
                     "weight": ValidationError(
-                        "Product can't have negative weight.",
-                        code=ProductErrorCode.INVALID.value,
+                        "Room can't have negative weight.",
+                        code=RoomErrorCode.INVALID.value,
                     )
                 }
             )
 
         # Attributes are provided as list of `AttributeValueInput` objects.
         # We need to transform them into the format they're stored in the
-        # `Product` model, which is HStore field that maps attribute's PK to
+        # `Room` model, which is HStore field that maps attribute's PK to
         # the value's PK.
 
         attributes = cleaned_input.get("attributes")
-        product_type = (
-            instance.product_type if instance.pk else cleaned_input.get("product_type")
-        )  # type: models.ProductType
+        room_type = (
+            instance.room_type if instance.pk else cleaned_input.get("room_type")
+        )  # type: models.RoomType
 
         try:
             cleaned_input = validate_slug_and_generate_if_needed(
                 instance, "name", cleaned_input
             )
         except ValidationError as error:
-            error.code = ProductErrorCode.REQUIRED.value
+            error.code = RoomErrorCode.REQUIRED.value
             raise ValidationError({"slug": error})
 
         # FIXME  tax_rate logic should be dropped after we remove tax_rate from input
@@ -573,10 +573,10 @@ class ProductCreate(ModelMutation):
                 instance, cleaned_input["tax_code"]
             )
 
-        if attributes and product_type:
+        if attributes and room_type:
             try:
                 cleaned_input["attributes"] = cls.clean_attributes(
-                    attributes, product_type
+                    attributes, room_type
                 )
             except ValidationError as exc:
                 raise ValidationError({"attributes": exc})
@@ -595,10 +595,10 @@ class ProductCreate(ModelMutation):
             # Prefetches needed by AttributeAssignmentMixin and
             # associate_attribute_values_to_instance
             qs = cls.Meta.model.objects.prefetch_related(
-                "product_type__product_attributes__values",
-                "product_type__attributeproduct",
+                "room_type__room_attributes__values",
+                "room_type__attributeroom",
             )
-            return cls.get_node_or_error(info, object_id, only_type="Product", qs=qs)
+            return cls.get_node_or_error(info, object_id, only_type="Room", qs=qs)
 
         return super().get_instance(info, **data)
 
@@ -620,31 +620,31 @@ class ProductCreate(ModelMutation):
     @classmethod
     def perform_mutation(cls, _root, info, **data):
         response = super().perform_mutation(_root, info, **data)
-        product = getattr(response, cls._meta.return_field_name)
-        info.context.plugins.product_created(product)
+        room = getattr(response, cls._meta.return_field_name)
+        info.context.plugins.room_created(room)
 
-        # Wrap product instance with ChannelContext in response
+        # Wrap room instance with ChannelContext in response
         setattr(
             response,
             cls._meta.return_field_name,
-            ChannelContext(node=product, channel_slug=None),
+            ChannelContext(node=room, channel_slug=None),
         )
         return response
 
 
-class ProductUpdate(ProductCreate):
+class RoomUpdate(RoomCreate):
     class Arguments:
-        id = graphene.ID(required=True, description="ID of a product to update.")
-        input = ProductInput(
-            required=True, description="Fields required to update a product."
+        id = graphene.ID(required=True, description="ID of a room to update.")
+        input = RoomInput(
+            required=True, description="Fields required to update a room."
         )
 
     class Meta:
-        description = "Updates an existing product."
-        model = models.Product
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Updates an existing room."
+        model = models.Room
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     @transaction.atomic
@@ -653,19 +653,19 @@ class ProductUpdate(ProductCreate):
         attributes = cleaned_input.get("attributes")
         if attributes:
             AttributeAssignmentMixin.save(instance, attributes)
-        info.context.plugins.product_updated(instance)
+        info.context.plugins.room_updated(instance)
 
 
-class ProductDelete(ModelDeleteMutation):
+class RoomDelete(ModelDeleteMutation):
     class Arguments:
-        id = graphene.ID(required=True, description="ID of a product to delete.")
+        id = graphene.ID(required=True, description="ID of a room to delete.")
 
     class Meta:
-        description = "Deletes a product."
-        model = models.Product
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Deletes a room."
+        model = models.Room
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def success_response(cls, instance):
@@ -675,7 +675,7 @@ class ProductDelete(ModelDeleteMutation):
     @classmethod
     def perform_mutation(cls, _root, info, **data):
         node_id = data.get("id")
-        instance = cls.get_node_or_error(info, node_id, only_type=Product)
+        instance = cls.get_node_or_error(info, node_id, only_type=Room)
 
         # get draft order lines for variant
         line_pks = list(
@@ -692,7 +692,7 @@ class ProductDelete(ModelDeleteMutation):
         return response
 
 
-class ProductVariantInput(graphene.InputObjectType):
+class RoomVariantInput(graphene.InputObjectType):
     attributes = graphene.List(
         AttributeValueInput,
         required=False,
@@ -705,46 +705,46 @@ class ProductVariantInput(graphene.InputObjectType):
             "the quantity won't change when customers buy this item."
         )
     )
-    weight = WeightScalar(description="Weight of the Product Variant.", required=False)
+    weight = WeightScalar(description="Weight of the Room Variant.", required=False)
 
 
-class ProductVariantCreateInput(ProductVariantInput):
+class RoomVariantCreateInput(RoomVariantInput):
     attributes = graphene.List(
         AttributeValueInput,
         required=True,
         description="List of attributes specific to this variant.",
     )
-    product = graphene.ID(
-        description="Product ID of which type is the variant.",
-        name="product",
+    room = graphene.ID(
+        description="Room ID of which type is the variant.",
+        name="room",
         required=True,
     )
     stocks = graphene.List(
         graphene.NonNull(StockInput),
-        description=("Stocks of a product available for sale."),
+        description=("Stocks of a room available for sale."),
         required=False,
     )
 
 
-class ProductVariantCreate(ModelMutation):
+class RoomVariantCreate(ModelMutation):
     class Arguments:
-        input = ProductVariantCreateInput(
-            required=True, description="Fields required to create a product variant."
+        input = RoomVariantCreateInput(
+            required=True, description="Fields required to create a room variant."
         )
 
     class Meta:
-        description = "Creates a new variant for a product."
-        model = models.ProductVariant
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Creates a new variant for a room."
+        model = models.RoomVariant
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
         errors_mapping = {"price_amount": "price"}
 
     @classmethod
     def clean_attributes(
-        cls, attributes: dict, product_type: models.ProductType
+        cls, attributes: dict, room_type: models.RoomType
     ) -> T_INPUT_MAP:
-        attributes_qs = product_type.variant_attributes
+        attributes_qs = room_type.variant_attributes
         attributes = AttributeAssignmentMixin.clean_input(
             attributes, attributes_qs, is_variant=True
         )
@@ -767,15 +767,15 @@ class ProductVariantCreate(ModelMutation):
             attribute_values[attr_data.global_id].extend(values)
         if attribute_values in used_attribute_values:
             raise ValidationError(
-                "Duplicated attribute values for product variant.",
-                ProductErrorCode.DUPLICATED_INPUT_ITEM,
+                "Duplicated attribute values for room variant.",
+                RoomErrorCode.DUPLICATED_INPUT_ITEM,
             )
         else:
             used_attribute_values.append(attribute_values)
 
     @classmethod
     def clean_input(
-        cls, info, instance: models.ProductVariant, data: dict, input_cls=None
+        cls, info, instance: models.RoomVariant, data: dict, input_cls=None
     ):
         cleaned_input = super().clean_input(info, instance, data)
 
@@ -784,8 +784,8 @@ class ProductVariantCreate(ModelMutation):
             raise ValidationError(
                 {
                     "weight": ValidationError(
-                        "Product variant can't have negative weight.",
-                        code=ProductErrorCode.INVALID.value,
+                        "Room variant can't have negative weight.",
+                        code=RoomErrorCode.INVALID.value,
                     )
                 }
             )
@@ -796,27 +796,27 @@ class ProductVariantCreate(ModelMutation):
 
         if instance.pk:
             # If the variant is getting updated,
-            # simply retrieve the associated product type
-            product_type = instance.product.product_type
-            used_attribute_values = get_used_variants_attribute_values(instance.product)
+            # simply retrieve the associated room type
+            room_type = instance.room.room_type
+            used_attribute_values = get_used_variants_attribute_values(instance.room)
         else:
-            # If the variant is getting created, no product type is associated yet,
-            # retrieve it from the required "product" input field
-            product_type = cleaned_input["product"].product_type
+            # If the variant is getting created, no room type is associated yet,
+            # retrieve it from the required "room" input field
+            room_type = cleaned_input["room"].room_type
             used_attribute_values = get_used_variants_attribute_values(
-                cleaned_input["product"]
+                cleaned_input["room"]
             )
 
-        # Run the validation only if product type is configurable
-        if product_type.has_variants:
+        # Run the validation only if room type is configurable
+        if room_type.has_variants:
             # Attributes are provided as list of `AttributeValueInput` objects.
             # We need to transform them into the format they're stored in the
-            # `Product` model, which is HStore field that maps attribute's PK to
+            # `Room` model, which is HStore field that maps attribute's PK to
             # the value's PK.
             attributes = cleaned_input.get("attributes")
             try:
                 if attributes:
-                    cleaned_attributes = cls.clean_attributes(attributes, product_type)
+                    cleaned_attributes = cls.clean_attributes(attributes, room_type)
                     cls.validate_duplicated_attribute_values(
                         cleaned_attributes, used_attribute_values, instance
                     )
@@ -825,7 +825,7 @@ class ProductVariantCreate(ModelMutation):
                     # if attributes were not provided on creation
                     raise ValidationError(
                         "All attributes must take a value.",
-                        ProductErrorCode.REQUIRED.value,
+                        RoomErrorCode.REQUIRED.value,
                     )
             except ValidationError as exc:
                 raise ValidationError({"attributes": exc})
@@ -834,14 +834,14 @@ class ProductVariantCreate(ModelMutation):
 
     @classmethod
     def check_for_duplicates_in_stocks(cls, stocks_data):
-        warehouse_ids = [stock["warehouse"] for stock in stocks_data]
-        duplicates = get_duplicated_values(warehouse_ids)
+        hotel_ids = [stock["hotel"] for stock in stocks_data]
+        duplicates = get_duplicated_values(hotel_ids)
         if duplicates:
-            error_msg = "Duplicated warehouse ID: {}".format(", ".join(duplicates))
+            error_msg = "Duplicated hotel ID: {}".format(", ".join(duplicates))
             raise ValidationError(
                 {
                     "stocks": ValidationError(
-                        error_msg, code=ProductErrorCode.UNIQUE.value
+                        error_msg, code=RoomErrorCode.UNIQUE.value
                     )
                 }
             )
@@ -859,11 +859,11 @@ class ProductVariantCreate(ModelMutation):
             # Prefetches needed by AttributeAssignmentMixin and
             # associate_attribute_values_to_instance
             qs = cls.Meta.model.objects.prefetch_related(
-                "product__product_type__variant_attributes__values",
-                "product__product_type__attributevariant",
+                "room__room_type__variant_attributes__values",
+                "room__room_type__attributevariant",
             )
             return cls.get_node_or_error(
-                info, object_id, only_type="ProductVariant", qs=qs
+                info, object_id, only_type="RoomVariant", qs=qs
             )
 
         return super().get_instance(info, **data)
@@ -872,11 +872,11 @@ class ProductVariantCreate(ModelMutation):
     @transaction.atomic()
     def save(cls, info, instance, cleaned_input):
         instance.save()
-        if not instance.product.default_variant:
-            instance.product.default_variant = instance
-            instance.product.save(update_fields=["default_variant", "updated_at"])
-        # Recalculate the "discounted price" for the parent product
-        update_product_discounted_price_task.delay(instance.product_id)
+        if not instance.room.default_variant:
+            instance.room.default_variant = instance
+            instance.room.save(update_fields=["default_variant", "updated_at"])
+        # Recalculate the "discounted price" for the parent room
+        update_room_discounted_price_task.delay(instance.room_id)
         stocks = cleaned_input.get("stocks")
         if stocks:
             cls.create_variant_stocks(instance, stocks)
@@ -885,15 +885,15 @@ class ProductVariantCreate(ModelMutation):
         if attributes:
             AttributeAssignmentMixin.save(instance, attributes)
             generate_and_set_variant_name(instance, cleaned_input.get("sku"))
-        info.context.plugins.product_updated(instance.product)
+        info.context.plugins.room_updated(instance.room)
 
     @classmethod
     def create_variant_stocks(cls, variant, stocks):
-        warehouse_ids = [stock["warehouse"] for stock in stocks]
-        warehouses = cls.get_nodes_or_error(
-            warehouse_ids, "warehouse", only_type=Warehouse
+        hotel_ids = [stock["hotel"] for stock in stocks]
+        hotels = cls.get_nodes_or_error(
+            hotel_ids, "hotel", only_type=Hotel
         )
-        create_stocks(variant, stocks, warehouses)
+        create_stocks(variant, stocks, hotels)
 
     @classmethod
     def success_response(cls, instance):
@@ -901,21 +901,21 @@ class ProductVariantCreate(ModelMutation):
         return super().success_response(instance)
 
 
-class ProductVariantUpdate(ProductVariantCreate):
+class RoomVariantUpdate(RoomVariantCreate):
     class Arguments:
         id = graphene.ID(
-            required=True, description="ID of a product variant to update."
+            required=True, description="ID of a room variant to update."
         )
-        input = ProductVariantInput(
-            required=True, description="Fields required to update a product variant."
+        input = RoomVariantInput(
+            required=True, description="Fields required to update a room variant."
         )
 
     class Meta:
-        description = "Updates an existing variant for product."
-        model = models.ProductVariant
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Updates an existing variant for room."
+        model = models.RoomVariant
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
         errors_mapping = {"price_amount": "price"}
 
     @classmethod
@@ -924,7 +924,7 @@ class ProductVariantUpdate(ProductVariantCreate):
     ):
         # Check if the variant is getting updated,
         # and the assigned attributes do not change
-        if instance.product_id is not None:
+        if instance.room_id is not None:
             assigned_attributes = get_used_attribute_values_for_variant(instance)
             input_attribute_values = defaultdict(list)
             for attr, attr_data in attributes_data:
@@ -945,35 +945,35 @@ class ProductVariantUpdate(ProductVariantCreate):
         )
 
 
-class ProductVariantDelete(ModelDeleteMutation):
+class RoomVariantDelete(ModelDeleteMutation):
     class Arguments:
         id = graphene.ID(
-            required=True, description="ID of a product variant to delete."
+            required=True, description="ID of a room variant to delete."
         )
 
     class Meta:
-        description = "Deletes a product variant."
-        model = models.ProductVariant
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Deletes a room variant."
+        model = models.RoomVariant
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def success_response(cls, instance):
-        # Update the "discounted_prices" of the parent product
-        update_product_discounted_price_task.delay(instance.product_id)
-        product = models.Product.objects.get(id=instance.product_id)
-        # if the product default variant has been removed set the new one
-        if not product.default_variant:
-            product.default_variant = product.variants.first()
-            product.save(update_fields=["default_variant"])
+        # Update the "discounted_prices" of the parent room
+        update_room_discounted_price_task.delay(instance.room_id)
+        room = models.Room.objects.get(id=instance.room_id)
+        # if the room default variant has been removed set the new one
+        if not room.default_variant:
+            room.default_variant = room.variants.first()
+            room.save(update_fields=["default_variant"])
         instance = ChannelContext(node=instance, channel_slug=None)
         return super().success_response(instance)
 
     @classmethod
     def perform_mutation(cls, _root, info, **data):
         node_id = data.get("id")
-        variant_pk = from_global_id_strict_type(node_id, ProductVariant, field="pk")
+        variant_pk = from_global_id_strict_type(node_id, RoomVariant, field="pk")
 
         # get draft order lines for variant
         line_pks = list(
@@ -990,51 +990,51 @@ class ProductVariantDelete(ModelDeleteMutation):
         return response
 
 
-class ProductTypeInput(graphene.InputObjectType):
-    name = graphene.String(description="Name of the product type.")
-    slug = graphene.String(description="Product type slug.")
+class RoomTypeInput(graphene.InputObjectType):
+    name = graphene.String(description="Name of the room type.")
+    slug = graphene.String(description="Room type slug.")
     has_variants = graphene.Boolean(
         description=(
-            "Determines if product of this type has multiple variants. This option "
-            "mainly simplifies product management in the dashboard. There is always at "
+            "Determines if room of this type has multiple variants. This option "
+            "mainly simplifies room management in the dashboard. There is always at "
             "least one variant created under the hood."
         )
     )
-    product_attributes = graphene.List(
+    room_attributes = graphene.List(
         graphene.ID,
-        description="List of attributes shared among all product variants.",
-        name="productAttributes",
+        description="List of attributes shared among all room variants.",
+        name="roomAttributes",
     )
     variant_attributes = graphene.List(
         graphene.ID,
         description=(
             "List of attributes used to distinguish between different variants of "
-            "a product."
+            "a room."
         ),
         name="variantAttributes",
     )
     is_shipping_required = graphene.Boolean(
-        description="Determines if shipping is required for products of this variant."
+        description="Determines if shipping is required for rooms of this variant."
     )
     is_digital = graphene.Boolean(
-        description="Determines if products are digital.", required=False
+        description="Determines if rooms are digital.", required=False
     )
-    weight = WeightScalar(description="Weight of the ProductType items.")
+    weight = WeightScalar(description="Weight of the RoomType items.")
     tax_code = graphene.String(description="Tax rate for enabled tax gateway.")
 
 
-class ProductTypeCreate(ModelMutation):
+class RoomTypeCreate(ModelMutation):
     class Arguments:
-        input = ProductTypeInput(
-            required=True, description="Fields required to create a product type."
+        input = RoomTypeInput(
+            required=True, description="Fields required to create a room type."
         )
 
     class Meta:
-        description = "Creates a new product type."
-        model = models.ProductType
-        permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Creates a new room type."
+        model = models.RoomType
+        permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def clean_input(cls, info, instance, data):
@@ -1045,8 +1045,8 @@ class ProductTypeCreate(ModelMutation):
             raise ValidationError(
                 {
                     "weight": ValidationError(
-                        "Product type can't have negative weight.",
-                        code=ProductErrorCode.INVALID,
+                        "Room type can't have negative weight.",
+                        code=RoomErrorCode.INVALID,
                     )
                 }
             )
@@ -1056,7 +1056,7 @@ class ProductTypeCreate(ModelMutation):
                 instance, "name", cleaned_input
             )
         except ValidationError as error:
-            error.code = ProductErrorCode.REQUIRED.value
+            error.code = RoomErrorCode.REQUIRED.value
             raise ValidationError({"slug": error})
 
         # FIXME  tax_rate logic should be dropped after we remove tax_rate from input
@@ -1078,19 +1078,19 @@ class ProductTypeCreate(ModelMutation):
     @classmethod
     def validate_attributes(cls, cleaned_data):
         errors = {}
-        for field in ["product_attributes", "variant_attributes"]:
+        for field in ["room_attributes", "variant_attributes"]:
             attributes = cleaned_data.get(field)
             if not attributes:
                 continue
             not_valid_attributes = [
                 graphene.Node.to_global_id("Attribute", attr.pk)
                 for attr in attributes
-                if attr.type != AttributeType.PRODUCT_TYPE
+                if attr.type != AttributeType.ROOM_TYPE
             ]
             if not_valid_attributes:
                 errors[field] = ValidationError(
-                    "Only Product type attributes are allowed.",
-                    code=ProductErrorCode.INVALID.value,
+                    "Only Room type attributes are allowed.",
+                    code=RoomErrorCode.INVALID.value,
                     params={"attributes": not_valid_attributes},
                 )
         if errors:
@@ -1099,27 +1099,27 @@ class ProductTypeCreate(ModelMutation):
     @classmethod
     def _save_m2m(cls, info, instance, cleaned_data):
         super()._save_m2m(info, instance, cleaned_data)
-        product_attributes = cleaned_data.get("product_attributes")
+        room_attributes = cleaned_data.get("room_attributes")
         variant_attributes = cleaned_data.get("variant_attributes")
-        if product_attributes is not None:
-            instance.product_attributes.set(product_attributes)
+        if room_attributes is not None:
+            instance.room_attributes.set(room_attributes)
         if variant_attributes is not None:
             instance.variant_attributes.set(variant_attributes)
 
 
-class ProductTypeUpdate(ProductTypeCreate):
+class RoomTypeUpdate(RoomTypeCreate):
     class Arguments:
-        id = graphene.ID(required=True, description="ID of a product type to update.")
-        input = ProductTypeInput(
-            required=True, description="Fields required to update a product type."
+        id = graphene.ID(required=True, description="ID of a room type to update.")
+        input = RoomTypeInput(
+            required=True, description="Fields required to update a room type."
         )
 
     class Meta:
-        description = "Updates an existing product type."
-        model = models.ProductType
-        permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Updates an existing room type."
+        model = models.RoomType
+        permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def save(cls, info, instance, cleaned_input):
@@ -1131,25 +1131,25 @@ class ProductTypeUpdate(ProductTypeCreate):
         super().save(info, instance, cleaned_input)
 
 
-class ProductTypeDelete(ModelDeleteMutation):
+class RoomTypeDelete(ModelDeleteMutation):
     class Arguments:
-        id = graphene.ID(required=True, description="ID of a product type to delete.")
+        id = graphene.ID(required=True, description="ID of a room type to delete.")
 
     class Meta:
-        description = "Deletes a product type."
-        model = models.ProductType
-        permissions = (ProductTypePermissions.MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Deletes a room type."
+        model = models.RoomType
+        permissions = (RoomTypePermissions.MANAGE_ROOM_TYPES_AND_ATTRIBUTES,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def perform_mutation(cls, _root, info, **data):
         node_id = data.get("id")
-        product_type_pk = from_global_id_strict_type(node_id, ProductType, field="pk")
-        variants_pks = models.Product.objects.filter(
-            product_type__pk=product_type_pk
+        room_type_pk = from_global_id_strict_type(node_id, RoomType, field="pk")
+        variants_pks = models.Room.objects.filter(
+            room_type__pk=room_type_pk
         ).values_list("variants__pk", flat=True)
-        # get draft order lines for products
+        # get draft order lines for rooms
         order_line_pks = list(
             order_models.OrderLine.objects.filter(
                 variant__pk__in=variants_pks, order__status=OrderStatus.DRAFT
@@ -1164,115 +1164,115 @@ class ProductTypeDelete(ModelDeleteMutation):
         return response
 
 
-class ProductImageCreateInput(graphene.InputObjectType):
+class RoomImageCreateInput(graphene.InputObjectType):
     alt = graphene.String(description="Alt text for an image.")
     image = Upload(
         required=True, description="Represents an image file in a multipart request."
     )
-    product = graphene.ID(
-        required=True, description="ID of an product.", name="product"
+    room = graphene.ID(
+        required=True, description="ID of an room.", name="room"
     )
 
 
-class ProductImageCreate(BaseMutation):
-    product = graphene.Field(Product)
-    image = graphene.Field(ProductImage)
+class RoomImageCreate(BaseMutation):
+    room = graphene.Field(Room)
+    image = graphene.Field(RoomImage)
 
     class Arguments:
-        input = ProductImageCreateInput(
-            required=True, description="Fields required to create a product image."
+        input = RoomImageCreateInput(
+            required=True, description="Fields required to create a room image."
         )
 
     class Meta:
         description = (
-            "Create a product image. This mutation must be sent as a `multipart` "
+            "Create a room image. This mutation must be sent as a `multipart` "
             "request. More detailed specs of the upload format can be found here: "
             "https://github.com/jaydenseric/graphql-multipart-request-spec"
         )
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def perform_mutation(cls, _root, info, **data):
         data = data.get("input")
-        product = cls.get_node_or_error(
-            info, data["product"], field="product", only_type=Product
+        room = cls.get_node_or_error(
+            info, data["room"], field="room", only_type=Room
         )
 
         image_data = info.context.FILES.get(data["image"])
         validate_image_file(image_data, "image")
 
-        image = product.images.create(image=image_data, alt=data.get("alt", ""))
-        create_product_thumbnails.delay(image.pk)
-        product = ChannelContext(node=product, channel_slug=None)
-        return ProductImageCreate(product=product, image=image)
+        image = room.images.create(image=image_data, alt=data.get("alt", ""))
+        create_room_thumbnails.delay(image.pk)
+        room = ChannelContext(node=room, channel_slug=None)
+        return RoomImageCreate(room=room, image=image)
 
 
-class ProductImageUpdateInput(graphene.InputObjectType):
+class RoomImageUpdateInput(graphene.InputObjectType):
     alt = graphene.String(description="Alt text for an image.")
 
 
-class ProductImageUpdate(BaseMutation):
-    product = graphene.Field(Product)
-    image = graphene.Field(ProductImage)
+class RoomImageUpdate(BaseMutation):
+    room = graphene.Field(Room)
+    image = graphene.Field(RoomImage)
 
     class Arguments:
-        id = graphene.ID(required=True, description="ID of a product image to update.")
-        input = ProductImageUpdateInput(
-            required=True, description="Fields required to update a product image."
+        id = graphene.ID(required=True, description="ID of a room image to update.")
+        input = RoomImageUpdateInput(
+            required=True, description="Fields required to update a room image."
         )
 
     class Meta:
-        description = "Updates a product image."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Updates a room image."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def perform_mutation(cls, _root, info, **data):
-        image = cls.get_node_or_error(info, data.get("id"), only_type=ProductImage)
-        product = image.product
+        image = cls.get_node_or_error(info, data.get("id"), only_type=RoomImage)
+        room = image.room
         alt = data.get("input").get("alt")
         if alt is not None:
             image.alt = alt
             image.save(update_fields=["alt"])
-        product = ChannelContext(node=product, channel_slug=None)
-        return ProductImageUpdate(product=product, image=image)
+        room = ChannelContext(node=room, channel_slug=None)
+        return RoomImageUpdate(room=room, image=image)
 
 
-class ProductImageReorder(BaseMutation):
-    product = graphene.Field(Product)
-    images = graphene.List(ProductImage)
+class RoomImageReorder(BaseMutation):
+    room = graphene.Field(Room)
+    images = graphene.List(RoomImage)
 
     class Arguments:
-        product_id = graphene.ID(
+        room_id = graphene.ID(
             required=True,
-            description="Id of product that images order will be altered.",
+            description="Id of room that images order will be altered.",
         )
         images_ids = graphene.List(
             graphene.ID,
             required=True,
-            description="IDs of a product images in the desired order.",
+            description="IDs of a room images in the desired order.",
         )
 
     class Meta:
-        description = "Changes ordering of the product image."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Changes ordering of the room image."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
-    def perform_mutation(cls, _root, info, product_id, images_ids):
-        product = cls.get_node_or_error(
-            info, product_id, field="product_id", only_type=Product
+    def perform_mutation(cls, _root, info, room_id, images_ids):
+        room = cls.get_node_or_error(
+            info, room_id, field="room_id", only_type=Room
         )
-        if len(images_ids) != product.images.count():
+        if len(images_ids) != room.images.count():
             raise ValidationError(
                 {
                     "order": ValidationError(
                         "Incorrect number of image IDs provided.",
-                        code=ProductErrorCode.INVALID,
+                        code=RoomErrorCode.INVALID,
                     )
                 }
             )
@@ -1280,14 +1280,14 @@ class ProductImageReorder(BaseMutation):
         images = []
         for image_id in images_ids:
             image = cls.get_node_or_error(
-                info, image_id, field="order", only_type=ProductImage
+                info, image_id, field="order", only_type=RoomImage
             )
-            if image and image.product != product:
+            if image and image.room != room:
                 raise ValidationError(
                     {
                         "order": ValidationError(
-                            "Image %(image_id)s does not belong to this product.",
-                            code=ProductErrorCode.NOT_PRODUCTS_IMAGE,
+                            "Image %(image_id)s does not belong to this room.",
+                            code=RoomErrorCode.NOT_ROOMS_IMAGE,
                             params={"image_id": image_id},
                         )
                     }
@@ -1298,17 +1298,17 @@ class ProductImageReorder(BaseMutation):
             image.sort_order = order
             image.save(update_fields=["sort_order"])
 
-        product = ChannelContext(node=product, channel_slug=None)
-        return ProductImageReorder(product=product, images=images)
+        room = ChannelContext(node=room, channel_slug=None)
+        return RoomImageReorder(room=room, images=images)
 
 
-class ProductVariantSetDefault(BaseMutation):
-    product = graphene.Field(Product)
+class RoomVariantSetDefault(BaseMutation):
+    room = graphene.Field(Room)
 
     class Arguments:
-        product_id = graphene.ID(
+        room_id = graphene.ID(
             required=True,
-            description="Id of a product that will have the default variant set.",
+            description="Id of a room that will have the default variant set.",
         )
         variant_id = graphene.ID(
             required=True,
@@ -1317,48 +1317,48 @@ class ProductVariantSetDefault(BaseMutation):
 
     class Meta:
         description = (
-            "Set default variant for a product. "
-            "Mutation triggers PRODUCT_UPDATED webhook."
+            "Set default variant for a room. "
+            "Mutation triggers ROOM_UPDATED webhook."
         )
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
-    def perform_mutation(cls, _root, info, product_id, variant_id):
-        product = cls.get_node_or_error(
-            info, product_id, field="product_id", only_type=Product
+    def perform_mutation(cls, _root, info, room_id, variant_id):
+        room = cls.get_node_or_error(
+            info, room_id, field="room_id", only_type=Room
         )
         variant = cls.get_node_or_error(
             info,
             variant_id,
             field="variant_id",
-            only_type=ProductVariant,
-            qs=models.ProductVariant.objects.select_related("product"),
+            only_type=RoomVariant,
+            qs=models.RoomVariant.objects.select_related("room"),
         )
-        if variant.product != product:
+        if variant.room != room:
             raise ValidationError(
                 {
                     "variant_id": ValidationError(
-                        "Provided variant doesn't belong to provided product.",
-                        code=ProductErrorCode.NOT_PRODUCTS_VARIANT,
+                        "Provided variant doesn't belong to provided room.",
+                        code=RoomErrorCode.NOT_ROOMS_VARIANT,
                     )
                 }
             )
-        product.default_variant = variant
-        product.save(update_fields=["default_variant", "updated_at"])
-        info.context.plugins.product_updated(product)
-        product = ChannelContext(node=product, channel_slug=None)
-        return ProductVariantSetDefault(product=product)
+        room.default_variant = variant
+        room.save(update_fields=["default_variant", "updated_at"])
+        info.context.plugins.room_updated(room)
+        room = ChannelContext(node=room, channel_slug=None)
+        return RoomVariantSetDefault(room=room)
 
 
-class ProductVariantReorder(BaseMutation):
-    product = graphene.Field(Product)
+class RoomVariantReorder(BaseMutation):
+    room = graphene.Field(Room)
 
     class Arguments:
-        product_id = graphene.ID(
+        room_id = graphene.ID(
             required=True,
-            description="Id of product that variants order will be altered.",
+            description="Id of room that variants order will be altered.",
         )
         moves = graphene.List(
             ReorderInput,
@@ -1368,36 +1368,36 @@ class ProductVariantReorder(BaseMutation):
 
     class Meta:
         description = (
-            "Reorder the variants of a product. "
-            "Mutation updates updated_at on product and "
-            "triggers PRODUCT_UPDATED webhook."
+            "Reorder the variants of a room. "
+            "Mutation updates updated_at on room and "
+            "triggers ROOM_UPDATED webhook."
         )
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
-    def perform_mutation(cls, _root, info, product_id, moves):
-        pk = from_global_id_strict_type(product_id, only_type=Product, field="id")
+    def perform_mutation(cls, _root, info, room_id, moves):
+        pk = from_global_id_strict_type(room_id, only_type=Room, field="id")
 
         try:
-            product = models.Product.objects.prefetch_related("variants").get(pk=pk)
+            room = models.Room.objects.prefetch_related("variants").get(pk=pk)
         except ObjectDoesNotExist:
             raise ValidationError(
                 {
-                    "product_id": ValidationError(
-                        (f"Couldn't resolve to a product type: {product_id}"),
-                        code=ProductErrorCode.NOT_FOUND,
+                    "room_id": ValidationError(
+                        (f"Couldn't resolve to a room type: {room_id}"),
+                        code=RoomErrorCode.NOT_FOUND,
                     )
                 }
             )
 
-        variants_m2m = product.variants
+        variants_m2m = room.variants
         operations = {}
 
         for move_info in moves:
             variant_pk = from_global_id_strict_type(
-                move_info.id, only_type=ProductVariant, field="moves"
+                move_info.id, only_type=RoomVariant, field="moves"
             )
 
             try:
@@ -1407,7 +1407,7 @@ class ProductVariantReorder(BaseMutation):
                     {
                         "moves": ValidationError(
                             f"Couldn't resolve to a variant: {move_info.id}",
-                            code=ProductErrorCode.NOT_FOUND,
+                            code=RoomErrorCode.NOT_FOUND,
                         )
                     }
                 )
@@ -1416,103 +1416,103 @@ class ProductVariantReorder(BaseMutation):
         with transaction.atomic():
             perform_reordering(variants_m2m, operations)
 
-        product.save(update_fields=["updated_at"])
-        info.context.plugins.product_updated(product)
-        product = ChannelContext(node=product, channel_slug=None)
-        return ProductVariantReorder(product=product)
+        room.save(update_fields=["updated_at"])
+        info.context.plugins.room_updated(room)
+        room = ChannelContext(node=room, channel_slug=None)
+        return RoomVariantReorder(room=room)
 
 
-class ProductImageDelete(BaseMutation):
-    product = graphene.Field(Product)
-    image = graphene.Field(ProductImage)
+class RoomImageDelete(BaseMutation):
+    room = graphene.Field(Room)
+    image = graphene.Field(RoomImage)
 
     class Arguments:
-        id = graphene.ID(required=True, description="ID of a product image to delete.")
+        id = graphene.ID(required=True, description="ID of a room image to delete.")
 
     class Meta:
-        description = "Deletes a product image."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Deletes a room image."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def perform_mutation(cls, _root, info, **data):
-        image = cls.get_node_or_error(info, data.get("id"), only_type=ProductImage)
+        image = cls.get_node_or_error(info, data.get("id"), only_type=RoomImage)
         image_id = image.id
         image.delete()
         image.id = image_id
-        product = ChannelContext(node=image.product, channel_slug=None)
-        return ProductImageDelete(product=product, image=image)
+        room = ChannelContext(node=image.room, channel_slug=None)
+        return RoomImageDelete(room=room, image=image)
 
 
 class VariantImageAssign(BaseMutation):
-    product_variant = graphene.Field(ProductVariant)
-    image = graphene.Field(ProductImage)
+    room_variant = graphene.Field(RoomVariant)
+    image = graphene.Field(RoomImage)
 
     class Arguments:
         image_id = graphene.ID(
-            required=True, description="ID of a product image to assign to a variant."
+            required=True, description="ID of a room image to assign to a variant."
         )
-        variant_id = graphene.ID(required=True, description="ID of a product variant.")
+        variant_id = graphene.ID(required=True, description="ID of a room variant.")
 
     class Meta:
-        description = "Assign an image to a product variant."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Assign an image to a room variant."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def perform_mutation(cls, _root, info, image_id, variant_id):
         image = cls.get_node_or_error(
-            info, image_id, field="image_id", only_type=ProductImage
+            info, image_id, field="image_id", only_type=RoomImage
         )
         variant = cls.get_node_or_error(
-            info, variant_id, field="variant_id", only_type=ProductVariant
+            info, variant_id, field="variant_id", only_type=RoomVariant
         )
         if image and variant:
             # check if the given image and variant can be matched together
-            image_belongs_to_product = variant.product.images.filter(
+            image_belongs_to_room = variant.room.images.filter(
                 pk=image.pk
             ).first()
-            if image_belongs_to_product:
+            if image_belongs_to_room:
                 image.variant_images.create(variant=variant)
             else:
                 raise ValidationError(
                     {
                         "image_id": ValidationError(
-                            "This image doesn't belong to that product.",
-                            code=ProductErrorCode.NOT_PRODUCTS_IMAGE,
+                            "This image doesn't belong to that room.",
+                            code=RoomErrorCode.NOT_ROOMS_IMAGE,
                         )
                     }
                 )
         variant = ChannelContext(node=variant, channel_slug=None)
-        return VariantImageAssign(product_variant=variant, image=image)
+        return VariantImageAssign(room_variant=variant, image=image)
 
 
 class VariantImageUnassign(BaseMutation):
-    product_variant = graphene.Field(ProductVariant)
-    image = graphene.Field(ProductImage)
+    room_variant = graphene.Field(RoomVariant)
+    image = graphene.Field(RoomImage)
 
     class Arguments:
         image_id = graphene.ID(
             required=True,
-            description="ID of a product image to unassign from a variant.",
+            description="ID of a room image to unassign from a variant.",
         )
-        variant_id = graphene.ID(required=True, description="ID of a product variant.")
+        variant_id = graphene.ID(required=True, description="ID of a room variant.")
 
     class Meta:
-        description = "Unassign an image from a product variant."
-        permissions = (ProductPermissions.MANAGE_PRODUCTS,)
-        error_type_class = ProductError
-        error_type_field = "product_errors"
+        description = "Unassign an image from a room variant."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
 
     @classmethod
     def perform_mutation(cls, _root, info, image_id, variant_id):
         image = cls.get_node_or_error(
-            info, image_id, field="image_id", only_type=ProductImage
+            info, image_id, field="image_id", only_type=RoomImage
         )
         variant = cls.get_node_or_error(
-            info, variant_id, field="variant_id", only_type=ProductVariant
+            info, variant_id, field="variant_id", only_type=RoomVariant
         )
 
         try:
@@ -1524,7 +1524,7 @@ class VariantImageUnassign(BaseMutation):
                 {
                     "image_id": ValidationError(
                         "Image is not assigned to this variant.",
-                        code=ProductErrorCode.NOT_PRODUCTS_IMAGE,
+                        code=RoomErrorCode.NOT_ROOMS_IMAGE,
                     )
                 }
             )
@@ -1532,4 +1532,4 @@ class VariantImageUnassign(BaseMutation):
             variant_image.delete()
 
         variant = ChannelContext(node=variant, channel_slug=None)
-        return VariantImageUnassign(product_variant=variant, image=image)
+        return VariantImageUnassign(room_variant=variant, image=image)

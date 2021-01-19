@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.utils import IntegrityError
 
 from ....core.permissions import ShippingPermissions
-from ....product import models as product_models
+from ....room import models as room_models
 from ....shipping import models
 from ....shipping.error_codes import ShippingErrorCode
 from ....shipping.utils import (
@@ -16,7 +16,7 @@ from ...core.mutations import BaseMutation, ModelDeleteMutation, ModelMutation
 from ...core.scalars import WeightScalar
 from ...core.types.common import ShippingError
 from ...core.utils import get_duplicates_ids
-from ...product import types as product_types
+from ...room import types as room_types
 from ...utils import resolve_global_ids_to_primary_keys
 from ..enums import ShippingMethodTypeEnum
 from ..types import ShippingMethod, ShippingMethodZipCodeRule, ShippingZone
@@ -56,16 +56,16 @@ class ShippingZoneCreateInput(graphene.InputObjectType):
             "zones."
         )
     )
-    add_warehouses = graphene.List(
+    add_hotels = graphene.List(
         graphene.ID,
-        description="List of warehouses to assign to a shipping zone",
+        description="List of hotels to assign to a shipping zone",
     )
 
 
 class ShippingZoneUpdateInput(ShippingZoneCreateInput):
-    remove_warehouses = graphene.List(
+    remove_hotels = graphene.List(
         graphene.ID,
-        description="List of warehouses to unassign from a shipping zone",
+        description="List of hotels to unassign from a shipping zone",
     )
 
 
@@ -73,7 +73,7 @@ class ShippingZoneMixin:
     @classmethod
     def clean_input(cls, info, instance, data, input_cls=None):
         duplicates_ids = get_duplicates_ids(
-            data.get("add_warehouses"), data.get("remove_warehouses")
+            data.get("add_hotels"), data.get("remove_hotels")
         )
         if duplicates_ids:
             error_msg = (
@@ -82,10 +82,10 @@ class ShippingZoneMixin:
             )
             raise ValidationError(
                 {
-                    "removeWarehouses": ValidationError(
+                    "removeHotels": ValidationError(
                         error_msg,
                         code=ShippingErrorCode.DUPLICATED_INPUT_ITEM.value,
-                        params={"warehouses": list(duplicates_ids)},
+                        params={"hotels": list(duplicates_ids)},
                     )
                 }
             )
@@ -119,13 +119,13 @@ class ShippingZoneMixin:
     def _save_m2m(cls, info, instance, cleaned_data):
         super()._save_m2m(info, instance, cleaned_data)
 
-        add_warehouses = cleaned_data.get("add_warehouses")
-        if add_warehouses:
-            instance.warehouses.add(*add_warehouses)
+        add_hotels = cleaned_data.get("add_hotels")
+        if add_hotels:
+            instance.hotels.add(*add_hotels)
 
-        remove_warehouses = cleaned_data.get("remove_warehouses")
-        if remove_warehouses:
-            instance.warehouses.remove(*remove_warehouses)
+        remove_hotels = cleaned_data.get("remove_hotels")
+        if remove_hotels:
+            instance.hotels.remove(*remove_hotels)
 
 
 class ShippingZoneCreate(ShippingZoneMixin, ModelMutation):
@@ -489,29 +489,29 @@ class ShippingPriceDelete(BaseMutation):
         )
 
 
-class ShippingPriceExcludeProductsInput(graphene.InputObjectType):
-    products = graphene.List(
+class ShippingPriceExcludeRoomsInput(graphene.InputObjectType):
+    rooms = graphene.List(
         graphene.ID,
-        description="List of products which will be excluded.",
+        description="List of rooms which will be excluded.",
         required=True,
     )
 
 
-class ShippingPriceExcludeProducts(BaseMutation):
+class ShippingPriceExcludeRooms(BaseMutation):
     shipping_method = graphene.Field(
         ShippingMethod,
-        description="A shipping method with new list of excluded products.",
+        description="A shipping method with new list of excluded rooms.",
     )
 
     class Arguments:
         id = graphene.ID(required=True, description="ID of a shipping price.")
 
-        input = ShippingPriceExcludeProductsInput(
-            description="Exclude products input.", required=True
+        input = ShippingPriceExcludeRoomsInput(
+            description="Exclude rooms input.", required=True
         )
 
     class Meta:
-        description = "Exclude products from shipping price."
+        description = "Exclude rooms from shipping price."
         permissions = (ShippingPermissions.MANAGE_SHIPPING,)
         error_type_class = ShippingError
         error_type_field = "shipping_errors"
@@ -522,41 +522,41 @@ class ShippingPriceExcludeProducts(BaseMutation):
             info, data.get("id"), only_type=ShippingMethod
         )
         input = data.get("input")
-        product_ids = input.get("products", [])
+        room_ids = input.get("rooms", [])
 
-        _, product_db_ids = resolve_global_ids_to_primary_keys(
-            product_ids, product_types.Product
+        _, room_db_ids = resolve_global_ids_to_primary_keys(
+            room_ids, room_types.Room
         )
 
-        product_to_exclude = product_models.Product.objects.filter(
-            id__in=product_db_ids
+        room_to_exclude = room_models.Room.objects.filter(
+            id__in=room_db_ids
         )
 
-        current_excluded_products = shipping_method.excluded_products.all()
-        shipping_method.excluded_products.set(
-            (current_excluded_products | product_to_exclude).distinct()
+        current_excluded_rooms = shipping_method.excluded_rooms.all()
+        shipping_method.excluded_rooms.set(
+            (current_excluded_rooms | room_to_exclude).distinct()
         )
-        return ShippingPriceExcludeProducts(
+        return ShippingPriceExcludeRooms(
             shipping_method=ChannelContext(node=shipping_method, channel_slug=None)
         )
 
 
-class ShippingPriceRemoveProductFromExclude(BaseMutation):
+class ShippingPriceRemoveRoomFromExclude(BaseMutation):
     shipping_method = graphene.Field(
         ShippingMethod,
-        description="A shipping method with new list of excluded products.",
+        description="A shipping method with new list of excluded rooms.",
     )
 
     class Arguments:
         id = graphene.ID(required=True, description="ID of a shipping price.")
-        products = graphene.List(
+        rooms = graphene.List(
             graphene.ID,
             required=True,
-            description="List of products which will be removed from excluded list.",
+            description="List of rooms which will be removed from excluded list.",
         )
 
     class Meta:
-        description = "Remove product from excluded list for shipping price."
+        description = "Remove room from excluded list for shipping price."
         permissions = (ShippingPermissions.MANAGE_SHIPPING,)
         error_type_class = ShippingError
         error_type_field = "shipping_errors"
@@ -566,14 +566,14 @@ class ShippingPriceRemoveProductFromExclude(BaseMutation):
         shipping_method = cls.get_node_or_error(
             info, data.get("id"), only_type=ShippingMethod
         )
-        product_ids = data.get("products")
-        if product_ids:
-            _, product_db_ids = resolve_global_ids_to_primary_keys(
-                product_ids, product_types.Product
+        room_ids = data.get("rooms")
+        if room_ids:
+            _, room_db_ids = resolve_global_ids_to_primary_keys(
+                room_ids, room_types.Room
             )
-            shipping_method.excluded_products.set(
-                shipping_method.excluded_products.exclude(id__in=product_db_ids)
+            shipping_method.excluded_rooms.set(
+                shipping_method.excluded_rooms.exclude(id__in=room_db_ids)
             )
-        return ShippingPriceExcludeProducts(
+        return ShippingPriceExcludeRooms(
             shipping_method=ChannelContext(node=shipping_method, channel_slug=None)
         )

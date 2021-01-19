@@ -3,23 +3,23 @@ from collections import defaultdict
 from promise import Promise
 
 from ....attribute.models import (
-    AssignedProductAttribute,
+    AssignedRoomAttribute,
     AssignedVariantAttribute,
-    AttributeProduct,
+    AttributeRoom,
     AttributeValue,
     AttributeVariant,
 )
-from ....core.permissions import ProductPermissions
+from ....core.permissions import RoomPermissions
 from ...attribute.dataloaders import AttributesByAttributeId, AttributeValueByIdLoader
 from ...core.dataloaders import DataLoader
 from ...utils import get_user_or_app_from_context
-from .products import ProductByIdLoader, ProductVariantByIdLoader
+from .rooms import RoomByIdLoader, RoomVariantByIdLoader
 
 
-class BaseProductAttributesByProductTypeIdLoader(DataLoader):
-    """Loads product attributes by product type ID."""
+class BaseRoomAttributesByRoomTypeIdLoader(DataLoader):
+    """Loads room attributes by room type ID."""
 
-    context_key = "product_attributes_by_producttype"
+    context_key = "room_attributes_by_roomtype"
     model_name = None
 
     def batch_load(self, keys):
@@ -28,125 +28,125 @@ class BaseProductAttributesByProductTypeIdLoader(DataLoader):
 
         requestor = get_user_or_app_from_context(self.context)
         if requestor.is_active and requestor.has_perm(
-            ProductPermissions.MANAGE_PRODUCTS
+            RoomPermissions.MANAGE_ROOMS
         ):
             qs = self.model_name.objects.all()
         else:
             qs = self.model_name.objects.filter(attribute__visible_in_storefront=True)
-        product_type_attribute_pairs = qs.filter(product_type_id__in=keys).values_list(
-            "product_type_id", "attribute_id"
+        room_type_attribute_pairs = qs.filter(room_type_id__in=keys).values_list(
+            "room_type_id", "attribute_id"
         )
 
-        product_type_to_attributes_map = defaultdict(list)
-        for product_type_id, attr_id in product_type_attribute_pairs:
-            product_type_to_attributes_map[product_type_id].append(attr_id)
+        room_type_to_attributes_map = defaultdict(list)
+        for room_type_id, attr_id in room_type_attribute_pairs:
+            room_type_to_attributes_map[room_type_id].append(attr_id)
 
         def map_attributes(attributes):
             attributes_map = {attr.id: attr for attr in attributes}
             return [
                 [
                     attributes_map[attr_id]
-                    for attr_id in product_type_to_attributes_map[product_type_id]
+                    for attr_id in room_type_to_attributes_map[room_type_id]
                 ]
-                for product_type_id in keys
+                for room_type_id in keys
             ]
 
         return (
             AttributesByAttributeId(self.context)
-            .load_many(set(attr_id for _, attr_id in product_type_attribute_pairs))
+            .load_many(set(attr_id for _, attr_id in room_type_attribute_pairs))
             .then(map_attributes)
         )
 
 
-class ProductAttributesByProductTypeIdLoader(
-    BaseProductAttributesByProductTypeIdLoader
+class RoomAttributesByRoomTypeIdLoader(
+    BaseRoomAttributesByRoomTypeIdLoader
 ):
-    """Loads product attributes by product type ID."""
+    """Loads room attributes by room type ID."""
 
-    context_key = "product_attributes_by_producttype"
-    model_name = AttributeProduct
+    context_key = "room_attributes_by_roomtype"
+    model_name = AttributeRoom
 
 
-class VariantAttributesByProductTypeIdLoader(
-    BaseProductAttributesByProductTypeIdLoader
+class VariantAttributesByRoomTypeIdLoader(
+    BaseRoomAttributesByRoomTypeIdLoader
 ):
-    """Loads variant attributes by product type ID."""
+    """Loads variant attributes by room type ID."""
 
-    context_key = "variant_attributes_by_producttype"
+    context_key = "variant_attributes_by_roomtype"
     model_name = AttributeVariant
 
 
-class AttributeProductsByProductTypeIdLoader(DataLoader):
-    """Loads AttributeProduct objects by product type ID."""
+class AttributeRoomsByRoomTypeIdLoader(DataLoader):
+    """Loads AttributeRoom objects by room type ID."""
 
-    context_key = "attributeproducts_by_producttype"
+    context_key = "attributerooms_by_roomtype"
 
     def batch_load(self, keys):
         requestor = get_user_or_app_from_context(self.context)
         if requestor.is_active and requestor.has_perm(
-            ProductPermissions.MANAGE_PRODUCTS
+            RoomPermissions.MANAGE_ROOMS
         ):
-            qs = AttributeProduct.objects.all()
+            qs = AttributeRoom.objects.all()
         else:
-            qs = AttributeProduct.objects.filter(attribute__visible_in_storefront=True)
-        attribute_products = qs.filter(product_type_id__in=keys)
-        producttype_to_attributeproducts = defaultdict(list)
-        for attribute_product in attribute_products:
-            producttype_to_attributeproducts[attribute_product.product_type_id].append(
-                attribute_product
+            qs = AttributeRoom.objects.filter(attribute__visible_in_storefront=True)
+        attribute_rooms = qs.filter(room_type_id__in=keys)
+        roomtype_to_attributerooms = defaultdict(list)
+        for attribute_room in attribute_rooms:
+            roomtype_to_attributerooms[attribute_room.room_type_id].append(
+                attribute_room
             )
-        return [producttype_to_attributeproducts[key] for key in keys]
+        return [roomtype_to_attributerooms[key] for key in keys]
 
 
-class AttributeVariantsByProductTypeIdLoader(DataLoader):
-    context_key = "attributevariants_by_producttype"
+class AttributeVariantsByRoomTypeIdLoader(DataLoader):
+    context_key = "attributevariants_by_roomtype"
 
     def batch_load(self, keys):
         requestor = get_user_or_app_from_context(self.context)
         if requestor.is_active and requestor.has_perm(
-            ProductPermissions.MANAGE_PRODUCTS
+            RoomPermissions.MANAGE_ROOMS
         ):
             qs = AttributeVariant.objects.all()
         else:
             qs = AttributeVariant.objects.filter(attribute__visible_in_storefront=True)
-        attribute_variants = qs.filter(product_type_id__in=keys)
-        producttype_to_attributevariants = defaultdict(list)
+        attribute_variants = qs.filter(room_type_id__in=keys)
+        roomtype_to_attributevariants = defaultdict(list)
         for attribute_variant in attribute_variants:
-            producttype_to_attributevariants[attribute_variant.product_type_id].append(
+            roomtype_to_attributevariants[attribute_variant.room_type_id].append(
                 attribute_variant
             )
-        return [producttype_to_attributevariants[key] for key in keys]
+        return [roomtype_to_attributevariants[key] for key in keys]
 
 
-class AssignedProductAttributesByProductIdLoader(DataLoader):
-    context_key = "assignedproductattributes_by_product"
+class AssignedRoomAttributesByRoomIdLoader(DataLoader):
+    context_key = "assignedroomattributes_by_room"
 
     def batch_load(self, keys):
         requestor = get_user_or_app_from_context(self.context)
         if requestor.is_active and requestor.has_perm(
-            ProductPermissions.MANAGE_PRODUCTS
+            RoomPermissions.MANAGE_ROOMS
         ):
-            qs = AssignedProductAttribute.objects.all()
+            qs = AssignedRoomAttribute.objects.all()
         else:
-            qs = AssignedProductAttribute.objects.filter(
+            qs = AssignedRoomAttribute.objects.filter(
                 assignment__attribute__visible_in_storefront=True
             )
-        assigned_product_attributes = qs.filter(product_id__in=keys)
-        product_to_assignedproductattributes = defaultdict(list)
-        for assigned_product_attribute in assigned_product_attributes:
-            product_to_assignedproductattributes[
-                assigned_product_attribute.product_id
-            ].append(assigned_product_attribute)
-        return [product_to_assignedproductattributes[product_id] for product_id in keys]
+        assigned_room_attributes = qs.filter(room_id__in=keys)
+        room_to_assignedroomattributes = defaultdict(list)
+        for assigned_room_attribute in assigned_room_attributes:
+            room_to_assignedroomattributes[
+                assigned_room_attribute.room_id
+            ].append(assigned_room_attribute)
+        return [room_to_assignedroomattributes[room_id] for room_id in keys]
 
 
-class AssignedVariantAttributesByProductVariantId(DataLoader):
-    context_key = "assignedvariantattributes_by_productvariant"
+class AssignedVariantAttributesByRoomVariantId(DataLoader):
+    context_key = "assignedvariantattributes_by_roomvariant"
 
     def batch_load(self, keys):
         requestor = get_user_or_app_from_context(self.context)
         if requestor.is_active and requestor.has_perm(
-            ProductPermissions.MANAGE_PRODUCTS
+            RoomPermissions.MANAGE_ROOMS
         ):
             qs = AssignedVariantAttribute.objects.all()
         else:
@@ -164,25 +164,25 @@ class AssignedVariantAttributesByProductVariantId(DataLoader):
         return [variant_attributes[variant_id] for variant_id in keys]
 
 
-class AttributeValuesByAssignedProductAttributeIdLoader(DataLoader):
-    context_key = "attributevalues_by_assignedproductattribute"
+class AttributeValuesByAssignedRoomAttributeIdLoader(DataLoader):
+    context_key = "attributevalues_by_assignedroomattribute"
 
     def batch_load(self, keys):
-        AttributeAssignment = AttributeValue.assignedproductattribute_set.through
+        AttributeAssignment = AttributeValue.assignedroomattribute_set.through
         attribute_values = AttributeAssignment.objects.filter(
-            assignedproductattribute_id__in=keys
+            assignedroomattribute_id__in=keys
         )
         value_ids = [a.attributevalue_id for a in attribute_values]
 
         def map_assignment_to_values(values):
             value_map = dict(zip(value_ids, values))
-            assigned_product_map = defaultdict(list)
+            assigned_room_map = defaultdict(list)
             for attribute_value in attribute_values:
-                assigned_product_map[
-                    attribute_value.assignedproductattribute_id
+                assigned_room_map[
+                    attribute_value.assignedroomattribute_id
                 ].append(value_map.get(attribute_value.attributevalue_id))
             return [
-                sorted(assigned_product_map[key], key=lambda v: (v.sort_order, v.id))
+                sorted(assigned_room_map[key], key=lambda v: (v.sort_order, v.id))
                 for key in keys
             ]
 
@@ -222,53 +222,53 @@ class AttributeValuesByAssignedVariantAttributeIdLoader(DataLoader):
         )
 
 
-class SelectedAttributesByProductIdLoader(DataLoader):
-    context_key = "selectedattributes_by_product"
+class SelectedAttributesByRoomIdLoader(DataLoader):
+    context_key = "selectedattributes_by_room"
 
     def batch_load(self, keys):
-        def with_products_and_assigned_attributes(result):
-            products, product_attributes = result
-            assigned_product_attribute_ids = [
-                a.id for attrs in product_attributes for a in attrs
+        def with_rooms_and_assigned_attributes(result):
+            rooms, room_attributes = result
+            assigned_room_attribute_ids = [
+                a.id for attrs in room_attributes for a in attrs
             ]
-            product_type_ids = list({p.product_type_id for p in products})
-            product_attributes = dict(zip(keys, product_attributes))
+            room_type_ids = list({p.room_type_id for p in rooms})
+            room_attributes = dict(zip(keys, room_attributes))
 
-            def with_attributeproducts_and_values(result):
-                attribute_products, attribute_values = result
+            def with_attributerooms_and_values(result):
+                attribute_rooms, attribute_values = result
                 attribute_ids = list(
-                    {ap.attribute_id for aps in attribute_products for ap in aps}
+                    {ap.attribute_id for aps in attribute_rooms for ap in aps}
                 )
-                attribute_products = dict(zip(product_type_ids, attribute_products))
+                attribute_rooms = dict(zip(room_type_ids, attribute_rooms))
                 attribute_values = dict(
-                    zip(assigned_product_attribute_ids, attribute_values)
+                    zip(assigned_room_attribute_ids, attribute_values)
                 )
 
                 def with_attributes(attributes):
                     id_to_attribute = dict(zip(attribute_ids, attributes))
                     selected_attributes_map = defaultdict(list)
-                    for key, product in zip(keys, products):
-                        assigned_producttype_attributes = attribute_products[
-                            product.product_type_id
+                    for key, room in zip(keys, rooms):
+                        assigned_roomtype_attributes = attribute_rooms[
+                            room.room_type_id
                         ]
-                        assigned_product_attributes = product_attributes[key]
+                        assigned_room_attributes = room_attributes[key]
                         for (
-                            assigned_producttype_attribute
-                        ) in assigned_producttype_attributes:
-                            product_assignment = next(
+                            assigned_roomtype_attribute
+                        ) in assigned_roomtype_attributes:
+                            room_assignment = next(
                                 (
                                     apa
-                                    for apa in assigned_product_attributes
+                                    for apa in assigned_room_attributes
                                     if apa.assignment_id
-                                    == assigned_producttype_attribute.id
+                                    == assigned_roomtype_attribute.id
                                 ),
                                 None,
                             )
                             attribute = id_to_attribute[
-                                assigned_producttype_attribute.attribute_id
+                                assigned_roomtype_attribute.attribute_id
                             ]
-                            if product_assignment:
-                                values = attribute_values[product_assignment.id]
+                            if room_assignment:
+                                values = attribute_values[room_assignment.id]
                             else:
                                 values = []
                             selected_attributes_map[key].append(
@@ -282,75 +282,75 @@ class SelectedAttributesByProductIdLoader(DataLoader):
                     .then(with_attributes)
                 )
 
-            attribute_products = AttributeProductsByProductTypeIdLoader(
+            attribute_rooms = AttributeRoomsByRoomTypeIdLoader(
                 self.context
-            ).load_many(product_type_ids)
-            attribute_values = AttributeValuesByAssignedProductAttributeIdLoader(
+            ).load_many(room_type_ids)
+            attribute_values = AttributeValuesByAssignedRoomAttributeIdLoader(
                 self.context
-            ).load_many(assigned_product_attribute_ids)
-            return Promise.all([attribute_products, attribute_values]).then(
-                with_attributeproducts_and_values
+            ).load_many(assigned_room_attribute_ids)
+            return Promise.all([attribute_rooms, attribute_values]).then(
+                with_attributerooms_and_values
             )
 
-        products = ProductByIdLoader(self.context).load_many(keys)
-        assigned_attributes = AssignedProductAttributesByProductIdLoader(
+        rooms = RoomByIdLoader(self.context).load_many(keys)
+        assigned_attributes = AssignedRoomAttributesByRoomIdLoader(
             self.context
         ).load_many(keys)
 
-        return Promise.all([products, assigned_attributes]).then(
-            with_products_and_assigned_attributes
+        return Promise.all([rooms, assigned_attributes]).then(
+            with_rooms_and_assigned_attributes
         )
 
 
-class SelectedAttributesByProductVariantIdLoader(DataLoader):
-    context_key = "selectedattributes_by_productvariant"
+class SelectedAttributesByRoomVariantIdLoader(DataLoader):
+    context_key = "selectedattributes_by_roomvariant"
 
     def batch_load(self, keys):
         def with_variants_and_assigned_attributed(results):
-            product_variants, variant_attributes = results
-            product_ids = list({v.product_id for v in product_variants})
+            room_variants, variant_attributes = results
+            room_ids = list({v.room_id for v in room_variants})
             assigned_variant_attribute_ids = [
                 a.id for attrs in variant_attributes for a in attrs
             ]
             variant_attributes = dict(zip(keys, variant_attributes))
 
-            def with_products_and_attribute_values(results):
-                products, attribute_values = results
-                product_type_ids = list({p.product_type_id for p in products})
-                products = dict(zip(product_ids, products))
+            def with_rooms_and_attribute_values(results):
+                rooms, attribute_values = results
+                room_type_ids = list({p.room_type_id for p in rooms})
+                rooms = dict(zip(room_ids, rooms))
                 attribute_values = dict(
                     zip(assigned_variant_attribute_ids, attribute_values)
                 )
 
-                def with_attribute_products(attribute_products):
+                def with_attribute_rooms(attribute_rooms):
                     attribute_ids = list(
-                        {ap.attribute_id for aps in attribute_products for ap in aps}
+                        {ap.attribute_id for aps in attribute_rooms for ap in aps}
                     )
-                    attribute_products = dict(zip(product_type_ids, attribute_products))
+                    attribute_rooms = dict(zip(room_type_ids, attribute_rooms))
 
                     def with_attributes(attributes):
                         id_to_attribute = dict(zip(attribute_ids, attributes))
                         selected_attributes_map = defaultdict(list)
-                        for key, product_variant in zip(keys, product_variants):
-                            product = products[product_variant.product_id]
-                            assigned_producttype_attributes = attribute_products[
-                                product.product_type_id
+                        for key, room_variant in zip(keys, room_variants):
+                            room = rooms[room_variant.room_id]
+                            assigned_roomtype_attributes = attribute_rooms[
+                                room.room_type_id
                             ]
                             assigned_variant_attributes = variant_attributes[key]
                             for (
-                                assigned_producttype_attribute
-                            ) in assigned_producttype_attributes:
+                                assigned_roomtype_attribute
+                            ) in assigned_roomtype_attributes:
                                 variant_assignment = next(
                                     (
                                         apa
                                         for apa in assigned_variant_attributes
                                         if apa.assignment_id
-                                        == assigned_producttype_attribute.id
+                                        == assigned_roomtype_attribute.id
                                     ),
                                     None,
                                 )
                                 attribute = id_to_attribute[
-                                    assigned_producttype_attribute.attribute_id
+                                    assigned_roomtype_attribute.attribute_id
                                 ]
                                 if variant_assignment:
                                     values = attribute_values[variant_assignment.id]
@@ -368,25 +368,25 @@ class SelectedAttributesByProductVariantIdLoader(DataLoader):
                     )
 
                 return (
-                    AttributeVariantsByProductTypeIdLoader(self.context)
-                    .load_many(product_type_ids)
-                    .then(with_attribute_products)
+                    AttributeVariantsByRoomTypeIdLoader(self.context)
+                    .load_many(room_type_ids)
+                    .then(with_attribute_rooms)
                 )
 
-            products = ProductByIdLoader(self.context).load_many(product_ids)
+            rooms = RoomByIdLoader(self.context).load_many(room_ids)
             attribute_values = AttributeValuesByAssignedVariantAttributeIdLoader(
                 self.context
             ).load_many(assigned_variant_attribute_ids)
 
-            return Promise.all([products, attribute_values]).then(
-                with_products_and_attribute_values
+            return Promise.all([rooms, attribute_values]).then(
+                with_rooms_and_attribute_values
             )
 
-        product_variants = ProductVariantByIdLoader(self.context).load_many(keys)
-        assigned_attributes = AssignedVariantAttributesByProductVariantId(
+        room_variants = RoomVariantByIdLoader(self.context).load_many(keys)
+        assigned_attributes = AssignedVariantAttributesByRoomVariantId(
             self.context
         ).load_many(keys)
 
-        return Promise.all([product_variants, assigned_attributes]).then(
+        return Promise.all([room_variants, assigned_attributes]).then(
             with_variants_and_assigned_attributed
         )

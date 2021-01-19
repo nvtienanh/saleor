@@ -4,38 +4,38 @@ from django.db import migrations, models
 from django.db.models.functions import Lower
 from django.utils.text import slugify
 
-DEFAULT_SLUG_VALUE = "warehouse"
+DEFAULT_SLUG_VALUE = "hotel"
 
 
-def create_unique_slug_for_warehouses(apps, schema_editor):
-    Warehouse = apps.get_model("warehouse", "Warehouse")
+def create_unique_slug_for_hotels(apps, schema_editor):
+    Hotel = apps.get_model("hotel", "Hotel")
 
-    warehouses = (
-        Warehouse.objects.filter(slug__isnull=True).order_by(Lower("name")).iterator()
+    hotels = (
+        Hotel.objects.filter(slug__isnull=True).order_by(Lower("name")).iterator()
     )
     previous_char = None
     slug_values = []
-    for warehouse in warehouses:
-        if warehouse.name:
-            first_char = warehouse.name[0].lower()
+    for hotel in hotels:
+        if hotel.name:
+            first_char = hotel.name[0].lower()
             if first_char != previous_char:
                 previous_char = first_char
                 slug_values = list(
-                    Warehouse.objects.filter(slug__istartswith=first_char).values_list(
+                    Hotel.objects.filter(slug__istartswith=first_char).values_list(
                         "slug", flat=True
                     )
                 )
         elif previous_char is None:
             previous_char = ""
             slug_values = list(
-                Warehouse.objects.filter(
+                Hotel.objects.filter(
                     slug__istartswith=DEFAULT_SLUG_VALUE
                 ).values_list("slug", flat=True)
             )
 
-        slug = generate_unique_slug(warehouse, slug_values)
-        warehouse.slug = slug
-        warehouse.save(update_fields=["slug"])
+        slug = generate_unique_slug(hotel, slug_values)
+        hotel.slug = slug
+        hotel.save(update_fields=["slug"])
         slug_values.append(slug)
 
 
@@ -54,21 +54,21 @@ def generate_unique_slug(instance, slug_values):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("warehouse", "0002_auto_20200123_0036"),
+        ("hotel", "0002_auto_20200123_0036"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="warehouse",
+            model_name="hotel",
             name="slug",
             field=models.SlugField(null=True, max_length=255, unique=True),
             preserve_default=False,
         ),
         migrations.RunPython(
-            create_unique_slug_for_warehouses, migrations.RunPython.noop
+            create_unique_slug_for_hotels, migrations.RunPython.noop
         ),
         migrations.AlterField(
-            model_name="warehouse",
+            model_name="hotel",
             name="slug",
             field=models.SlugField(max_length=255, unique=True),
         ),

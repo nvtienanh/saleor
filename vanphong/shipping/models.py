@@ -103,19 +103,19 @@ class ShippingMethodQueryset(models.QuerySet):
             "price_amount"
         )
 
-    def exclude_shipping_methods_for_excluded_products(
-        self, qs, product_ids: List[int]
+    def exclude_shipping_methods_for_excluded_rooms(
+        self, qs, room_ids: List[int]
     ):
-        """Exclude the ShippingMethods which have excluded given products."""
-        return qs.exclude(excluded_products__id__in=product_ids)
+        """Exclude the ShippingMethods which have excluded given rooms."""
+        return qs.exclude(excluded_rooms__id__in=room_ids)
 
     def applicable_shipping_methods(
-        self, price: Money, channel_id, weight, country_code, product_ids=None
+        self, price: Money, channel_id, weight, country_code, room_ids=None
     ):
         """Return the ShippingMethods that can be used on an order with shipment.
 
         It is based on the given country code, and by shipping methods that are
-        applicable to the given price, weight and products.
+        applicable to the given price, weight and rooms.
         """
         qs = self.filter(
             shipping_zone__countries__contains=country_code,
@@ -125,11 +125,11 @@ class ShippingMethodQueryset(models.QuerySet):
         qs = self.applicable_shipping_methods_by_channel(qs, channel_id)
         qs = qs.prefetch_related("shipping_zone")
 
-        # Products IDs are used to exclude shipping methods that may be not applicable
-        # to some of these products, based on exclusion rules defined in shipping method
+        # Rooms IDs are used to exclude shipping methods that may be not applicable
+        # to some of these rooms, based on exclusion rules defined in shipping method
         # instances.
-        if product_ids:
-            qs = self.exclude_shipping_methods_for_excluded_products(qs, product_ids)
+        if room_ids:
+            qs = self.exclude_shipping_methods_for_excluded_rooms(qs, room_ids)
 
         price_based_methods = _applicable_price_based_methods(price, qs, channel_id)
         weight_based_methods = _applicable_weight_based_methods(weight, qs)
@@ -152,16 +152,16 @@ class ShippingMethodQueryset(models.QuerySet):
             country_code = instance.shipping_address.country.code  # type: ignore
         if lines is None:
             # TODO: lines should comes from args in get_valid_shipping_methods_for_order
-            lines = instance.lines.prefetch_related("variant__product").all()
-            instance_product_ids = set(lines.values_list("variant__product", flat=True))
+            lines = instance.lines.prefetch_related("variant__room").all()
+            instance_room_ids = set(lines.values_list("variant__room", flat=True))
         else:
-            instance_product_ids = {line.product.id for line in lines}
+            instance_room_ids = {line.room.id for line in lines}
         applicable_methods = self.applicable_shipping_methods(
             price=price,
             channel_id=channel_id,
             weight=instance.get_total_weight(lines),
             country_code=country_code or instance.shipping_address.country.code,
-            product_ids=instance_product_ids,
+            room_ids=instance_room_ids,
         ).prefetch_related("zip_code_rules")
 
         excluded_methods_by_zip_code = []
@@ -189,8 +189,8 @@ class ShippingMethod(ModelWithMetadata):
     maximum_order_weight = MeasurementField(
         measurement=Weight, unit_choices=WeightUnits.CHOICES, blank=True, null=True
     )
-    excluded_products = models.ManyToManyField(
-        "product.Product", blank=True
+    excluded_rooms = models.ManyToManyField(
+        "room.Room", blank=True
     )  # type: ignore
     maximum_delivery_days = models.PositiveIntegerField(null=True, blank=True)
     minimum_delivery_days = models.PositiveIntegerField(null=True, blank=True)

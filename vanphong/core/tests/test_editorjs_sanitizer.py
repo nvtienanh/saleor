@@ -9,8 +9,8 @@ from ..sanitizers.editorjs_sanitizer import clean_editor_js
 @pytest.mark.parametrize(
     "text",
     [
-        "The Saleor Winter Sale is snowed under with seasonal offers. Unreal products "
-        "at unreal prices. Literally, they are not real products, but the Saleor demo "
+        "The Saleor Winter Sale is snowed under with seasonal offers. Unreal rooms "
+        "at unreal prices. Literally, they are not real rooms, but the Saleor demo "
         "store is a genuine e-commerce leader.",
         'The Saleor Winter Sale is snowed <a href="https://docs.saleor.io/docs/">',
         'The Saleor Sale is snowed <a href="https://docs.saleor.io/docs/">. Test.',
@@ -64,7 +64,7 @@ def test_clean_editor_js_invalid_url(parse_url_mock):
     url = "https://github.com/editor-js"
     text = (
         'The Saleor Winter Sale is snowed under with seasonal offers. <a href="{}"> '
-        "Unreal products at unreal prices. Literally, they are not real products, "
+        "Unreal rooms at unreal prices. Literally, they are not real rooms, "
         "but the Saleor demo store is a genuine e-commerce leader."
     )
 

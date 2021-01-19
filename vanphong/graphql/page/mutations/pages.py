@@ -18,7 +18,7 @@ from ...core.utils import (
     get_duplicates_ids,
     validate_slug_and_generate_if_needed,
 )
-from ...product.mutations.products import AttributeValueInput
+from ...room.mutations.rooms import AttributeValueInput
 
 if TYPE_CHECKING:
     from ....attribute.models import Attribute

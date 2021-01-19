@@ -161,7 +161,7 @@ def test_get_braintree_gateway(gateway_config):
     connection_params = gateway_config.connection_params
     result = get_braintree_gateway(**gateway_config.connection_params)
     assert connection_params["sandbox_mode"] is False
-    assert result.config.environment == Environment.Production
+    assert result.config.environment == Environment.Roomion
     assert result.config.merchant_id == connection_params["merchant_id"]
     assert result.config.public_key == connection_params["public_key"]
     assert result.config.private_key == connection_params["private_key"]

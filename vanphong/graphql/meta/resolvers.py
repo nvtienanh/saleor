@@ -8,7 +8,7 @@ from ...core.exceptions import PermissionDenied
 from ...core.models import ModelWithMetadata
 from ...order import models as order_models
 from ...page import models as page_models
-from ...product import models as product_models
+from ...room import models as room_models
 from ...shipping import models as shipping_models
 from ..utils import get_user_or_app_from_context
 from .permissions import PRIVATE_META_PERMISSION_MAP
@@ -26,23 +26,23 @@ def resolve_object_with_metadata_type(instance: ModelWithMetadata):
     from ..menu import types as menu_types
     from ..order import types as order_types
     from ..page import types as page_types
-    from ..product import types as product_types
+    from ..room import types as room_types
     from ..shipping import types as shipping_types
 
     MODEL_TO_TYPE_MAP = {
         attribute_models.Attribute: attribute_types.Attribute,
-        product_models.Category: product_types.Category,
+        room_models.Category: room_types.Category,
         checkout_models.Checkout: checkout_types.Checkout,
-        product_models.Collection: product_types.Collection,
-        product_models.DigitalContent: product_types.DigitalContent,
+        room_models.Collection: room_types.Collection,
+        room_models.DigitalContent: room_types.DigitalContent,
         order_models.Fulfillment: order_types.Fulfillment,
         order_models.Order: order_types.Order,
         invoice_models.Invoice: invoice_types.Invoice,
         page_models.Page: page_types.Page,
         page_models.PageType: page_types.PageType,
-        product_models.Product: product_types.Product,
-        product_models.ProductType: product_types.ProductType,
-        product_models.ProductVariant: product_types.ProductVariant,
+        room_models.Room: room_types.Room,
+        room_models.RoomType: room_types.RoomType,
+        room_models.RoomVariant: room_types.RoomVariant,
         menu_models.Menu: menu_types.Menu,
         menu_models.MenuItem: menu_types.MenuItem,
         shipping_models.ShippingMethod: shipping_types.ShippingMethod,

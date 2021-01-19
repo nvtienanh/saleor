@@ -6,7 +6,7 @@ from ....discount.models import Voucher
 from ....giftcard.models import GiftCard
 from ....order.models import Order, OrderLine
 from ....payment.models import Payment, Transaction
-from ....product.models import Product, ProductVariant
+from ....room.models import Room, RoomVariant
 from ....shipping.models import ShippingMethod
 
 
@@ -48,6 +48,6 @@ class Command(BaseCommand):
         OrderLine.objects.update(currency=currency)
         Payment.objects.update(currency=currency)
         Transaction.objects.update(currency=currency)
-        Product.objects.update(currency=currency)
-        ProductVariant.objects.update(currency=currency)
+        Room.objects.update(currency=currency)
+        RoomVariant.objects.update(currency=currency)
         ShippingMethod.objects.update(currency=currency)

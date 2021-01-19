@@ -8,7 +8,7 @@ def migrate_attributes_to_list(model_name):
     """Migrate HStore attributes configuration to JSONB with a list of values."""
 
     def make_migration(apps, schema):
-        Model = apps.get_model("product", model_name)
+        Model = apps.get_model("room", model_name)
 
         for instance in Model.objects.all():
             new_attributes = {}
@@ -33,9 +33,9 @@ def migrate_attributes_to_list(model_name):
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0103_schema_data_enterprise_grade_attributes")]
+    dependencies = [("room", "0103_schema_data_enterprise_grade_attributes")]
 
     operations = [
-        migrations.RunPython(migrate_attributes_to_list("Product")),
-        migrations.RunPython(migrate_attributes_to_list("ProductVariant")),
+        migrations.RunPython(migrate_attributes_to_list("Room")),
+        migrations.RunPython(migrate_attributes_to_list("RoomVariant")),
     ]

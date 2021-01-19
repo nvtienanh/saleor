@@ -6,7 +6,7 @@ def test_delete_attribute_value(
     staff_api_client,
     color_attribute,
     pink_attribute_value,
-    permission_manage_product_types_and_attributes,
+    permission_manage_room_types_and_attributes,
 ):
     # given
     value = color_attribute.values.get(name="Red")
@@ -25,7 +25,7 @@ def test_delete_attribute_value(
 
     # when
     staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_product_types_and_attributes]
+        query, variables, permissions=[permission_manage_room_types_and_attributes]
     )
 
     # then

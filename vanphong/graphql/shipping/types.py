@@ -19,7 +19,7 @@ from ..meta.types import ObjectWithMetadata
 from ..shipping.resolvers import resolve_price_range
 from ..translations.fields import TranslationField
 from ..translations.types import ShippingMethodTranslation
-from ..warehouse.types import Warehouse
+from ..hotel.types import Hotel
 from .dataloaders import (
     ShippingMethodChannelListingByShippingMethodIdAndChannelSlugLoader,
     ShippingMethodChannelListingByShippingMethodIdLoader,
@@ -86,9 +86,9 @@ class ShippingMethod(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         ShippingMethodZipCodeRule,
         description="Zip code exclude range of the shipping method.",
     )
-    excluded_products = ChannelContextFilterConnectionField(
-        "saleor.graphql.product.types.products.Product",
-        description="List of excluded products for the shipping method.",
+    excluded_rooms = ChannelContextFilterConnectionField(
+        "saleor.graphql.room.types.rooms.Room",
+        description="List of excluded rooms for the shipping method.",
     )
 
     class Meta:
@@ -185,10 +185,10 @@ class ShippingMethod(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
     @staticmethod
     @permission_required(ShippingPermissions.MANAGE_SHIPPING)
-    def resolve_excluded_products(
+    def resolve_excluded_rooms(
         root: ChannelContext[models.ShippingMethod], _info, **_kwargs
     ):
-        return ChannelQsContext(qs=root.node.excluded_products.all(), channel_slug=None)
+        return ChannelQsContext(qs=root.node.excluded_rooms.all(), channel_slug=None)
 
 
 class ShippingZone(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
@@ -205,8 +205,8 @@ class ShippingZone(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             " shipped to countries within this shipping zone."
         ),
     )
-    warehouses = graphene.List(
-        Warehouse, description="List of warehouses for shipping zone."
+    hotels = graphene.List(
+        Hotel, description="List of hotels for shipping zone."
     )
     description = graphene.String(description="Description of a shipping zone.")
 
@@ -258,5 +258,5 @@ class ShippingZone(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         )
 
     @staticmethod
-    def resolve_warehouses(root: ChannelContext[models.ShippingZone], *_args):
-        return root.node.warehouses.all()
+    def resolve_hotels(root: ChannelContext[models.ShippingZone], *_args):
+        return root.node.hotels.all()

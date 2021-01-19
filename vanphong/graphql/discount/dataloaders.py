@@ -7,7 +7,7 @@ from ...discount.models import Sale, SaleChannelListing, Voucher, VoucherChannel
 from ...discount.utils import (
     fetch_categories,
     fetch_collections,
-    fetch_products,
+    fetch_rooms,
     fetch_sale_channel_listings,
 )
 from ..core.dataloaders import DataLoader
@@ -24,7 +24,7 @@ class DiscountsByDateTimeLoader(DataLoader):
         pks = {s.pk for d, ss in sales_map.items() for s in ss}
         collections = fetch_collections(pks)
         channel_listings = fetch_sale_channel_listings(pks)
-        products = fetch_products(pks)
+        rooms = fetch_rooms(pks)
         categories = fetch_categories(pks)
 
         return [
@@ -34,7 +34,7 @@ class DiscountsByDateTimeLoader(DataLoader):
                     channel_listings=channel_listings[sale.pk],
                     category_ids=categories[sale.pk],
                     collection_ids=collections[sale.pk],
-                    product_ids=products[sale.pk],
+                    room_ids=rooms[sale.pk],
                 )
                 for sale in sales_map[datetime]
             ]

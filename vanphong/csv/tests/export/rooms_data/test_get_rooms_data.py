@@ -3,94 +3,94 @@ from measurement.measures import Weight
 from .....attribute.models import Attribute
 from .....attribute.utils import associate_attribute_values_to_instance
 from .....channel.models import Channel
-from .....product.models import Product, ProductVariant, VariantImage
-from .....warehouse.models import Warehouse
-from ....utils import ProductExportFields
-from ....utils.products_data import get_products_data
+from .....room.models import Room, RoomVariant, VariantImage
+from .....hotel.models import Hotel
+from ....utils import RoomExportFields
+from ....utils.rooms_data import get_rooms_data
 from .utils import (
-    add_channel_to_expected_product_data,
+    add_channel_to_expected_room_data,
     add_channel_to_expected_variant_data,
-    add_product_attribute_data_to_expected_data,
+    add_room_attribute_data_to_expected_data,
     add_stocks_to_expected_data,
     add_variant_attribute_data_to_expected_data,
 )
 
 
-def test_get_products_data(product, product_with_image, collection, image, channel_USD):
+def test_get_rooms_data(room, room_with_image, collection, image, channel_USD):
     # given
-    product.weight = Weight(kg=5)
-    product.save()
+    room.weight = Weight(kg=5)
+    room.save()
 
-    collection.products.add(product)
+    collection.rooms.add(room)
 
-    variant = product.variants.first()
-    VariantImage.objects.create(variant=variant, image=product.images.first())
+    variant = room.variants.first()
+    VariantImage.objects.create(variant=variant, image=room.images.first())
 
-    products = Product.objects.all()
+    rooms = Room.objects.all()
     export_fields = set(
         value
-        for mapping in ProductExportFields.HEADERS_TO_FIELDS_MAPPING.values()
+        for mapping in RoomExportFields.HEADERS_TO_FIELDS_MAPPING.values()
         for value in mapping.values()
     )
-    warehouse_ids = [str(warehouse.pk) for warehouse in Warehouse.objects.all()]
+    hotel_ids = [str(hotel.pk) for hotel in Hotel.objects.all()]
     attribute_ids = [str(attr.pk) for attr in Attribute.objects.all()]
     channel_ids = [str(channel.pk) for channel in Channel.objects.all()]
 
     variants = []
-    for variant in product.variants.all():
+    for variant in room.variants.all():
         for attr in variant.attributes.all():
             attribute_ids.append(str(attr.assignment.attribute.pk))
         variant.weight = Weight(kg=3)
         variants.append(variant)
 
-    ProductVariant.objects.bulk_update(variants, ["weight"])
+    RoomVariant.objects.bulk_update(variants, ["weight"])
 
     variants = []
-    for variant in product_with_image.variants.all():
+    for variant in room_with_image.variants.all():
         variant.weight = None
         variants.append(variant)
-    ProductVariant.objects.bulk_update(variants, ["weight"])
+    RoomVariant.objects.bulk_update(variants, ["weight"])
 
     # when
-    result_data = get_products_data(
-        products, export_fields, attribute_ids, warehouse_ids, channel_ids
+    result_data = get_rooms_data(
+        rooms, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
     expected_data = []
-    for product in products.order_by("pk"):
-        product_data = {
-            "id": product.id,
-            "name": product.name,
-            "description": product.description,
-            "category__slug": product.category.slug,
-            "product_type__name": product.product_type.name,
-            "charge_taxes": product.charge_taxes,
+    for room in rooms.order_by("pk"):
+        room_data = {
+            "id": room.id,
+            "name": room.name,
+            "description": room.description,
+            "category__slug": room.category.slug,
+            "room_type__name": room.room_type.name,
+            "charge_taxes": room.charge_taxes,
             "collections__slug": (
                 ""
-                if not product.collections.all()
-                else product.collections.first().slug
+                if not room.collections.all()
+                else room.collections.first().slug
             ),
-            "product_weight": (
-                "{} g".format(int(product.weight.value * 1000))
-                if product.weight
+            "room_weight": (
+                "{} g".format(int(room.weight.value * 1000))
+                if room.weight
                 else ""
             ),
             "images__image": (
                 ""
-                if not product.images.all()
-                else "http://mirumee.com{}".format(product.images.first().image.url)
+                if not room.images.all()
+                else "http://mirumee.com{}".format(room.images.first().image.url)
             ),
         }
 
-        product_data = add_product_attribute_data_to_expected_data(
-            product_data, product, attribute_ids
+        room_data = add_room_attribute_data_to_expected_data(
+            room_data, room, attribute_ids
         )
-        product_data = add_channel_to_expected_product_data(
-            product_data, product, channel_ids
+        room_data = add_channel_to_expected_room_data(
+            room_data, room, channel_ids
         )
 
-        for variant in product.variants.all():
+        for variant in room.variants.all():
             data = {
                 "variants__sku": variant.sku,
                 "variants__images__image": (
@@ -104,9 +104,9 @@ def test_get_products_data(product, product_with_image, collection, image, chann
                     else ""
                 ),
             }
-            data.update(product_data)
+            data.update(room_data)
 
-            data = add_stocks_to_expected_data(data, variant, warehouse_ids)
+            data = add_stocks_to_expected_data(data, variant, hotel_ids)
             data = add_variant_attribute_data_to_expected_data(
                 data, variant, attribute_ids
             )
@@ -116,33 +116,33 @@ def test_get_products_data(product, product_with_image, collection, image, chann
     assert result_data == expected_data
 
 
-def test_get_products_data_for_specified_attributes(
-    product, product_with_variant_with_two_attributes
+def test_get_rooms_data_for_specified_attributes(
+    room, room_with_variant_with_two_attributes
 ):
     # given
-    products = Product.objects.all()
+    rooms = Room.objects.all()
     export_fields = {"id", "variants__sku"}
     attribute_ids = [str(attr.pk) for attr in Attribute.objects.all()][:1]
-    warehouse_ids = []
+    hotel_ids = []
     channel_ids = []
 
     # when
-    result_data = get_products_data(
-        products, export_fields, attribute_ids, warehouse_ids, channel_ids
+    result_data = get_rooms_data(
+        rooms, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
     expected_data = []
-    for product in products.order_by("pk"):
-        product_data = {"id": product.pk}
+    for room in rooms.order_by("pk"):
+        room_data = {"id": room.pk}
 
-        product_data = add_product_attribute_data_to_expected_data(
-            product_data, product, attribute_ids
+        room_data = add_room_attribute_data_to_expected_data(
+            room_data, room, attribute_ids
         )
 
-        for variant in product.variants.all():
+        for variant in room.variants.all():
             data = {}
-            data.update(product_data)
+            data.update(room_data)
             data["variants__sku"] = variant.sku
             data = add_variant_attribute_data_to_expected_data(
                 data, variant, attribute_ids
@@ -153,67 +153,67 @@ def test_get_products_data_for_specified_attributes(
     assert result_data == expected_data
 
 
-def test_get_products_data_for_specified_warehouses(
-    product, product_with_image, variant_with_many_stocks
+def test_get_rooms_data_for_specified_hotels(
+    room, room_with_image, variant_with_many_stocks
 ):
     # given
-    product.variants.add(variant_with_many_stocks)
+    room.variants.add(variant_with_many_stocks)
 
-    products = Product.objects.all()
+    rooms = Room.objects.all()
     export_fields = {"id", "variants__sku"}
-    warehouse_ids = [str(warehouse.pk) for warehouse in Warehouse.objects.all()][:2]
+    hotel_ids = [str(hotel.pk) for hotel in Hotel.objects.all()][:2]
     attribute_ids = []
     channel_ids = []
 
     # when
-    result_data = get_products_data(
-        products, export_fields, attribute_ids, warehouse_ids, channel_ids
+    result_data = get_rooms_data(
+        rooms, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
     expected_data = []
-    for product in products.order_by("pk"):
-        product_data = {"id": product.pk}
+    for room in rooms.order_by("pk"):
+        room_data = {"id": room.pk}
 
-        for variant in product.variants.all():
+        for variant in room.variants.all():
             data = {"variants__sku": variant.sku}
-            data.update(product_data)
+            data.update(room_data)
 
-            data = add_stocks_to_expected_data(data, variant, warehouse_ids)
+            data = add_stocks_to_expected_data(data, variant, hotel_ids)
 
             expected_data.append(data)
     for res in result_data:
         assert res in expected_data
 
 
-def test_get_products_data_for_product_without_channel(
-    product, product_with_image, variant_with_many_stocks
+def test_get_rooms_data_for_room_without_channel(
+    room, room_with_image, variant_with_many_stocks
 ):
     # given
-    product.variants.add(variant_with_many_stocks)
-    product_with_image.channel_listings.all().delete()
+    room.variants.add(variant_with_many_stocks)
+    room_with_image.channel_listings.all().delete()
 
-    products = Product.objects.all()
+    rooms = Room.objects.all()
     export_fields = {"id", "variants__sku"}
-    warehouse_ids = []
+    hotel_ids = []
     attribute_ids = []
     channel_ids = []
 
     # when
-    result_data = get_products_data(
-        products, export_fields, attribute_ids, warehouse_ids, channel_ids
+    result_data = get_rooms_data(
+        rooms, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
     expected_data = []
-    for product in products.order_by("pk"):
-        product_data = {"id": product.pk}
+    for room in rooms.order_by("pk"):
+        room_data = {"id": room.pk}
 
-        for variant in product.variants.all():
+        for variant in room.variants.all():
             data = {"variants__sku": variant.sku}
-            data.update(product_data)
+            data.update(room_data)
 
-            data = add_stocks_to_expected_data(data, variant, warehouse_ids)
+            data = add_stocks_to_expected_data(data, variant, hotel_ids)
 
             expected_data.append(data)
 
@@ -221,52 +221,52 @@ def test_get_products_data_for_product_without_channel(
         assert res in expected_data
 
 
-def test_get_products_data_for_specified_warehouses_channels_and_attributes(
-    product,
+def test_get_rooms_data_for_specified_hotels_channels_and_attributes(
+    room,
     variant_with_many_stocks,
-    product_with_image,
-    product_with_variant_with_two_attributes,
+    room_with_image,
+    room_with_variant_with_two_attributes,
     file_attribute,
 ):
     # given
-    product.variants.add(variant_with_many_stocks)
-    product.product_type.variant_attributes.add(file_attribute)
-    product.product_type.product_attributes.add(file_attribute)
+    room.variants.add(variant_with_many_stocks)
+    room.room_type.variant_attributes.add(file_attribute)
+    room.room_type.room_attributes.add(file_attribute)
     associate_attribute_values_to_instance(
         variant_with_many_stocks, file_attribute, file_attribute.values.first()
     )
     associate_attribute_values_to_instance(
-        product, file_attribute, file_attribute.values.first()
+        room, file_attribute, file_attribute.values.first()
     )
 
-    products = Product.objects.all()
+    rooms = Room.objects.all()
     export_fields = {"id", "variants__sku"}
-    warehouse_ids = [str(warehouse.pk) for warehouse in Warehouse.objects.all()]
+    hotel_ids = [str(hotel.pk) for hotel in Hotel.objects.all()]
     attribute_ids = [str(attr.pk) for attr in Attribute.objects.all()]
     channel_ids = [str(channel.pk) for channel in Channel.objects.all()]
 
     # when
-    result_data = get_products_data(
-        products, export_fields, attribute_ids, warehouse_ids, channel_ids
+    result_data = get_rooms_data(
+        rooms, export_fields, attribute_ids, hotel_ids, channel_ids
     )
 
     # then
     expected_data = []
-    for product in products.order_by("pk"):
-        product_data = {"id": product.id}
+    for room in rooms.order_by("pk"):
+        room_data = {"id": room.id}
 
-        product_data = add_product_attribute_data_to_expected_data(
-            product_data, product, attribute_ids
+        room_data = add_room_attribute_data_to_expected_data(
+            room_data, room, attribute_ids
         )
-        product_data = add_channel_to_expected_product_data(
-            product_data, product, channel_ids
+        room_data = add_channel_to_expected_room_data(
+            room_data, room, channel_ids
         )
 
-        for variant in product.variants.all():
+        for variant in room.variants.all():
             data = {"variants__sku": variant.sku}
-            data.update(product_data)
+            data.update(room_data)
 
-            data = add_stocks_to_expected_data(data, variant, warehouse_ids)
+            data = add_stocks_to_expected_data(data, variant, hotel_ids)
             data = add_variant_attribute_data_to_expected_data(
                 data, variant, attribute_ids
             )

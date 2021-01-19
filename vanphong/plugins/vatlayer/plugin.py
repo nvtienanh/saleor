@@ -14,7 +14,7 @@ from prices import Money, MoneyRange, TaxedMoney, TaxedMoneyRange
 from ...checkout import calculations
 from ...core.taxes import TaxType
 from ...graphql.core.utils.error_codes import PluginErrorCode
-from ...product.models import ProductType
+from ...room.models import RoomType
 from ..base_plugin import BasePlugin, ConfigurationTypeField
 from ..manager import get_plugins_manager
 from . import (
@@ -34,11 +34,11 @@ if TYPE_CHECKING:
     from ...checkout.models import Checkout, CheckoutLine
     from ...discount import DiscountInfo
     from ...order.models import Order, OrderLine
-    from ...product.models import (
+    from ...room.models import (
         Collection,
-        Product,
-        ProductVariant,
-        ProductVariantChannelListing,
+        Room,
+        RoomVariant,
+        RoomVariantChannelListing,
     )
     from ..models import PluginConfiguration
 
@@ -169,12 +169,12 @@ class VatlayerPlugin(BasePlugin):
         self,
         checkout: "Checkout",
         checkout_line: "CheckoutLine",
-        variant: "ProductVariant",
-        product: "Product",
+        variant: "RoomVariant",
+        room: "Room",
         collections: List["Collection"],
         address: Optional["Address"],
         channel: "Channel",
-        channel_listing: "ProductVariantChannelListing",
+        channel_listing: "RoomVariantChannelListing",
         discounts: List["DiscountInfo"],
         previous_value: TaxedMoney,
     ) -> TaxedMoney:
@@ -182,11 +182,11 @@ class VatlayerPlugin(BasePlugin):
             return previous_value
 
         price = variant.get_price(
-            product, collections, channel, channel_listing, discounts
+            room, collections, channel, channel_listing, discounts
         )
         country = address.country if address else None
         return (
-            self.__apply_taxes_to_product(product, price, country)
+            self.__apply_taxes_to_room(room, price, country)
             * checkout_line.quantity
         )
 
@@ -201,8 +201,8 @@ class VatlayerPlugin(BasePlugin):
         variant = order_line.variant
         if not variant:
             return previous_value
-        return self.__apply_taxes_to_product(
-            variant.product, order_line.unit_price, country
+        return self.__apply_taxes_to_room(
+            variant.room, order_line.unit_price, country
         )
 
     def get_checkout_line_tax_rate(
@@ -213,24 +213,24 @@ class VatlayerPlugin(BasePlugin):
         discounts: Iterable["DiscountInfo"],
         previous_value: Decimal,
     ) -> Decimal:
-        return self._get_tax_rate(checkout_line_info.product, address, previous_value)
+        return self._get_tax_rate(checkout_line_info.room, address, previous_value)
 
     def get_order_line_tax_rate(
         self,
         order: "Order",
-        product: "Product",
+        room: "Room",
         address: Optional["Address"],
         previous_value: Decimal,
     ) -> Decimal:
-        return self._get_tax_rate(product, address, previous_value)
+        return self._get_tax_rate(room, address, previous_value)
 
     def _get_tax_rate(
-        self, product: "Product", address: Optional["Address"], previous_value: Decimal
+        self, room: "Room", address: Optional["Address"], previous_value: Decimal
     ):
         if self._skip_plugin(previous_value):
             return previous_value
         country = address.country if address else None
-        taxes, tax_rate = self.__get_tax_data_for_product(product, country)
+        taxes, tax_rate = self.__get_tax_data_for_room(room, country)
         if not taxes or not tax_rate:
             return previous_value
         tax = taxes.get(tax_rate) or taxes.get(DEFAULT_TAX_RATE_NAME)
@@ -300,37 +300,37 @@ class VatlayerPlugin(BasePlugin):
         taxes = self._get_taxes_for_country(shipping_address.country)
         return get_taxed_shipping_price(price, taxes)
 
-    def apply_taxes_to_product(
+    def apply_taxes_to_room(
         self,
-        product: "Product",
+        room: "Room",
         price: Money,
         country: Country,
         previous_value: TaxedMoney,
     ) -> TaxedMoney:
         if self._skip_plugin(previous_value):
             return previous_value
-        return self.__apply_taxes_to_product(product, price, country)
+        return self.__apply_taxes_to_room(room, price, country)
 
-    def __apply_taxes_to_product(
-        self, product: "Product", price: Money, country: Country
+    def __apply_taxes_to_room(
+        self, room: "Room", price: Money, country: Country
     ):
-        taxes, tax_rate = self.__get_tax_data_for_product(product, country)
+        taxes, tax_rate = self.__get_tax_data_for_room(room, country)
         return apply_tax_to_price(taxes, tax_rate, price)
 
-    def __get_tax_data_for_product(self, product: "Product", country: Country):
+    def __get_tax_data_for_room(self, room: "Room", country: Country):
         taxes = None
-        if country and product.charge_taxes:
+        if country and room.charge_taxes:
             taxes = self._get_taxes_for_country(country)
-        product_tax_rate = self.__get_tax_code_from_object_meta(product).code
+        room_tax_rate = self.__get_tax_code_from_object_meta(room).code
         tax_rate = (
-            product_tax_rate
-            or self.__get_tax_code_from_object_meta(product.product_type).code
+            room_tax_rate
+            or self.__get_tax_code_from_object_meta(room.room_type).code
         )
         return taxes, tax_rate
 
     def assign_tax_code_to_object_meta(
         self,
-        obj: Union["Product", "ProductType"],
+        obj: Union["Room", "RoomType"],
         tax_code: Optional[str],
         previous_value: Any,
     ):
@@ -350,20 +350,20 @@ class VatlayerPlugin(BasePlugin):
         return previous_value
 
     def get_tax_code_from_object_meta(
-        self, obj: Union["Product", "ProductType"], previous_value: "TaxType"
+        self, obj: Union["Room", "RoomType"], previous_value: "TaxType"
     ) -> "TaxType":
         if not self.active:
             return previous_value
         return self.__get_tax_code_from_object_meta(obj)
 
     def __get_tax_code_from_object_meta(
-        self, obj: Union["Product", "ProductType"]
+        self, obj: Union["Room", "RoomType"]
     ) -> "TaxType":
 
-        # Product has None as it determines if we overwrite taxes for the product
+        # Room has None as it determines if we overwrite taxes for the room
         default_tax_code = None
         default_tax_description = None
-        if isinstance(obj, ProductType):
+        if isinstance(obj, RoomType):
             default_tax_code = DEFAULT_TAX_RATE_NAME
             default_tax_description = DEFAULT_TAX_RATE_NAME
 
@@ -374,7 +374,7 @@ class VatlayerPlugin(BasePlugin):
         return TaxType(code=tax_code, description=tax_description)
 
     def get_tax_rate_percentage_value(
-        self, obj: Union["Product", "ProductType"], country: Country, previous_value
+        self, obj: Union["Room", "RoomType"], country: Country, previous_value
     ) -> Decimal:
         """Return tax rate percentage value for given tax rate type in the country."""
         if not self.active:

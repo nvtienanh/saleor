@@ -94,8 +94,8 @@ def test_checkout_totals_use_discounts(
 ):
     checkout = checkout_with_item
     # make sure that we're testing a variant that is actually on sale
-    product = checkout.lines.first().variant.product
-    sale.products.add(product)
+    room = checkout.lines.first().variant.room
+    sale.rooms.add(room)
 
     query = """
     query getCheckout($token: UUID) {
@@ -130,7 +130,7 @@ def test_checkout_totals_use_discounts(
         DiscountInfo(
             sale=sale,
             channel_listings={channel_USD.slug: sale_channel_listing},
-            product_ids={product.id},
+            room_ids={room.id},
             category_ids=set(),
             collection_ids=set(),
         )
@@ -154,7 +154,7 @@ def test_checkout_totals_use_discounts(
         checkout=checkout,
         line=line,
         variant=line.variant,
-        product=line.variant.product,
+        room=line.variant.room,
         collections=[],
         address=checkout.shipping_address,
         channel=channel_USD,
@@ -289,10 +289,10 @@ def test_checkout_add_voucher_code_checkout_with_sale(
     assert checkout_with_item.discount_amount == Decimal(1.5)
 
 
-def test_checkout_add_specific_product_voucher_code_checkout_with_sale(
-    api_client, checkout_with_item, voucher_specific_product_type, discount_info
+def test_checkout_add_specific_room_voucher_code_checkout_with_sale(
+    api_client, checkout_with_item, voucher_specific_room_type, discount_info
 ):
-    voucher = voucher_specific_product_type
+    voucher = voucher_specific_room_type
     checkout = checkout_with_item
     expected_discount = Decimal(1.5)
     manager = get_plugins_manager()
@@ -324,15 +324,15 @@ def test_checkout_add_specific_product_voucher_code_checkout_with_sale(
     assert checkout.discount == Money(expected_discount, "USD")
 
 
-def test_checkout_add_products_voucher_code_checkout_with_sale(
+def test_checkout_add_rooms_voucher_code_checkout_with_sale(
     api_client, checkout_with_item, voucher_percentage, discount_info
 ):
     checkout = checkout_with_item
-    product = checkout.lines.first().variant.product
+    room = checkout.lines.first().variant.room
     voucher = voucher_percentage
-    voucher.type = VoucherType.SPECIFIC_PRODUCT
+    voucher.type = VoucherType.SPECIFIC_ROOM
     voucher.save()
-    voucher.products.add(product)
+    voucher.rooms.add(room)
 
     lines = fetch_checkout_lines(checkout)
     manager = get_plugins_manager()
@@ -366,9 +366,9 @@ def test_checkout_add_collection_voucher_code_checkout_with_sale(
 ):
     checkout = checkout_with_item
     voucher = voucher_percentage
-    product = checkout.lines.first().variant.product
-    product.collections.add(collection)
-    voucher.type = VoucherType.SPECIFIC_PRODUCT
+    room = checkout.lines.first().variant.room
+    room.collections.add(collection)
+    voucher.type = VoucherType.SPECIFIC_ROOM
     voucher.save()
     voucher.collections.add(collection)
 
@@ -402,9 +402,9 @@ def test_checkout_add_category_code_checkout_with_sale(
     api_client, checkout_with_item, voucher_percentage, discount_info
 ):
     checkout = checkout_with_item
-    category = checkout.lines.first().variant.product.category
+    category = checkout.lines.first().variant.room.category
     voucher = voucher_percentage
-    voucher.type = VoucherType.SPECIFIC_PRODUCT
+    voucher.type = VoucherType.SPECIFIC_ROOM
     voucher.save()
     voucher.categories.add(category)
 

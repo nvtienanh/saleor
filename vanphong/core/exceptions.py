@@ -26,11 +26,11 @@ class ReadOnlyException(Exception):
         super().__init__(msg)
 
 
-class ProductNotPublished(Exception):
+class RoomNotPublished(Exception):
     def __init__(self, context=None):
-        super().__init__("Can't add unpublished product.")
+        super().__init__("Can't add unpublished room.")
         self.context = context
-        self.code = CheckoutErrorCode.PRODUCT_NOT_PUBLISHED
+        self.code = CheckoutErrorCode.ROOM_NOT_PUBLISHED
 
 
 class PermissionDenied(Exception):

@@ -1,7 +1,7 @@
 import graphene
 
-from ...core.permissions import ProductPermissions
-from ...product import models
+from ...core.permissions import RoomPermissions
+from ...room import models
 from ..channel import ChannelContext
 from ..channel.utils import get_default_channel_slug_or_graphql_error
 from ..core.enums import ReportingPeriod
@@ -15,39 +15,39 @@ from ..decorators import permission_required
 from ..translations.mutations import (
     CategoryTranslate,
     CollectionTranslate,
-    ProductTranslate,
-    ProductVariantTranslate,
+    RoomTranslate,
+    RoomVariantTranslate,
 )
 from ..utils import get_user_or_app_from_context
-from .bulk_mutations.products import (
+from .bulk_mutations.rooms import (
     CategoryBulkDelete,
     CollectionBulkDelete,
-    ProductBulkDelete,
-    ProductImageBulkDelete,
-    ProductTypeBulkDelete,
-    ProductVariantBulkCreate,
-    ProductVariantBulkDelete,
-    ProductVariantStocksCreate,
-    ProductVariantStocksDelete,
-    ProductVariantStocksUpdate,
+    RoomBulkDelete,
+    RoomImageBulkDelete,
+    RoomTypeBulkDelete,
+    RoomVariantBulkCreate,
+    RoomVariantBulkDelete,
+    RoomVariantStocksCreate,
+    RoomVariantStocksDelete,
+    RoomVariantStocksUpdate,
 )
 from .enums import StockAvailability
 from .filters import (
     CategoryFilterInput,
     CollectionFilterInput,
-    ProductFilterInput,
-    ProductTypeFilterInput,
-    ProductVariantFilterInput,
+    RoomFilterInput,
+    RoomTypeFilterInput,
+    RoomVariantFilterInput,
 )
 from .mutations.attributes import (
-    ProductAttributeAssign,
-    ProductAttributeUnassign,
-    ProductTypeReorderAttributes,
+    RoomAttributeAssign,
+    RoomAttributeUnassign,
+    RoomTypeReorderAttributes,
 )
 from .mutations.channels import (
     CollectionChannelListingUpdate,
-    ProductChannelListingUpdate,
-    ProductVariantChannelListingUpdate,
+    RoomChannelListingUpdate,
+    RoomVariantChannelListingUpdate,
 )
 from .mutations.digital_contents import (
     DigitalContentCreate,
@@ -55,31 +55,31 @@ from .mutations.digital_contents import (
     DigitalContentUpdate,
     DigitalContentUrlCreate,
 )
-from .mutations.products import (
+from .mutations.rooms import (
     CategoryCreate,
     CategoryDelete,
     CategoryUpdate,
-    CollectionAddProducts,
+    CollectionAddRooms,
     CollectionCreate,
     CollectionDelete,
-    CollectionRemoveProducts,
-    CollectionReorderProducts,
+    CollectionRemoveRooms,
+    CollectionReorderRooms,
     CollectionUpdate,
-    ProductCreate,
-    ProductDelete,
-    ProductImageCreate,
-    ProductImageDelete,
-    ProductImageReorder,
-    ProductImageUpdate,
-    ProductTypeCreate,
-    ProductTypeDelete,
-    ProductTypeUpdate,
-    ProductUpdate,
-    ProductVariantCreate,
-    ProductVariantDelete,
-    ProductVariantReorder,
-    ProductVariantSetDefault,
-    ProductVariantUpdate,
+    RoomCreate,
+    RoomDelete,
+    RoomImageCreate,
+    RoomImageDelete,
+    RoomImageReorder,
+    RoomImageUpdate,
+    RoomTypeCreate,
+    RoomTypeDelete,
+    RoomTypeUpdate,
+    RoomUpdate,
+    RoomVariantCreate,
+    RoomVariantDelete,
+    RoomVariantReorder,
+    RoomVariantSetDefault,
+    RoomVariantUpdate,
     VariantImageAssign,
     VariantImageUnassign,
 )
@@ -90,32 +90,32 @@ from .resolvers import (
     resolve_collection_by_slug,
     resolve_collections,
     resolve_digital_contents,
-    resolve_product_by_id,
-    resolve_product_by_slug,
-    resolve_product_types,
-    resolve_product_variant_by_sku,
-    resolve_product_variants,
-    resolve_products,
-    resolve_report_product_sales,
+    resolve_room_by_id,
+    resolve_room_by_slug,
+    resolve_room_types,
+    resolve_room_variant_by_sku,
+    resolve_room_variants,
+    resolve_rooms,
+    resolve_report_room_sales,
     resolve_variant_by_id,
 )
 from .sorters import (
     CategorySortingInput,
     CollectionSortingInput,
-    ProductOrder,
-    ProductTypeSortingInput,
+    RoomOrder,
+    RoomTypeSortingInput,
 )
 from .types import (
     Category,
     Collection,
     DigitalContent,
-    Product,
-    ProductType,
-    ProductVariant,
+    Room,
+    RoomType,
+    RoomVariant,
 )
 
 
-class ProductQueries(graphene.ObjectType):
+class RoomQueries(graphene.ObjectType):
     digital_content = graphene.Field(
         DigitalContent,
         description="Look up digital content by ID.",
@@ -163,78 +163,78 @@ class ProductQueries(graphene.ObjectType):
             description="Slug of a channel for which the data should be returned."
         ),
     )
-    product = graphene.Field(
-        Product,
+    room = graphene.Field(
+        Room,
         id=graphene.Argument(
             graphene.ID,
-            description="ID of the product.",
+            description="ID of the room.",
         ),
-        slug=graphene.Argument(graphene.String, description="Slug of the product."),
+        slug=graphene.Argument(graphene.String, description="Slug of the room."),
         channel=graphene.String(
             description="Slug of a channel for which the data should be returned."
         ),
-        description="Look up a product by ID.",
+        description="Look up a room by ID.",
     )
-    products = ChannelContextFilterConnectionField(
-        Product,
-        filter=ProductFilterInput(description="Filtering options for products."),
-        sort_by=ProductOrder(description="Sort products."),
+    rooms = ChannelContextFilterConnectionField(
+        Room,
+        filter=RoomFilterInput(description="Filtering options for rooms."),
+        sort_by=RoomOrder(description="Sort rooms."),
         stock_availability=graphene.Argument(
             StockAvailability,
             description=(
-                "[Deprecated] Filter products by stock availability. Use the `filter` "
+                "[Deprecated] Filter rooms by stock availability. Use the `filter` "
                 "field instead. This field will be removed after 2020-07-31."
             ),
         ),
         channel=graphene.String(
             description="Slug of a channel for which the data should be returned."
         ),
-        description="List of the shop's products.",
+        description="List of the shop's rooms.",
     )
-    product_type = graphene.Field(
-        ProductType,
+    room_type = graphene.Field(
+        RoomType,
         id=graphene.Argument(
-            graphene.ID, description="ID of the product type.", required=True
+            graphene.ID, description="ID of the room type.", required=True
         ),
-        description="Look up a product type by ID.",
+        description="Look up a room type by ID.",
     )
-    product_types = FilterInputConnectionField(
-        ProductType,
-        filter=ProductTypeFilterInput(
-            description="Filtering options for product types."
+    room_types = FilterInputConnectionField(
+        RoomType,
+        filter=RoomTypeFilterInput(
+            description="Filtering options for room types."
         ),
-        sort_by=ProductTypeSortingInput(description="Sort product types."),
-        description="List of the shop's product types.",
+        sort_by=RoomTypeSortingInput(description="Sort room types."),
+        description="List of the shop's room types.",
     )
-    product_variant = graphene.Field(
-        ProductVariant,
+    room_variant = graphene.Field(
+        RoomVariant,
         id=graphene.Argument(
             graphene.ID,
-            description="ID of the product variant.",
+            description="ID of the room variant.",
         ),
         sku=graphene.Argument(
-            graphene.String, description="Sku of the product variant."
+            graphene.String, description="Sku of the room variant."
         ),
         channel=graphene.String(
             description="Slug of a channel for which the data should be returned."
         ),
-        description="Look up a product variant by ID or SKU.",
+        description="Look up a room variant by ID or SKU.",
     )
-    product_variants = ChannelContextFilterConnectionField(
-        ProductVariant,
+    room_variants = ChannelContextFilterConnectionField(
+        RoomVariant,
         ids=graphene.List(
-            graphene.ID, description="Filter product variants by given IDs."
+            graphene.ID, description="Filter room variants by given IDs."
         ),
         channel=graphene.String(
             description="Slug of a channel for which the data should be returned."
         ),
-        filter=ProductVariantFilterInput(
-            description="Filtering options for product variant."
+        filter=RoomVariantFilterInput(
+            description="Filtering options for room variant."
         ),
-        description="List of product variants.",
+        description="List of room variants.",
     )
-    report_product_sales = ChannelContextFilterConnectionField(
-        ProductVariant,
+    report_room_sales = ChannelContextFilterConnectionField(
+        RoomVariant,
         period=graphene.Argument(
             ReportingPeriod, required=True, description="Span of time."
         ),
@@ -242,7 +242,7 @@ class ProductQueries(graphene.ObjectType):
             description="Slug of a channel for which the data should be returned.",
             required=True,
         ),
-        description="List of top selling products.",
+        description="List of top selling rooms.",
     )
 
     def resolve_categories(self, info, level=None, **kwargs):
@@ -286,15 +286,15 @@ class ProductQueries(graphene.ObjectType):
             channel = get_default_channel_slug_or_graphql_error()
         return resolve_collections(info, channel)
 
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def resolve_digital_content(self, info, id):
         return graphene.Node.get_node_from_global_id(info, id, DigitalContent)
 
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
     def resolve_digital_contents(self, info, **_kwargs):
         return resolve_digital_contents(info)
 
-    def resolve_product(self, info, id=None, slug=None, channel=None, **_kwargs):
+    def resolve_room(self, info, id=None, slug=None, channel=None, **_kwargs):
         validate_one_of_args_is_in_query("id", id, "slug", slug)
         requestor = get_user_or_app_from_context(info.context)
         requestor_has_access_to_all = models.Collection.objects.user_has_access_to_all(
@@ -305,31 +305,31 @@ class ProductQueries(graphene.ObjectType):
             channel = get_default_channel_slug_or_graphql_error()
         if id:
             _, id = graphene.Node.from_global_id(id)
-            product = resolve_product_by_id(
+            room = resolve_room_by_id(
                 info, id, channel_slug=channel, requestor=requestor
             )
         else:
-            product = resolve_product_by_slug(
-                info, product_slug=slug, channel_slug=channel, requestor=requestor
+            room = resolve_room_by_slug(
+                info, room_slug=slug, channel_slug=channel, requestor=requestor
             )
-        return ChannelContext(node=product, channel_slug=channel) if product else None
+        return ChannelContext(node=room, channel_slug=channel) if room else None
 
-    def resolve_products(self, info, channel=None, **kwargs):
+    def resolve_rooms(self, info, channel=None, **kwargs):
         requestor = get_user_or_app_from_context(info.context)
-        requestor_has_access_to_all = models.Product.objects.user_has_access_to_all(
+        requestor_has_access_to_all = models.Room.objects.user_has_access_to_all(
             requestor
         )
         if channel is None and not requestor_has_access_to_all:
             channel = get_default_channel_slug_or_graphql_error()
-        return resolve_products(info, requestor, channel_slug=channel, **kwargs)
+        return resolve_rooms(info, requestor, channel_slug=channel, **kwargs)
 
-    def resolve_product_type(self, info, id, **_kwargs):
-        return graphene.Node.get_node_from_global_id(info, id, ProductType)
+    def resolve_room_type(self, info, id, **_kwargs):
+        return graphene.Node.get_node_from_global_id(info, id, RoomType)
 
-    def resolve_product_types(self, info, **kwargs):
-        return resolve_product_types(info, **kwargs)
+    def resolve_room_types(self, info, **kwargs):
+        return resolve_room_types(info, **kwargs)
 
-    def resolve_product_variant(
+    def resolve_room_variant(
         self,
         info,
         id=None,
@@ -338,7 +338,7 @@ class ProductQueries(graphene.ObjectType):
     ):
         validate_one_of_args_is_in_query("id", id, "sku", sku)
         requestor = get_user_or_app_from_context(info.context)
-        requestor_has_access_to_all = models.Product.objects.user_has_access_to_all(
+        requestor_has_access_to_all = models.Room.objects.user_has_access_to_all(
             requestor
         )
         if channel is None and not requestor_has_access_to_all:
@@ -349,7 +349,7 @@ class ProductQueries(graphene.ObjectType):
                 info, id, channel_slug=channel, requestor=requestor
             )
         else:
-            variant = resolve_product_variant_by_sku(
+            variant = resolve_room_variant_by_sku(
                 info,
                 sku=sku,
                 channel_slug=channel,
@@ -358,14 +358,14 @@ class ProductQueries(graphene.ObjectType):
             )
         return ChannelContext(node=variant, channel_slug=channel) if variant else None
 
-    def resolve_product_variants(self, info, ids=None, channel=None, **_kwargs):
+    def resolve_room_variants(self, info, ids=None, channel=None, **_kwargs):
         requestor = get_user_or_app_from_context(info.context)
-        requestor_has_access_to_all = models.Product.objects.user_has_access_to_all(
+        requestor_has_access_to_all = models.Room.objects.user_has_access_to_all(
             requestor
         )
         if channel is None and not requestor_has_access_to_all:
             channel = get_default_channel_slug_or_graphql_error()
-        return resolve_product_variants(
+        return resolve_room_variants(
             info,
             ids=ids,
             channel_slug=channel,
@@ -373,14 +373,14 @@ class ProductQueries(graphene.ObjectType):
             requestor=requestor,
         )
 
-    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
-    def resolve_report_product_sales(self, *_args, period, channel, **_kwargs):
-        return resolve_report_product_sales(period, channel_slug=channel)
+    @permission_required(RoomPermissions.MANAGE_ROOMS)
+    def resolve_report_room_sales(self, *_args, period, channel, **_kwargs):
+        return resolve_report_room_sales(period, channel_slug=channel)
 
 
-class ProductMutations(graphene.ObjectType):
-    product_attribute_assign = ProductAttributeAssign.Field()
-    product_attribute_unassign = ProductAttributeUnassign.Field()
+class RoomMutations(graphene.ObjectType):
+    room_attribute_assign = RoomAttributeAssign.Field()
+    room_attribute_unassign = RoomAttributeUnassign.Field()
 
     category_create = CategoryCreate.Field()
     category_delete = CategoryDelete.Field()
@@ -388,36 +388,36 @@ class ProductMutations(graphene.ObjectType):
     category_update = CategoryUpdate.Field()
     category_translate = CategoryTranslate.Field()
 
-    collection_add_products = CollectionAddProducts.Field()
+    collection_add_rooms = CollectionAddRooms.Field()
     collection_create = CollectionCreate.Field()
     collection_delete = CollectionDelete.Field()
-    collection_reorder_products = CollectionReorderProducts.Field()
+    collection_reorder_rooms = CollectionReorderRooms.Field()
     collection_bulk_delete = CollectionBulkDelete.Field()
-    collection_remove_products = CollectionRemoveProducts.Field()
+    collection_remove_rooms = CollectionRemoveRooms.Field()
     collection_update = CollectionUpdate.Field()
     collection_translate = CollectionTranslate.Field()
     collection_channel_listing_update = CollectionChannelListingUpdate.Field()
 
-    product_create = ProductCreate.Field()
-    product_delete = ProductDelete.Field()
-    product_bulk_delete = ProductBulkDelete.Field()
-    product_update = ProductUpdate.Field()
-    product_translate = ProductTranslate.Field()
+    room_create = RoomCreate.Field()
+    room_delete = RoomDelete.Field()
+    room_bulk_delete = RoomBulkDelete.Field()
+    room_update = RoomUpdate.Field()
+    room_translate = RoomTranslate.Field()
 
-    product_channel_listing_update = ProductChannelListingUpdate.Field()
+    room_channel_listing_update = RoomChannelListingUpdate.Field()
 
-    product_image_create = ProductImageCreate.Field()
-    product_variant_reorder = ProductVariantReorder.Field()
-    product_image_delete = ProductImageDelete.Field()
-    product_image_bulk_delete = ProductImageBulkDelete.Field()
-    product_image_reorder = ProductImageReorder.Field()
-    product_image_update = ProductImageUpdate.Field()
+    room_image_create = RoomImageCreate.Field()
+    room_variant_reorder = RoomVariantReorder.Field()
+    room_image_delete = RoomImageDelete.Field()
+    room_image_bulk_delete = RoomImageBulkDelete.Field()
+    room_image_reorder = RoomImageReorder.Field()
+    room_image_update = RoomImageUpdate.Field()
 
-    product_type_create = ProductTypeCreate.Field()
-    product_type_delete = ProductTypeDelete.Field()
-    product_type_bulk_delete = ProductTypeBulkDelete.Field()
-    product_type_update = ProductTypeUpdate.Field()
-    product_type_reorder_attributes = ProductTypeReorderAttributes.Field()
+    room_type_create = RoomTypeCreate.Field()
+    room_type_delete = RoomTypeDelete.Field()
+    room_type_bulk_delete = RoomTypeBulkDelete.Field()
+    room_type_update = RoomTypeUpdate.Field()
+    room_type_reorder_attributes = RoomTypeReorderAttributes.Field()
 
     digital_content_create = DigitalContentCreate.Field()
     digital_content_delete = DigitalContentDelete.Field()
@@ -425,17 +425,17 @@ class ProductMutations(graphene.ObjectType):
 
     digital_content_url_create = DigitalContentUrlCreate.Field()
 
-    product_variant_create = ProductVariantCreate.Field()
-    product_variant_delete = ProductVariantDelete.Field()
-    product_variant_bulk_create = ProductVariantBulkCreate.Field()
-    product_variant_bulk_delete = ProductVariantBulkDelete.Field()
-    product_variant_stocks_create = ProductVariantStocksCreate.Field()
-    product_variant_stocks_delete = ProductVariantStocksDelete.Field()
-    product_variant_stocks_update = ProductVariantStocksUpdate.Field()
-    product_variant_update = ProductVariantUpdate.Field()
-    product_variant_set_default = ProductVariantSetDefault.Field()
-    product_variant_translate = ProductVariantTranslate.Field()
-    product_variant_channel_listing_update = ProductVariantChannelListingUpdate.Field()
+    room_variant_create = RoomVariantCreate.Field()
+    room_variant_delete = RoomVariantDelete.Field()
+    room_variant_bulk_create = RoomVariantBulkCreate.Field()
+    room_variant_bulk_delete = RoomVariantBulkDelete.Field()
+    room_variant_stocks_create = RoomVariantStocksCreate.Field()
+    room_variant_stocks_delete = RoomVariantStocksDelete.Field()
+    room_variant_stocks_update = RoomVariantStocksUpdate.Field()
+    room_variant_update = RoomVariantUpdate.Field()
+    room_variant_set_default = RoomVariantSetDefault.Field()
+    room_variant_translate = RoomVariantTranslate.Field()
+    room_variant_channel_listing_update = RoomVariantChannelListingUpdate.Field()
 
     variant_image_assign = VariantImageAssign.Field()
     variant_image_unassign = VariantImageUnassign.Field()

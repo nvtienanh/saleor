@@ -22,13 +22,13 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("entire_order", "Entire order"),
-                    ("product", "Specific products"),
-                    ("collection", "Specific collections of products"),
-                    ("category", "Specific categories of products"),
+                    ("room", "Specific rooms"),
+                    ("collection", "Specific collections of rooms"),
+                    ("category", "Specific categories of rooms"),
                     ("shipping", "Shipping"),
                     (
-                        "specific_product",
-                        "Specific products, collections and categories",
+                        "specific_room",
+                        "Specific rooms, collections and categories",
                     ),
                 ],
                 default="entire_order",

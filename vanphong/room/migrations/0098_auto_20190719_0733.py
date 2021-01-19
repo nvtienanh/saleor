@@ -8,11 +8,11 @@ import saleor.core.utils.json_serializer
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0097_auto_20190719_0458")]
+    dependencies = [("room", "0097_auto_20190719_0458")]
 
     operations = [
         migrations.AlterField(
-            model_name="product",
+            model_name="room",
             name="meta",
             field=django.contrib.postgres.fields.jsonb.JSONField(
                 blank=True,
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterField(
-            model_name="producttype",
+            model_name="roomtype",
             name="meta",
             field=django.contrib.postgres.fields.jsonb.JSONField(
                 blank=True,

@@ -25,19 +25,19 @@ from ...checkout.utils import (
     remove_promo_code_from_checkout,
 )
 from ...core import analytics
-from ...core.exceptions import InsufficientStock, PermissionDenied, ProductNotPublished
+from ...core.exceptions import InsufficientStock, PermissionDenied, RoomNotPublished
 from ...core.transactions import transaction_with_commit_on_errors
 from ...order import models as order_models
-from ...product import models as product_models
+from ...room import models as room_models
 from ...shipping import models as shipping_models
-from ...warehouse.availability import check_stock_quantity_bulk
+from ...hotel.availability import check_stock_quantity_bulk
 from ..account.i18n import I18nMixin
 from ..account.types import AddressInput
 from ..core.mutations import BaseMutation, ModelMutation
 from ..core.types.common import CheckoutError
 from ..core.utils import from_global_id_strict_type
 from ..order.types import Order
-from ..product.types import ProductVariant
+from ..room.types import RoomVariant
 from ..shipping.types import ShippingMethod
 from .types import Checkout, CheckoutLine
 
@@ -121,7 +121,7 @@ def check_lines_quantity(variants, quantities, country):
         check_stock_quantity_bulk(variants, country, quantities)
     except InsufficientStock as e:
         remaining = e.context["available_quantity"]
-        item_name = e.item.display_product()
+        item_name = e.item.display_room()
         message = (
             f"Could not add item {item_name}. Only {remaining} remaining in stock."
         )
@@ -131,25 +131,25 @@ def check_lines_quantity(variants, quantities, country):
 def validate_variants_available_for_purchase(variants, channel_id):
     not_available_variants = []
     for variant in variants:
-        product_channel_listing = variant.product.channel_listings.filter(
+        room_channel_listing = variant.room.channel_listings.filter(
             channel_id=channel_id
         ).first()
         if not (
-            product_channel_listing
-            and product_channel_listing.is_available_for_purchase()
+            room_channel_listing
+            and room_channel_listing.is_available_for_purchase()
         ):
             not_available_variants.append(variant.pk)
 
     if not_available_variants:
         variant_ids = [
-            graphene.Node.to_global_id("ProductVariant", pk)
+            graphene.Node.to_global_id("RoomVariant", pk)
             for pk in not_available_variants
         ]
         raise ValidationError(
             {
                 "lines": ValidationError(
                     "Cannot add lines for unavailable for purchase variants.",
-                    code=CheckoutErrorCode.PRODUCT_UNAVAILABLE_FOR_PURCHASE,
+                    code=CheckoutErrorCode.ROOM_UNAVAILABLE_FOR_PURCHASE,
                     params={"variants": variant_ids},
                 )
             }
@@ -158,7 +158,7 @@ def validate_variants_available_for_purchase(variants, channel_id):
 
 class CheckoutLineInput(graphene.InputObjectType):
     quantity = graphene.Int(required=True, description="The number of items purchased.")
-    variant_id = graphene.ID(required=True, description="ID of the product variant.")
+    variant_id = graphene.ID(required=True, description="ID of the room variant.")
 
 
 class CheckoutCreateInput(graphene.InputObjectType):
@@ -209,14 +209,14 @@ class CheckoutCreate(ModelMutation, I18nMixin):
     @classmethod
     def clean_checkout_lines(
         cls, lines, country, channel_id
-    ) -> Tuple[List[product_models.ProductVariant], List[int]]:
+    ) -> Tuple[List[room_models.RoomVariant], List[int]]:
         variant_ids = [line["variant_id"] for line in lines]
         variants = cls.get_nodes_or_error(
             variant_ids,
             "variant_id",
-            ProductVariant,
-            qs=product_models.ProductVariant.objects.prefetch_related(
-                "product__product_type"
+            RoomVariant,
+            qs=room_models.RoomVariant.objects.prefetch_related(
+                "room__room_type"
             ),
         )
 
@@ -336,11 +336,11 @@ class CheckoutCreate(ModelMutation, I18nMixin):
                 add_variants_to_checkout(instance, variants, quantities)
             except InsufficientStock as exc:
                 raise ValidationError(
-                    f"Insufficient product stock: {exc.item}", code=exc.code
+                    f"Insufficient room stock: {exc.item}", code=exc.code
                 )
-            except ProductNotPublished as exc:
+            except RoomNotPublished as exc:
                 raise ValidationError(
-                    "Can't create checkout with unpublished product.",
+                    "Can't create checkout with unpublished room.",
                     code=exc.code,
                 )
 
@@ -413,7 +413,7 @@ class CheckoutLinesAdd(BaseMutation):
         )
 
         variant_ids = [line.get("variant_id") for line in lines]
-        variants = cls.get_nodes_or_error(variant_ids, "variant_id", ProductVariant)
+        variants = cls.get_nodes_or_error(variant_ids, "variant_id", RoomVariant)
         quantities = [line.get("quantity") for line in lines]
 
         check_lines_quantity(variants, quantities, checkout.get_country())
@@ -427,11 +427,11 @@ class CheckoutLinesAdd(BaseMutation):
                     )
                 except InsufficientStock as exc:
                     raise ValidationError(
-                        f"Insufficient product stock: {exc.item}", code=exc.code
+                        f"Insufficient room stock: {exc.item}", code=exc.code
                     )
-                except ProductNotPublished as exc:
+                except RoomNotPublished as exc:
                     raise ValidationError(
-                        "Can't add unpublished product.",
+                        "Can't add unpublished room.",
                         code=exc.code,
                     )
             info.context.plugins.checkout_quantity_changed(checkout)
@@ -593,9 +593,9 @@ class CheckoutShippingAddressUpdate(BaseMutation, I18nMixin):
     ) -> None:
         variant_ids = [line_info.variant.id for line_info in lines]
         variants = list(
-            product_models.ProductVariant.objects.filter(
+            room_models.RoomVariant.objects.filter(
                 id__in=variant_ids
-            ).prefetch_related("product__product_type")
+            ).prefetch_related("room__room_type")
         )  # FIXME: is this prefetch needed?
         quantities = [line_info.line.quantity for line_info in lines]
         check_lines_quantity(variants, quantities, country)
@@ -606,7 +606,7 @@ class CheckoutShippingAddressUpdate(BaseMutation, I18nMixin):
 
         try:
             checkout = models.Checkout.objects.prefetch_related(
-                "lines__variant__product__product_type"
+                "lines__variant__room__room_type"
             ).get(pk=pk)
         except ObjectDoesNotExist:
             raise ValidationError(

@@ -137,7 +137,7 @@ def test_shipping_zones_query(
     staff_api_client,
     shipping_zone,
     permission_manage_shipping,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     query = """
@@ -162,7 +162,7 @@ def test_shipping_zones_query(
                             }
                         }
                     }
-                    warehouses {
+                    hotels {
                         id
                         name
                     }
@@ -177,7 +177,7 @@ def test_shipping_zones_query(
     response = staff_api_client.post_graphql(
         query,
         variables,
-        permissions=[permission_manage_shipping, permission_manage_products],
+        permissions=[permission_manage_shipping, permission_manage_rooms],
     )
     content = get_graphql_content(response)
     assert content["data"]["shippingZones"]["totalCount"] == num_of_shippings
@@ -188,7 +188,7 @@ def test_shipping_methods_query_with_channel(
     shipping_zone,
     shipping_method_channel_PLN,
     permission_manage_shipping,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     query = """
@@ -213,7 +213,7 @@ def test_shipping_methods_query_with_channel(
     response = staff_api_client.post_graphql(
         query,
         variables,
-        permissions=[permission_manage_shipping, permission_manage_products],
+        permissions=[permission_manage_shipping, permission_manage_rooms],
     )
     content = get_graphql_content(response)
     assert (
@@ -227,7 +227,7 @@ def test_shipping_methods_query(
     shipping_zone,
     shipping_method_channel_PLN,
     permission_manage_shipping,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     query = """
@@ -250,7 +250,7 @@ def test_shipping_methods_query(
     shipping_zone.shipping_methods.add(shipping_method_channel_PLN)
     response = staff_api_client.post_graphql(
         query,
-        permissions=[permission_manage_shipping, permission_manage_products],
+        permissions=[permission_manage_shipping, permission_manage_rooms],
     )
     content = get_graphql_content(response)
     assert (
@@ -265,7 +265,7 @@ CREATE_SHIPPING_ZONE_QUERY = """
         $description: String
         $default: Boolean
         $countries: [String]
-        $addWarehouses: [ID]
+        $addHotels: [ID]
     ) {
         shippingZoneCreate(
             input: {
@@ -273,7 +273,7 @@ CREATE_SHIPPING_ZONE_QUERY = """
                 description: $description
                 countries: $countries
                 default: $default
-                addWarehouses: $addWarehouses
+                addHotels: $addHotels
             }
         ) {
             shippingErrors {
@@ -287,7 +287,7 @@ CREATE_SHIPPING_ZONE_QUERY = """
                     code
                 }
                 default
-                warehouses {
+                hotels {
                     name
                 }
             }
@@ -296,13 +296,13 @@ CREATE_SHIPPING_ZONE_QUERY = """
 """
 
 
-def test_create_shipping_zone(staff_api_client, warehouse, permission_manage_shipping):
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+def test_create_shipping_zone(staff_api_client, hotel, permission_manage_shipping):
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "name": "test shipping",
         "description": "test description",
         "countries": ["PL"],
-        "addWarehouses": [warehouse_id],
+        "addHotels": [hotel_id],
     }
     response = staff_api_client.post_graphql(
         CREATE_SHIPPING_ZONE_QUERY, variables, permissions=[permission_manage_shipping]
@@ -313,17 +313,17 @@ def test_create_shipping_zone(staff_api_client, warehouse, permission_manage_shi
     assert zone["name"] == "test shipping"
     assert zone["description"] == "test description"
     assert zone["countries"] == [{"code": "PL"}]
-    assert zone["warehouses"][0]["name"] == warehouse.name
+    assert zone["hotels"][0]["name"] == hotel.name
     assert zone["default"] is False
 
 
-def test_create_shipping_zone_with_empty_warehouses(
+def test_create_shipping_zone_with_empty_hotels(
     staff_api_client, permission_manage_shipping
 ):
     variables = {
         "name": "test shipping",
         "countries": ["PL"],
-        "addWarehouses": [],
+        "addHotels": [],
     }
     response = staff_api_client.post_graphql(
         CREATE_SHIPPING_ZONE_QUERY, variables, permissions=[permission_manage_shipping]
@@ -334,11 +334,11 @@ def test_create_shipping_zone_with_empty_warehouses(
     zone = data["shippingZone"]
     assert zone["name"] == "test shipping"
     assert zone["countries"] == [{"code": "PL"}]
-    assert not zone["warehouses"]
+    assert not zone["hotels"]
     assert zone["default"] is False
 
 
-def test_create_shipping_zone_without_warehouses(
+def test_create_shipping_zone_without_hotels(
     staff_api_client, permission_manage_shipping
 ):
     variables = {
@@ -354,20 +354,20 @@ def test_create_shipping_zone_without_warehouses(
     zone = data["shippingZone"]
     assert zone["name"] == "test shipping"
     assert zone["countries"] == [{"code": "PL"}]
-    assert not zone["warehouses"]
+    assert not zone["hotels"]
     assert zone["default"] is False
 
 
 def test_create_default_shipping_zone(
-    staff_api_client, warehouse, permission_manage_shipping
+    staff_api_client, hotel, permission_manage_shipping
 ):
     unassigned_countries = set(get_countries_without_shipping_zone())
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "default": True,
         "name": "test shipping",
         "countries": ["PL"],
-        "addWarehouses": [warehouse_id],
+        "addHotels": [hotel_id],
     }
     response = staff_api_client.post_graphql(
         CREATE_SHIPPING_ZONE_QUERY, variables, permissions=[permission_manage_shipping]
@@ -377,7 +377,7 @@ def test_create_default_shipping_zone(
     assert not data["shippingErrors"]
     zone = data["shippingZone"]
     assert zone["name"] == "test shipping"
-    assert zone["warehouses"][0]["name"] == warehouse.name
+    assert zone["hotels"][0]["name"] == hotel.name
     assert zone["default"] is True
     zone_countries = {c.code for c in zone["countries"]}
     assert zone_countries == unassigned_countries
@@ -528,8 +528,8 @@ UPDATE_SHIPPING_ZONE_QUERY = """
         $description: String
         $default: Boolean
         $countries: [String]
-        $addWarehouses: [ID]
-        $removeWarehouses: [ID]
+        $addHotels: [ID]
+        $removeHotels: [ID]
     ) {
         shippingZoneUpdate(
             id: $id
@@ -538,14 +538,14 @@ UPDATE_SHIPPING_ZONE_QUERY = """
                 description: $description
                 default: $default
                 countries: $countries
-                addWarehouses: $addWarehouses
-                removeWarehouses: $removeWarehouses
+                addHotels: $addHotels
+                removeHotels: $removeHotels
             }
         ) {
             shippingZone {
                 name
                 description
-                warehouses {
+                hotels {
                     name
                     slug
                 }
@@ -553,7 +553,7 @@ UPDATE_SHIPPING_ZONE_QUERY = """
             shippingErrors {
                 field
                 code
-                warehouses
+                hotels
             }
         }
     }
@@ -603,23 +603,23 @@ def test_update_shipping_zone_default_exists(
     assert data["shippingErrors"][0]["code"] == ShippingErrorCode.ALREADY_EXISTS.name
 
 
-def test_update_shipping_zone_add_warehouses(
+def test_update_shipping_zone_add_hotels(
     staff_api_client,
     shipping_zone,
-    warehouses,
+    hotels,
     permission_manage_shipping,
 ):
     shipping_id = graphene.Node.to_global_id("ShippingZone", shipping_zone.pk)
-    warehouse_ids = [
-        graphene.Node.to_global_id("Warehouse", warehouse.pk)
-        for warehouse in warehouses
+    hotel_ids = [
+        graphene.Node.to_global_id("Hotel", hotel.pk)
+        for hotel in hotels
     ]
-    warehouse_names = [warehouse.name for warehouse in warehouses]
+    hotel_names = [hotel.name for hotel in hotels]
 
     variables = {
         "id": shipping_id,
         "name": shipping_zone.name,
-        "addWarehouses": warehouse_ids,
+        "addHotels": hotel_ids,
     }
     response = staff_api_client.post_graphql(
         UPDATE_SHIPPING_ZONE_QUERY, variables, permissions=[permission_manage_shipping]
@@ -628,26 +628,26 @@ def test_update_shipping_zone_add_warehouses(
     data = content["data"]["shippingZoneUpdate"]
     assert not data["shippingErrors"]
     data = content["data"]["shippingZoneUpdate"]["shippingZone"]
-    for response_warehouse in data["warehouses"]:
-        assert response_warehouse["name"] in warehouse_names
-    assert len(data["warehouses"]) == len(warehouse_names)
+    for response_hotel in data["hotels"]:
+        assert response_hotel["name"] in hotel_names
+    assert len(data["hotels"]) == len(hotel_names)
 
 
-def test_update_shipping_zone_add_second_warehouses(
+def test_update_shipping_zone_add_second_hotels(
     staff_api_client,
     shipping_zone,
-    warehouse,
-    warehouse_no_shipping_zone,
+    hotel,
+    hotel_no_shipping_zone,
     permission_manage_shipping,
 ):
     shipping_id = graphene.Node.to_global_id("ShippingZone", shipping_zone.pk)
-    warehouse_id = graphene.Node.to_global_id(
-        "Warehouse", warehouse_no_shipping_zone.pk
+    hotel_id = graphene.Node.to_global_id(
+        "Hotel", hotel_no_shipping_zone.pk
     )
     variables = {
         "id": shipping_id,
         "name": shipping_zone.name,
-        "addWarehouses": [warehouse_id],
+        "addHotels": [hotel_id],
     }
     response = staff_api_client.post_graphql(
         UPDATE_SHIPPING_ZONE_QUERY, variables, permissions=[permission_manage_shipping]
@@ -656,22 +656,22 @@ def test_update_shipping_zone_add_second_warehouses(
     data = content["data"]["shippingZoneUpdate"]
     assert not data["shippingErrors"]
     data = content["data"]["shippingZoneUpdate"]["shippingZone"]
-    assert data["warehouses"][1]["slug"] == warehouse.slug
-    assert data["warehouses"][0]["slug"] == warehouse_no_shipping_zone.slug
+    assert data["hotels"][1]["slug"] == hotel.slug
+    assert data["hotels"][0]["slug"] == hotel_no_shipping_zone.slug
 
 
-def test_update_shipping_zone_remove_warehouses(
+def test_update_shipping_zone_remove_hotels(
     staff_api_client,
     shipping_zone,
-    warehouse,
+    hotel,
     permission_manage_shipping,
 ):
     shipping_id = graphene.Node.to_global_id("ShippingZone", shipping_zone.pk)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "id": shipping_id,
         "name": shipping_zone.name,
-        "removeWarehouses": [warehouse_id],
+        "removeHotels": [hotel_id],
     }
     response = staff_api_client.post_graphql(
         UPDATE_SHIPPING_ZONE_QUERY, variables, permissions=[permission_manage_shipping]
@@ -680,23 +680,23 @@ def test_update_shipping_zone_remove_warehouses(
     data = content["data"]["shippingZoneUpdate"]
     assert not data["shippingErrors"]
     data = content["data"]["shippingZoneUpdate"]["shippingZone"]
-    assert not data["warehouses"]
+    assert not data["hotels"]
 
 
-def test_update_shipping_zone_remove_one_warehouses(
+def test_update_shipping_zone_remove_one_hotels(
     staff_api_client,
     shipping_zone,
-    warehouses,
+    hotels,
     permission_manage_shipping,
 ):
-    for warehouse in warehouses:
-        warehouse.shipping_zones.add(shipping_zone)
+    for hotel in hotels:
+        hotel.shipping_zones.add(shipping_zone)
     shipping_id = graphene.Node.to_global_id("ShippingZone", shipping_zone.pk)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouses[0].pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotels[0].pk)
     variables = {
         "id": shipping_id,
         "name": shipping_zone.name,
-        "removeWarehouses": [warehouse_id],
+        "removeHotels": [hotel_id],
     }
     response = staff_api_client.post_graphql(
         UPDATE_SHIPPING_ZONE_QUERY, variables, permissions=[permission_manage_shipping]
@@ -705,29 +705,29 @@ def test_update_shipping_zone_remove_one_warehouses(
     data = content["data"]["shippingZoneUpdate"]
     assert not data["shippingErrors"]
     data = content["data"]["shippingZoneUpdate"]["shippingZone"]
-    assert data["warehouses"][0]["name"] == warehouses[1].name
-    assert len(data["warehouses"]) == 1
+    assert data["hotels"][0]["name"] == hotels[1].name
+    assert len(data["hotels"]) == 1
 
 
-def test_update_shipping_zone_replace_warehouse(
+def test_update_shipping_zone_replace_hotel(
     staff_api_client,
     shipping_zone,
-    warehouse,
-    warehouse_no_shipping_zone,
+    hotel,
+    hotel_no_shipping_zone,
     permission_manage_shipping,
 ):
-    assert shipping_zone.warehouses.first() == warehouse
+    assert shipping_zone.hotels.first() == hotel
 
     shipping_id = graphene.Node.to_global_id("ShippingZone", shipping_zone.pk)
-    add_warehouse_id = graphene.Node.to_global_id(
-        "Warehouse", warehouse_no_shipping_zone.pk
+    add_hotel_id = graphene.Node.to_global_id(
+        "Hotel", hotel_no_shipping_zone.pk
     )
-    remove_warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    remove_hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "id": shipping_id,
         "name": shipping_zone.name,
-        "addWarehouses": [add_warehouse_id],
-        "removeWarehouses": [remove_warehouse_id],
+        "addHotels": [add_hotel_id],
+        "removeHotels": [remove_hotel_id],
     }
     response = staff_api_client.post_graphql(
         UPDATE_SHIPPING_ZONE_QUERY, variables, permissions=[permission_manage_shipping]
@@ -736,23 +736,23 @@ def test_update_shipping_zone_replace_warehouse(
     data = content["data"]["shippingZoneUpdate"]
     assert not data["shippingErrors"]
     data = content["data"]["shippingZoneUpdate"]["shippingZone"]
-    assert data["warehouses"][0]["name"] == warehouse_no_shipping_zone.name
-    assert len(data["warehouses"]) == 1
+    assert data["hotels"][0]["name"] == hotel_no_shipping_zone.name
+    assert len(data["hotels"]) == 1
 
 
-def test_update_shipping_zone_same_warehouse_id_in_add_and_remove(
+def test_update_shipping_zone_same_hotel_id_in_add_and_remove(
     staff_api_client,
     shipping_zone,
-    warehouse,
+    hotel,
     permission_manage_shipping,
 ):
     shipping_id = graphene.Node.to_global_id("ShippingZone", shipping_zone.pk)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "id": shipping_id,
         "name": shipping_zone.name,
-        "addWarehouses": [warehouse_id],
-        "removeWarehouses": [warehouse_id],
+        "addHotels": [hotel_id],
+        "removeHotels": [hotel_id],
     }
     response = staff_api_client.post_graphql(
         UPDATE_SHIPPING_ZONE_QUERY, variables, permissions=[permission_manage_shipping]
@@ -760,12 +760,12 @@ def test_update_shipping_zone_same_warehouse_id_in_add_and_remove(
     content = get_graphql_content(response)
     data = content["data"]["shippingZoneUpdate"]
     assert data["shippingErrors"]
-    assert data["shippingErrors"][0]["field"] == "removeWarehouses"
+    assert data["shippingErrors"][0]["field"] == "removeHotels"
     assert (
         data["shippingErrors"][0]["code"]
         == ShippingErrorCode.DUPLICATED_INPUT_ITEM.name
     )
-    assert data["shippingErrors"][0]["warehouses"][0] == warehouse_id
+    assert data["shippingErrors"][0]["hotels"][0] == hotel_id
 
 
 def test_delete_shipping_zone(
@@ -1416,11 +1416,11 @@ def test_delete_shipping_method(
         shipping_method.refresh_from_db()
 
 
-EXCLUDE_PRODUCTS_MUTATION = """
-    mutation shippingPriceRemoveProductFromExclude(
-        $id: ID!, $input:ShippingPriceExcludeProductsInput!
+EXCLUDE_ROOMS_MUTATION = """
+    mutation shippingPriceRemoveRoomFromExclude(
+        $id: ID!, $input:ShippingPriceExcludeRoomsInput!
         ) {
-        shippingPriceExcludeProducts(
+        shippingPriceExcludeRooms(
             id: $id
             input: $input) {
             shippingErrors {
@@ -1429,7 +1429,7 @@ EXCLUDE_PRODUCTS_MUTATION = """
             }
             shippingMethod {
                 id
-                excludedProducts(first:10){
+                excludedRooms(first:10){
                    totalCount
                    edges{
                      node{
@@ -1444,11 +1444,11 @@ EXCLUDE_PRODUCTS_MUTATION = """
 
 
 @pytest.mark.parametrize("requestor", ["staff", "app"])
-def test_exclude_products_for_shipping_method_only_products(
+def test_exclude_rooms_for_shipping_method_only_rooms(
     requestor,
     app_api_client,
     shipping_method,
-    product_list,
+    room_list,
     staff_api_client,
     permission_manage_shipping,
 ):
@@ -1456,26 +1456,26 @@ def test_exclude_products_for_shipping_method_only_products(
     shipping_method_id = graphene.Node.to_global_id(
         "ShippingMethod", shipping_method.pk
     )
-    product_ids = [graphene.Node.to_global_id("Product", p.pk) for p in product_list]
-    variables = {"id": shipping_method_id, "input": {"products": product_ids}}
+    room_ids = [graphene.Node.to_global_id("Room", p.pk) for p in room_list]
+    variables = {"id": shipping_method_id, "input": {"rooms": room_ids}}
     response = api.post_graphql(
-        EXCLUDE_PRODUCTS_MUTATION, variables, permissions=[permission_manage_shipping]
+        EXCLUDE_ROOMS_MUTATION, variables, permissions=[permission_manage_shipping]
     )
     content = get_graphql_content(response)
-    shipping_method = content["data"]["shippingPriceExcludeProducts"]["shippingMethod"]
-    excluded_products = shipping_method["excludedProducts"]
-    total_count = excluded_products["totalCount"]
-    excluded_product_ids = {p["node"]["id"] for p in excluded_products["edges"]}
-    assert len(product_ids) == total_count
-    assert excluded_product_ids == set(product_ids)
+    shipping_method = content["data"]["shippingPriceExcludeRooms"]["shippingMethod"]
+    excluded_rooms = shipping_method["excludedRooms"]
+    total_count = excluded_rooms["totalCount"]
+    excluded_room_ids = {p["node"]["id"] for p in excluded_rooms["edges"]}
+    assert len(room_ids) == total_count
+    assert excluded_room_ids == set(room_ids)
 
 
 @pytest.mark.parametrize("requestor", ["staff", "app"])
-def test_exclude_products_for_shipping_method_already_has_excluded_products(
+def test_exclude_rooms_for_shipping_method_already_has_excluded_rooms(
     requestor,
     shipping_method,
-    product_list,
-    product,
+    room_list,
+    room,
     staff_api_client,
     permission_manage_shipping,
     app_api_client,
@@ -1484,37 +1484,37 @@ def test_exclude_products_for_shipping_method_already_has_excluded_products(
     shipping_method_id = graphene.Node.to_global_id(
         "ShippingMethod", shipping_method.pk
     )
-    shipping_method.excluded_products.add(product, product_list[0])
-    product_ids = [graphene.Node.to_global_id("Product", p.pk) for p in product_list]
-    variables = {"id": shipping_method_id, "input": {"products": product_ids}}
+    shipping_method.excluded_rooms.add(room, room_list[0])
+    room_ids = [graphene.Node.to_global_id("Room", p.pk) for p in room_list]
+    variables = {"id": shipping_method_id, "input": {"rooms": room_ids}}
     response = api.post_graphql(
-        EXCLUDE_PRODUCTS_MUTATION, variables, permissions=[permission_manage_shipping]
+        EXCLUDE_ROOMS_MUTATION, variables, permissions=[permission_manage_shipping]
     )
     content = get_graphql_content(response)
-    shipping_method = content["data"]["shippingPriceExcludeProducts"]["shippingMethod"]
-    excluded_products = shipping_method["excludedProducts"]
-    total_count = excluded_products["totalCount"]
-    expected_product_ids = product_ids
-    expected_product_ids.append(graphene.Node.to_global_id("Product", product.pk))
-    excluded_product_ids = {p["node"]["id"] for p in excluded_products["edges"]}
-    assert len(expected_product_ids) == total_count
-    assert excluded_product_ids == set(expected_product_ids)
+    shipping_method = content["data"]["shippingPriceExcludeRooms"]["shippingMethod"]
+    excluded_rooms = shipping_method["excludedRooms"]
+    total_count = excluded_rooms["totalCount"]
+    expected_room_ids = room_ids
+    expected_room_ids.append(graphene.Node.to_global_id("Room", room.pk))
+    excluded_room_ids = {p["node"]["id"] for p in excluded_rooms["edges"]}
+    assert len(expected_room_ids) == total_count
+    assert excluded_room_ids == set(expected_room_ids)
 
 
-REMOVE_PRODUCTS_FROM_EXCLUDED_PRODUCTS_MUTATION = """
-    mutation shippingPriceRemoveProductFromExclude(
-        $id: ID!, $products: [ID]!
+REMOVE_ROOMS_FROM_EXCLUDED_ROOMS_MUTATION = """
+    mutation shippingPriceRemoveRoomFromExclude(
+        $id: ID!, $rooms: [ID]!
         ) {
-        shippingPriceRemoveProductFromExclude(
+        shippingPriceRemoveRoomFromExclude(
             id: $id
-            products: $products) {
+            rooms: $rooms) {
             shippingErrors {
                 field
                 code
             }
             shippingMethod {
                 id
-                excludedProducts(first:10){
+                excludedRooms(first:10){
                    totalCount
                    edges{
                      node{
@@ -1529,10 +1529,10 @@ REMOVE_PRODUCTS_FROM_EXCLUDED_PRODUCTS_MUTATION = """
 
 
 @pytest.mark.parametrize("requestor", ["staff", "app"])
-def test_remove_products_from_excluded_products_for_shipping_method_delete_all_products(
+def test_remove_rooms_from_excluded_rooms_for_shipping_method_delete_all_rooms(
     requestor,
     shipping_method,
-    product_list,
+    room_list,
     staff_api_client,
     permission_manage_shipping,
     app_api_client,
@@ -1541,63 +1541,63 @@ def test_remove_products_from_excluded_products_for_shipping_method_delete_all_p
     shipping_method_id = graphene.Node.to_global_id(
         "ShippingMethod", shipping_method.pk
     )
-    shipping_method.excluded_products.set(product_list)
+    shipping_method.excluded_rooms.set(room_list)
 
-    product_ids = [graphene.Node.to_global_id("Product", p.pk) for p in product_list]
-    variables = {"id": shipping_method_id, "products": product_ids}
+    room_ids = [graphene.Node.to_global_id("Room", p.pk) for p in room_list]
+    variables = {"id": shipping_method_id, "rooms": room_ids}
     response = api.post_graphql(
-        REMOVE_PRODUCTS_FROM_EXCLUDED_PRODUCTS_MUTATION,
+        REMOVE_ROOMS_FROM_EXCLUDED_ROOMS_MUTATION,
         variables,
         permissions=[permission_manage_shipping],
     )
 
     content = get_graphql_content(response)
-    shipping_method = content["data"]["shippingPriceRemoveProductFromExclude"][
+    shipping_method = content["data"]["shippingPriceRemoveRoomFromExclude"][
         "shippingMethod"
     ]
-    excluded_products = shipping_method["excludedProducts"]
-    total_count = excluded_products["totalCount"]
-    excluded_product_ids = {p["node"]["id"] for p in excluded_products["edges"]}
+    excluded_rooms = shipping_method["excludedRooms"]
+    total_count = excluded_rooms["totalCount"]
+    excluded_room_ids = {p["node"]["id"] for p in excluded_rooms["edges"]}
     assert total_count == 0
-    assert len(excluded_product_ids) == 0
+    assert len(excluded_room_ids) == 0
 
 
 @pytest.mark.parametrize("requestor", ["staff", "app"])
-def test_remove_products_from_excluded_products_for_shipping_method(
+def test_remove_rooms_from_excluded_rooms_for_shipping_method(
     requestor,
     shipping_method,
-    product_list,
+    room_list,
     staff_api_client,
     permission_manage_shipping,
-    product,
+    room,
     app_api_client,
 ):
     api = staff_api_client if requestor == "staff" else app_api_client
     shipping_method_id = graphene.Node.to_global_id(
         "ShippingMethod", shipping_method.pk
     )
-    shipping_method.excluded_products.set(product_list)
-    shipping_method.excluded_products.add(product)
+    shipping_method.excluded_rooms.set(room_list)
+    shipping_method.excluded_rooms.add(room)
 
-    product_ids = [
-        graphene.Node.to_global_id("Product", product.pk),
+    room_ids = [
+        graphene.Node.to_global_id("Room", room.pk),
     ]
-    variables = {"id": shipping_method_id, "products": product_ids}
+    variables = {"id": shipping_method_id, "rooms": room_ids}
     response = api.post_graphql(
-        REMOVE_PRODUCTS_FROM_EXCLUDED_PRODUCTS_MUTATION,
+        REMOVE_ROOMS_FROM_EXCLUDED_ROOMS_MUTATION,
         variables,
         permissions=[permission_manage_shipping],
     )
 
     content = get_graphql_content(response)
-    shipping_method = content["data"]["shippingPriceRemoveProductFromExclude"][
+    shipping_method = content["data"]["shippingPriceRemoveRoomFromExclude"][
         "shippingMethod"
     ]
-    excluded_products = shipping_method["excludedProducts"]
-    total_count = excluded_products["totalCount"]
-    expected_product_ids = {
-        graphene.Node.to_global_id("Product", p.pk) for p in product_list
+    excluded_rooms = shipping_method["excludedRooms"]
+    total_count = excluded_rooms["totalCount"]
+    expected_room_ids = {
+        graphene.Node.to_global_id("Room", p.pk) for p in room_list
     }
-    excluded_product_ids = {p["node"]["id"] for p in excluded_products["edges"]}
-    assert total_count == len(expected_product_ids)
-    assert excluded_product_ids == expected_product_ids
+    excluded_room_ids = {p["node"]["id"] for p in excluded_rooms["edges"]}
+    assert total_count == len(expected_room_ids)
+    assert excluded_room_ids == expected_room_ids

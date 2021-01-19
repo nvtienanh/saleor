@@ -21,8 +21,8 @@ def test_get_order_payloads(order_with_lines):
     for i, line in enumerate(order):
         item = data[i + 1]
         assert item["ti"] == order.pk
-        assert item["in"] == line.variant.display_product()
-        assert item["ic"] == line.product_sku
+        assert item["in"] == line.variant.display_room()
+        assert item["ic"] == line.room_sku
         assert item["iq"] == str(int(line.quantity))
         assert item["cu"] == line.unit_price.currency
         assert Decimal(item["ip"]) == line.unit_price.gross.amount

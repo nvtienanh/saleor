@@ -19,10 +19,10 @@ def assing_permissions(apps, schema_editor):
         full_access.permissions.add(manage_channels)
 
 
-def get_default_currency(Checkout, Order, Product, ShippingMethod, Voucher):
-    latest_product = Product.objects.order_by("-pk").first()
-    if latest_product:
-        return latest_product.currency
+def get_default_currency(Checkout, Order, Room, ShippingMethod, Voucher):
+    latest_room = Room.objects.order_by("-pk").first()
+    if latest_room:
+        return latest_room.currency
     latest_voucher = Voucher.objects.order_by("-pk").first()
     if latest_voucher:
         return latest_voucher.currency
@@ -42,12 +42,12 @@ def create_default_channel(apps, schema_editor):
     Channel = apps.get_model("channel", "Channel")
     Checkout = apps.get_model("checkout", "Checkout")
     Order = apps.get_model("order", "Order")
-    Product = apps.get_model("product", "Product")
+    Room = apps.get_model("room", "Room")
     ShippingMethod = apps.get_model("shipping", "ShippingMethod")
     Voucher = apps.get_model("discount", "Voucher")
 
     default_currency = get_default_currency(
-        Checkout, Order, Product, ShippingMethod, Voucher
+        Checkout, Order, Room, ShippingMethod, Voucher
     )
     if default_currency:
         Channel.objects.create(
@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
         ("checkout", "0025_auto_20200221_0257"),
         ("discount", "0019_auto_20200217_0350"),
         ("order", "0084_auto_20200522_0522"),
-        ("product", "0118_populate_product_variant_price"),
+        ("room", "0118_populate_room_variant_price"),
         ("shipping", "0018_default_zones_countries"),
     ]
 

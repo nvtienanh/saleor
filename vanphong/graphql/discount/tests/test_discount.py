@@ -59,9 +59,9 @@ def query_sales_with_filter():
 def test_voucher_query(
     staff_api_client,
     voucher,
-    product,
+    room,
     permission_manage_discounts,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     query = """
     query vouchers {
@@ -76,7 +76,7 @@ def test_voucher_query(
                     startDate
                     discountValueType
                     applyOncePerCustomer
-                    products(first: 1) {
+                    rooms(first: 1) {
                         edges {
                             node {
                                 name
@@ -100,10 +100,10 @@ def test_voucher_query(
         }
     }
     """
-    voucher.products.add(product)
+    voucher.rooms.add(room)
 
     response = staff_api_client.post_graphql(
-        query, permissions=[permission_manage_discounts, permission_manage_products]
+        query, permissions=[permission_manage_discounts, permission_manage_rooms]
     )
 
     content = get_graphql_content(response)
@@ -113,7 +113,7 @@ def test_voucher_query(
     assert data["name"] == voucher.name
     assert data["code"] == voucher.code
     assert data["usageLimit"] == voucher.usage_limit
-    assert data["products"]["edges"][0]["node"]["name"] == product.name
+    assert data["rooms"]["edges"][0]["node"]["name"] == room.name
 
     assert data["applyOncePerCustomer"] == voucher.apply_once_per_customer
     assert data["used"] == voucher.used
@@ -136,10 +136,10 @@ def test_voucher_query_with_channel_slug(
     voucher_with_many_channels_and_countries,
     permission_manage_discounts,
     channel_USD,
-    product,
+    room,
 ):
     voucher = voucher_with_many_channels_and_countries
-    voucher.products.add(product)
+    voucher.rooms.add(room)
 
     query = """
     query vouchers($channel: String) {
@@ -154,7 +154,7 @@ def test_voucher_query_with_channel_slug(
                     startDate
                     discountValueType
                     applyOncePerCustomer
-                    products(first: 1) {
+                    rooms(first: 1) {
                         edges {
                             node {
                                 name
@@ -189,7 +189,7 @@ def test_voucher_query_with_channel_slug(
     assert data["type"] == voucher.type.upper()
     assert data["name"] == voucher.name
     assert data["code"] == voucher.code
-    assert data["products"]["edges"][0]["node"]["name"] == product.name
+    assert data["rooms"]["edges"][0]["node"]["name"] == room.name
     assert data["usageLimit"] == voucher.usage_limit
     assert data["applyOncePerCustomer"] == voucher.apply_once_per_customer
     assert data["used"] == voucher.used
@@ -214,7 +214,7 @@ def test_vouchers_query_with_channel_slug(
     voucher_with_many_channels,
     permission_manage_discounts,
     channel_PLN,
-    product,
+    room,
 ):
 
     query = """
@@ -243,7 +243,7 @@ def test_vouchers_query(
     voucher_with_many_channels,
     permission_manage_discounts,
     channel_PLN,
-    product,
+    room,
 ):
 
     query = """
@@ -270,7 +270,7 @@ def test_sale_query(
     sale,
     permission_manage_discounts,
     channel_USD,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     query = """
         query sales {
@@ -278,7 +278,7 @@ def test_sale_query(
                 edges {
                     node {
                         type
-                        products(first: 1) {
+                        rooms(first: 1) {
                             edges {
                                 node {
                                     name
@@ -303,12 +303,12 @@ def test_sale_query(
         }
         """
     response = staff_api_client.post_graphql(
-        query, permissions=[permission_manage_discounts, permission_manage_products]
+        query, permissions=[permission_manage_discounts, permission_manage_rooms]
     )
     channel_listing_usd = sale.channel_listings.get(channel=channel_USD)
     content = get_graphql_content(response)
     data = content["data"]["sales"]["edges"][0]["node"]
-    assert data["products"]["edges"][0]["node"]["name"] == sale.products.first().name
+    assert data["rooms"]["edges"][0]["node"]["name"] == sale.rooms.first().name
 
     assert data["type"] == sale.type.upper()
     assert data["name"] == sale.name
@@ -328,7 +328,7 @@ def test_sale_query_with_channel_slug(
                 edges {
                     node {
                         type
-                        products(first: 1) {
+                        rooms(first: 1) {
                             edges {
                                 node {
                                     name
@@ -357,7 +357,7 @@ def test_sale_query_with_channel_slug(
 
     assert data["type"] == sale.type.upper()
     assert data["name"] == sale.name
-    assert data["products"]["edges"][0]["node"]["name"] == sale.products.first().name
+    assert data["rooms"]["edges"][0]["node"]["name"] == sale.rooms.first().name
     assert data["discountValue"] == channel_listing.discount_value
     assert data["channelListings"][0]["discountValue"] == channel_listing.discount_value
     assert data["startDate"] == sale.start_date.isoformat()
@@ -369,7 +369,7 @@ def test_sales_query(
     sale,
     permission_manage_discounts,
     channel_USD,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     query = """
         query sales {
@@ -383,7 +383,7 @@ def test_sales_query(
         }
         """
     response = staff_api_client.post_graphql(
-        query, permissions=[permission_manage_discounts, permission_manage_products]
+        query, permissions=[permission_manage_discounts, permission_manage_rooms]
     )
     content = get_graphql_content(response)
 
@@ -396,7 +396,7 @@ def test_sales_query_with_channel_slug(
     sale,
     permission_manage_discounts,
     channel_PLN,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     query = """
         query sales($channel: String) {
@@ -413,7 +413,7 @@ def test_sales_query_with_channel_slug(
     response = staff_api_client.post_graphql(
         query,
         variables,
-        permissions=[permission_manage_discounts, permission_manage_products],
+        permissions=[permission_manage_discounts, permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
@@ -647,7 +647,7 @@ def test_voucher_add_catalogues(
     staff_api_client,
     voucher,
     category,
-    product,
+    room,
     collection,
     permission_manage_discounts,
 ):
@@ -665,13 +665,13 @@ def test_voucher_add_catalogues(
             }
         }
     """
-    product_id = graphene.Node.to_global_id("Product", product.id)
+    room_id = graphene.Node.to_global_id("Room", room.id)
     collection_id = graphene.Node.to_global_id("Collection", collection.id)
     category_id = graphene.Node.to_global_id("Category", category.id)
     variables = {
         "id": graphene.Node.to_global_id("Voucher", voucher.id),
         "input": {
-            "products": [product_id],
+            "rooms": [room_id],
             "collections": [collection_id],
             "categories": [category_id],
         },
@@ -684,16 +684,16 @@ def test_voucher_add_catalogues(
     data = content["data"]["voucherCataloguesAdd"]
 
     assert not data["discountErrors"]
-    assert product in voucher.products.all()
+    assert room in voucher.rooms.all()
     assert category in voucher.categories.all()
     assert collection in voucher.collections.all()
 
 
-def test_voucher_add_catalogues_with_product_without_variant(
+def test_voucher_add_catalogues_with_room_without_variant(
     staff_api_client,
     voucher,
     category,
-    product,
+    room,
     collection,
     permission_manage_discounts,
 ):
@@ -711,14 +711,14 @@ def test_voucher_add_catalogues_with_product_without_variant(
             }
         }
     """
-    product.variants.all().delete()
-    product_id = graphene.Node.to_global_id("Product", product.id)
+    room.variants.all().delete()
+    room_id = graphene.Node.to_global_id("Room", room.id)
     collection_id = graphene.Node.to_global_id("Collection", collection.id)
     category_id = graphene.Node.to_global_id("Category", category.id)
     variables = {
         "id": graphene.Node.to_global_id("Voucher", voucher.id),
         "input": {
-            "products": [product_id],
+            "rooms": [room_id],
             "collections": [collection_id],
             "categories": [category_id],
         },
@@ -730,19 +730,19 @@ def test_voucher_add_catalogues_with_product_without_variant(
     content = get_graphql_content(response)
     error = content["data"]["voucherCataloguesAdd"]["discountErrors"][0]
 
-    assert error["code"] == DiscountErrorCode.CANNOT_MANAGE_PRODUCT_WITHOUT_VARIANT.name
-    assert error["message"] == "Cannot manage products without variants."
+    assert error["code"] == DiscountErrorCode.CANNOT_MANAGE_ROOM_WITHOUT_VARIANT.name
+    assert error["message"] == "Cannot manage rooms without variants."
 
 
 def test_voucher_remove_catalogues(
     staff_api_client,
     voucher,
     category,
-    product,
+    room,
     collection,
     permission_manage_discounts,
 ):
-    voucher.products.add(product)
+    voucher.rooms.add(room)
     voucher.collections.add(collection)
     voucher.categories.add(category)
 
@@ -760,13 +760,13 @@ def test_voucher_remove_catalogues(
             }
         }
     """
-    product_id = graphene.Node.to_global_id("Product", product.id)
+    room_id = graphene.Node.to_global_id("Room", room.id)
     collection_id = graphene.Node.to_global_id("Collection", collection.id)
     category_id = graphene.Node.to_global_id("Category", category.id)
     variables = {
         "id": graphene.Node.to_global_id("Voucher", voucher.id),
         "input": {
-            "products": [product_id],
+            "rooms": [room_id],
             "collections": [collection_id],
             "categories": [category_id],
         },
@@ -779,7 +779,7 @@ def test_voucher_remove_catalogues(
     data = content["data"]["voucherCataloguesRemove"]
 
     assert not data["discountErrors"]
-    assert product not in voucher.products.all()
+    assert room not in voucher.rooms.all()
     assert category not in voucher.categories.all()
     assert collection not in voucher.collections.all()
 
@@ -803,7 +803,7 @@ def test_voucher_add_no_catalogues(
     """
     variables = {
         "id": graphene.Node.to_global_id("Voucher", voucher.id),
-        "input": {"products": [], "collections": [], "categories": []},
+        "input": {"rooms": [], "collections": [], "categories": []},
     }
     response = staff_api_client.post_graphql(
         query, variables, permissions=[permission_manage_discounts]
@@ -812,7 +812,7 @@ def test_voucher_add_no_catalogues(
     data = content["data"]["voucherCataloguesAdd"]
 
     assert not data["discountErrors"]
-    assert not voucher.products.exists()
+    assert not voucher.rooms.exists()
     assert not voucher.categories.exists()
     assert not voucher.collections.exists()
 
@@ -821,11 +821,11 @@ def test_voucher_remove_no_catalogues(
     staff_api_client,
     voucher,
     category,
-    product,
+    room,
     collection,
     permission_manage_discounts,
 ):
-    voucher.products.add(product)
+    voucher.rooms.add(room)
     voucher.collections.add(collection)
     voucher.categories.add(category)
 
@@ -845,7 +845,7 @@ def test_voucher_remove_no_catalogues(
     """
     variables = {
         "id": graphene.Node.to_global_id("Voucher", voucher.id),
-        "input": {"products": [], "collections": [], "categories": []},
+        "input": {"rooms": [], "collections": [], "categories": []},
     }
     response = staff_api_client.post_graphql(
         query, variables, permissions=[permission_manage_discounts]
@@ -854,7 +854,7 @@ def test_voucher_remove_no_catalogues(
     data = content["data"]["voucherCataloguesAdd"]
 
     assert not data["discountErrors"]
-    assert voucher.products.exists()
+    assert voucher.rooms.exists()
     assert voucher.categories.exists()
     assert voucher.collections.exists()
 
@@ -962,7 +962,7 @@ def test_sale_delete_mutation(staff_api_client, sale, permission_manage_discount
 
 
 def test_sale_add_catalogues(
-    staff_api_client, sale, category, product, collection, permission_manage_discounts
+    staff_api_client, sale, category, room, collection, permission_manage_discounts
 ):
     query = """
         mutation saleCataloguesAdd($id: ID!, $input: CatalogueInput!) {
@@ -978,13 +978,13 @@ def test_sale_add_catalogues(
             }
         }
     """
-    product_id = graphene.Node.to_global_id("Product", product.id)
+    room_id = graphene.Node.to_global_id("Room", room.id)
     collection_id = graphene.Node.to_global_id("Collection", collection.id)
     category_id = graphene.Node.to_global_id("Category", category.id)
     variables = {
         "id": graphene.Node.to_global_id("Sale", sale.id),
         "input": {
-            "products": [product_id],
+            "rooms": [room_id],
             "collections": [collection_id],
             "categories": [category_id],
         },
@@ -997,13 +997,13 @@ def test_sale_add_catalogues(
     data = content["data"]["saleCataloguesAdd"]
 
     assert not data["discountErrors"]
-    assert product in sale.products.all()
+    assert room in sale.rooms.all()
     assert category in sale.categories.all()
     assert collection in sale.collections.all()
 
 
-def test_sale_add_catalogues_with_product_without_variants(
-    staff_api_client, sale, category, product, collection, permission_manage_discounts
+def test_sale_add_catalogues_with_room_without_variants(
+    staff_api_client, sale, category, room, collection, permission_manage_discounts
 ):
     query = """
         mutation saleCataloguesAdd($id: ID!, $input: CatalogueInput!) {
@@ -1019,14 +1019,14 @@ def test_sale_add_catalogues_with_product_without_variants(
             }
         }
     """
-    product.variants.all().delete()
-    product_id = graphene.Node.to_global_id("Product", product.id)
+    room.variants.all().delete()
+    room_id = graphene.Node.to_global_id("Room", room.id)
     collection_id = graphene.Node.to_global_id("Collection", collection.id)
     category_id = graphene.Node.to_global_id("Category", category.id)
     variables = {
         "id": graphene.Node.to_global_id("Sale", sale.id),
         "input": {
-            "products": [product_id],
+            "rooms": [room_id],
             "collections": [collection_id],
             "categories": [category_id],
         },
@@ -1038,14 +1038,14 @@ def test_sale_add_catalogues_with_product_without_variants(
     content = get_graphql_content(response)
     error = content["data"]["saleCataloguesAdd"]["discountErrors"][0]
 
-    assert error["code"] == DiscountErrorCode.CANNOT_MANAGE_PRODUCT_WITHOUT_VARIANT.name
-    assert error["message"] == "Cannot manage products without variants."
+    assert error["code"] == DiscountErrorCode.CANNOT_MANAGE_ROOM_WITHOUT_VARIANT.name
+    assert error["message"] == "Cannot manage rooms without variants."
 
 
 def test_sale_remove_catalogues(
-    staff_api_client, sale, category, product, collection, permission_manage_discounts
+    staff_api_client, sale, category, room, collection, permission_manage_discounts
 ):
-    sale.products.add(product)
+    sale.rooms.add(room)
     sale.collections.add(collection)
     sale.categories.add(category)
 
@@ -1063,13 +1063,13 @@ def test_sale_remove_catalogues(
             }
         }
     """
-    product_id = graphene.Node.to_global_id("Product", product.id)
+    room_id = graphene.Node.to_global_id("Room", room.id)
     collection_id = graphene.Node.to_global_id("Collection", collection.id)
     category_id = graphene.Node.to_global_id("Category", category.id)
     variables = {
         "id": graphene.Node.to_global_id("Sale", sale.id),
         "input": {
-            "products": [product_id],
+            "rooms": [room_id],
             "collections": [collection_id],
             "categories": [category_id],
         },
@@ -1082,7 +1082,7 @@ def test_sale_remove_catalogues(
     data = content["data"]["saleCataloguesRemove"]
 
     assert not data["discountErrors"]
-    assert product not in sale.products.all()
+    assert room not in sale.rooms.all()
     assert category not in sale.categories.all()
     assert collection not in sale.collections.all()
 
@@ -1106,7 +1106,7 @@ def test_sale_add_no_catalogues(
     """
     variables = {
         "id": graphene.Node.to_global_id("Sale", new_sale.id),
-        "input": {"products": [], "collections": [], "categories": []},
+        "input": {"rooms": [], "collections": [], "categories": []},
     }
     response = staff_api_client.post_graphql(
         query, variables, permissions=[permission_manage_discounts]
@@ -1115,15 +1115,15 @@ def test_sale_add_no_catalogues(
     data = content["data"]["saleCataloguesAdd"]
 
     assert not data["discountErrors"]
-    assert not new_sale.products.exists()
+    assert not new_sale.rooms.exists()
     assert not new_sale.categories.exists()
     assert not new_sale.collections.exists()
 
 
 def test_sale_remove_no_catalogues(
-    staff_api_client, sale, category, product, collection, permission_manage_discounts
+    staff_api_client, sale, category, room, collection, permission_manage_discounts
 ):
-    sale.products.add(product)
+    sale.rooms.add(room)
     sale.collections.add(collection)
     sale.categories.add(category)
 
@@ -1143,7 +1143,7 @@ def test_sale_remove_no_catalogues(
     """
     variables = {
         "id": graphene.Node.to_global_id("Sale", sale.id),
-        "input": {"products": [], "collections": [], "categories": []},
+        "input": {"rooms": [], "collections": [], "categories": []},
     }
     response = staff_api_client.post_graphql(
         query, variables, permissions=[permission_manage_discounts]
@@ -1152,7 +1152,7 @@ def test_sale_remove_no_catalogues(
     data = content["data"]["saleCataloguesAdd"]
 
     assert not data["discountErrors"]
-    assert sale.products.exists()
+    assert sale.rooms.exists()
     assert sale.categories.exists()
     assert sale.collections.exists()
 

@@ -8,47 +8,47 @@ from prices import Money
 
 from ...account import events as account_events
 from ...attribute.utils import associate_attribute_values_to_instance
-from ...graphql.product.filters import filter_products_by_attributes_values
+from ...graphql.room.filters import filter_rooms_by_attributes_values
 from .. import models
 from ..models import DigitalContentUrl
-from ..thumbnails import create_product_thumbnails
+from ..thumbnails import create_room_thumbnails
 from ..utils.costs import get_margin_for_variant_channel_listing
-from ..utils.digital_products import increment_download_count
+from ..utils.digital_rooms import increment_download_count
 
 
 def test_filtering_by_attribute(
     db, color_attribute, size_attribute, category, channel_USD, settings
 ):
-    product_type_a = models.ProductType.objects.create(
+    room_type_a = models.RoomType.objects.create(
         name="New class", slug="new-class1", has_variants=True
     )
-    product_type_a.product_attributes.add(color_attribute)
-    product_type_b = models.ProductType.objects.create(
+    room_type_a.room_attributes.add(color_attribute)
+    room_type_b = models.RoomType.objects.create(
         name="New class", slug="new-class2", has_variants=True
     )
-    product_type_b.variant_attributes.add(color_attribute)
-    product_a = models.Product.objects.create(
-        name="Test product a",
-        slug="test-product-a",
-        product_type=product_type_a,
+    room_type_b.variant_attributes.add(color_attribute)
+    room_a = models.Room.objects.create(
+        name="Test room a",
+        slug="test-room-a",
+        room_type=room_type_a,
         category=category,
     )
-    variant_a = models.ProductVariant.objects.create(product=product_a, sku="1234")
-    models.ProductVariantChannelListing.objects.create(
+    variant_a = models.RoomVariant.objects.create(room=room_a, sku="1234")
+    models.RoomVariantChannelListing.objects.create(
         variant=variant_a,
         channel=channel_USD,
         cost_price_amount=Decimal(1),
         price_amount=Decimal(10),
         currency=channel_USD.currency_code,
     )
-    product_b = models.Product.objects.create(
-        name="Test product b",
-        slug="test-product-b",
-        product_type=product_type_b,
+    room_b = models.Room.objects.create(
+        name="Test room b",
+        slug="test-room-b",
+        room_type=room_type_b,
         category=category,
     )
-    variant_b = models.ProductVariant.objects.create(product=product_b, sku="12345")
-    models.ProductVariantChannelListing.objects.create(
+    variant_b = models.RoomVariant.objects.create(room=room_b, sku="12345")
+    models.RoomVariantChannelListing.objects.create(
         variant=variant_b,
         channel=channel_USD,
         cost_price_amount=Decimal(1),
@@ -58,45 +58,45 @@ def test_filtering_by_attribute(
     color = color_attribute.values.first()
     color_2 = color_attribute.values.last()
 
-    # Associate color to a product and a variant
-    associate_attribute_values_to_instance(product_a, color_attribute, color)
+    # Associate color to a room and a variant
+    associate_attribute_values_to_instance(room_a, color_attribute, color)
     associate_attribute_values_to_instance(variant_b, color_attribute, color)
 
-    product_qs = models.Product.objects.all().values_list("pk", flat=True)
+    room_qs = models.Room.objects.all().values_list("pk", flat=True)
 
     filters = {color_attribute.pk: [color.pk]}
-    filtered = filter_products_by_attributes_values(product_qs, filters)
-    assert product_a.pk in list(filtered)
-    assert product_b.pk in list(filtered)
+    filtered = filter_rooms_by_attributes_values(room_qs, filters)
+    assert room_a.pk in list(filtered)
+    assert room_b.pk in list(filtered)
 
-    associate_attribute_values_to_instance(product_a, color_attribute, color_2)
+    associate_attribute_values_to_instance(room_a, color_attribute, color_2)
 
     filters = {color_attribute.pk: [color.pk]}
-    filtered = filter_products_by_attributes_values(product_qs, filters)
+    filtered = filter_rooms_by_attributes_values(room_qs, filters)
 
-    assert product_a.pk not in list(filtered)
-    assert product_b.pk in list(filtered)
+    assert room_a.pk not in list(filtered)
+    assert room_b.pk in list(filtered)
 
     filters = {color_attribute.pk: [color_2.pk]}
-    filtered = filter_products_by_attributes_values(product_qs, filters)
-    assert product_a.pk in list(filtered)
-    assert product_b.pk not in list(filtered)
+    filtered = filter_rooms_by_attributes_values(room_qs, filters)
+    assert room_a.pk in list(filtered)
+    assert room_b.pk not in list(filtered)
 
     # Filter by multiple values, should trigger a OR condition
     filters = {color_attribute.pk: [color.pk, color_2.pk]}
-    filtered = filter_products_by_attributes_values(product_qs, filters)
-    assert product_a.pk in list(filtered)
-    assert product_b.pk in list(filtered)
+    filtered = filter_rooms_by_attributes_values(room_qs, filters)
+    assert room_a.pk in list(filtered)
+    assert room_b.pk in list(filtered)
 
-    # Associate additional attribute to a product
+    # Associate additional attribute to a room
     size = size_attribute.values.first()
-    product_type_a.product_attributes.add(size_attribute)
-    associate_attribute_values_to_instance(product_a, size_attribute, size)
+    room_type_a.room_attributes.add(size_attribute)
+    associate_attribute_values_to_instance(room_a, size_attribute, size)
 
     # Filter by multiple attributes
     filters = {color_attribute.pk: [color_2.pk], size_attribute.pk: [size.pk]}
-    filtered = filter_products_by_attributes_values(product_qs, filters)
-    assert product_a.pk in list(filtered)
+    filtered = filter_rooms_by_attributes_values(room_qs, filters)
+    assert room_a.pk in list(filtered)
 
 
 @pytest.mark.parametrize(
@@ -104,7 +104,7 @@ def test_filtering_by_attribute(
     [(Decimal("10.00"), True), (Decimal("15.0"), False)],
 )
 def test_get_price(
-    product_type,
+    room_type,
     category,
     sale,
     expected_price,
@@ -113,44 +113,44 @@ def test_get_price(
     discount_info,
     channel_USD,
 ):
-    product = models.Product.objects.create(
-        product_type=product_type,
+    room = models.Room.objects.create(
+        room_type=room_type,
         category=category,
     )
-    variant = product.variants.create()
-    channel_listing = models.ProductVariantChannelListing.objects.create(
+    variant = room.variants.create()
+    channel_listing = models.RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(15),
         currency=channel_USD.currency_code,
     )
     discounts = [discount_info] if include_discounts else []
-    price = variant.get_price(product, [], channel_USD, channel_listing, discounts)
+    price = variant.get_price(room, [], channel_USD, channel_listing, discounts)
     assert price.amount == expected_price
 
 
-def test_product_get_price_do_not_charge_taxes(
-    product_type, category, discount_info, channel_USD
+def test_room_get_price_do_not_charge_taxes(
+    room_type, category, discount_info, channel_USD
 ):
-    product = models.Product.objects.create(
-        product_type=product_type,
+    room = models.Room.objects.create(
+        room_type=room_type,
         category=category,
         charge_taxes=False,
     )
-    variant = product.variants.create()
-    channel_listing = models.ProductVariantChannelListing.objects.create(
+    variant = room.variants.create()
+    channel_listing = models.RoomVariantChannelListing.objects.create(
         variant=variant,
         channel=channel_USD,
         price_amount=Decimal(10),
         currency=channel_USD.currency_code,
     )
     price = variant.get_price(
-        product, [], channel_USD, channel_listing, discounts=[discount_info]
+        room, [], channel_USD, channel_listing, discounts=[discount_info]
     )
     assert price == Money("5.00", "USD")
 
 
-def test_digital_product_view(client, digital_content_url):
+def test_digital_room_view(client, digital_content_url):
     """Ensure a user (anonymous or not) can download a non-expired digital good
     using its associated token and that all associated events
     are correctly generated."""
@@ -164,14 +164,14 @@ def test_digital_product_view(client, digital_content_url):
     assert response["content-disposition"] == 'attachment; filename="%s"' % filename
 
     # Ensure an event was generated from downloading a digital good.
-    # The validity of this event is checked in test_digital_product_increment_download
+    # The validity of this event is checked in test_digital_room_increment_download
     assert account_events.CustomerEvent.objects.exists()
 
 
 @pytest.mark.parametrize(
     "is_user_null, is_line_null", ((False, False), (False, True), (True, True))
 )
-def test_digital_product_increment_download(
+def test_digital_room_increment_download(
     client,
     customer_user,
     digital_content_url: DigitalContentUrl,
@@ -209,7 +209,7 @@ def test_digital_product_increment_download(
     assert download_event.parameters == {"order_line_pk": digital_content_url.line.pk}
 
 
-def test_digital_product_view_url_downloaded_max_times(client, digital_content):
+def test_digital_room_view_url_downloaded_max_times(client, digital_content):
     digital_content.use_default_settings = False
     digital_content.max_downloads = 1
     digital_content.save()
@@ -226,7 +226,7 @@ def test_digital_product_view_url_downloaded_max_times(client, digital_content):
     assert response.status_code == 404
 
 
-def test_digital_product_view_url_expired(client, digital_content):
+def test_digital_room_view_url_expired(client, digital_content):
     digital_content.use_default_settings = False
     digital_content.url_valid_days = 10
     digital_content.save()
@@ -254,14 +254,14 @@ def test_costs_get_margin_for_variant_channel_listing(
     assert not get_margin_for_variant_channel_listing(variant_channel_listing)
 
 
-@patch("saleor.product.thumbnails.create_thumbnails")
-def test_create_product_thumbnails(mock_create_thumbnails, product_with_image):
-    product_image = product_with_image.images.first()
-    create_product_thumbnails(product_image.pk)
+@patch("saleor.room.thumbnails.create_thumbnails")
+def test_create_room_thumbnails(mock_create_thumbnails, room_with_image):
+    room_image = room_with_image.images.first()
+    create_room_thumbnails(room_image.pk)
     assert mock_create_thumbnails.call_count == 1
     args, kwargs = mock_create_thumbnails.call_args
     assert kwargs == {
-        "model": models.ProductImage,
-        "pk": product_image.pk,
-        "size_set": "products",
+        "model": models.RoomImage,
+        "pk": room_image.pk,
+        "size_set": "rooms",
     }

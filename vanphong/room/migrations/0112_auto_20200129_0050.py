@@ -7,27 +7,27 @@ from django.db.models.functions import Lower
 from django.utils.text import slugify
 
 
-def create_unique_slugs_for_producttypes(apps, schema_editor):
-    ProductType = apps.get_model("product", "ProductType")
+def create_unique_slugs_for_roomtypes(apps, schema_editor):
+    RoomType = apps.get_model("room", "RoomType")
 
-    product_types = (
-        ProductType.objects.filter(slug__isnull=True).order_by(Lower("name")).iterator()
+    room_types = (
+        RoomType.objects.filter(slug__isnull=True).order_by(Lower("name")).iterator()
     )
     previous_char = ""
     slug_values = []
-    for product_type in product_types:
-        first_char = product_type.name[0].lower()
+    for room_type in room_types:
+        first_char = room_type.name[0].lower()
         if first_char != previous_char:
             previous_char = first_char
             slug_values = list(
-                ProductType.objects.filter(slug__istartswith=first_char).values_list(
+                RoomType.objects.filter(slug__istartswith=first_char).values_list(
                     "slug", flat=True
                 )
             )
 
-        slug = generate_unique_slug(product_type, slug_values)
-        product_type.slug = slug
-        product_type.save(update_fields=["slug"])
+        slug = generate_unique_slug(room_type, slug_values)
+        room_type.slug = slug
+        room_type.save(update_fields=["slug"])
         slug_values.append(slug)
 
 
@@ -48,7 +48,7 @@ def update_non_unique_slugs_for_models(apps, schema_editor):
     models_to_update = ["Category", "Collection"]
 
     for model in models_to_update:
-        Model = apps.get_model("product", model)
+        Model = apps.get_model("room", model)
 
         duplicated_slugs = (
             Model.objects.all()
@@ -85,7 +85,7 @@ def update_slug_to_unique_value(slug_value, slugs_counter):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0111_auto_20191209_0437"),
+        ("room", "0111_auto_20191209_0437"),
     ]
 
     operations = [
@@ -93,7 +93,7 @@ class Migration(migrations.Migration):
             update_non_unique_slugs_for_models, migrations.RunPython.noop
         ),
         migrations.AddField(
-            model_name="producttype",
+            model_name="roomtype",
             name="slug",
             field=models.SlugField(null=True, max_length=128, unique=True),
             preserve_default=False,
@@ -109,10 +109,10 @@ class Migration(migrations.Migration):
             field=models.SlugField(max_length=128, unique=True),
         ),
         migrations.RunPython(
-            create_unique_slugs_for_producttypes, migrations.RunPython.noop
+            create_unique_slugs_for_roomtypes, migrations.RunPython.noop
         ),
         migrations.AlterField(
-            model_name="producttype",
+            model_name="roomtype",
             name="slug",
             field=models.SlugField(max_length=128, unique=True),
         ),

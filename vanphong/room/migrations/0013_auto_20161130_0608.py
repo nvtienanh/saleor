@@ -8,6 +8,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0012_auto_20160218_0812")]
+    dependencies = [("room", "0012_auto_20160218_0812")]
 
     operations = [HStoreExtension()]

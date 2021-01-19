@@ -8,7 +8,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0012_auto_20160218_0812"),
+        ("room", "0012_auto_20160218_0812"),
         ("checkout", "0001_initial"),
     ]
 
@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameField(
-            model_name="cartline", old_name="product", new_name="variant"
+            model_name="cartline", old_name="room", new_name="variant"
         ),
         migrations.AlterUniqueTogether(
             name="cartline", unique_together=set([("cart", "variant", "data")])

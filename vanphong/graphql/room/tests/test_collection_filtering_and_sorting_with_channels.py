@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from ....product.models import Collection, CollectionChannelListing
+from ....room.models import Collection, CollectionChannelListing
 from ...channel.filters import LACK_OF_CHANNEL_IN_FILTERING_MSG
 from ...channel.sorters import LACK_OF_CHANNEL_IN_SORTING_MSG
 from ...tests.utils import assert_graphql_error_with_message, get_graphql_content
@@ -100,7 +100,7 @@ QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING = """
 def test_collections_with_sorting_and_without_channel(
     sort_by,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     # given
     variables = {"sortBy": sort_by}
@@ -109,7 +109,7 @@ def test_collections_with_sorting_and_without_channel(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -142,7 +142,7 @@ def test_collections_with_sorting_and_channel_USD(
     sort_by,
     collections_order,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     collections_for_sorting_with_channels,
     channel_USD,
 ):
@@ -154,7 +154,7 @@ def test_collections_with_sorting_and_channel_USD(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -190,7 +190,7 @@ def test_collections_with_sorting_and_channel_PLN(
     sort_by,
     collections_order,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     collections_for_sorting_with_channels,
     channel_PLN,
 ):
@@ -202,7 +202,7 @@ def test_collections_with_sorting_and_channel_PLN(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -224,7 +224,7 @@ def test_collections_with_sorting_and_channel_PLN(
 def test_collections_with_sorting_and_not_existing_channel_asc(
     sort_by,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     collections_for_sorting_with_channels,
     channel_USD,
 ):
@@ -243,7 +243,7 @@ def test_collections_with_sorting_and_not_existing_channel_asc(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -264,7 +264,7 @@ def test_collections_with_sorting_and_not_existing_channel_asc(
 def test_collections_with_sorting_and_not_existing_channel_desc(
     sort_by,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     collections_for_sorting_with_channels,
     channel_USD,
 ):
@@ -283,7 +283,7 @@ def test_collections_with_sorting_and_not_existing_channel_desc(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -295,7 +295,7 @@ def test_collections_with_sorting_and_not_existing_channel_desc(
 
 
 def test_collections_with_filtering_without_channel(
-    staff_api_client, permission_manage_products
+    staff_api_client, permission_manage_rooms
 ):
     # given
     variables = {"filter": {"published": "PUBLISHED"}}
@@ -304,7 +304,7 @@ def test_collections_with_filtering_without_channel(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -320,7 +320,7 @@ def test_collections_with_filtering_with_channel_USD(
     filter_by,
     collections_count,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     collections_for_sorting_with_channels,
     channel_USD,
 ):
@@ -332,7 +332,7 @@ def test_collections_with_filtering_with_channel_USD(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -350,7 +350,7 @@ def test_collections_with_filtering_with_channel_PLN(
     filter_by,
     collections_count,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     collections_for_sorting_with_channels,
     channel_PLN,
 ):
@@ -362,7 +362,7 @@ def test_collections_with_filtering_with_channel_PLN(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 
@@ -379,7 +379,7 @@ def test_collections_with_filtering_with_channel_PLN(
 def test_collections_with_filtering_and_not_existing_channel(
     filter_by,
     staff_api_client,
-    permission_manage_products,
+    permission_manage_rooms,
     collections_for_sorting_with_channels,
     channel_USD,
 ):
@@ -391,7 +391,7 @@ def test_collections_with_filtering_and_not_existing_channel(
     response = staff_api_client.post_graphql(
         QUERY_COLLECTIONS_WITH_SORTING_AND_FILTERING,
         variables,
-        permissions=[permission_manage_products],
+        permissions=[permission_manage_rooms],
         check_no_permissions=False,
     )
 

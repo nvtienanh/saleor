@@ -7,25 +7,25 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0032_auto_20170216_0438")]
+    dependencies = [("room", "0032_auto_20170216_0438")]
 
     operations = [
         migrations.AlterModelOptions(
-            name="productattribute",
+            name="roomattribute",
             options={
                 "ordering": ("slug",),
-                "verbose_name": "product attribute",
-                "verbose_name_plural": "product attributes",
+                "verbose_name": "room attribute",
+                "verbose_name_plural": "room attributes",
             },
         ),
         migrations.RenameField(
             model_name="attributechoicevalue", old_name="display", new_name="name"
         ),
         migrations.RenameField(
-            model_name="productattribute", old_name="name", new_name="slug"
+            model_name="roomattribute", old_name="name", new_name="slug"
         ),
         migrations.RenameField(
-            model_name="productattribute", old_name="display", new_name="name"
+            model_name="roomattribute", old_name="display", new_name="name"
         ),
         migrations.AlterUniqueTogether(
             name="attributechoicevalue", unique_together=set([("name", "attribute")])

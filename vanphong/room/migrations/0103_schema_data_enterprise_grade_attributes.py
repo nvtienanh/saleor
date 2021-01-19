@@ -25,25 +25,25 @@ def validate_attribute_json(value):
                 )
 
 
-def migrate_fk_to_m2m(product_type_related_field):
-    """Migrate product types' foreign key to a M2M relation."""
+def migrate_fk_to_m2m(room_type_related_field):
+    """Migrate room types' foreign key to a M2M relation."""
 
     def make_migration(apps, schema):
-        ProductType = apps.get_model("product", "ProductType")
+        RoomType = apps.get_model("room", "RoomType")
 
-        for product_type in ProductType.objects.all():
-            m2m_field = getattr(product_type, product_type_related_field)
+        for room_type in RoomType.objects.all():
+            m2m_field = getattr(room_type, room_type_related_field)
             attributes_to_migrate = getattr(
-                product_type, f"{product_type_related_field}_old"
+                room_type, f"{room_type_related_field}_old"
             )
             for attr in attributes_to_migrate.all():
-                if product_type not in m2m_field.all():
+                if room_type not in m2m_field.all():
                     m2m_field.add(attr)
 
     return make_migration
 
 
-PRODUCT_TYPE_UNIQUE_SLUGS = [
+ROOM_TYPE_UNIQUE_SLUGS = [
     migrations.AlterField(
         model_name="attribute", name="slug", field=models.SlugField(unique=True)
     )
@@ -60,14 +60,14 @@ ATTRIBUTE_NEW_FIELDS = [
         ),
     ),
     migrations.AlterField(
-        model_name="product",
+        model_name="room",
         name="attributes",
         field=jsonb.JSONField(
             blank=True, default=dict, validators=[validate_attribute_json]
         ),
     ),
     migrations.AlterField(
-        model_name="productvariant",
+        model_name="roomvariant",
         name="attributes",
         field=jsonb.JSONField(
             blank=True, default=dict, validators=[validate_attribute_json]
@@ -108,7 +108,7 @@ ATTRIBUTE_NEW_FIELDS = [
     ),
 ]
 
-PRODUCT_TYPE_NEW_RELATION = [
+ROOM_TYPE_NEW_RELATION = [
     migrations.AddField(
         model_name="attribute",
         name="is_variant_only",
@@ -116,39 +116,39 @@ PRODUCT_TYPE_NEW_RELATION = [
     ),
     # Rename the foreign keys to backup them before overriding and processing them
     migrations.RenameField(
-        model_name="attribute", old_name="product_type", new_name="product_type_old"
+        model_name="attribute", old_name="room_type", new_name="room_type_old"
     ),
     migrations.RenameField(
         model_name="attribute",
-        old_name="product_variant_type",
-        new_name="product_variant_type_old",
+        old_name="room_variant_type",
+        new_name="room_variant_type_old",
     ),
     # Rename related names of foreign keys
     migrations.AlterField(
         model_name="attribute",
-        name="product_type_old",
+        name="room_type_old",
         field=models.ForeignKey(
             blank=True,
             null=True,
             on_delete=models.deletion.CASCADE,
-            related_name="product_attributes_old",
-            to="product.ProductType",
+            related_name="room_attributes_old",
+            to="room.RoomType",
         ),
     ),
     migrations.AlterField(
         model_name="attribute",
-        name="product_variant_type_old",
+        name="room_variant_type_old",
         field=models.ForeignKey(
             blank=True,
             null=True,
             on_delete=models.deletion.CASCADE,
             related_name="variant_attributes_old",
-            to="product.ProductType",
+            to="room.RoomType",
         ),
     ),
     # Add the M2M new fields
     migrations.CreateModel(
-        name="AttributeProduct",
+        name="AttributeRoom",
         fields=[
             (
                 "id",
@@ -163,16 +163,16 @@ PRODUCT_TYPE_NEW_RELATION = [
                 "attribute",
                 models.ForeignKey(
                     on_delete=models.deletion.CASCADE,
-                    related_name="attributeproduct",
-                    to="product.Attribute",
+                    related_name="attributeroom",
+                    to="room.Attribute",
                 ),
             ),
             (
-                "product_type",
+                "room_type",
                 models.ForeignKey(
                     on_delete=models.deletion.CASCADE,
-                    related_name="attributeproduct",
-                    to="product.ProductType",
+                    related_name="attributeroom",
+                    to="room.RoomType",
                 ),
             ),
             (
@@ -199,15 +199,15 @@ PRODUCT_TYPE_NEW_RELATION = [
                 models.ForeignKey(
                     on_delete=models.deletion.CASCADE,
                     related_name="attributevariant",
-                    to="product.Attribute",
+                    to="room.Attribute",
                 ),
             ),
             (
-                "product_type",
+                "room_type",
                 models.ForeignKey(
                     on_delete=models.deletion.CASCADE,
                     related_name="attributevariant",
-                    to="product.ProductType",
+                    to="room.RoomType",
                 ),
             ),
             (
@@ -219,30 +219,30 @@ PRODUCT_TYPE_NEW_RELATION = [
     ),
     migrations.AddField(
         model_name="attribute",
-        name="product_types",
+        name="room_types",
         field=models.ManyToManyField(
             blank=True,
-            related_name="product_attributes",
-            through="product.AttributeProduct",
-            to="product.ProductType",
+            related_name="room_attributes",
+            through="room.AttributeRoom",
+            to="room.RoomType",
         ),
     ),
     migrations.AddField(
         model_name="attribute",
-        name="product_variant_types",
+        name="room_variant_types",
         field=models.ManyToManyField(
             blank=True,
             related_name="variant_attributes",
-            through="product.AttributeVariant",
-            to="product.ProductType",
+            through="room.AttributeVariant",
+            to="room.RoomType",
         ),
     ),
     # Migrate the foreign keys into M2M
-    migrations.RunPython(migrate_fk_to_m2m("product_attributes")),
+    migrations.RunPython(migrate_fk_to_m2m("room_attributes")),
     migrations.RunPython(migrate_fk_to_m2m("variant_attributes")),
     # Remove the migrated foreign keys
-    migrations.RemoveField(model_name="attribute", name="product_variant_type_old"),
-    migrations.RemoveField(model_name="attribute", name="product_type_old"),
+    migrations.RemoveField(model_name="attribute", name="room_variant_type_old"),
+    migrations.RemoveField(model_name="attribute", name="room_type_old"),
 ]
 
 SORTING_NULLABLE_LOGIC = [
@@ -252,12 +252,12 @@ SORTING_NULLABLE_LOGIC = [
         field=models.IntegerField(db_index=True, editable=False, null=True),
     ),
     migrations.AlterField(
-        model_name="collectionproduct",
+        model_name="collectionroom",
         name="sort_order",
         field=models.IntegerField(db_index=True, editable=False, null=True),
     ),
     migrations.AlterField(
-        model_name="productimage",
+        model_name="roomimage",
         name="sort_order",
         field=models.IntegerField(db_index=True, editable=False, null=True),
     ),
@@ -268,25 +268,25 @@ SORTING_NULLABLE_LOGIC = [
 
 M2M_UNIQUE_TOGETHER = [
     migrations.AlterUniqueTogether(
-        name="attributeproduct", unique_together={("attribute", "product_type")}
+        name="attributeroom", unique_together={("attribute", "room_type")}
     ),
     migrations.AlterUniqueTogether(
-        name="attributevariant", unique_together={("attribute", "product_type")}
+        name="attributevariant", unique_together={("attribute", "room_type")}
     ),
     migrations.AlterUniqueTogether(
-        name="collectionproduct", unique_together={("collection", "product")}
+        name="collectionroom", unique_together={("collection", "room")}
     ),
 ]
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0102_migrate_data_enterprise_grade_attributes")]
+    dependencies = [("room", "0102_migrate_data_enterprise_grade_attributes")]
 
     operations = (
-        PRODUCT_TYPE_UNIQUE_SLUGS
+        ROOM_TYPE_UNIQUE_SLUGS
         + ATTRIBUTE_NEW_FIELDS
-        + PRODUCT_TYPE_NEW_RELATION
+        + ROOM_TYPE_NEW_RELATION
         + SORTING_NULLABLE_LOGIC
         + M2M_UNIQUE_TOGETHER
     )

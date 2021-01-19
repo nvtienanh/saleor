@@ -1,7 +1,7 @@
 import graphene
 from graphene import relay
 
-from ....product import models
+from ....room import models
 from ...core.connection import CountableDjangoObjectType
 from ...core.scalars import UUID
 from ...meta.types import ObjectWithMetadata
@@ -35,7 +35,7 @@ class DigitalContent(CountableDjangoObjectType):
             "automatic_fulfillment",
             "content_file",
             "max_downloads",
-            "product_variant",
+            "room_variant",
             "url_valid_days",
             "urls",
             "use_default_settings",

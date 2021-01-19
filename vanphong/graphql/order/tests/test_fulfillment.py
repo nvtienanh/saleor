@@ -12,7 +12,7 @@ from ....order.error_codes import OrderErrorCode
 from ....order.events import OrderEvents
 from ....order.models import FulfillmentStatus
 from ....payment import ChargeStatus
-from ....warehouse.models import Allocation, Stock
+from ....hotel.models import Allocation, Stock
 from ...tests.utils import assert_no_permission, get_graphql_content
 
 ORDER_FULFILL_QUERY = """
@@ -27,7 +27,7 @@ mutation fulfillOrder(
             field
             code
             message
-            warehouse
+            hotel
             orderLine
         }
     }
@@ -42,7 +42,7 @@ def test_order_fulfill(
     staff_user,
     order_with_lines,
     permission_manage_orders,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     query = ORDER_FULFILL_QUERY
@@ -50,7 +50,7 @@ def test_order_fulfill(
     order_line, order_line2 = order.lines.all()
     order_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
     order_line2_id = graphene.Node.to_global_id("OrderLine", order_line2.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "order": order_id,
         "input": {
@@ -58,11 +58,11 @@ def test_order_fulfill(
             "lines": [
                 {
                     "orderLineId": order_line_id,
-                    "stocks": [{"quantity": 3, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 3, "hotel": hotel_id}],
                 },
                 {
                     "orderLineId": order_line2_id,
-                    "stocks": [{"quantity": 2, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 2, "hotel": hotel_id}],
                 },
             ],
         },
@@ -74,14 +74,14 @@ def test_order_fulfill(
     data = content["data"]["orderFulfill"]
     assert not data["orderErrors"]
 
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [
             {"order_line": order_line, "quantity": 3},
             {"order_line": order_line2, "quantity": 2},
         ]
     }
     mock_create_fulfillments.assert_called_once_with(
-        staff_user, order, fulfillment_lines_for_warehouses, True
+        staff_user, order, fulfillment_lines_for_hotels, True
     )
 
 
@@ -92,7 +92,7 @@ def test_order_fulfill_as_app(
     staff_user,
     order_with_lines,
     permission_manage_orders,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     query = ORDER_FULFILL_QUERY
@@ -100,7 +100,7 @@ def test_order_fulfill_as_app(
     order_line, order_line2 = order.lines.all()
     order_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
     order_line2_id = graphene.Node.to_global_id("OrderLine", order_line2.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "order": order_id,
         "input": {
@@ -108,11 +108,11 @@ def test_order_fulfill_as_app(
             "lines": [
                 {
                     "orderLineId": order_line_id,
-                    "stocks": [{"quantity": 3, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 3, "hotel": hotel_id}],
                 },
                 {
                     "orderLineId": order_line2_id,
-                    "stocks": [{"quantity": 2, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 2, "hotel": hotel_id}],
                 },
             ],
         },
@@ -124,37 +124,37 @@ def test_order_fulfill_as_app(
     data = content["data"]["orderFulfill"]
     assert not data["orderErrors"]
 
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [
             {"order_line": order_line, "quantity": 3},
             {"order_line": order_line2, "quantity": 2},
         ]
     }
     mock_create_fulfillments.assert_called_once_with(
-        AnonymousUser(), order, fulfillment_lines_for_warehouses, True
+        AnonymousUser(), order, fulfillment_lines_for_hotels, True
     )
 
 
 @patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments")
-def test_order_fulfill_many_warehouses(
+def test_order_fulfill_many_hotels(
     mock_create_fulfillments,
     staff_api_client,
     staff_user,
     order_with_lines,
     permission_manage_orders,
-    warehouses,
+    hotels,
 ):
     order = order_with_lines
     query = ORDER_FULFILL_QUERY
 
-    warehouse1, warehouse2 = warehouses
+    hotel1, hotel2 = hotels
     order_line1, order_line2 = order.lines.all()
 
     order_id = graphene.Node.to_global_id("Order", order.id)
     order_line1_id = graphene.Node.to_global_id("OrderLine", order_line1.id)
     order_line2_id = graphene.Node.to_global_id("OrderLine", order_line2.id)
-    warehouse1_id = graphene.Node.to_global_id("Warehouse", warehouse1.pk)
-    warehouse2_id = graphene.Node.to_global_id("Warehouse", warehouse2.pk)
+    hotel1_id = graphene.Node.to_global_id("Hotel", hotel1.pk)
+    hotel2_id = graphene.Node.to_global_id("Hotel", hotel2.pk)
 
     variables = {
         "order": order_id,
@@ -162,13 +162,13 @@ def test_order_fulfill_many_warehouses(
             "lines": [
                 {
                     "orderLineId": order_line1_id,
-                    "stocks": [{"quantity": 3, "warehouse": warehouse1_id}],
+                    "stocks": [{"quantity": 3, "hotel": hotel1_id}],
                 },
                 {
                     "orderLineId": order_line2_id,
                     "stocks": [
-                        {"quantity": 1, "warehouse": warehouse1_id},
-                        {"quantity": 1, "warehouse": warehouse2_id},
+                        {"quantity": 1, "hotel": hotel1_id},
+                        {"quantity": 1, "hotel": hotel2_id},
                     ],
                 },
             ],
@@ -181,16 +181,16 @@ def test_order_fulfill_many_warehouses(
     data = content["data"]["orderFulfill"]
     assert not data["orderErrors"]
 
-    fulfillment_lines_for_warehouses = {
-        str(warehouse1.pk): [
+    fulfillment_lines_for_hotels = {
+        str(hotel1.pk): [
             {"order_line": order_line1, "quantity": 3},
             {"order_line": order_line2, "quantity": 1},
         ],
-        str(warehouse2.pk): [{"order_line": order_line2, "quantity": 1}],
+        str(hotel2.pk): [{"order_line": order_line2, "quantity": 1}],
     }
 
     mock_create_fulfillments.assert_called_once_with(
-        staff_user, order, fulfillment_lines_for_warehouses, True
+        staff_user, order, fulfillment_lines_for_hotels, True
     )
 
 
@@ -201,14 +201,14 @@ def test_order_fulfill_without_notification(
     staff_user,
     order_with_lines,
     permission_manage_orders,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     query = ORDER_FULFILL_QUERY
     order_id = graphene.Node.to_global_id("Order", order.id)
     order_line = order.lines.first()
     order_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "order": order_id,
         "input": {
@@ -216,7 +216,7 @@ def test_order_fulfill_without_notification(
             "lines": [
                 {
                     "orderLineId": order_line_id,
-                    "stocks": [{"quantity": 1, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 1, "hotel": hotel_id}],
                 }
             ],
         },
@@ -228,11 +228,11 @@ def test_order_fulfill_without_notification(
     data = content["data"]["orderFulfill"]
     assert not data["orderErrors"]
 
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [{"order_line": order_line, "quantity": 1}]
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [{"order_line": order_line, "quantity": 1}]
     }
     mock_create_fulfillments.assert_called_once_with(
-        staff_user, order, fulfillment_lines_for_warehouses, False
+        staff_user, order, fulfillment_lines_for_hotels, False
     )
 
 
@@ -243,8 +243,8 @@ def test_order_fulfill_lines_with_empty_quantity(
     staff_user,
     order_with_lines,
     permission_manage_orders,
-    warehouse,
-    warehouse_no_shipping_zone,
+    hotel,
+    hotel_no_shipping_zone,
 ):
     order = order_with_lines
     query = ORDER_FULFILL_QUERY
@@ -252,9 +252,9 @@ def test_order_fulfill_lines_with_empty_quantity(
     order_line, order_line2 = order.lines.all()
     order_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
     order_line2_id = graphene.Node.to_global_id("OrderLine", order_line2.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
-    warehouse2_id = graphene.Node.to_global_id(
-        "Warehouse", warehouse_no_shipping_zone.pk
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
+    hotel2_id = graphene.Node.to_global_id(
+        "Hotel", hotel_no_shipping_zone.pk
     )
     assert not order.events.all()
     variables = {
@@ -264,15 +264,15 @@ def test_order_fulfill_lines_with_empty_quantity(
                 {
                     "orderLineId": order_line_id,
                     "stocks": [
-                        {"quantity": 0, "warehouse": warehouse_id},
-                        {"quantity": 0, "warehouse": warehouse2_id},
+                        {"quantity": 0, "hotel": hotel_id},
+                        {"quantity": 0, "hotel": hotel2_id},
                     ],
                 },
                 {
                     "orderLineId": order_line2_id,
                     "stocks": [
-                        {"quantity": 2, "warehouse": warehouse_id},
-                        {"quantity": 0, "warehouse": warehouse2_id},
+                        {"quantity": 2, "hotel": hotel_id},
+                        {"quantity": 0, "hotel": hotel2_id},
                     ],
                 },
             ],
@@ -286,11 +286,11 @@ def test_order_fulfill_lines_with_empty_quantity(
     data = content["data"]["orderFulfill"]
     assert not data["orderErrors"]
 
-    fulfillment_lines_for_warehouses = {
-        str(warehouse.pk): [{"order_line": order_line2, "quantity": 2}]
+    fulfillment_lines_for_hotels = {
+        str(hotel.pk): [{"order_line": order_line2, "quantity": 2}]
     }
     mock_create_fulfillments.assert_called_once_with(
-        staff_user, order, fulfillment_lines_for_warehouses, True
+        staff_user, order, fulfillment_lines_for_hotels, True
     )
 
 
@@ -301,20 +301,20 @@ def test_order_fulfill_zero_quantity(
     staff_user,
     order_with_lines,
     permission_manage_orders,
-    warehouse,
+    hotel,
 ):
     query = ORDER_FULFILL_QUERY
     order_id = graphene.Node.to_global_id("Order", order_with_lines.id)
     order_line = order_with_lines.lines.first()
     order_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "order": order_id,
         "input": {
             "lines": [
                 {
                     "orderLineId": order_line_id,
-                    "stocks": [{"quantity": 0, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 0, "hotel": hotel_id}],
                 }
             ]
         },
@@ -329,7 +329,7 @@ def test_order_fulfill_zero_quantity(
     assert error["field"] == "lines"
     assert error["code"] == OrderErrorCode.ZERO_QUANTITY.name
     assert not error["orderLine"]
-    assert not error["warehouse"]
+    assert not error["hotel"]
 
     mock_create_fulfillments.assert_not_called()
 
@@ -341,20 +341,20 @@ def test_order_fulfill_fulfilled_order(
     staff_user,
     order_with_lines,
     permission_manage_orders,
-    warehouse,
+    hotel,
 ):
     query = ORDER_FULFILL_QUERY
     order_id = graphene.Node.to_global_id("Order", order_with_lines.id)
     order_line = order_with_lines.lines.first()
     order_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "order": order_id,
         "input": {
             "lines": [
                 {
                     "orderLineId": order_line_id,
-                    "stocks": [{"quantity": 100, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 100, "hotel": hotel_id}],
                 }
             ]
         },
@@ -369,26 +369,26 @@ def test_order_fulfill_fulfilled_order(
     assert error["field"] == "orderLineId"
     assert error["code"] == OrderErrorCode.FULFILL_ORDER_LINE.name
     assert error["orderLine"] == order_line_id
-    assert not error["warehouse"]
+    assert not error["hotel"]
 
     mock_create_fulfillments.assert_not_called()
 
 
 @patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments", autospec=True)
-def test_order_fulfill_warehouse_with_insufficient_stock_exception(
+def test_order_fulfill_hotel_with_insufficient_stock_exception(
     mock_create_fulfillments,
     staff_api_client,
     order_with_lines,
     permission_manage_orders,
-    warehouse_no_shipping_zone,
+    hotel_no_shipping_zone,
 ):
     order = order_with_lines
     query = ORDER_FULFILL_QUERY
     order_id = graphene.Node.to_global_id("Order", order.id)
     order_line = order.lines.first()
     order_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
-    warehouse_id = graphene.Node.to_global_id(
-        "Warehouse", warehouse_no_shipping_zone.pk
+    hotel_id = graphene.Node.to_global_id(
+        "Hotel", hotel_no_shipping_zone.pk
     )
     variables = {
         "order": order_id,
@@ -396,7 +396,7 @@ def test_order_fulfill_warehouse_with_insufficient_stock_exception(
             "lines": [
                 {
                     "orderLineId": order_line_id,
-                    "stocks": [{"quantity": 1, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 1, "hotel": hotel_id}],
                 }
             ]
         },
@@ -404,7 +404,7 @@ def test_order_fulfill_warehouse_with_insufficient_stock_exception(
 
     error_context = {
         "order_line": order_line,
-        "warehouse_pk": str(warehouse_no_shipping_zone.pk),
+        "hotel_pk": str(hotel_no_shipping_zone.pk),
     }
     mock_create_fulfillments.side_effect = InsufficientStock(
         order_line.variant, error_context
@@ -420,23 +420,23 @@ def test_order_fulfill_warehouse_with_insufficient_stock_exception(
     assert error["field"] == "stocks"
     assert error["code"] == OrderErrorCode.INSUFFICIENT_STOCK.name
     assert error["orderLine"] == order_line_id
-    assert error["warehouse"] == warehouse_id
+    assert error["hotel"] == hotel_id
 
 
 @patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments", autospec=True)
-def test_order_fulfill_warehouse_duplicated_warehouse_id(
+def test_order_fulfill_hotel_duplicated_hotel_id(
     mock_create_fulfillments,
     staff_api_client,
     order_with_lines,
     permission_manage_orders,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     query = ORDER_FULFILL_QUERY
     order_id = graphene.Node.to_global_id("Order", order.id)
     order_line = order.lines.first()
     order_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "order": order_id,
         "input": {
@@ -444,8 +444,8 @@ def test_order_fulfill_warehouse_duplicated_warehouse_id(
                 {
                     "orderLineId": order_line_id,
                     "stocks": [
-                        {"quantity": 1, "warehouse": warehouse_id},
-                        {"quantity": 2, "warehouse": warehouse_id},
+                        {"quantity": 1, "hotel": hotel_id},
+                        {"quantity": 2, "hotel": hotel_id},
                     ],
                 }
             ]
@@ -458,38 +458,38 @@ def test_order_fulfill_warehouse_duplicated_warehouse_id(
     data = content["data"]["orderFulfill"]
     assert data["orderErrors"]
     error = data["orderErrors"][0]
-    assert error["field"] == "warehouse"
+    assert error["field"] == "hotel"
     assert error["code"] == OrderErrorCode.DUPLICATED_INPUT_ITEM.name
     assert not error["orderLine"]
-    assert error["warehouse"] == warehouse_id
+    assert error["hotel"] == hotel_id
     mock_create_fulfillments.assert_not_called()
 
 
 @patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments", autospec=True)
-def test_order_fulfill_warehouse_duplicated_order_line_id(
+def test_order_fulfill_hotel_duplicated_order_line_id(
     mock_create_fulfillments,
     staff_api_client,
     order_with_lines,
     permission_manage_orders,
-    warehouse,
+    hotel,
 ):
     order = order_with_lines
     query = ORDER_FULFILL_QUERY
     order_id = graphene.Node.to_global_id("Order", order.id)
     order_line = order.lines.first()
     order_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {
         "order": order_id,
         "input": {
             "lines": [
                 {
                     "orderLineId": order_line_id,
-                    "stocks": [{"quantity": 3, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 3, "hotel": hotel_id}],
                 },
                 {
                     "orderLineId": order_line_id,
-                    "stocks": [{"quantity": 3, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 3, "hotel": hotel_id}],
                 },
             ]
         },
@@ -504,7 +504,7 @@ def test_order_fulfill_warehouse_duplicated_order_line_id(
     assert error["field"] == "orderLineId"
     assert error["code"] == OrderErrorCode.DUPLICATED_INPUT_ITEM.name
     assert error["orderLine"] == order_line_id
-    assert not error["warehouse"]
+    assert not error["hotel"]
     mock_create_fulfillments.assert_not_called()
 
 
@@ -595,8 +595,8 @@ def test_fulfillment_update_tracking_send_notification_false(
 
 
 CANCEL_FULFILLMENT_MUTATION = """
-    mutation cancelFulfillment($id: ID!, $warehouseId: ID!) {
-            orderFulfillmentCancel(id: $id, input: {warehouseId: $warehouseId}) {
+    mutation cancelFulfillment($id: ID!, $hotelId: ID!) {
+            orderFulfillmentCancel(id: $id, input: {hotelId: $hotelId}) {
                     fulfillment {
                         status
                     }
@@ -609,12 +609,12 @@ CANCEL_FULFILLMENT_MUTATION = """
 
 
 def test_cancel_fulfillment(
-    staff_api_client, fulfillment, staff_user, permission_manage_orders, warehouse
+    staff_api_client, fulfillment, staff_user, permission_manage_orders, hotel
 ):
     query = CANCEL_FULFILLMENT_MUTATION
     fulfillment_id = graphene.Node.to_global_id("Fulfillment", fulfillment.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.id)
-    variables = {"id": fulfillment_id, "warehouseId": warehouse_id}
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.id)
+    variables = {"id": fulfillment_id, "hotelId": hotel_id}
     response = staff_api_client.post_graphql(
         query, variables, permissions=[permission_manage_orders]
     )
@@ -630,13 +630,13 @@ def test_cancel_fulfillment(
     assert event_restocked_items.type == (OrderEvents.FULFILLMENT_RESTOCKED_ITEMS)
     assert event_restocked_items.parameters == {
         "quantity": fulfillment.get_total_quantity(),
-        "warehouse": str(warehouse.pk),
+        "hotel": str(hotel.pk),
     }
     assert event_restocked_items.user == staff_user
 
 
-def test_cancel_fulfillment_warehouse_without_stock(
-    order_line, warehouse, staff_api_client, permission_manage_orders, staff_user
+def test_cancel_fulfillment_hotel_without_stock(
+    order_line, hotel, staff_api_client, permission_manage_orders, staff_user
 ):
     query = CANCEL_FULFILLMENT_MUTATION
     order = order_line.order
@@ -646,13 +646,13 @@ def test_cancel_fulfillment_warehouse_without_stock(
     order.save(update_fields=["status"])
 
     assert not Stock.objects.filter(
-        warehouse=warehouse, product_variant=order_line.variant
+        hotel=hotel, room_variant=order_line.variant
     )
     assert not Allocation.objects.filter(order_line=order_line)
 
     fulfillment_id = graphene.Node.to_global_id("Fulfillment", fulfillment.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.id)
-    variables = {"id": fulfillment_id, "warehouseId": warehouse_id}
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.id)
+    variables = {"id": fulfillment_id, "hotelId": hotel_id}
     response = staff_api_client.post_graphql(
         query, variables, permissions=[permission_manage_orders]
     )
@@ -668,12 +668,12 @@ def test_cancel_fulfillment_warehouse_without_stock(
     assert event_restocked_items.type == (OrderEvents.FULFILLMENT_RESTOCKED_ITEMS)
     assert event_restocked_items.parameters == {
         "quantity": fulfillment.get_total_quantity(),
-        "warehouse": str(warehouse.pk),
+        "hotel": str(hotel.pk),
     }
     assert event_restocked_items.user == staff_user
 
     stock = Stock.objects.filter(
-        warehouse=warehouse, product_variant=order_line.variant
+        hotel=hotel, room_variant=order_line.variant
     ).first()
     assert stock.quantity == order_line.quantity
     allocation = order_line.allocations.filter(stock=stock).first()
@@ -686,18 +686,18 @@ def test_create_digital_fulfillment(
     digital_content,
     staff_api_client,
     order_with_lines,
-    warehouse,
+    hotel,
     permission_manage_orders,
 ):
     order = order_with_lines
     query = ORDER_FULFILL_QUERY
     order_id = graphene.Node.to_global_id("Order", order.id)
     order_line = order.lines.first()
-    order_line.variant = digital_content.product_variant
+    order_line.variant = digital_content.room_variant
     order_line.save()
     order_line.allocations.all().delete()
 
-    stock = digital_content.product_variant.stocks.get(warehouse=warehouse)
+    stock = digital_content.room_variant.stocks.get(hotel=hotel)
     Allocation.objects.create(
         order_line=order_line, stock=stock, quantity_allocated=order_line.quantity
     )
@@ -705,7 +705,7 @@ def test_create_digital_fulfillment(
     second_line = order.lines.last()
     first_line_id = graphene.Node.to_global_id("OrderLine", order_line.id)
     second_line_id = graphene.Node.to_global_id("OrderLine", second_line.id)
-    warehouse_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
 
     variables = {
         "order": order_id,
@@ -714,11 +714,11 @@ def test_create_digital_fulfillment(
             "lines": [
                 {
                     "orderLineId": first_line_id,
-                    "stocks": [{"quantity": 1, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 1, "hotel": hotel_id}],
                 },
                 {
                     "orderLineId": second_line_id,
-                    "stocks": [{"quantity": 1, "warehouse": warehouse_id}],
+                    "stocks": [{"quantity": 1, "hotel": hotel_id}],
                 },
             ],
         },
@@ -739,7 +739,7 @@ query fulfillment($id: ID!){
             fulfillmentOrder
             status
             trackingNumber
-            warehouse{
+            hotel{
                 id
             }
             lines{
@@ -757,7 +757,7 @@ query fulfillment($id: ID!){
 def test_fulfillment_query(
     staff_api_client,
     fulfilled_order,
-    warehouse,
+    hotel,
     permission_manage_orders,
 ):
     order = fulfilled_order
@@ -765,7 +765,7 @@ def test_fulfillment_query(
     order_id = graphene.Node.to_global_id("Order", order.pk)
     order_line_1_id = graphene.Node.to_global_id("OrderLine", order_line_1.pk)
     order_line_2_id = graphene.Node.to_global_id("OrderLine", order_line_2.pk)
-    warehose_id = graphene.Node.to_global_id("Warehouse", warehouse.pk)
+    warehose_id = graphene.Node.to_global_id("Hotel", hotel.pk)
     variables = {"id": order_id}
     response = staff_api_client.post_graphql(
         QUERY_FULFILLMENT, variables, permissions=[permission_manage_orders]
@@ -778,7 +778,7 @@ def test_fulfillment_query(
     assert fulfillment_data["fulfillmentOrder"] == 1
     assert fulfillment_data["status"] == FulfillmentStatus.FULFILLED.upper()
     assert fulfillment_data["trackingNumber"] == "123"
-    assert fulfillment_data["warehouse"]["id"] == warehose_id
+    assert fulfillment_data["hotel"]["id"] == warehose_id
     assert len(fulfillment_data["lines"]) == 2
     assert {
         "orderLine": {"id": order_line_1_id},
@@ -797,7 +797,7 @@ query OrderFulfillData($id: ID!) {
         lines {
             variant {
                 stocks {
-                    warehouse {
+                    hotel {
                         id
                     }
                     quantity
@@ -837,10 +837,10 @@ def test_staff_can_query_order_fulfill_data_without_permission(
 
 
 ORDER_FULFILL_REFUND_MUTATION = """
-mutation OrderFulfillmentRefundProducts(
-    $order: ID!, $input: OrderRefundProductsInput!
+mutation OrderFulfillmentRefundRooms(
+    $order: ID!, $input: OrderRefundRoomsInput!
 ) {
-    orderFulfillmentRefundProducts(
+    orderFulfillmentRefundRooms(
         order: $order,
         input: $input
     ) {
@@ -859,7 +859,7 @@ mutation OrderFulfillmentRefundProducts(
             field
             code
             message
-            warehouse
+            hotel
             orderLine
         }
     }
@@ -867,7 +867,7 @@ mutation OrderFulfillmentRefundProducts(
 """
 
 
-def test_fulfillment_refund_products_order_without_payment(
+def test_fulfillment_refund_rooms_order_without_payment(
     staff_api_client, permission_manage_orders, fulfilled_order
 ):
     order_id = graphene.Node.to_global_id("Order", fulfilled_order.pk)
@@ -875,7 +875,7 @@ def test_fulfillment_refund_products_order_without_payment(
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
     assert len(errors) == 1
@@ -885,7 +885,7 @@ def test_fulfillment_refund_products_order_without_payment(
 
 
 @patch("saleor.order.actions.gateway.refund")
-def test_fulfillment_refund_products_amount_and_shipping_costs(
+def test_fulfillment_refund_rooms_amount_and_shipping_costs(
     mocked_refund,
     staff_api_client,
     permission_manage_orders,
@@ -911,7 +911,7 @@ def test_fulfillment_refund_products_amount_and_shipping_costs(
 
 
 @patch("saleor.order.actions.gateway.refund")
-def test_fulfillment_refund_products_order_lines(
+def test_fulfillment_refund_rooms_order_lines(
     mocked_refund,
     staff_api_client,
     permission_manage_orders,
@@ -933,7 +933,7 @@ def test_fulfillment_refund_products_order_lines(
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
     assert not errors
@@ -946,7 +946,7 @@ def test_fulfillment_refund_products_order_lines(
     )
 
 
-def test_fulfillment_refund_products_order_lines_quantity_bigger_than_total(
+def test_fulfillment_refund_rooms_order_lines_quantity_bigger_than_total(
     staff_api_client, permission_manage_orders, order_with_lines, payment_dummy
 ):
     payment_dummy.total = order_with_lines.total_gross_amount
@@ -964,7 +964,7 @@ def test_fulfillment_refund_products_order_lines_quantity_bigger_than_total(
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
 
@@ -974,7 +974,7 @@ def test_fulfillment_refund_products_order_lines_quantity_bigger_than_total(
     assert refund_fulfillment is None
 
 
-def test_fulfillment_refund_products_order_lines_quantity_bigger_than_unfulfilled(
+def test_fulfillment_refund_rooms_order_lines_quantity_bigger_than_unfulfilled(
     staff_api_client, permission_manage_orders, order_with_lines, payment_dummy
 ):
     payment_dummy.total = order_with_lines.total_gross_amount
@@ -995,7 +995,7 @@ def test_fulfillment_refund_products_order_lines_quantity_bigger_than_unfulfille
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
 
@@ -1006,7 +1006,7 @@ def test_fulfillment_refund_products_order_lines_quantity_bigger_than_unfulfille
 
 
 @patch("saleor.order.actions.gateway.refund")
-def test_fulfillment_refund_products_fulfillment_lines(
+def test_fulfillment_refund_rooms_fulfillment_lines(
     mocked_refund,
     staff_api_client,
     permission_manage_orders,
@@ -1037,7 +1037,7 @@ def test_fulfillment_refund_products_fulfillment_lines(
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
 
@@ -1051,7 +1051,7 @@ def test_fulfillment_refund_products_fulfillment_lines(
     )
 
 
-def test_fulfillment_refund_products_fulfillment_lines_quantity_bigger_than_total(
+def test_fulfillment_refund_rooms_fulfillment_lines_quantity_bigger_than_total(
     staff_api_client, permission_manage_orders, fulfilled_order, payment_dummy
 ):
     payment_dummy.total = fulfilled_order.total_gross_amount
@@ -1075,7 +1075,7 @@ def test_fulfillment_refund_products_fulfillment_lines_quantity_bigger_than_tota
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
 
     errors = data["orderErrors"]
@@ -1085,7 +1085,7 @@ def test_fulfillment_refund_products_fulfillment_lines_quantity_bigger_than_tota
     assert refund_fulfillment is None
 
 
-def test_fulfillment_refund_products_amount_bigger_than_captured_amount(
+def test_fulfillment_refund_rooms_amount_bigger_than_captured_amount(
     staff_api_client, permission_manage_orders, fulfilled_order, payment_dummy
 ):
     payment_dummy.total = fulfilled_order.total_gross_amount
@@ -1110,7 +1110,7 @@ def test_fulfillment_refund_products_amount_bigger_than_captured_amount(
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
 
     errors = data["orderErrors"]
@@ -1121,7 +1121,7 @@ def test_fulfillment_refund_products_amount_bigger_than_captured_amount(
 
 
 @patch("saleor.order.actions.gateway.refund")
-def test_fulfillment_refund_products_fulfillment_lines_include_shipping_costs(
+def test_fulfillment_refund_rooms_fulfillment_lines_include_shipping_costs(
     mocked_refund,
     staff_api_client,
     permission_manage_orders,
@@ -1153,7 +1153,7 @@ def test_fulfillment_refund_products_fulfillment_lines_include_shipping_costs(
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
 
@@ -1168,7 +1168,7 @@ def test_fulfillment_refund_products_fulfillment_lines_include_shipping_costs(
 
 
 @patch("saleor.order.actions.gateway.refund")
-def test_fulfillment_refund_products_order_lines_include_shipping_costs(
+def test_fulfillment_refund_rooms_order_lines_include_shipping_costs(
     mocked_refund,
     staff_api_client,
     permission_manage_orders,
@@ -1193,7 +1193,7 @@ def test_fulfillment_refund_products_order_lines_include_shipping_costs(
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
     assert not errors
@@ -1207,7 +1207,7 @@ def test_fulfillment_refund_products_order_lines_include_shipping_costs(
 
 
 @patch("saleor.order.actions.gateway.refund")
-def test_fulfillment_refund_products_fulfillment_lines_custom_amount(
+def test_fulfillment_refund_rooms_fulfillment_lines_custom_amount(
     mocked_refund,
     staff_api_client,
     permission_manage_orders,
@@ -1240,7 +1240,7 @@ def test_fulfillment_refund_products_fulfillment_lines_custom_amount(
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
 
@@ -1253,7 +1253,7 @@ def test_fulfillment_refund_products_fulfillment_lines_custom_amount(
 
 
 @patch("saleor.order.actions.gateway.refund")
-def test_fulfillment_refund_products_order_lines_custom_amount(
+def test_fulfillment_refund_rooms_order_lines_custom_amount(
     mocked_refund,
     staff_api_client,
     permission_manage_orders,
@@ -1279,7 +1279,7 @@ def test_fulfillment_refund_products_order_lines_custom_amount(
     staff_api_client.user.user_permissions.add(permission_manage_orders)
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
     assert not errors
@@ -1291,9 +1291,9 @@ def test_fulfillment_refund_products_order_lines_custom_amount(
 
 
 @patch("saleor.order.actions.gateway.refund")
-def test_fulfillment_refund_products_fulfillment_lines_and_order_lines(
+def test_fulfillment_refund_rooms_fulfillment_lines_and_order_lines(
     mocked_refund,
-    warehouse,
+    hotel,
     variant,
     channel_USD,
     staff_api_client,
@@ -1308,12 +1308,12 @@ def test_fulfillment_refund_products_fulfillment_lines_and_order_lines(
     payment_dummy.save()
     fulfilled_order.payments.add(payment_dummy)
     stock = Stock.objects.create(
-        warehouse=warehouse, product_variant=variant, quantity=5
+        hotel=hotel, room_variant=variant, quantity=5
     )
     variant_channel_listing = variant.channel_listings.get(channel=channel_USD)
 
     net = variant.get_price(
-        variant.product, [collection], channel_USD, variant_channel_listing, []
+        variant.room, [collection], channel_USD, variant_channel_listing, []
     )
     gross = Money(amount=net.amount * Decimal(1.23), currency=net.currency)
     variant.track_inventory = False
@@ -1321,9 +1321,9 @@ def test_fulfillment_refund_products_fulfillment_lines_and_order_lines(
     quantity = 5
     total_price = TaxedMoney(net=net * quantity, gross=gross * quantity)
     order_line = fulfilled_order.lines.create(
-        product_name=str(variant.product),
+        room_name=str(variant.room),
         variant_name=str(variant),
-        product_sku=variant.sku,
+        room_sku=variant.sku,
         is_shipping_required=variant.is_shipping_required(),
         quantity=quantity,
         quantity_fulfilled=2,
@@ -1357,7 +1357,7 @@ def test_fulfillment_refund_products_fulfillment_lines_and_order_lines(
     response = staff_api_client.post_graphql(ORDER_FULFILL_REFUND_MUTATION, variables)
 
     content = get_graphql_content(response)
-    data = content["data"]["orderFulfillmentRefundProducts"]
+    data = content["data"]["orderFulfillmentRefundRooms"]
     refund_fulfillment = data["fulfillment"]
     errors = data["orderErrors"]
 

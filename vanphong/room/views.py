@@ -6,13 +6,13 @@ from django.http import FileResponse, HttpResponseNotFound
 from django.shortcuts import get_object_or_404
 
 from .models import DigitalContentUrl
-from .utils.digital_products import (
+from .utils.digital_rooms import (
     digital_content_url_is_valid,
     increment_download_count,
 )
 
 
-def digital_product(request, token: str) -> Union[FileResponse, HttpResponseNotFound]:
+def digital_room(request, token: str) -> Union[FileResponse, HttpResponseNotFound]:
     """Return the direct download link to content if given token is still valid."""
 
     qs = DigitalContentUrl.objects.prefetch_related("line__order__user")

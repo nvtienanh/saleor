@@ -101,7 +101,7 @@ class ChannelDelete(ModelDeleteMutation):
         description = (
             "Delete a channel. Orders associated with the deleted "
             "channel will be moved to the target channel. "
-            "Checkouts, product availability, and pricing will be removed."
+            "Checkouts, room availability, and pricing will be removed."
         )
         model = models.Channel
         permissions = (ChannelPermissions.MANAGE_CHANNELS,)

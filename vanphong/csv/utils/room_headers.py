@@ -6,8 +6,8 @@ from django.db.models.functions import Concat
 
 from ...attribute.models import Attribute
 from ...channel.models import Channel
-from ...warehouse.models import Warehouse
-from . import ProductExportFields
+from ...hotel.models import Hotel
+from . import RoomExportFields
 
 
 def get_export_fields_and_headers_info(
@@ -17,21 +17,21 @@ def get_export_fields_and_headers_info(
 
     Based on export_info returns exported fields, fields to headers mapping and
     all headers.
-    Headers contains product, variant, attribute and warehouse headers.
+    Headers contains room, variant, attribute and hotel headers.
     """
-    export_fields, file_headers = get_product_export_fields_and_headers(export_info)
+    export_fields, file_headers = get_room_export_fields_and_headers(export_info)
     attributes_headers = get_attributes_headers(export_info)
-    warehouses_headers = get_warehouses_headers(export_info)
+    hotels_headers = get_hotels_headers(export_info)
     channels_headers = get_channels_headers(export_info)
 
     data_headers = (
-        export_fields + attributes_headers + warehouses_headers + channels_headers
+        export_fields + attributes_headers + hotels_headers + channels_headers
     )
-    file_headers += attributes_headers + warehouses_headers + channels_headers
+    file_headers += attributes_headers + hotels_headers + channels_headers
     return export_fields, file_headers, data_headers
 
 
-def get_product_export_fields_and_headers(
+def get_room_export_fields_and_headers(
     export_info: Dict[str, list]
 ) -> Tuple[List[str], List[str]]:
     """Get export fields from export info and prepare headers mapping.
@@ -49,7 +49,7 @@ def get_product_export_fields_and_headers(
     fields_mapping = dict(
         ChainMap(
             *reversed(
-                ProductExportFields.HEADERS_TO_FIELDS_MAPPING.values()
+                RoomExportFields.HEADERS_TO_FIELDS_MAPPING.values()
             )  # type: ignore
         )
     )
@@ -65,8 +65,8 @@ def get_product_export_fields_and_headers(
 def get_attributes_headers(export_info: Dict[str, list]) -> List[str]:
     """Get headers for exported attributes.
 
-    Headers are build from slug and contains information if it's a product or variant
-    attribute. Respectively for product: "slug-value (product attribute)"
+    Headers are build from slug and contains information if it's a room or variant
+    attribute. Respectively for room: "slug-value (room attribute)"
     and for variant: "slug-value (variant attribute)".
     """
 
@@ -76,38 +76,38 @@ def get_attributes_headers(export_info: Dict[str, list]) -> List[str]:
 
     attributes = Attribute.objects.filter(pk__in=attribute_ids).order_by("slug")
 
-    products_headers = (
-        attributes.filter(product_types__isnull=False)
-        .annotate(header=Concat("slug", V(" (product attribute)")))
+    rooms_headers = (
+        attributes.filter(room_types__isnull=False)
+        .annotate(header=Concat("slug", V(" (room attribute)")))
         .values_list("header", flat=True)
     )
 
     variant_headers = (
-        attributes.filter(product_variant_types__isnull=False)
+        attributes.filter(room_variant_types__isnull=False)
         .annotate(header=Concat("slug", V(" (variant attribute)")))
         .values_list("header", flat=True)
     )
 
-    return list(products_headers) + list(variant_headers)
+    return list(rooms_headers) + list(variant_headers)
 
 
-def get_warehouses_headers(export_info: Dict[str, list]) -> List[str]:
-    """Get headers for exported warehouses.
+def get_hotels_headers(export_info: Dict[str, list]) -> List[str]:
+    """Get headers for exported hotels.
 
-    Headers are build from slug. Example: "slug-value (warehouse quantity)"
+    Headers are build from slug. Example: "slug-value (hotel quantity)"
     """
-    warehouse_ids = export_info.get("warehouses")
-    if not warehouse_ids:
+    hotel_ids = export_info.get("hotels")
+    if not hotel_ids:
         return []
 
-    warehouses_headers = (
-        Warehouse.objects.filter(pk__in=warehouse_ids)
+    hotels_headers = (
+        Hotel.objects.filter(pk__in=hotel_ids)
         .order_by("slug")
-        .annotate(header=Concat("slug", V(" (warehouse quantity)")))
+        .annotate(header=Concat("slug", V(" (hotel quantity)")))
         .values_list("header", flat=True)
     )
 
-    return list(warehouses_headers)
+    return list(hotels_headers)
 
 
 def get_channels_headers(export_info: Dict[str, list]) -> List[str]:
@@ -132,8 +132,8 @@ def get_channels_headers(export_info: Dict[str, list]) -> List[str]:
     )
 
     fields = [
-        *ProductExportFields.PRODUCT_CHANNEL_LISTING_FIELDS.keys(),
-        *ProductExportFields.VARIANT_CHANNEL_LISTING_FIELDS.keys(),
+        *RoomExportFields.ROOM_CHANNEL_LISTING_FIELDS.keys(),
+        *RoomExportFields.VARIANT_CHANNEL_LISTING_FIELDS.keys(),
     ]
     channels_headers = []
     for slug in channels_slugs:

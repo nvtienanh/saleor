@@ -2,13 +2,13 @@ import graphene
 
 from ....attribute import AttributeInputType
 from ....page.error_codes import PageErrorCode
-from ....product.error_codes import ProductErrorCode
-from ...product.mutations.products import AttrValuesInput
+from ....room.error_codes import RoomErrorCode
+from ...room.mutations.rooms import AttrValuesInput
 from ..utils import validate_attributes_input
 
 
-def test_validate_attributes_input_for_product(
-    weight_attribute, color_attribute, product_type
+def test_validate_attributes_input_for_room(
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.value_required = True
@@ -41,7 +41,7 @@ def test_validate_attributes_input_for_product(
     # when
     errors = validate_attributes_input(
         input_data,
-        product_type.product_attributes.all(),
+        room_type.room_attributes.all(),
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -50,8 +50,8 @@ def test_validate_attributes_input_for_product(
     assert not errors
 
 
-def test_validate_attributes_input_for_product_no_values_given(
-    weight_attribute, color_attribute, product_type
+def test_validate_attributes_input_for_room_no_values_given(
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.value_required = True
@@ -84,7 +84,7 @@ def test_validate_attributes_input_for_product_no_values_given(
     # when
     errors = validate_attributes_input(
         input_data,
-        product_type.product_attributes.all(),
+        room_type.room_attributes.all(),
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -92,15 +92,15 @@ def test_validate_attributes_input_for_product_no_values_given(
     # then
     assert len(errors) == 1
     error = errors[0]
-    assert error.code == ProductErrorCode.REQUIRED.value
+    assert error.code == RoomErrorCode.REQUIRED.value
     assert set(error.params["attributes"]) == {
         graphene.Node.to_global_id("Attribute", attr.pk)
         for attr in [weight_attribute, color_attribute]
     }
 
 
-def test_validate_attributes_input_for_product_too_many_values_given(
-    weight_attribute, color_attribute, product_type
+def test_validate_attributes_input_for_room_too_many_values_given(
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.input_type = AttributeInputType.DROPDOWN
@@ -135,7 +135,7 @@ def test_validate_attributes_input_for_product_too_many_values_given(
     # when
     errors = validate_attributes_input(
         input_data,
-        product_type.product_attributes.all(),
+        room_type.room_attributes.all(),
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -143,14 +143,14 @@ def test_validate_attributes_input_for_product_too_many_values_given(
     # then
     assert len(errors) == 1
     error = errors[0]
-    assert error.code == ProductErrorCode.INVALID.value
+    assert error.code == RoomErrorCode.INVALID.value
     assert error.params["attributes"] == [
         graphene.Node.to_global_id("Attribute", color_attribute.pk)
     ]
 
 
-def test_validate_attributes_input_for_product_empty_values_given(
-    weight_attribute, color_attribute, product_type
+def test_validate_attributes_input_for_room_empty_values_given(
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.input_type = AttributeInputType.DROPDOWN
@@ -185,7 +185,7 @@ def test_validate_attributes_input_for_product_empty_values_given(
     # when
     errors = validate_attributes_input(
         input_data,
-        product_type.product_attributes.all(),
+        room_type.room_attributes.all(),
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -193,19 +193,19 @@ def test_validate_attributes_input_for_product_empty_values_given(
     # then
     assert len(errors) == 1
     error = errors[0]
-    assert error.code == ProductErrorCode.REQUIRED.value
+    assert error.code == RoomErrorCode.REQUIRED.value
     assert set(error.params["attributes"]) == {
         graphene.Node.to_global_id("Attribute", attr.pk)
         for attr in [weight_attribute, color_attribute]
     }
 
 
-def test_validate_attributes_input_for_product_lack_of_required_attribute(
-    weight_attribute, color_attribute, product_type
+def test_validate_attributes_input_for_room_lack_of_required_attribute(
+    weight_attribute, color_attribute, room_type
 ):
     # given
-    product_attributes = product_type.product_attributes.all()
-    attr = product_attributes.first()
+    room_attributes = room_type.room_attributes.all()
+    attr = room_attributes.first()
     attr.value_required = True
     attr.save(update_fields=["value_required"])
 
@@ -227,7 +227,7 @@ def test_validate_attributes_input_for_product_lack_of_required_attribute(
     # when
     errors = validate_attributes_input(
         input_data,
-        product_attributes,
+        room_attributes,
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -235,14 +235,14 @@ def test_validate_attributes_input_for_product_lack_of_required_attribute(
     # then
     assert len(errors) == 1
     error = errors[0]
-    assert error.code == ProductErrorCode.REQUIRED.value
+    assert error.code == RoomErrorCode.REQUIRED.value
     assert set(error.params["attributes"]) == {
         graphene.Node.to_global_id("Attribute", attr.pk)
     }
 
 
-def test_validate_attributes_input_for_product_multiply_errors(
-    weight_attribute, color_attribute, product_type
+def test_validate_attributes_input_for_room_multiply_errors(
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.input_type = AttributeInputType.DROPDOWN
@@ -277,7 +277,7 @@ def test_validate_attributes_input_for_product_multiply_errors(
     # when
     errors = validate_attributes_input(
         input_data,
-        product_type.product_attributes.all(),
+        room_type.room_attributes.all(),
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -285,8 +285,8 @@ def test_validate_attributes_input_for_product_multiply_errors(
     # then
     assert len(errors) == 2
     assert {error.code for error in errors} == {
-        ProductErrorCode.INVALID.value,
-        ProductErrorCode.REQUIRED.value,
+        RoomErrorCode.INVALID.value,
+        RoomErrorCode.REQUIRED.value,
     }
     assert {attr for error in errors for attr in error.params["attributes"]} == {
         graphene.Node.to_global_id("Attribute", attr.pk)
@@ -578,7 +578,7 @@ def test_validate_attributes_input_for_page_multiply_errors(
     }
 
 
-def test_validate_attributes_input(weight_attribute, color_attribute, product_type):
+def test_validate_attributes_input(weight_attribute, color_attribute, room_type):
     # given
     color_attribute.value_required = True
     color_attribute.save(update_fields=["value_required"])
@@ -607,7 +607,7 @@ def test_validate_attributes_input(weight_attribute, color_attribute, product_ty
         ),
     ]
 
-    attributes = product_type.variant_attributes.all()
+    attributes = room_type.variant_attributes.all()
 
     # when
     errors = validate_attributes_input(
@@ -619,7 +619,7 @@ def test_validate_attributes_input(weight_attribute, color_attribute, product_ty
 
 
 def test_validate_attributes_input_no_values_given(
-    weight_attribute, color_attribute, product_type
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.value_required = True
@@ -649,7 +649,7 @@ def test_validate_attributes_input_no_values_given(
         ),
     ]
 
-    attributes = product_type.variant_attributes.all()
+    attributes = room_type.variant_attributes.all()
 
     # when
     errors = validate_attributes_input(
@@ -659,7 +659,7 @@ def test_validate_attributes_input_no_values_given(
     # then
     assert len(errors) == 1
     error = errors[0]
-    assert error.code == ProductErrorCode.REQUIRED.value
+    assert error.code == RoomErrorCode.REQUIRED.value
     assert set(error.params["attributes"]) == {
         graphene.Node.to_global_id("Attribute", attr.pk)
         for attr in [weight_attribute, color_attribute]
@@ -667,7 +667,7 @@ def test_validate_attributes_input_no_values_given(
 
 
 def test_validate_not_required_variant_selection_attributes_input_no_values_given(
-    weight_attribute, color_attribute, product_type
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.value_required = False
@@ -699,7 +699,7 @@ def test_validate_not_required_variant_selection_attributes_input_no_values_give
         ),
     ]
 
-    attributes = product_type.variant_attributes.all()
+    attributes = room_type.variant_attributes.all()
 
     # when
     errors = validate_attributes_input(
@@ -711,7 +711,7 @@ def test_validate_not_required_variant_selection_attributes_input_no_values_give
 
 
 def test_validate_attributes_input_too_many_values_given(
-    weight_attribute, color_attribute, product_type
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.value_required = True
@@ -741,7 +741,7 @@ def test_validate_attributes_input_too_many_values_given(
         ),
     ]
 
-    attributes = product_type.variant_attributes.all()
+    attributes = room_type.variant_attributes.all()
 
     # when
     errors = validate_attributes_input(
@@ -751,7 +751,7 @@ def test_validate_attributes_input_too_many_values_given(
     # then
     assert len(errors) == 1
     error = errors[0]
-    assert error.code == ProductErrorCode.INVALID.value
+    assert error.code == RoomErrorCode.INVALID.value
     assert set(error.params["attributes"]) == {
         graphene.Node.to_global_id("Attribute", attr.pk)
         for attr in [weight_attribute, color_attribute]
@@ -759,7 +759,7 @@ def test_validate_attributes_input_too_many_values_given(
 
 
 def test_validate_attributes_input_empty_values_given(
-    weight_attribute, color_attribute, product_type
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.value_required = True
@@ -789,7 +789,7 @@ def test_validate_attributes_input_empty_values_given(
         ),
     ]
 
-    attributes = product_type.variant_attributes.all()
+    attributes = room_type.variant_attributes.all()
 
     # when
     errors = validate_attributes_input(
@@ -799,7 +799,7 @@ def test_validate_attributes_input_empty_values_given(
     # then
     assert len(errors) == 1
     error = errors[0]
-    assert error.code == ProductErrorCode.REQUIRED.value
+    assert error.code == RoomErrorCode.REQUIRED.value
     assert set(error.params["attributes"]) == {
         graphene.Node.to_global_id("Attribute", attr.pk)
         for attr in [weight_attribute, color_attribute]
@@ -807,7 +807,7 @@ def test_validate_attributes_input_empty_values_given(
 
 
 def test_validate_attributes_input_multiply_errors(
-    weight_attribute, color_attribute, product_type
+    weight_attribute, color_attribute, room_type
 ):
     # given
     color_attribute.value_required = True
@@ -837,7 +837,7 @@ def test_validate_attributes_input_multiply_errors(
         ),
     ]
 
-    attributes = product_type.variant_attributes.all()
+    attributes = room_type.variant_attributes.all()
 
     # when
     errors = validate_attributes_input(
@@ -847,8 +847,8 @@ def test_validate_attributes_input_multiply_errors(
     # then
     assert len(errors) == 2
     assert {error.code for error in errors} == {
-        ProductErrorCode.INVALID.value,
-        ProductErrorCode.REQUIRED.value,
+        RoomErrorCode.INVALID.value,
+        RoomErrorCode.REQUIRED.value,
     }
     assert {attr for error in errors for attr in error.params["attributes"]} == {
         graphene.Node.to_global_id("Attribute", attr.pk)
@@ -856,8 +856,8 @@ def test_validate_attributes_input_multiply_errors(
     }
 
 
-def test_validate_attributes_with_file_input_type_for_product(
-    weight_attribute, file_attribute, product_type
+def test_validate_attributes_with_file_input_type_for_room(
+    weight_attribute, file_attribute, room_type
 ):
     # given
     file_attribute.value_required = True
@@ -890,7 +890,7 @@ def test_validate_attributes_with_file_input_type_for_product(
     # when
     errors = validate_attributes_input(
         input_data,
-        product_type.product_attributes.all(),
+        room_type.room_attributes.all(),
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -899,8 +899,8 @@ def test_validate_attributes_with_file_input_type_for_product(
     assert not errors
 
 
-def test_validate_attributes_with_file_input_type_for_product_no_file_given(
-    weight_attribute, file_attribute, product_type
+def test_validate_attributes_with_file_input_type_for_room_no_file_given(
+    weight_attribute, file_attribute, room_type
 ):
     # given
     file_attribute.value_required = True
@@ -933,7 +933,7 @@ def test_validate_attributes_with_file_input_type_for_product_no_file_given(
     # when
     errors = validate_attributes_input(
         input_data,
-        product_type.product_attributes.all(),
+        room_type.room_attributes.all(),
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -941,14 +941,14 @@ def test_validate_attributes_with_file_input_type_for_product_no_file_given(
     # then
     assert len(errors) == 1
     error = errors[0]
-    assert error.code == ProductErrorCode.REQUIRED.value
+    assert error.code == RoomErrorCode.REQUIRED.value
     assert set(error.params["attributes"]) == {
         graphene.Node.to_global_id("Attribute", file_attribute.pk)
     }
 
 
-def test_validate_not_required_attrs_with_file_input_type_for_product_no_file_given(
-    weight_attribute, file_attribute, product_type
+def test_validate_not_required_attrs_with_file_input_type_for_room_no_file_given(
+    weight_attribute, file_attribute, room_type
 ):
     # given
     file_attribute.value_required = False
@@ -981,7 +981,7 @@ def test_validate_not_required_attrs_with_file_input_type_for_product_no_file_gi
     # when
     errors = validate_attributes_input(
         input_data,
-        product_type.product_attributes.all(),
+        room_type.room_attributes.all(),
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -990,8 +990,8 @@ def test_validate_not_required_attrs_with_file_input_type_for_product_no_file_gi
     assert not errors
 
 
-def test_validate_attributes_with_file_input_type_for_product_empty_file_value(
-    weight_attribute, file_attribute, product_type
+def test_validate_attributes_with_file_input_type_for_room_empty_file_value(
+    weight_attribute, file_attribute, room_type
 ):
     # given
     file_attribute.value_required = True
@@ -1024,7 +1024,7 @@ def test_validate_attributes_with_file_input_type_for_product_empty_file_value(
     # when
     errors = validate_attributes_input(
         input_data,
-        product_type.product_attributes.all(),
+        room_type.room_attributes.all(),
         is_page_attributes=False,
         variant_validation=False,
     )
@@ -1032,7 +1032,7 @@ def test_validate_attributes_with_file_input_type_for_product_empty_file_value(
     # then
     assert len(errors) == 1
     error = errors[0]
-    assert error.code == ProductErrorCode.REQUIRED.value
+    assert error.code == RoomErrorCode.REQUIRED.value
     assert set(error.params["attributes"]) == {
         graphene.Node.to_global_id("Attribute", file_attribute.pk)
     }

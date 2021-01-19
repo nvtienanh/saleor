@@ -15,20 +15,20 @@ def get_organization():
     return {"@type": "Organization", "name": site.name}
 
 
-def get_product_data(line: "OrderLine", organization: dict) -> dict:
-    gross_product_price = line.total_price.gross
+def get_room_data(line: "OrderLine", organization: dict) -> dict:
+    gross_room_price = line.total_price.gross
     line_name = str(line)
-    if line.translated_product_name:
+    if line.translated_room_name:
         line_name = (
-            f"{line.translated_product_name} ({line.translated_variant_name})"
+            f"{line.translated_room_name} ({line.translated_variant_name})"
             if line.translated_variant_name
-            else line.translated_product_name
+            else line.translated_room_name
         )
-    product_data = {
+    room_data = {
         "@type": "Offer",
-        "itemOffered": {"@type": "Product", "name": line_name, "sku": line.product_sku},
-        "price": gross_product_price.amount,
-        "priceCurrency": gross_product_price.currency,
+        "itemOffered": {"@type": "Room", "name": line_name, "sku": line.room_sku},
+        "price": gross_room_price.amount,
+        "priceCurrency": gross_room_price.currency,
         "eligibleQuantity": {"@type": "QuantitativeValue", "value": line.quantity},
         "seller": organization,
     }
@@ -36,12 +36,12 @@ def get_product_data(line: "OrderLine", organization: dict) -> dict:
     if not line.variant:
         return {}
 
-    product = line.variant.product
-    product_image = product.get_first_image()
-    if product_image:
-        image = product_image.image
-        product_data["itemOffered"]["image"] = build_absolute_uri(location=image.url)
-    return product_data
+    room = line.variant.room
+    room_image = room.get_first_image()
+    if room_image:
+        image = room_image.image
+        room_data["itemOffered"]["image"] = build_absolute_uri(location=image.url)
+    return room_data
 
 
 def get_order_confirmation_markup(order: "Order") -> str:
@@ -60,6 +60,6 @@ def get_order_confirmation_markup(order: "Order") -> str:
     }
 
     for line in order.lines.all():
-        product_data = get_product_data(line=line, organization=organization)
-        data["acceptedOffer"].append(product_data)
+        room_data = get_room_data(line=line, organization=organization)
+        data["acceptedOffer"].append(room_data)
     return json.dumps(data, cls=HTMLSafeJSON)

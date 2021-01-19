@@ -15,9 +15,9 @@ from ...discount.models import (
 from ...discount.utils import validate_voucher_in_order
 from ...payment import ChargeStatus
 from ...payment.models import Payment
-from ...product.models import Collection
-from ...warehouse.models import Stock
-from ...warehouse.tests.utils import get_quantity_allocated_for_stock
+from ...room.models import Collection
+from ...hotel.models import Stock
+from ...hotel.tests.utils import get_quantity_allocated_for_stock
 from .. import OrderEvents, OrderStatus, models
 from ..emails import send_fulfillment_confirmation_to_customer
 from ..events import OrderEvent, OrderEventsEmails, email_sent_event
@@ -58,29 +58,29 @@ def test_order_get_subtotal(order_with_lines):
 
 
 def test_add_variant_to_draft_order_adds_line_for_new_variant(
-    order_with_lines, product, product_translation_fr, settings
+    order_with_lines, room, room_translation_fr, settings
 ):
     order = order_with_lines
-    variant = product.variants.get()
+    variant = room.variants.get()
     lines_before = order.lines.count()
     settings.LANGUAGE_CODE = "fr"
     add_variant_to_draft_order(order, variant, 1)
 
     line = order.lines.last()
     assert order.lines.count() == lines_before + 1
-    assert line.product_sku == variant.sku
+    assert line.room_sku == variant.sku
     assert line.quantity == 1
     assert line.unit_price == TaxedMoney(net=Money(10, "USD"), gross=Money(10, "USD"))
-    assert line.translated_product_name == str(variant.product.translated)
+    assert line.translated_room_name == str(variant.room.translated)
     assert line.variant_name == str(variant)
-    assert line.product_name == str(variant.product)
+    assert line.room_name == str(variant.room)
 
 
 def test_add_variant_to_draft_order_adds_line_for_variant_with_price_0(
-    order_with_lines, product, product_translation_fr, settings
+    order_with_lines, room, room_translation_fr, settings
 ):
     order = order_with_lines
-    variant = product.variants.get()
+    variant = room.variants.get()
     variant_channel_listing = variant.channel_listings.get()
     variant_channel_listing.price = Money(0, "USD")
     variant_channel_listing.save(update_fields=["price_amount", "currency"])
@@ -91,18 +91,18 @@ def test_add_variant_to_draft_order_adds_line_for_variant_with_price_0(
 
     line = order.lines.last()
     assert order.lines.count() == lines_before + 1
-    assert line.product_sku == variant.sku
+    assert line.room_sku == variant.sku
     assert line.quantity == 1
     assert line.unit_price == TaxedMoney(net=Money(0, "USD"), gross=Money(0, "USD"))
-    assert line.translated_product_name == str(variant.product.translated)
-    assert line.product_name == variant.product.name
+    assert line.translated_room_name == str(variant.room.translated)
+    assert line.room_name == variant.room.name
 
 
 def test_add_variant_to_draft_order_not_allocates_stock_for_new_variant(
-    order_with_lines, product
+    order_with_lines, room
 ):
-    variant = product.variants.get()
-    stock = Stock.objects.get(product_variant=variant)
+    variant = room.variants.get()
+    stock = Stock.objects.get(room_variant=variant)
 
     stock_before = get_quantity_allocated_for_stock(stock)
 
@@ -122,7 +122,7 @@ def test_add_variant_to_draft_order_edits_line_for_existing_variant(order_with_l
 
     existing_line.refresh_from_db()
     assert order_with_lines.lines.count() == lines_before
-    assert existing_line.product_sku == variant.sku
+    assert existing_line.room_sku == variant.sku
     assert existing_line.quantity == line_quantity_before + 1
 
 
@@ -131,7 +131,7 @@ def test_add_variant_to_draft_order_not_allocates_stock_for_existing_variant(
 ):
     existing_line = order_with_lines.lines.first()
     variant = existing_line.variant
-    stock = Stock.objects.get(product_variant=variant)
+    stock = Stock.objects.get(room_variant=variant)
     stock_before = get_quantity_allocated_for_stock(stock)
     quantity_before = existing_line.quantity
     quantity_unfulfilled_before = existing_line.quantity_unfulfilled
@@ -157,8 +157,8 @@ def test_restock_order_lines(order_with_lines, track_inventory):
 
     line_1.variant.save()
     line_2.variant.save()
-    stock_1 = Stock.objects.get(product_variant=line_1.variant)
-    stock_2 = Stock.objects.get(product_variant=line_2.variant)
+    stock_1 = Stock.objects.get(room_variant=line_1.variant)
+    stock_2 = Stock.objects.get(room_variant=line_2.variant)
 
     stock_1_quantity_allocated_before = get_quantity_allocated_for_stock(stock_1)
     stock_2_quantity_allocated_before = get_quantity_allocated_for_stock(stock_2)
@@ -195,8 +195,8 @@ def test_restock_order_lines(order_with_lines, track_inventory):
 def test_restock_fulfilled_order_lines(fulfilled_order):
     line_1 = fulfilled_order.lines.first()
     line_2 = fulfilled_order.lines.last()
-    stock_1 = Stock.objects.get(product_variant=line_1.variant)
-    stock_2 = Stock.objects.get(product_variant=line_2.variant)
+    stock_1 = Stock.objects.get(room_variant=line_1.variant)
+    stock_2 = Stock.objects.get(room_variant=line_2.variant)
     stock_1_quantity_allocated_before = get_quantity_allocated_for_stock(stock_1)
     stock_2_quantity_allocated_before = get_quantity_allocated_for_stock(stock_2)
     stock_1_quantity_before = stock_1.quantity
@@ -216,12 +216,12 @@ def test_restock_fulfilled_order_lines(fulfilled_order):
     assert stock_2.quantity == stock_2_quantity_before + line_2.quantity
 
 
-def test_restock_fulfillment_lines(fulfilled_order, warehouse):
+def test_restock_fulfillment_lines(fulfilled_order, hotel):
     fulfillment = fulfilled_order.fulfillments.first()
     line_1 = fulfillment.lines.first()
     line_2 = fulfillment.lines.last()
-    stock_1 = Stock.objects.get(product_variant=line_1.order_line.variant)
-    stock_2 = Stock.objects.get(product_variant=line_2.order_line.variant)
+    stock_1 = Stock.objects.get(room_variant=line_1.order_line.variant)
+    stock_2 = Stock.objects.get(room_variant=line_2.order_line.variant)
     stock_1_quantity_allocated_before = get_quantity_allocated_for_stock(stock_1)
     stock_2_quantity_allocated_before = get_quantity_allocated_for_stock(stock_2)
     stock_1_quantity_before = stock_1.quantity
@@ -231,7 +231,7 @@ def test_restock_fulfillment_lines(fulfilled_order, warehouse):
     order_line_1_quantity_fulfilled_before = order_line_1.quantity_fulfilled
     order_line_2_quantity_fulfilled_before = order_line_2.quantity_fulfilled
 
-    restock_fulfillment_lines(fulfillment, warehouse)
+    restock_fulfillment_lines(fulfillment, hotel)
 
     stock_1.refresh_from_db()
     stock_2.refresh_from_db()
@@ -392,19 +392,19 @@ def test_update_order_prices(order_with_lines):
 
     line_1 = order_with_lines.lines.first()
     variant_1 = line_1.variant
-    product_1 = variant_1.product
+    room_1 = variant_1.room
     variant_channel_listing_1 = variant_1.channel_listings.get(channel=channel)
     price_1 = variant_1.get_price(
-        product_1, [], channel, variant_channel_listing_1, None
+        room_1, [], channel, variant_channel_listing_1, None
     )
     price_1 = TaxedMoney(net=price_1, gross=price_1)
 
     line_2 = order_with_lines.lines.last()
     variant_2 = line_2.variant
-    product_2 = variant_2.product
+    room_2 = variant_2.room
     variant_channel_listing_2 = variant_2.channel_listings.get(channel=channel)
     price_2 = variant_2.get_price(
-        product_2, [], channel, variant_channel_listing_2, None
+        room_2, [], channel, variant_channel_listing_2, None
     )
     price_2 = TaxedMoney(net=price_2, gross=price_2)
 
@@ -433,18 +433,18 @@ def test_update_order_prices_tax_included(order_with_lines, vatlayer):
 
     line_1 = order_with_lines.lines.first()
     variant_1 = line_1.variant
-    product_1 = variant_1.product
+    room_1 = variant_1.room
     variant_channel_listing_1 = variant_1.channel_listings.get(channel=channel)
     price_1 = variant_1.get_price(
-        product_1, [], channel, variant_channel_listing_1, None
+        room_1, [], channel, variant_channel_listing_1, None
     )
 
     line_2 = order_with_lines.lines.last()
     variant_2 = line_2.variant
-    product_2 = variant_2.product
+    room_2 = variant_2.room
     variant_channel_listing_2 = variant_2.channel_listings.get(channel=channel)
     price_2 = variant_2.get_price(
-        product_2, [], channel, variant_channel_listing_2, None
+        room_2, [], channel, variant_channel_listing_2, None
     )
 
     shipping_price = order_with_lines.shipping_method.channel_listings.get(
@@ -485,8 +485,8 @@ def test_order_weight_add_more_variant(order_with_lines):
     )
 
 
-def test_order_weight_add_new_variant(order_with_lines, product):
-    variant = product.variants.first()
+def test_order_weight_add_new_variant(order_with_lines, room):
+    variant = room.variants.first()
     add_variant_to_draft_order(order_with_lines, variant, 2)
     order_with_lines.refresh_from_db()
     assert order_with_lines.weight == _calculate_order_weight_from_lines(
@@ -512,14 +512,14 @@ def test_order_weight_delete_line(order_with_lines):
     )
 
 
-def test_get_order_weight_non_existing_product(order_with_lines, product):
-    # Removing product should not affect order's weight
+def test_get_order_weight_non_existing_room(order_with_lines, room):
+    # Removing room should not affect order's weight
     order = order_with_lines
-    variant = product.variants.first()
+    variant = room.variants.first()
     add_variant_to_draft_order(order, variant, 1)
     old_weight = order.get_total_weight()
 
-    product.delete()
+    room.delete()
 
     order.refresh_from_db()
     new_weight = order.get_total_weight()
@@ -558,28 +558,28 @@ def test_validate_voucher_in_order_without_voucher(
 
 
 @pytest.mark.parametrize(
-    "product_name, variant_name, translated_product_name, translated_variant_name,"
+    "room_name, variant_name, translated_room_name, translated_variant_name,"
     "expected_display_name",
     [
-        ("product", "variant", "", "", "product (variant)"),
-        ("product", "", "", "", "product"),
-        ("product", "", "productPL", "", "productPL"),
-        ("product", "variant", "productPL", "", "productPL (variant)"),
-        ("product", "variant", "productPL", "variantPl", "productPL (variantPl)"),
-        ("product", "variant", "", "variantPl", "product (variantPl)"),
+        ("room", "variant", "", "", "room (variant)"),
+        ("room", "", "", "", "room"),
+        ("room", "", "roomPL", "", "roomPL"),
+        ("room", "variant", "roomPL", "", "roomPL (variant)"),
+        ("room", "variant", "roomPL", "variantPl", "roomPL (variantPl)"),
+        ("room", "variant", "", "variantPl", "room (variantPl)"),
     ],
 )
 def test_display_translated_order_line_name(
-    product_name,
+    room_name,
     variant_name,
-    translated_product_name,
+    translated_room_name,
     translated_variant_name,
     expected_display_name,
 ):
     order_line = MagicMock(
-        product_name=product_name,
+        room_name=room_name,
         variant_name=variant_name,
-        translated_product_name=translated_product_name,
+        translated_room_name=translated_room_name,
         translated_variant_name=translated_variant_name,
     )
     display_name = display_translated_order_line_name(order_line)
@@ -661,9 +661,9 @@ def test_shipping_voucher_order_discount(
         (99, 10, 100, 10, VoucherType.ENTIRE_ORDER),
         (100, 9, 100, 10, VoucherType.ENTIRE_ORDER),
         (99, 9, 100, 10, VoucherType.ENTIRE_ORDER),
-        (99, 10, 100, 10, VoucherType.SPECIFIC_PRODUCT),
-        (100, 9, 100, 10, VoucherType.SPECIFIC_PRODUCT),
-        (99, 9, 100, 10, VoucherType.SPECIFIC_PRODUCT),
+        (99, 10, 100, 10, VoucherType.SPECIFIC_ROOM),
+        (100, 9, 100, 10, VoucherType.SPECIFIC_ROOM),
+        (99, 9, 100, 10, VoucherType.SPECIFIC_ROOM),
     ],
 )
 def test_shipping_voucher_checkout_discount_not_applicable_returns_zero(
@@ -710,7 +710,7 @@ def test_shipping_voucher_checkout_discount_not_applicable_returns_zero(
         (10, DiscountValueType.PERCENTAGE, False, "8.61"),
     ],
 )
-def test_get_discount_for_order_specific_products_voucher(
+def test_get_discount_for_order_specific_rooms_voucher(
     order_with_lines,
     discount_value,
     discount_type,
@@ -720,7 +720,7 @@ def test_get_discount_for_order_specific_products_voucher(
 ):
     voucher = Voucher.objects.create(
         code="unique",
-        type=VoucherType.SPECIFIC_PRODUCT,
+        type=VoucherType.SPECIFIC_ROOM,
         discount_value_type=discount_type,
         apply_once_per_order=apply_once_per_order,
     )
@@ -729,21 +729,21 @@ def test_get_discount_for_order_specific_products_voucher(
         channel=channel_USD,
         discount=Money(discount_value, channel_USD.currency_code),
     )
-    voucher.products.add(order_with_lines.lines.first().variant.product)
-    voucher.products.add(order_with_lines.lines.last().variant.product)
+    voucher.rooms.add(order_with_lines.lines.first().variant.room)
+    voucher.rooms.add(order_with_lines.lines.last().variant.room)
     order_with_lines.voucher = voucher
     order_with_lines.save()
     discount = get_voucher_discount_for_order(order_with_lines)
     assert discount == Money(discount_amount, "USD")
 
 
-def test_product_voucher_checkout_discount_raises_not_applicable(
-    order_with_lines, product_with_images, channel_USD
+def test_room_voucher_checkout_discount_raises_not_applicable(
+    order_with_lines, room_with_images, channel_USD
 ):
-    discounted_product = product_with_images
+    discounted_room = room_with_images
     voucher = Voucher.objects.create(
         code="unique",
-        type=VoucherType.SPECIFIC_PRODUCT,
+        type=VoucherType.SPECIFIC_ROOM,
         discount_value_type=DiscountValueType.FIXED,
     )
     VoucherChannelListing.objects.create(
@@ -752,10 +752,10 @@ def test_product_voucher_checkout_discount_raises_not_applicable(
         discount=Money(10, channel_USD.currency_code),
     )
     voucher.save()
-    voucher.products.add(discounted_product)
+    voucher.rooms.add(discounted_room)
     order_with_lines.voucher = voucher
     order_with_lines.save()
-    # Offer is valid only for products listed in voucher
+    # Offer is valid only for rooms listed in voucher
     with pytest.raises(NotApplicable):
         get_voucher_discount_for_order(order_with_lines)
 
@@ -768,7 +768,7 @@ def test_category_voucher_checkout_discount_raises_not_applicable(
     )
     voucher = Voucher.objects.create(
         code="unique",
-        type=VoucherType.SPECIFIC_PRODUCT,
+        type=VoucherType.SPECIFIC_ROOM,
         discount_value_type=DiscountValueType.FIXED,
     )
     VoucherChannelListing.objects.create(
@@ -813,13 +813,13 @@ def test_send_fulfillment_order_lines_mails(
 
     if not has_standard:
         line = order.lines.all()[0]
-        line.variant = digital_content.product_variant
+        line.variant = digital_content.room_variant
         assert line.is_digital
         line.save()
 
     if has_digital:
         line = order.lines.all()[1]
-        line.variant = digital_content.product_variant
+        line.variant = digital_content.room_variant
         assert line.is_digital
         line.save()
 

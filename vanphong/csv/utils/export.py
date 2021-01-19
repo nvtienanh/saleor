@@ -4,11 +4,11 @@ from typing import IO, TYPE_CHECKING, Any, Dict, List, Set, Union
 import petl as etl
 from django.utils import timezone
 
-from ...product.models import Product
+from ...room.models import Room
 from .. import FileTypes
 from ..emails import send_email_with_link_to_download_file
-from .product_headers import get_export_fields_and_headers_info
-from .products_data import get_products_data
+from .room_headers import get_export_fields_and_headers_info
+from .rooms_data import get_rooms_data
 
 if TYPE_CHECKING:
     # flake8: noqa
@@ -20,15 +20,15 @@ if TYPE_CHECKING:
 BATCH_SIZE = 10000
 
 
-def export_products(
+def export_rooms(
     export_file: "ExportFile",
     scope: Dict[str, Union[str, dict]],
     export_info: Dict[str, list],
     file_type: str,
     delimiter: str = ";",
 ):
-    file_name = get_filename("product", file_type)
-    queryset = get_product_queryset(scope)
+    file_name = get_filename("room", file_type)
+    queryset = get_room_queryset(scope)
 
     export_fields, file_headers, data_headers = get_export_fields_and_headers_info(
         export_info
@@ -36,7 +36,7 @@ def export_products(
 
     temporary_file = create_file_with_headers(file_headers, delimiter, file_type)
 
-    export_products_in_batches(
+    export_rooms_in_batches(
         queryset,
         export_info,
         set(export_fields),
@@ -51,7 +51,7 @@ def export_products(
 
     if export_file.user:
         send_email_with_link_to_download_file(
-            export_file, export_file.user.email, "export_products_success"
+            export_file, export_file.user.email, "export_rooms_success"
         )
 
 
@@ -61,16 +61,16 @@ def get_filename(model_name: str, file_type: str) -> str:
     )
 
 
-def get_product_queryset(scope: Dict[str, Union[str, dict]]) -> "QuerySet":
-    """Get product queryset based on a scope."""
+def get_room_queryset(scope: Dict[str, Union[str, dict]]) -> "QuerySet":
+    """Get room queryset based on a scope."""
 
-    from ...graphql.product.filters import ProductFilter
+    from ...graphql.room.filters import RoomFilter
 
-    queryset = Product.objects.all()
+    queryset = Room.objects.all()
     if "ids" in scope:
-        queryset = Product.objects.filter(pk__in=scope["ids"])
+        queryset = Room.objects.filter(pk__in=scope["ids"])
     elif "filter" in scope:
-        queryset = ProductFilter(data=scope["filter"], queryset=queryset).qs
+        queryset = RoomFilter(data=scope["filter"], queryset=queryset).qs
 
     queryset = queryset.order_by("pk")
 
@@ -96,7 +96,7 @@ def queryset_in_batches(queryset):
         start_pk = pks[-1]
 
 
-def export_products_in_batches(
+def export_rooms_in_batches(
     queryset: "QuerySet",
     export_info: Dict[str, list],
     export_fields: Set[str],
@@ -105,22 +105,22 @@ def export_products_in_batches(
     temporary_file: Any,
     file_type: str,
 ):
-    warehouses = export_info.get("warehouses")
+    hotels = export_info.get("hotels")
     attributes = export_info.get("attributes")
     channels = export_info.get("channels")
 
     for batch_pks in queryset_in_batches(queryset):
-        product_batch = Product.objects.filter(pk__in=batch_pks).prefetch_related(
+        room_batch = Room.objects.filter(pk__in=batch_pks).prefetch_related(
             "attributes",
             "variants",
             "collections",
             "images",
-            "product_type",
+            "room_type",
             "category",
         )
 
-        export_data = get_products_data(
-            product_batch, export_fields, attributes, warehouses, channels
+        export_data = get_rooms_data(
+            room_batch, export_fields, attributes, hotels, channels
         )
 
         append_to_file(export_data, headers, temporary_file, file_type, delimiter)

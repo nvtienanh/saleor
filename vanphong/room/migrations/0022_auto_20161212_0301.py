@@ -9,24 +9,24 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0021_add_hstore_extension")]
+    dependencies = [("room", "0021_add_hstore_extension")]
 
     operations = [
-        migrations.RemoveField(model_name="product", name="attributes"),
+        migrations.RemoveField(model_name="room", name="attributes"),
         migrations.AddField(
-            model_name="product",
+            model_name="room",
             name="attributes",
             field=django.contrib.postgres.fields.hstore.HStoreField(
                 default={}, verbose_name="attributes"
             ),
         ),
         migrations.AlterField(
-            model_name="product",
-            name="product_class",
+            model_name="room",
+            name="room_class",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="products",
-                to="product.ProductClass",
+                related_name="rooms",
+                to="room.RoomClass",
             ),
         ),
     ]

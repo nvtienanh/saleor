@@ -15,10 +15,10 @@ from ...tests.fixtures import (
 from ...tests.utils import get_graphql_content, get_graphql_content_from_response
 
 
-def test_batch_queries(category, product, api_client, channel_USD):
-    query_product = """
-        query GetProduct($id: ID!, $channel: String) {
-            product(id: $id, channel: $channel) {
+def test_batch_queries(category, room, api_client, channel_USD):
+    query_room = """
+        query GetRoom($id: ID!, $channel: String) {
+            room(id: $id, channel: $channel) {
                 name
             }
         }
@@ -39,9 +39,9 @@ def test_batch_queries(category, product, api_client, channel_USD):
             },
         },
         {
-            "query": query_product,
+            "query": query_room,
             "variables": {
-                "id": graphene.Node.to_global_id("Product", product.pk),
+                "id": graphene.Node.to_global_id("Room", room.pk),
                 "channel": channel_USD.slug,
             },
         },
@@ -57,7 +57,7 @@ def test_batch_queries(category, product, api_client, channel_USD):
         for content in batch_content
         for field, value in content["data"].items()
     }
-    assert data["product"]["name"] == product.name
+    assert data["room"]["name"] == room.name
     assert data["category"]["name"] == category.name
 
 
@@ -237,7 +237,7 @@ def test_permission_denied_query_graphql_errors_are_logged_in_another_logger(
     response = api_client.post_graphql(
         """
         mutation {
-          productImageDelete(id: "aa") {
+          roomImageDelete(id: "aa") {
             errors {
               message
             }
@@ -252,13 +252,13 @@ def test_permission_denied_query_graphql_errors_are_logged_in_another_logger(
 
 
 def test_validation_errors_query_do_not_get_logged(
-    staff_api_client, graphql_log_handler, permission_manage_products
+    staff_api_client, graphql_log_handler, permission_manage_rooms
 ):
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     response = staff_api_client.post_graphql(
         """
         mutation {
-          productImageDelete(id: "aa") {
+          roomImageDelete(id: "aa") {
             errors {
               message
             }
@@ -270,12 +270,12 @@ def test_validation_errors_query_do_not_get_logged(
     assert graphql_log_handler.messages == []
 
 
-@mock.patch("saleor.graphql.product.schema.resolve_collection_by_id")
+@mock.patch("saleor.graphql.room.schema.resolve_collection_by_id")
 def test_unexpected_exceptions_are_logged_in_their_own_logger(
     mocked_resolve_collection_by_id,
     staff_api_client,
     graphql_log_handler,
-    permission_manage_products,
+    permission_manage_rooms,
     published_collection,
     channel_USD,
 ):
@@ -284,7 +284,7 @@ def test_unexpected_exceptions_are_logged_in_their_own_logger(
 
     mocked_resolve_collection_by_id.side_effect = bad_mocked_resolve_collection_by_id
 
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
     variables = {
         "id": graphene.Node.to_global_id("Collection", published_collection.pk),
         "channel": channel_USD.slug,
@@ -305,7 +305,7 @@ def test_unexpected_exceptions_are_logged_in_their_own_logger(
     ]
 
 
-def test_example_query(api_client, product):
+def test_example_query(api_client, room):
     response = api_client.post_graphql(EXAMPLE_QUERY)
     content = get_graphql_content(response)
-    assert content["data"]["products"]["edges"][0]["node"]["name"] == product.name
+    assert content["data"]["rooms"]["edges"][0]["node"]["name"] == room.name

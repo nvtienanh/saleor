@@ -8,24 +8,24 @@ from django.db.models import Q
 from django.utils.text import slugify
 
 
-def copy_featured_products_to_homepade_collection(apps, schema_editor):
+def copy_featured_rooms_to_homepade_collection(apps, schema_editor):
     SiteSettings = apps.get_model("site", "SiteSettings")
-    Collection = apps.get_model("product", "Collection")
-    Product = apps.get_model("product", "Product")
+    Collection = apps.get_model("room", "Collection")
+    Room = apps.get_model("room", "Room")
 
     today = datetime.date.today()
-    homepage_products = list(
-        Product.objects.filter(
+    homepage_rooms = list(
+        Room.objects.filter(
             Q(available_on__lte=today) | Q(available_on__isnull=True),
             is_published=True,
             is_featured=True,
         )
     )
-    if homepage_products:
+    if homepage_rooms:
         homepage_collection = Collection(name="Homepage collection for migration")
         homepage_collection.slug = slugify(homepage_collection.name)
         homepage_collection.save()
-        homepage_collection.products.add(*homepage_products)
+        homepage_collection.rooms.add(*homepage_rooms)
 
         for site_setting in SiteSettings.objects.all():
             site_setting.homepage_collection = homepage_collection
@@ -35,7 +35,7 @@ def copy_featured_products_to_homepade_collection(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0066_auto_20180803_0528"),
+        ("room", "0066_auto_20180803_0528"),
         ("site", "0017_auto_20180803_0528"),
     ]
 
@@ -48,11 +48,11 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="+",
-                to="product.Collection",
+                to="room.Collection",
             ),
         ),
         migrations.RunPython(
-            copy_featured_products_to_homepade_collection,
+            copy_featured_rooms_to_homepade_collection,
             lambda app, schema_editor: None,
         ),
     ]

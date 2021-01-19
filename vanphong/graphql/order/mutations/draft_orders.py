@@ -19,18 +19,18 @@ from ....order.utils import (
     recalculate_order,
     update_order_prices,
 )
-from ....warehouse.management import allocate_stock
+from ....hotel.management import allocate_stock
 from ...account.i18n import I18nMixin
 from ...account.types import AddressInput
 from ...channel.types import Channel
 from ...core.mutations import BaseMutation, ModelDeleteMutation, ModelMutation
 from ...core.scalars import PositiveDecimal
 from ...core.types.common import OrderError
-from ...product.types import ProductVariant
+from ...room.types import RoomVariant
 from ..types import Order, OrderLine
 from ..utils import (
     validate_draft_order,
-    validate_product_is_published_in_channel,
+    validate_room_is_published_in_channel,
     validate_variant_channel_listings,
 )
 
@@ -43,7 +43,7 @@ class OrderLineInput(graphene.InputObjectType):
 
 class OrderLineCreateInput(OrderLineInput):
     variant_id = graphene.ID(
-        description="Product variant ID.", name="variantId", required=True
+        description="Room variant ID.", name="variantId", required=True
     )
 
 
@@ -80,7 +80,7 @@ class DraftOrderCreateInput(DraftOrderInput):
     lines = graphene.List(
         OrderLineCreateInput,
         description=(
-            "Variant line input consisting of variant ID and quantity of products."
+            "Variant line input consisting of variant ID and quantity of rooms."
         ),
     )
 
@@ -154,9 +154,9 @@ class DraftOrderCreate(ModelMutation, I18nMixin):
 
         if lines:
             variant_ids = [line.get("variant_id") for line in lines]
-            variants = cls.get_nodes_or_error(variant_ids, "variants", ProductVariant)
+            variants = cls.get_nodes_or_error(variant_ids, "variants", RoomVariant)
             try:
-                validate_product_is_published_in_channel(variants, channel)
+                validate_room_is_published_in_channel(variants, channel)
                 validate_variant_channel_listings(variants, channel)
             except ValidationError as error:
                 field_name = "lines"
@@ -220,7 +220,7 @@ class DraftOrderCreate(ModelMutation, I18nMixin):
                 add_variant_to_draft_order(instance, variant, quantity)
 
             # New event
-            events.draft_order_added_products_event(
+            events.draft_order_added_rooms_event(
                 order=instance, user=info.context.user, order_lines=lines
             )
 
@@ -369,7 +369,7 @@ class DraftOrderComplete(BaseMutation):
                     raise ValidationError(
                         {
                             "lines": ValidationError(
-                                f"Insufficient product stock: {exc.item}",
+                                f"Insufficient room stock: {exc.item}",
                                 code=OrderErrorCode.INSUFFICIENT_STOCK,
                             )
                         }
@@ -418,7 +418,7 @@ class DraftOrderLinesCreate(BaseMutation):
         for input_line in data.get("input"):
             variant_id = input_line["variant_id"]
             variant = cls.get_node_or_error(
-                info, variant_id, "variant_id", only_type=ProductVariant
+                info, variant_id, "variant_id", only_type=RoomVariant
             )
             quantity = input_line["quantity"]
             if quantity > 0:
@@ -436,7 +436,7 @@ class DraftOrderLinesCreate(BaseMutation):
         variants = [line[1] for line in lines_to_add]
         try:
             channel = order.channel
-            validate_product_is_published_in_channel(variants, channel)
+            validate_room_is_published_in_channel(variants, channel)
             validate_variant_channel_listings(variants, channel)
         except ValidationError as error:
             raise ValidationError({"input": error})
@@ -453,7 +453,7 @@ class DraftOrderLinesCreate(BaseMutation):
             )
 
         # Create the event
-        events.draft_order_added_products_event(
+        events.draft_order_added_rooms_event(
             order=order, user=info.context.user, order_lines=lines_to_add
         )
 
@@ -495,7 +495,7 @@ class DraftOrderLineDelete(BaseMutation):
         line.id = db_id
 
         # Create the removal event
-        events.draft_order_removed_products_event(
+        events.draft_order_removed_rooms_event(
             order=order, user=info.context.user, order_lines=[(line.quantity, line)]
         )
 

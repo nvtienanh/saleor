@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0065_auto_20180719_0520"),
+        ("room", "0065_auto_20180719_0520"),
         ("discount", "0009_auto_20180719_0520"),
     ]
 
@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         ),
         migrations.RemoveField(model_name="voucher", name="apply_to"),
         migrations.RemoveField(model_name="voucher", name="category"),
-        migrations.RemoveField(model_name="voucher", name="product"),
+        migrations.RemoveField(model_name="voucher", name="room"),
         migrations.AddField(
             model_name="sale",
             name="end_date",
@@ -38,12 +38,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="voucher",
             name="categories",
-            field=models.ManyToManyField(blank=True, to="product.Category"),
+            field=models.ManyToManyField(blank=True, to="room.Category"),
         ),
         migrations.AddField(
             model_name="voucher",
             name="collections",
-            field=models.ManyToManyField(blank=True, to="product.Collection"),
+            field=models.ManyToManyField(blank=True, to="room.Collection"),
         ),
         migrations.AddField(
             model_name="voucher",
@@ -54,18 +54,18 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="voucher",
-            name="products",
-            field=models.ManyToManyField(blank=True, to="product.Product"),
+            name="rooms",
+            field=models.ManyToManyField(blank=True, to="room.Room"),
         ),
         migrations.AlterField(
             model_name="voucher",
             name="type",
             field=models.CharField(
                 choices=[
-                    ("value", "All products"),
-                    ("product", "Specific products"),
-                    ("collection", "Specific collections of products"),
-                    ("category", "Specific categories of products"),
+                    ("value", "All rooms"),
+                    ("room", "Specific rooms"),
+                    ("collection", "Specific collections of rooms"),
+                    ("category", "Specific categories of rooms"),
                     ("shipping", "Shipping"),
                 ],
                 default="value",

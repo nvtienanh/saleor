@@ -6,9 +6,9 @@ import pytest
 from django.utils.text import slugify
 from graphql_relay import to_global_id
 
-from ....product.error_codes import ProductErrorCode
-from ....product.models import Category, Product, ProductChannelListing
-from ....product.tests.utils import create_image, create_pdf_file_with_image_ext
+from ....room.error_codes import RoomErrorCode
+from ....room.models import Category, Room, RoomChannelListing
+from ....room.tests.utils import create_image, create_pdf_file_with_image_ext
 from ...tests.utils import get_graphql_content, get_multipart_request_body
 
 QUERY_CATEGORY = """
@@ -33,7 +33,7 @@ QUERY_CATEGORY = """
                     }
                 }
             }
-            products(first: 10, channel: $channel) {
+            rooms(first: 10, channel: $channel) {
                 edges {
                     node {
                         id
@@ -45,7 +45,7 @@ QUERY_CATEGORY = """
     """
 
 
-def test_category_query_by_id(user_api_client, product, channel_USD):
+def test_category_query_by_id(user_api_client, room, channel_USD):
     category = Category.objects.first()
     variables = {
         "id": graphene.Node.to_global_id("Category", category.pk),
@@ -61,7 +61,7 @@ def test_category_query_by_id(user_api_client, product, channel_USD):
     assert len(category_data["children"]["edges"]) == category.get_children().count()
 
 
-def test_category_query_by_slug(user_api_client, product, channel_USD):
+def test_category_query_by_slug(user_api_client, room, channel_USD):
     category = Category.objects.first()
     variables = {"slug": category.slug, "channel": channel_USD.slug}
     response = user_api_client.post_graphql(QUERY_CATEGORY, variables=variables)
@@ -74,7 +74,7 @@ def test_category_query_by_slug(user_api_client, product, channel_USD):
 
 
 def test_category_query_error_when_id_and_slug_provided(
-    user_api_client, product, graphql_log_handler, channel_USD
+    user_api_client, room, graphql_log_handler, channel_USD
 ):
     category = Category.objects.first()
     variables = {
@@ -91,7 +91,7 @@ def test_category_query_error_when_id_and_slug_provided(
 
 
 def test_category_query_error_when_no_param(
-    user_api_client, product, graphql_log_handler
+    user_api_client, room, graphql_log_handler
 ):
     variables = {}
     response = user_api_client.post_graphql(QUERY_CATEGORY, variables=variables)
@@ -102,15 +102,15 @@ def test_category_query_error_when_no_param(
     assert len(content["errors"]) == 1
 
 
-def test_query_category_product_only_visible_in_listings_as_customer(
-    user_api_client, product_list, channel_USD
+def test_query_category_room_only_visible_in_listings_as_customer(
+    user_api_client, room_list, channel_USD
 ):
     # given
     category = Category.objects.first()
 
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     variables = {
         "id": graphene.Node.to_global_id("Category", category.pk),
@@ -122,18 +122,18 @@ def test_query_category_product_only_visible_in_listings_as_customer(
 
     # then
     content = get_graphql_content(response, ignore_errors=True)
-    assert len(content["data"]["category"]["products"]["edges"]) == product_count - 1
+    assert len(content["data"]["category"]["rooms"]["edges"]) == room_count - 1
 
 
-def test_query_category_product_only_visible_in_listings_as_staff_without_perm(
-    staff_api_client, product_list, channel_USD
+def test_query_category_room_only_visible_in_listings_as_staff_without_perm(
+    staff_api_client, room_list, channel_USD
 ):
     # given
     category = Category.objects.first()
 
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     variables = {
         "id": graphene.Node.to_global_id("Category", category.pk),
@@ -145,20 +145,20 @@ def test_query_category_product_only_visible_in_listings_as_staff_without_perm(
 
     # then
     content = get_graphql_content(response, ignore_errors=True)
-    assert len(content["data"]["category"]["products"]["edges"]) == product_count - 1
+    assert len(content["data"]["category"]["rooms"]["edges"]) == room_count - 1
 
 
-def test_query_category_product_only_visible_in_listings_as_staff_with_perm(
-    staff_api_client, product_list, permission_manage_products
+def test_query_category_room_only_visible_in_listings_as_staff_with_perm(
+    staff_api_client, room_list, permission_manage_rooms
 ):
     # given
-    staff_api_client.user.user_permissions.add(permission_manage_products)
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
 
     category = Category.objects.first()
 
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     variables = {"id": graphene.Node.to_global_id("Category", category.pk)}
 
@@ -167,18 +167,18 @@ def test_query_category_product_only_visible_in_listings_as_staff_with_perm(
 
     # then
     content = get_graphql_content(response, ignore_errors=True)
-    assert len(content["data"]["category"]["products"]["edges"]) == product_count
+    assert len(content["data"]["category"]["rooms"]["edges"]) == room_count
 
 
-def test_query_category_product_only_visible_in_listings_as_app_without_perm(
-    app_api_client, product_list, channel_USD
+def test_query_category_room_only_visible_in_listings_as_app_without_perm(
+    app_api_client, room_list, channel_USD
 ):
     # given
     category = Category.objects.first()
 
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     variables = {
         "id": graphene.Node.to_global_id("Category", category.pk),
@@ -190,20 +190,20 @@ def test_query_category_product_only_visible_in_listings_as_app_without_perm(
 
     # then
     content = get_graphql_content(response, ignore_errors=True)
-    assert len(content["data"]["category"]["products"]["edges"]) == product_count - 1
+    assert len(content["data"]["category"]["rooms"]["edges"]) == room_count - 1
 
 
-def test_query_category_product_only_visible_in_listings_as_app_with_perm(
-    app_api_client, product_list, permission_manage_products
+def test_query_category_room_only_visible_in_listings_as_app_with_perm(
+    app_api_client, room_list, permission_manage_rooms
 ):
     # given
-    app_api_client.app.permissions.add(permission_manage_products)
+    app_api_client.app.permissions.add(permission_manage_rooms)
 
     category = Category.objects.first()
 
-    product_list[0].channel_listings.all().update(visible_in_listings=False)
+    room_list[0].channel_listings.all().update(visible_in_listings=False)
 
-    product_count = Product.objects.count()
+    room_count = Room.objects.count()
 
     variables = {"id": graphene.Node.to_global_id("Category", category.pk)}
 
@@ -212,7 +212,7 @@ def test_query_category_product_only_visible_in_listings_as_app_with_perm(
 
     # then
     content = get_graphql_content(response, ignore_errors=True)
-    assert len(content["data"]["category"]["products"]["edges"]) == product_count
+    assert len(content["data"]["category"]["rooms"]["edges"]) == room_count
 
 
 CATEGORY_CREATE_MUTATION = """
@@ -245,7 +245,7 @@ CATEGORY_CREATE_MUTATION = """
                         alt
                     }
                 }
-                productErrors {
+                roomErrors {
                     field
                     code
                     message
@@ -256,14 +256,14 @@ CATEGORY_CREATE_MUTATION = """
 
 
 def test_category_create_mutation(
-    monkeypatch, staff_api_client, permission_manage_products, media_root
+    monkeypatch, staff_api_client, permission_manage_rooms, media_root
 ):
     query = CATEGORY_CREATE_MUTATION
 
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.product.thumbnails."
+            "saleor.room.thumbnails."
             "create_category_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -287,11 +287,11 @@ def test_category_create_mutation(
     }
     body = get_multipart_request_body(query, variables, image_file, image_name)
     response = staff_api_client.post_multipart(
-        body, permissions=[permission_manage_products]
+        body, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryCreate"]
-    assert data["productErrors"] == []
+    assert data["roomErrors"] == []
     assert data["category"]["name"] == category_name
     assert data["category"]["description"] == category_description
     assert data["category"]["descriptionJson"] == category_description_json
@@ -312,7 +312,7 @@ def test_category_create_mutation(
     response = staff_api_client.post_graphql(query, variables)
     content = get_graphql_content(response)
     data = content["data"]["categoryCreate"]
-    assert data["productErrors"] == []
+    assert data["roomErrors"] == []
     assert data["category"]["parent"]["id"] == parent_id
 
 
@@ -326,45 +326,45 @@ def test_category_create_mutation(
     ),
 )
 def test_create_category_with_given_slug(
-    staff_api_client, permission_manage_products, input_slug, expected_slug
+    staff_api_client, permission_manage_rooms, input_slug, expected_slug
 ):
     query = CATEGORY_CREATE_MUTATION
     name = "Test category"
     variables = {"name": name, "slug": input_slug}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryCreate"]
-    assert not data["productErrors"]
+    assert not data["roomErrors"]
     assert data["category"]["slug"] == expected_slug
 
 
 def test_create_category_name_with_unicode(
-    staff_api_client, permission_manage_products
+    staff_api_client, permission_manage_rooms
 ):
     query = CATEGORY_CREATE_MUTATION
     name = "わたし-わ にっぽん です"
     variables = {"name": name}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryCreate"]
-    assert not data["productErrors"]
+    assert not data["roomErrors"]
     assert data["category"]["name"] == name
     assert data["category"]["slug"] == "わたし-わ-にっぽん-です"
 
 
 def test_category_create_mutation_without_background_image(
-    monkeypatch, staff_api_client, permission_manage_products
+    monkeypatch, staff_api_client, permission_manage_rooms
 ):
     query = CATEGORY_CREATE_MUTATION
 
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.product.thumbnails."
+            "saleor.room.thumbnails."
             "create_category_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -378,11 +378,11 @@ def test_category_create_mutation_without_background_image(
         "slug": slugify(category_name),
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryCreate"]
-    assert data["productErrors"] == []
+    assert data["roomErrors"] == []
     assert mock_create_thumbnails.call_count == 0
 
 
@@ -422,12 +422,12 @@ MUTATION_CATEGORY_UPDATE_MUTATION = """
 
 
 def test_category_update_mutation(
-    monkeypatch, staff_api_client, category, permission_manage_products, media_root
+    monkeypatch, staff_api_client, category, permission_manage_rooms, media_root
 ):
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.product.thumbnails."
+            "saleor.room.thumbnails."
             "create_category_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -456,7 +456,7 @@ def test_category_update_mutation(
         MUTATION_CATEGORY_UPDATE_MUTATION, variables, image_file, image_name
     )
     response = staff_api_client.post_multipart(
-        body, permissions=[permission_manage_products]
+        body, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryUpdate"]
@@ -474,7 +474,7 @@ def test_category_update_mutation(
 
 
 def test_category_update_mutation_invalid_background_image(
-    staff_api_client, category, permission_manage_products
+    staff_api_client, category, permission_manage_rooms
 ):
     image_file, image_name = create_pdf_file_with_image_ext()
     image_alt = "Alt text for an image."
@@ -490,7 +490,7 @@ def test_category_update_mutation_invalid_background_image(
         MUTATION_CATEGORY_UPDATE_MUTATION, variables, image_file, image_name
     )
     response = staff_api_client.post_multipart(
-        body, permissions=[permission_manage_products]
+        body, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryUpdate"]
@@ -499,7 +499,7 @@ def test_category_update_mutation_invalid_background_image(
 
 
 def test_category_update_mutation_without_background_image(
-    monkeypatch, staff_api_client, category, permission_manage_products
+    monkeypatch, staff_api_client, category, permission_manage_rooms
 ):
     query = """
         mutation($id: ID!, $name: String, $slug: String, $description: String) {
@@ -522,7 +522,7 @@ def test_category_update_mutation_without_background_image(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.product.thumbnails."
+            "saleor.room.thumbnails."
             "create_category_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -538,7 +538,7 @@ def test_category_update_mutation_without_background_image(
         "slug": slugify(category_name),
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
 
     content = get_graphql_content(response)
@@ -559,7 +559,7 @@ UPDATE_CATEGORY_SLUG_MUTATION = """
                 name
                 slug
             }
-            productErrors {
+            roomErrors {
                 field
                 message
                 code
@@ -580,7 +580,7 @@ UPDATE_CATEGORY_SLUG_MUTATION = """
 def test_update_category_slug(
     staff_api_client,
     category,
-    permission_manage_products,
+    permission_manage_rooms,
     input_slug,
     expected_slug,
     error_message,
@@ -593,22 +593,22 @@ def test_update_category_slug(
     node_id = graphene.Node.to_global_id("Category", category.id)
     variables = {"slug": input_slug, "id": node_id}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryUpdate"]
-    errors = data["productErrors"]
+    errors = data["roomErrors"]
     if not error_message:
         assert not errors
         assert data["category"]["slug"] == expected_slug
     else:
         assert errors
         assert errors[0]["field"] == "slug"
-        assert errors[0]["code"] == ProductErrorCode.REQUIRED.name
+        assert errors[0]["code"] == RoomErrorCode.REQUIRED.name
 
 
 def test_update_category_slug_exists(
-    staff_api_client, category, permission_manage_products
+    staff_api_client, category, permission_manage_rooms
 ):
     query = UPDATE_CATEGORY_SLUG_MUTATION
     input_slug = "test-slug"
@@ -623,14 +623,14 @@ def test_update_category_slug_exists(
     node_id = graphene.Node.to_global_id("Category", category.id)
     variables = {"slug": input_slug, "id": node_id}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryUpdate"]
-    errors = data["productErrors"]
+    errors = data["roomErrors"]
     assert errors
     assert errors[0]["field"] == "slug"
-    assert errors[0]["code"] == ProductErrorCode.UNIQUE.name
+    assert errors[0]["code"] == RoomErrorCode.UNIQUE.name
 
 
 @pytest.mark.parametrize(
@@ -647,7 +647,7 @@ def test_update_category_slug_exists(
 def test_update_category_slug_and_name(
     staff_api_client,
     category,
-    permission_manage_products,
+    permission_manage_rooms,
     input_slug,
     expected_slug,
     input_name,
@@ -667,7 +667,7 @@ def test_update_category_slug_and_name(
                     name
                     slug
                 }
-                productErrors {
+                roomErrors {
                     field
                     message
                     code
@@ -685,19 +685,19 @@ def test_update_category_slug_and_name(
     node_id = graphene.Node.to_global_id("Category", category.id)
     variables = {"slug": input_slug, "name": input_name, "id": node_id}
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     category.refresh_from_db()
     data = content["data"]["categoryUpdate"]
-    errors = data["productErrors"]
+    errors = data["roomErrors"]
     if not error_message:
         assert data["category"]["name"] == input_name == category.name
         assert data["category"]["slug"] == input_slug == category.slug
     else:
         assert errors
         assert errors[0]["field"] == error_field
-        assert errors[0]["code"] == ProductErrorCode.REQUIRED.name
+        assert errors[0]["code"] == RoomErrorCode.REQUIRED.name
 
 
 MUTATION_CATEGORY_DELETE = """
@@ -716,11 +716,11 @@ MUTATION_CATEGORY_DELETE = """
 
 
 def test_category_delete_mutation(
-    staff_api_client, category, permission_manage_products
+    staff_api_client, category, permission_manage_rooms
 ):
     variables = {"id": graphene.Node.to_global_id("Category", category.id)}
     response = staff_api_client.post_graphql(
-        MUTATION_CATEGORY_DELETE, variables, permissions=[permission_manage_products]
+        MUTATION_CATEGORY_DELETE, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryDelete"]
@@ -729,22 +729,22 @@ def test_category_delete_mutation(
         category.refresh_from_db()
 
 
-@patch("saleor.product.utils.update_products_discounted_prices_task")
+@patch("saleor.room.utils.update_rooms_discounted_prices_task")
 def test_category_delete_mutation_for_categories_tree(
-    mock_update_products_discounted_prices_task,
+    mock_update_rooms_discounted_prices_task,
     staff_api_client,
-    categories_tree_with_published_products,
-    permission_manage_products,
+    categories_tree_with_published_rooms,
+    permission_manage_rooms,
 ):
-    parent = categories_tree_with_published_products
-    parent_product = parent.products.first()
-    child_product = parent.children.first().products.first()
+    parent = categories_tree_with_published_rooms
+    parent_room = parent.rooms.first()
+    child_room = parent.children.first().rooms.first()
 
-    product_list = [child_product, parent_product]
+    room_list = [child_room, parent_room]
 
     variables = {"id": graphene.Node.to_global_id("Category", parent.id)}
     response = staff_api_client.post_graphql(
-        MUTATION_CATEGORY_DELETE, variables, permissions=[permission_manage_products]
+        MUTATION_CATEGORY_DELETE, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryDelete"]
@@ -752,37 +752,37 @@ def test_category_delete_mutation_for_categories_tree(
     with pytest.raises(parent._meta.model.DoesNotExist):
         parent.refresh_from_db()
 
-    mock_update_products_discounted_prices_task.delay.assert_called_once()
+    mock_update_rooms_discounted_prices_task.delay.assert_called_once()
     (
         _call_args,
         call_kwargs,
-    ) = mock_update_products_discounted_prices_task.delay.call_args
-    assert set(call_kwargs["product_ids"]) == set(p.pk for p in product_list)
+    ) = mock_update_rooms_discounted_prices_task.delay.call_args
+    assert set(call_kwargs["room_ids"]) == set(p.pk for p in room_list)
 
-    product_channel_listings = ProductChannelListing.objects.filter(
-        product__in=product_list
+    room_channel_listings = RoomChannelListing.objects.filter(
+        room__in=room_list
     )
-    for product_channel_listing in product_channel_listings:
-        assert product_channel_listing.is_published is False
-        assert not product_channel_listing.publication_date
-    assert product_channel_listings.count() == 4
+    for room_channel_listing in room_channel_listings:
+        assert room_channel_listing.is_published is False
+        assert not room_channel_listing.publication_date
+    assert room_channel_listings.count() == 4
 
 
-@patch("saleor.product.utils.update_products_discounted_prices_task")
+@patch("saleor.room.utils.update_rooms_discounted_prices_task")
 def test_category_delete_mutation_for_children_from_categories_tree(
-    mock_update_products_discounted_prices_task,
+    mock_update_rooms_discounted_prices_task,
     staff_api_client,
-    categories_tree_with_published_products,
-    permission_manage_products,
+    categories_tree_with_published_rooms,
+    permission_manage_rooms,
 ):
-    parent = categories_tree_with_published_products
+    parent = categories_tree_with_published_rooms
     child = parent.children.first()
-    parent_product = parent.products.first()
-    child_product = child.products.first()
+    parent_room = parent.rooms.first()
+    child_room = child.rooms.first()
 
     variables = {"id": graphene.Node.to_global_id("Category", child.id)}
     response = staff_api_client.post_graphql(
-        MUTATION_CATEGORY_DELETE, variables, permissions=[permission_manage_products]
+        MUTATION_CATEGORY_DELETE, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryDelete"]
@@ -790,27 +790,27 @@ def test_category_delete_mutation_for_children_from_categories_tree(
     with pytest.raises(child._meta.model.DoesNotExist):
         child.refresh_from_db()
 
-    mock_update_products_discounted_prices_task.delay.assert_called_once_with(
-        product_ids=[child_product.pk]
+    mock_update_rooms_discounted_prices_task.delay.assert_called_once_with(
+        room_ids=[child_room.pk]
     )
 
-    parent_product.refresh_from_db()
-    assert parent_product.category
-    product_channel_listings = ProductChannelListing.objects.filter(
-        product=parent_product
+    parent_room.refresh_from_db()
+    assert parent_room.category
+    room_channel_listings = RoomChannelListing.objects.filter(
+        room=parent_room
     )
-    for product_channel_listing in product_channel_listings:
-        assert product_channel_listing.is_published is True
-        assert product_channel_listing.publication_date
+    for room_channel_listing in room_channel_listings:
+        assert room_channel_listing.is_published is True
+        assert room_channel_listing.publication_date
 
-    child_product.refresh_from_db()
-    assert not child_product.category
-    product_channel_listings = ProductChannelListing.objects.filter(
-        product=child_product
+    child_room.refresh_from_db()
+    assert not child_room.category
+    room_channel_listings = RoomChannelListing.objects.filter(
+        room=child_room
     )
-    for product_channel_listing in product_channel_listings:
-        assert product_channel_listing.is_published is False
-        assert not product_channel_listing.publication_date
+    for room_channel_listing in room_channel_listings:
+        assert room_channel_listing.is_published is False
+        assert not room_channel_listing.publication_date
 
 
 LEVELED_CATEGORIES_QUERY = """
@@ -917,7 +917,7 @@ def test_category_image_query_without_associated_file(
 
 
 def test_update_category_mutation_remove_background_image(
-    staff_api_client, category_with_image, permission_manage_products
+    staff_api_client, category_with_image, permission_manage_rooms
 ):
     query = """
         mutation updateCategory($id: ID!, $backgroundImage: Upload) {
@@ -944,7 +944,7 @@ def test_update_category_mutation_remove_background_image(
         "backgroundImage": None,
     }
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     data = content["data"]["categoryUpdate"]["category"]

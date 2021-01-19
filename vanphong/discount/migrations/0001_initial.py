@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [("product", "0010_auto_20160129_0826")]
+    dependencies = [("room", "0010_auto_20160129_0826")]
 
     operations = [
         migrations.CreateModel(
@@ -42,9 +42,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "categories",
-                    models.ManyToManyField(blank=True, to="product.Category"),
+                    models.ManyToManyField(blank=True, to="room.Category"),
                 ),
-                ("products", models.ManyToManyField(blank=True, to="product.Product")),
+                ("rooms", models.ManyToManyField(blank=True, to="room.Room")),
             ],
         )
     ]

@@ -11,7 +11,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("product", "0012_auto_20160218_0812"),
+        ("room", "0012_auto_20160218_0812"),
         ("discount", "0003_auto_20160207_0534"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -120,11 +120,11 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "product",
+                    "room",
                     models.ForeignKey(
                         related_name="+",
-                        verbose_name="product",
-                        to="product.ProductVariant",
+                        verbose_name="room",
+                        to="room.RoomVariant",
                         on_delete=django.db.models.deletion.CASCADE,
                     ),
                 ),
@@ -132,6 +132,6 @@ class Migration(migrations.Migration):
             options={"db_table": "cart_cartline"},
         ),
         migrations.AlterUniqueTogether(
-            name="cartline", unique_together=set([("cart", "product", "data")])
+            name="cartline", unique_together=set([("cart", "room", "data")])
         ),
     ]

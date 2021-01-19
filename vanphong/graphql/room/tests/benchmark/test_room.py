@@ -6,9 +6,9 @@ from ....tests.utils import get_graphql_content
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_product_details(product_with_image, api_client, count_queries, channel_USD):
+def test_room_details(room_with_image, api_client, count_queries, channel_USD):
     query = """
-        fragment BasicProductFields on Product {
+        fragment BasicRoomFields on Room {
           id
           name
           thumbnail {
@@ -20,7 +20,7 @@ def test_product_details(product_with_image, api_client, count_queries, channel_
           }
         }
 
-        fragment ProductVariantFields on ProductVariant {
+        fragment RoomVariantFields on RoomVariant {
           id
           sku
           name
@@ -71,17 +71,17 @@ def test_product_details(product_with_image, api_client, count_queries, channel_
           }
         }
 
-        query ProductDetails($id: ID!, $channel: String) {
-          product(id: $id, channel: $channel) {
-            ...BasicProductFields
+        query RoomDetails($id: ID!, $channel: String) {
+          room(id: $id, channel: $channel) {
+            ...BasicRoomFields
             description
             category {
               id
               name
-              products(first: 4, channel: $channel) {
+              rooms(first: 4, channel: $channel) {
                 edges {
                   node {
-                    ...BasicProductFields
+                    ...BasicRoomFields
                     category {
                       id
                       name
@@ -145,7 +145,7 @@ def test_product_details(product_with_image, api_client, count_queries, channel_
               url
             }
             variants {
-              ...ProductVariantFields
+              ...RoomVariantFields
             }
             seoDescription
             seoTitle
@@ -153,13 +153,13 @@ def test_product_details(product_with_image, api_client, count_queries, channel_
           }
         }
     """
-    product = product_with_image
-    variant = product_with_image.variants.first()
-    image = product_with_image.get_first_image()
+    room = room_with_image
+    variant = room_with_image.variants.first()
+    image = room_with_image.get_first_image()
     image.variant_images.create(variant=variant)
 
     variables = {
-        "id": Node.to_global_id("Product", product.pk),
+        "id": Node.to_global_id("Room", room.pk),
         "channel": channel_USD.slug,
     }
     get_graphql_content(api_client.post_graphql(query, variables))
@@ -167,12 +167,12 @@ def test_product_details(product_with_image, api_client, count_queries, channel_
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_retrieve_product_attributes(
-    product_list, api_client, count_queries, channel_USD
+def test_retrieve_room_attributes(
+    room_list, api_client, count_queries, channel_USD
 ):
     query = """
-        query($sortBy: ProductOrder, $channel: String) {
-          products(first: 10, sortBy: $sortBy, channel: $channel) {
+        query($sortBy: RoomOrder, $channel: String) {
+          rooms(first: 10, sortBy: $sortBy, channel: $channel) {
             edges {
               node {
                 id
@@ -194,15 +194,15 @@ def test_retrieve_product_attributes(
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
 def test_retrieve_channel_listings(
-    product_list_with_many_channels,
+    room_list_with_many_channels,
     staff_api_client,
     count_queries,
-    permission_manage_products,
+    permission_manage_rooms,
     channel_USD,
 ):
     query = """
         query($channel: String) {
-          products(first: 10, channel: $channel) {
+          rooms(first: 10, channel: $channel) {
             edges {
               node {
                 id
@@ -262,7 +262,7 @@ def test_retrieve_channel_listings(
         staff_api_client.post_graphql(
             query,
             variables,
-            permissions=(permission_manage_products,),
+            permissions=(permission_manage_rooms,),
             check_no_permissions=False,
         )
     )
@@ -270,21 +270,21 @@ def test_retrieve_channel_listings(
 
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
-def test_retrive_products_with_product_types_and_attributes(
-    product_list,
+def test_retrive_rooms_with_room_types_and_attributes(
+    room_list,
     api_client,
     count_queries,
     channel_USD,
 ):
     query = """
         query($channel: String) {
-          products(first: 10, channel: $channel) {
+          rooms(first: 10, channel: $channel) {
             edges {
               node {
                 id
-                  productType {
+                  roomType {
                     name
-                  productAttributes {
+                  roomAttributes {
                     name
                   }
                   variantAttributes {

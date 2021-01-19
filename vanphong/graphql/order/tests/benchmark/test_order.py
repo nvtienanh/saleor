@@ -2,13 +2,13 @@ import pytest
 
 from ....checkout.tests.benchmark.test_checkout_mutations import (
     FRAGMENT_ADDRESS,
-    FRAGMENT_PRODUCT_VARIANT,
+    FRAGMENT_ROOM_VARIANT,
 )
 from ....tests.utils import get_graphql_content
 
 FRAGMENT_ORDER_DETAILS = (
     FRAGMENT_ADDRESS
-    + FRAGMENT_PRODUCT_VARIANT
+    + FRAGMENT_ROOM_VARIANT
     + """
         fragment OrderDetail on Order {
           userEmail
@@ -22,10 +22,10 @@ FRAGMENT_ORDER_DETAILS = (
             ...Address
           }
           lines {
-            productName
+            roomName
             quantity
             variant {
-              ...ProductVariant
+              ...RoomVariant
             }
             unitPrice {
               currency

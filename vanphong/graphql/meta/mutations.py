@@ -7,7 +7,7 @@ from ...core import models
 from ...core.error_codes import MetadataErrorCode
 from ...core.exceptions import PermissionDenied
 from ...menu import models as menu_models
-from ...product import models as product_models
+from ...room import models as room_models
 from ...shipping import models as shipping_models
 from ..channel import ChannelContext
 from ..core.mutations import BaseMutation
@@ -125,9 +125,9 @@ class BaseMetadataMutation(BaseMutation):
             [
                 isinstance(instance, Model)
                 for Model in [
-                    product_models.Product,
-                    product_models.ProductVariant,
-                    product_models.Collection,
+                    room_models.Room,
+                    room_models.RoomVariant,
+                    room_models.Collection,
                     shipping_models.ShippingMethod,
                     shipping_models.ShippingZone,
                     menu_models.Menu,

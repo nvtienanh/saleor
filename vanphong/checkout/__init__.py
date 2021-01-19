@@ -3,11 +3,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
-    from ..product.models import (
+    from ..room.models import (
         Collection,
-        Product,
-        ProductVariant,
-        ProductVariantChannelListing,
+        Room,
+        RoomVariant,
+        RoomVariantChannelListing,
     )
     from .models import CheckoutLine
 
@@ -27,7 +27,7 @@ class AddressType:
 @dataclass
 class CheckoutLineInfo:
     line: "CheckoutLine"
-    variant: "ProductVariant"
-    channel_listing: "ProductVariantChannelListing"
-    product: "Product"
+    variant: "RoomVariant"
+    channel_listing: "RoomVariantChannelListing"
+    room: "Room"
     collections: List["Collection"]

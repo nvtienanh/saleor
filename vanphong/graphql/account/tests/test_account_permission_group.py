@@ -1317,7 +1317,7 @@ def test_permission_group_update_mutation_out_of_scope_users(
     permission_manage_users,
     permission_manage_apps,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
 ):
     """Ensure user can assign and cannot unasign users whose permission scope
     is wider than requestor scope.
@@ -1333,7 +1333,7 @@ def test_permission_group_update_mutation_out_of_scope_users(
     )
 
     staff_user.user_permissions.add(permission_manage_apps, permission_manage_users)
-    staff_users[1].user_permissions.add(permission_manage_products)
+    staff_users[1].user_permissions.add(permission_manage_rooms)
     staff_user3.user_permissions.add(permission_manage_orders)
 
     group = permission_group_manage_users
@@ -1838,20 +1838,20 @@ def test_group_delete_mutation(
     staff_users,
     permission_manage_staff,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     staff_api_client,
 ):
     staff_user, staff_user1, staff_user2 = staff_users
     staff_user.user_permissions.add(
-        permission_manage_orders, permission_manage_products
+        permission_manage_orders, permission_manage_rooms
     )
     groups = Group.objects.bulk_create(
-        [Group(name="manage orders"), Group(name="manage orders and products")]
+        [Group(name="manage orders"), Group(name="manage orders and rooms")]
     )
     group1, group2 = groups
     group1.permissions.add(permission_manage_orders, permission_manage_staff)
     group2.permissions.add(
-        permission_manage_orders, permission_manage_products, permission_manage_staff
+        permission_manage_orders, permission_manage_rooms, permission_manage_staff
     )
 
     staff_user2.groups.add(group1, group2)
@@ -1878,20 +1878,20 @@ def test_group_delete_mutation_app_no_permission(
     staff_users,
     permission_manage_staff,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     app_api_client,
 ):
     staff_user, staff_user1, staff_user2 = staff_users
     staff_user.user_permissions.add(
-        permission_manage_orders, permission_manage_products
+        permission_manage_orders, permission_manage_rooms
     )
     groups = Group.objects.bulk_create(
-        [Group(name="manage orders"), Group(name="manage orders and products")]
+        [Group(name="manage orders"), Group(name="manage orders and rooms")]
     )
     group1, group2 = groups
     group1.permissions.add(permission_manage_orders, permission_manage_staff)
     group2.permissions.add(
-        permission_manage_orders, permission_manage_products, permission_manage_staff
+        permission_manage_orders, permission_manage_rooms, permission_manage_staff
     )
 
     staff_user2.groups.add(group1, group2)
@@ -1949,7 +1949,7 @@ def test_group_delete_mutation_left_not_manageable_permission(
     staff_users,
     permission_manage_staff,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     staff_api_client,
     superuser_api_client,
 ):
@@ -1959,12 +1959,12 @@ def test_group_delete_mutation_left_not_manageable_permission(
     """
     staff_user, staff_user1, staff_user2 = staff_users
     staff_user.user_permissions.add(
-        permission_manage_orders, permission_manage_products
+        permission_manage_orders, permission_manage_rooms
     )
     groups = Group.objects.bulk_create(
         [
-            Group(name="manage orders and products"),
-            Group(name="manage products"),
+            Group(name="manage orders and rooms"),
+            Group(name="manage rooms"),
             Group(name="manage staff"),
             Group(name="manage orders"),
         ]
@@ -1973,9 +1973,9 @@ def test_group_delete_mutation_left_not_manageable_permission(
 
     # add permissions to groups
     group1.permissions.add(
-        permission_manage_orders, permission_manage_products, permission_manage_staff
+        permission_manage_orders, permission_manage_rooms, permission_manage_staff
     )
-    group2.permissions.add(permission_manage_products)
+    group2.permissions.add(permission_manage_rooms)
     group3.permissions.add(permission_manage_staff)
     group4.permissions.add(permission_manage_orders)
 
@@ -2088,20 +2088,20 @@ def test_group_delete_mutation_cannot_remove_requestor_last_group(
     staff_users,
     permission_manage_staff,
     permission_manage_orders,
-    permission_manage_products,
+    permission_manage_rooms,
     staff_api_client,
 ):
     staff_user, staff_user1, staff_user2 = staff_users
     staff_user.user_permissions.add(
-        permission_manage_orders, permission_manage_products
+        permission_manage_orders, permission_manage_rooms
     )
     groups = Group.objects.bulk_create(
-        [Group(name="manage orders"), Group(name="manage orders and products")]
+        [Group(name="manage orders"), Group(name="manage orders and rooms")]
     )
     group1, group2 = groups
     group1.permissions.add(permission_manage_orders, permission_manage_staff)
     group2.permissions.add(
-        permission_manage_orders, permission_manage_products, permission_manage_staff
+        permission_manage_orders, permission_manage_rooms, permission_manage_staff
     )
 
     staff_user2.groups.add(group1, group2)
@@ -2159,7 +2159,7 @@ def test_permission_groups_query(
     query = QUERY_PERMISSION_GROUP_WITH_FILTER
 
     Group.objects.bulk_create(
-        [Group(name="Manage product."), Group(name="Remove product.")]
+        [Group(name="Manage room."), Group(name="Remove room.")]
     )
 
     variables = {"filter": permission_group_filter}
@@ -2179,7 +2179,7 @@ def test_permission_groups_app_no_permission(
     app.permissions.add(permission_manage_staff)
     query = QUERY_PERMISSION_GROUP_WITH_FILTER
     Group.objects.bulk_create(
-        [Group(name="Manage product."), Group(name="Remove product.")]
+        [Group(name="Manage room."), Group(name="Remove room.")]
     )
     variables = {"filter": {"search": "Manage user groups"}}
 

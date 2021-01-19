@@ -1,13 +1,13 @@
 import graphene
 
-from ....product.error_codes import ProductErrorCode
-from ....product.models import DigitalContent, ProductVariant
-from ....product.tests.utils import create_image
+from ....room.error_codes import RoomErrorCode
+from ....room.models import DigitalContent, RoomVariant
+from ....room.tests.utils import create_image
 from ...tests.utils import get_graphql_content, get_multipart_request_body
 
 
 def test_fetch_all_digital_contents(
-    staff_api_client, variant, digital_content, permission_manage_products
+    staff_api_client, variant, digital_content, permission_manage_rooms
 ):
 
     digital_content_num = DigitalContent.objects.count()
@@ -24,7 +24,7 @@ def test_fetch_all_digital_contents(
     }
     """
     response = staff_api_client.post_graphql(
-        query, permissions=[permission_manage_products]
+        query, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     edges = content["data"]["digitalContents"]["edges"]
@@ -32,7 +32,7 @@ def test_fetch_all_digital_contents(
 
 
 def test_fetch_single_digital_content(
-    staff_api_client, variant, digital_content, permission_manage_products
+    staff_api_client, variant, digital_content, permission_manage_rooms
 ):
     query = """
     query {
@@ -44,7 +44,7 @@ def test_fetch_single_digital_content(
         "DigitalContent", digital_content.id
     )
     response = staff_api_client.post_graphql(
-        query, permissions=[permission_manage_products]
+        query, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
 
@@ -53,7 +53,7 @@ def test_fetch_single_digital_content(
 
 
 def test_digital_content_create_mutation_custom_settings(
-    monkeypatch, staff_api_client, variant, permission_manage_products, media_root
+    monkeypatch, staff_api_client, variant, permission_manage_rooms, media_root
 ):
     query = """
     mutation createDigitalContent($variant: ID!,
@@ -71,7 +71,7 @@ def test_digital_content_create_mutation_custom_settings(
     max_downloads = 5
 
     variables = {
-        "variant": graphene.Node.to_global_id("ProductVariant", variant.id),
+        "variant": graphene.Node.to_global_id("RoomVariant", variant.id),
         "input": {
             "useDefaultSettings": False,
             "maxDownloads": max_downloads,
@@ -83,7 +83,7 @@ def test_digital_content_create_mutation_custom_settings(
 
     body = get_multipart_request_body(query, variables, image_file, image_name)
     response = staff_api_client.post_multipart(
-        body, permissions=[permission_manage_products]
+        body, permissions=[permission_manage_rooms]
     )
     get_graphql_content(response)
     variant.refresh_from_db()
@@ -95,7 +95,7 @@ def test_digital_content_create_mutation_custom_settings(
 
 
 def test_digital_content_create_mutation_default_settings(
-    monkeypatch, staff_api_client, variant, permission_manage_products, media_root
+    monkeypatch, staff_api_client, variant, permission_manage_rooms, media_root
 ):
     query = """
     mutation digitalCreate($variant: ID!,
@@ -111,13 +111,13 @@ def test_digital_content_create_mutation_default_settings(
     image_file, image_name = create_image()
 
     variables = {
-        "variant": graphene.Node.to_global_id("ProductVariant", variant.id),
+        "variant": graphene.Node.to_global_id("RoomVariant", variant.id),
         "input": {"useDefaultSettings": True, "contentFile": image_name},
     }
 
     body = get_multipart_request_body(query, variables, image_file, image_name)
     response = staff_api_client.post_multipart(
-        body, permissions=[permission_manage_products]
+        body, permissions=[permission_manage_rooms]
     )
     get_graphql_content(response)
     variant.refresh_from_db()
@@ -126,7 +126,7 @@ def test_digital_content_create_mutation_default_settings(
 
 
 def test_digital_content_create_mutation_removes_old_content(
-    monkeypatch, staff_api_client, variant, permission_manage_products, media_root
+    monkeypatch, staff_api_client, variant, permission_manage_rooms, media_root
 ):
     query = """
     mutation digitalCreate($variant: ID!,
@@ -142,17 +142,17 @@ def test_digital_content_create_mutation_removes_old_content(
     image_file, image_name = create_image()
 
     d_content = DigitalContent.objects.create(
-        content_file=image_file, product_variant=variant, use_default_settings=True
+        content_file=image_file, room_variant=variant, use_default_settings=True
     )
 
     variables = {
-        "variant": graphene.Node.to_global_id("ProductVariant", variant.id),
+        "variant": graphene.Node.to_global_id("RoomVariant", variant.id),
         "input": {"useDefaultSettings": True, "contentFile": image_name},
     }
 
     body = get_multipart_request_body(query, variables, image_file, image_name)
     response = staff_api_client.post_multipart(
-        body, permissions=[permission_manage_products]
+        body, permissions=[permission_manage_rooms]
     )
     get_graphql_content(response)
     variant.refresh_from_db()
@@ -162,7 +162,7 @@ def test_digital_content_create_mutation_removes_old_content(
 
 
 def test_digital_content_delete_mutation(
-    monkeypatch, staff_api_client, variant, digital_content, permission_manage_products
+    monkeypatch, staff_api_client, variant, digital_content, permission_manage_rooms
 ):
     query = """
     mutation digitalDelete($variant: ID!){
@@ -178,18 +178,18 @@ def test_digital_content_delete_mutation(
     variant.digital_content.save()
 
     assert hasattr(variant, "digital_content")
-    variables = {"variant": graphene.Node.to_global_id("ProductVariant", variant.id)}
+    variables = {"variant": graphene.Node.to_global_id("RoomVariant", variant.id)}
 
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     get_graphql_content(response)
-    variant = ProductVariant.objects.get(id=variant.id)
+    variant = RoomVariant.objects.get(id=variant.id)
     assert not hasattr(variant, "digital_content")
 
 
 def test_digital_content_update_mutation(
-    monkeypatch, staff_api_client, variant, digital_content, permission_manage_products
+    monkeypatch, staff_api_client, variant, digital_content, permission_manage_rooms
 ):
     url_valid_days = 3
     max_downloads = 5
@@ -214,7 +214,7 @@ def test_digital_content_update_mutation(
     variant.digital_content.save()
 
     variables = {
-        "variant": graphene.Node.to_global_id("ProductVariant", variant.id),
+        "variant": graphene.Node.to_global_id("RoomVariant", variant.id),
         "input": {
             "maxDownloads": max_downloads,
             "urlValidDays": url_valid_days,
@@ -224,10 +224,10 @@ def test_digital_content_update_mutation(
     }
 
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     get_graphql_content(response)
-    variant = ProductVariant.objects.get(id=variant.id)
+    variant = RoomVariant.objects.get(id=variant.id)
     digital_content = variant.digital_content
     assert digital_content.max_downloads == max_downloads
     assert digital_content.url_valid_days == url_valid_days
@@ -235,7 +235,7 @@ def test_digital_content_update_mutation(
 
 
 def test_digital_content_update_mutation_missing_content(
-    monkeypatch, staff_api_client, variant, permission_manage_products
+    monkeypatch, staff_api_client, variant, permission_manage_rooms
 ):
     url_valid_days = 3
     max_downloads = 5
@@ -255,7 +255,7 @@ def test_digital_content_update_mutation_missing_content(
                 field
                 message
             }
-            productErrors {
+            roomErrors {
                 field
                 message
                 code
@@ -265,7 +265,7 @@ def test_digital_content_update_mutation_missing_content(
     """
 
     variables = {
-        "variant": graphene.Node.to_global_id("ProductVariant", variant.id),
+        "variant": graphene.Node.to_global_id("RoomVariant", variant.id),
         "input": {
             "maxDownloads": max_downloads,
             "urlValidDays": url_valid_days,
@@ -275,7 +275,7 @@ def test_digital_content_update_mutation_missing_content(
     }
 
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     content = get_graphql_content(response)
     assert content["data"]["digitalContentUpdate"]["errors"]
@@ -283,12 +283,12 @@ def test_digital_content_update_mutation_missing_content(
     assert len(errors) == 1
     assert errors[0]["field"] == "variantId"
 
-    product_errors = content["data"]["digitalContentUpdate"]["productErrors"]
-    assert product_errors[0]["code"] == ProductErrorCode.VARIANT_NO_DIGITAL_CONTENT.name
+    room_errors = content["data"]["digitalContentUpdate"]["roomErrors"]
+    assert room_errors[0]["code"] == RoomErrorCode.VARIANT_NO_DIGITAL_CONTENT.name
 
 
 def test_digital_content_url_create(
-    monkeypatch, staff_api_client, variant, permission_manage_products, digital_content
+    monkeypatch, staff_api_client, variant, permission_manage_rooms, digital_content
 ):
     query = """
     mutation digitalContentUrlCreate($input: DigitalContentUrlCreateInput!) {
@@ -313,7 +313,7 @@ def test_digital_content_url_create(
 
     assert digital_content.urls.count() == 0
     response = staff_api_client.post_graphql(
-        query, variables, permissions=[permission_manage_products]
+        query, variables, permissions=[permission_manage_rooms]
     )
     get_graphql_content(response)
 

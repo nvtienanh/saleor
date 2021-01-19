@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0077_generate_versatile_background_images")]
+    dependencies = [("room", "0077_generate_versatile_background_images")]
 
     operations = [
         migrations.AddField(

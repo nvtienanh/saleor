@@ -25,7 +25,7 @@ class Page(CountableDjangoObjectType):
     attributes = graphene.List(
         graphene.NonNull(SelectedAttribute),
         required=True,
-        description="List of attributes assigned to this product.",
+        description="List of attributes assigned to this room.",
     )
 
     class Meta:

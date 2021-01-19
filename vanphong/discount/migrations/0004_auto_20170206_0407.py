@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
             model_name="sale",
             name="categories",
             field=models.ManyToManyField(
-                blank=True, to="product.Category", verbose_name="categories"
+                blank=True, to="room.Category", verbose_name="categories"
             ),
         ),
         migrations.AlterField(
@@ -35,9 +35,9 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name="sale",
-            name="products",
+            name="rooms",
             field=models.ManyToManyField(
-                blank=True, to="product.Product", verbose_name="products"
+                blank=True, to="room.Room", verbose_name="rooms"
             ),
         ),
         migrations.AlterField(
@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to="product.Category",
+                to="room.Category",
                 verbose_name="category",
             ),
         ),
@@ -91,13 +91,13 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name="voucher",
-            name="product",
+            name="room",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to="product.Product",
-                verbose_name="product",
+                to="room.Room",
+                verbose_name="room",
             ),
         ),
     ]

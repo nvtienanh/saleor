@@ -5,7 +5,7 @@ from ..core import JobStatus
 from . import events
 from .emails import send_export_failed_info
 from .models import ExportFile
-from .utils.export import export_products
+from .utils.export import export_rooms
 
 
 def on_task_failure(self, exc, task_id, args, kwargs, einfo):
@@ -41,7 +41,7 @@ def on_task_success(self, retval, task_id, args, kwargs):
 
 
 @app.task(on_success=on_task_success, on_failure=on_task_failure)
-def export_products_task(
+def export_rooms_task(
     export_file_id: int,
     scope: Dict[str, Union[str, dict]],
     export_info: Dict[str, list],
@@ -49,4 +49,4 @@ def export_products_task(
     delimiter: str = ";",
 ):
     export_file = ExportFile.objects.get(pk=export_file_id)
-    export_products(export_file, scope, export_info, file_type, delimiter)
+    export_rooms(export_file, scope, export_info, file_type, delimiter)

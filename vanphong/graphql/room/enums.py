@@ -1,8 +1,8 @@
 import graphene
 
 
-class ProductAttributeType(graphene.Enum):
-    PRODUCT = "PRODUCT"
+class RoomAttributeType(graphene.Enum):
+    ROOM = "ROOM"
     VARIANT = "VARIANT"
 
 
@@ -16,12 +16,12 @@ class CollectionPublished(graphene.Enum):
     HIDDEN = "hidden"
 
 
-class ProductTypeConfigurable(graphene.Enum):
+class RoomTypeConfigurable(graphene.Enum):
     CONFIGURABLE = "configurable"
     SIMPLE = "simple"
 
 
-class ProductTypeEnum(graphene.Enum):
+class RoomTypeEnum(graphene.Enum):
     DIGITAL = "digital"
     SHIPPABLE = "shippable"
 

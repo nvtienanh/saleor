@@ -9,7 +9,7 @@ def get_attributes_display_map(obj, attributes):
     """Return attributes associated with an object, as dict of AttrPK: AttributeValue.
 
     Args:
-        obj: The variant or product.
+        obj: The variant or room.
         attributes: Attribute Iterable
 
     """
@@ -29,7 +29,7 @@ def get_attributes_display_map(obj, attributes):
 
 
 def get_name_from_attributes(variant):
-    attributes = variant.product.product_type.variant_attributes.all()
+    attributes = variant.room.room_type.variant_attributes.all()
     values = get_attributes_display_map(variant, attributes)
     return " / ".join(
         attributechoice.name
@@ -38,9 +38,9 @@ def get_name_from_attributes(variant):
 
 
 def create_variant_name_based_on_attributes(apps, schema_editor):
-    ProductVariant = apps.get_model("product", "ProductVariant")
-    for variant in ProductVariant.objects.prefetch_related(
-        "product__product_type__variant_attributes__values"
+    RoomVariant = apps.get_model("room", "RoomVariant")
+    for variant in RoomVariant.objects.prefetch_related(
+        "room__room_type__variant_attributes__values"
     ):
         new_name = get_name_from_attributes(variant)
         if variant.name != new_name:
@@ -50,7 +50,7 @@ def create_variant_name_based_on_attributes(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    dependencies = [("product", "0058_auto_20180329_0142")]
+    dependencies = [("room", "0058_auto_20180329_0142")]
 
     operations = [
         migrations.RunPython(

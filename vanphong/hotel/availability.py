@@ -8,7 +8,7 @@ from ..core.exceptions import InsufficientStock
 from .models import Stock, StockQuerySet
 
 if TYPE_CHECKING:
-    from ..product.models import Product, ProductVariant
+    from ..room.models import Room, RoomVariant
 
 
 def _get_available_quantity(stocks: StockQuerySet) -> int:
@@ -22,7 +22,7 @@ def _get_available_quantity(stocks: StockQuerySet) -> int:
     return max(total_quantity - quantity_allocated, 0)
 
 
-def check_stock_quantity(variant: "ProductVariant", country_code: str, quantity: int):
+def check_stock_quantity(variant: "RoomVariant", country_code: str, quantity: int):
     """Validate if there is stock available for given variant in given country.
 
     If so - returns None. If there is less stock then required raise InsufficientStock
@@ -44,13 +44,13 @@ def check_stock_quantity_bulk(variants, country_code, quantities):
     """
     all_variants_stocks = (
         Stock.objects.for_country(country_code)
-        .filter(product_variant__in=variants)
+        .filter(room_variant__in=variants)
         .annotate_available_quantity()
     )
 
     variant_stocks = defaultdict(list)
     for stock in all_variants_stocks:
-        variant_stocks[stock.product_variant_id].append(stock)
+        variant_stocks[stock.room_variant_id].append(stock)
 
     for variant, quantity in zip(variants, quantities):
         stocks = variant_stocks.get(variant.pk)
@@ -68,17 +68,17 @@ def check_stock_quantity_bulk(variants, country_code, quantities):
                 )
 
 
-def get_available_quantity(variant: "ProductVariant", country_code: str) -> int:
-    """Return available quantity for given product in given country."""
+def get_available_quantity(variant: "RoomVariant", country_code: str) -> int:
+    """Return available quantity for given room in given country."""
     stocks = Stock.objects.get_variant_stocks_for_country(country_code, variant)
     if not stocks:
         return 0
     return _get_available_quantity(stocks)
 
 
-def is_product_in_stock(product: "Product", country_code: str) -> bool:
-    """Check if there is any variant of given product available in given country."""
-    stocks = Stock.objects.get_product_stocks_for_country(
-        country_code, product
+def is_room_in_stock(room: "Room", country_code: str) -> bool:
+    """Check if there is any variant of given room available in given country."""
+    stocks = Stock.objects.get_room_stocks_for_country(
+        country_code, room
     ).annotate_available_quantity()
     return any(stocks.values_list("available_quantity", flat=True))

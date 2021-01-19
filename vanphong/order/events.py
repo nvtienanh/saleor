@@ -123,27 +123,27 @@ def draft_order_created_event(*, order: Order, user: UserType) -> OrderEvent:
     )
 
 
-def draft_order_added_products_event(
+def draft_order_added_rooms_event(
     *, order: Order, user: UserType, order_lines: List[Tuple[int, OrderLine]]
 ) -> OrderEvent:
     if not _user_is_valid(user):
         user = None
     return OrderEvent.objects.create(
         order=order,
-        type=OrderEvents.DRAFT_ADDED_PRODUCTS,
+        type=OrderEvents.DRAFT_ADDED_ROOMS,
         user=user,
         parameters={"lines": _lines_per_quantity_to_line_object_list(order_lines)},
     )
 
 
-def draft_order_removed_products_event(
+def draft_order_removed_rooms_event(
     *, order: Order, user: UserType, order_lines: List[Tuple[int, OrderLine]]
 ) -> OrderEvent:
     if not _user_is_valid(user):
         user = None
     return OrderEvent.objects.create(
         order=order,
-        type=OrderEvents.DRAFT_REMOVED_PRODUCTS,
+        type=OrderEvents.DRAFT_REMOVED_ROOMS,
         user=user,
         parameters={"lines": _lines_per_quantity_to_line_object_list(order_lines)},
     )
@@ -320,7 +320,7 @@ def fulfillment_restocked_items_event(
     order: Order,
     user: UserType,
     fulfillment: Union[Order, Fulfillment],
-    warehouse_pk: Optional[int] = None,
+    hotel_pk: Optional[int] = None,
 ) -> OrderEvent:
     if not _user_is_valid(user):
         user = None
@@ -330,7 +330,7 @@ def fulfillment_restocked_items_event(
         user=user,
         parameters={
             "quantity": fulfillment.get_total_quantity(),
-            "warehouse": warehouse_pk,
+            "hotel": hotel_pk,
         },
     )
 

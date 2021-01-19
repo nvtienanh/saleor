@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("warehouse", "0009_remove_invalid_allocation"),
+        ("hotel", "0009_remove_invalid_allocation"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="warehouse",
+            name="hotel",
             options={"ordering": ("-slug",)},
         ),
     ]
