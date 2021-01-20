@@ -107,7 +107,7 @@ def test_update_rooms_discounted_prices_task(room_list):
 
 
 @patch(
-    "saleor.room.management.commands"
+    "vanphong.room.management.commands"
     ".update_all_rooms_discounted_prices"
     ".update_room_discounted_price"
 )

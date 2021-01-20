@@ -3,7 +3,7 @@
 import django_measurement.models
 from django.db import migrations
 
-import saleor.core.weight
+import vanphong.core.weight
 
 
 class Migration(migrations.Migration):
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             model_name="roomtype",
             name="weight",
             field=django_measurement.models.MeasurementField(
-                default=saleor.core.weight.zero_weight, measurement_class="Mass"
+                default=vanphong.core.weight.zero_weight, measurement_class="Mass"
             ),
         ),
         migrations.AddField(

@@ -15,7 +15,7 @@ def test_validate_hmac_signature(adyen_plugin, notification_with_hmac_signature)
     assert validate_hmac_signature(notification_with_hmac_signature, config) is True
 
 
-def test_validate_hmac_signature_missing_key_in_saleor(
+def test_validate_hmac_signature_missing_key_in_vanphong(
     adyen_plugin, notification_with_hmac_signature
 ):
     plugin = adyen_plugin()

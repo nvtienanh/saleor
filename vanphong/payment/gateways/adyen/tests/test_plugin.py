@@ -13,7 +13,7 @@ from ....models import Payment
 from ....utils import create_payment_information, create_transaction
 
 
-@mock.patch("saleor.payment.gateways.adyen.plugin.api_call")
+@mock.patch("vanphong.payment.gateways.adyen.plugin.api_call")
 def test_process_additional_action(
     mocked_api_call,
     dummy_payment_data,
@@ -96,7 +96,7 @@ def test_process_payment(
 
 
 @pytest.mark.vcr
-@mock.patch("saleor.payment.gateways.adyen.plugin.call_capture")
+@mock.patch("vanphong.payment.gateways.adyen.plugin.call_capture")
 def test_process_payment_with_adyen_auto_capture(
     capture_mock,
     payment_adyen_for_checkout,
@@ -143,7 +143,7 @@ def test_process_payment_with_auto_capture(
 
 
 @pytest.mark.vcr
-@mock.patch("saleor.payment.gateways.adyen.plugin.api_call")
+@mock.patch("vanphong.payment.gateways.adyen.plugin.api_call")
 def test_process_payment_additional_action(
     api_call_mock, payment_adyen_for_checkout, checkout_with_items, adyen_plugin
 ):
@@ -187,7 +187,7 @@ def test_process_payment_additional_action(
 
 
 @pytest.mark.vcr
-@mock.patch("saleor.payment.gateways.adyen.plugin.api_call")
+@mock.patch("vanphong.payment.gateways.adyen.plugin.api_call")
 def test_process_payment_additional_action_payment_does_not_exists(
     api_call_mock, payment_adyen_for_checkout, checkout_with_items, adyen_plugin
 ):
@@ -222,7 +222,7 @@ def test_process_payment_additional_action_payment_does_not_exists(
 
 
 @pytest.mark.vcr
-@mock.patch("saleor.payment.gateways.adyen.plugin.api_call")
+@mock.patch("vanphong.payment.gateways.adyen.plugin.api_call")
 def test_process_payment_additional_action_checkout_does_not_exists(
     api_call_mock, payment_adyen_for_checkout, checkout_with_items, adyen_plugin
 ):
@@ -504,7 +504,7 @@ def test_capture_payment(
     assert response.transaction_id == "852610007697063J"  # ID returned by Adyen
 
 
-@mock.patch("saleor.payment.gateways.adyen.utils.apple_pay.requests.post")
+@mock.patch("vanphong.payment.gateways.adyen.utils.apple_pay.requests.post")
 def test_validate_plugin_configuration_incorrect_certificate(
     mocked_request, adyen_plugin
 ):
@@ -515,7 +515,7 @@ def test_validate_plugin_configuration_incorrect_certificate(
         plugin.validate_plugin_configuration(configuration)
 
 
-@mock.patch("saleor.payment.gateways.adyen.utils.apple_pay.requests.post")
+@mock.patch("vanphong.payment.gateways.adyen.utils.apple_pay.requests.post")
 def test_validate_plugin_configuration_correct_cert(mocked_request, adyen_plugin):
     plugin = adyen_plugin(apple_pay_cert="correct_cert")
     mocked_request.side_effect = RequestException()

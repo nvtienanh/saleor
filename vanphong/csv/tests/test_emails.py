@@ -7,7 +7,7 @@ from .. import ExportEvents, emails
 from ..models import ExportEvent
 
 
-@mock.patch("saleor.csv.emails.send_templated_mail")
+@mock.patch("vanphong.csv.emails.send_templated_mail")
 def test_send_email_with_link_to_download_file(
     mocked_templated_email, site_settings, user_export_file, tmpdir, media_root
 ):
@@ -52,7 +52,7 @@ def test_send_email_with_link_to_download_file(
     ).exists()
 
 
-@mock.patch("saleor.csv.emails.send_templated_mail")
+@mock.patch("vanphong.csv.emails.send_templated_mail")
 def test_send_export_failed_info(
     mocked_templated_email, site_settings, user_export_file, tmpdir, media_root
 ):

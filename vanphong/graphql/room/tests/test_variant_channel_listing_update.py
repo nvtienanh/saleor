@@ -235,7 +235,7 @@ def test_variant_channel_listing_update_as_staff_user(
     assert variant_data["channelListings"][1]["channel"]["slug"] == channel_PLN.slug
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_variant_channel_listing_update_trigger_webhook_room_updated(
     mock_room_updated,
     staff_api_client,
@@ -384,7 +384,7 @@ def test_variant_channel_listing_update_as_anonymous(
     assert_no_permission(response)
 
 
-@patch("saleor.graphql.room.mutations.channels.update_room_discounted_price_task")
+@patch("vanphong.graphql.room.mutations.channels.update_room_discounted_price_task")
 def test_room_variant_channel_listing_update_updates_discounted_price(
     mock_update_room_discounted_price_task,
     staff_api_client,

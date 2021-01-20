@@ -8,7 +8,7 @@ from ..actions import create_fulfillments
 from ..models import FulfillmentLine, OrderStatus
 
 
-@patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
+@patch("vanphong.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
 def test_create_fulfillments(
     mock_email_fulfillment,
     staff_user,
@@ -56,7 +56,7 @@ def test_create_fulfillments(
     )
 
 
-@patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
+@patch("vanphong.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
 def test_create_fulfillments_without_notification(
     mock_email_fulfillment,
     staff_user,
@@ -160,7 +160,7 @@ def test_create_fulfillments_many_hotels(
     )
 
 
-@patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
+@patch("vanphong.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
 def test_create_fulfillments_with_one_line_empty_quantity(
     mock_email_fulfillment,
     staff_user,
@@ -206,7 +206,7 @@ def test_create_fulfillments_with_one_line_empty_quantity(
     )
 
 
-@patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
+@patch("vanphong.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
 def test_create_fulfillments_with_variant_without_inventory_tracking(
     mock_email_fulfillment,
     staff_user,
@@ -246,7 +246,7 @@ def test_create_fulfillments_with_variant_without_inventory_tracking(
     )
 
 
-@patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
+@patch("vanphong.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
 def test_create_fulfillments_without_allocations(
     mock_email_fulfillment,
     staff_user,
@@ -295,7 +295,7 @@ def test_create_fulfillments_without_allocations(
     )
 
 
-@patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
+@patch("vanphong.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
 def test_create_fulfillments_hotel_with_out_of_stock(
     mock_email_fulfillment,
     staff_user,
@@ -344,7 +344,7 @@ def test_create_fulfillments_hotel_with_out_of_stock(
     mock_email_fulfillment.assert_not_called()
 
 
-@patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
+@patch("vanphong.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
 def test_create_fulfillments_hotel_without_stock(
     mock_email_fulfillment,
     staff_user,
@@ -389,7 +389,7 @@ def test_create_fulfillments_hotel_without_stock(
     mock_email_fulfillment.assert_not_called()
 
 
-@patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
+@patch("vanphong.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
 def test_create_fulfillments_with_variant_without_inventory_tracking_and_without_stock(
     mock_email_fulfillment,
     staff_user,

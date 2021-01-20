@@ -38,13 +38,13 @@ def test_report_order_has_no_errors(mocked_ga_report, order_with_lines, settings
 @mock.patch("google_measurement_protocol.report")
 def test_get_view_payloads(mocked_ga_report, settings):
     settings.GOOGLE_ANALYTICS_TRACKING_ID = "ga_id"
-    headers = {"HTTP_HOST": "getsaleor.com", "HTTP_REFERER": "example.com"}
+    headers = {"HTTP_HOST": "getvanphong.com", "HTTP_REFERER": "example.com"}
     report_view("dummy_client_id", "/test-path/", "en-us", headers)
     expected_payload = [
         {
             "t": "pageview",
             "dp": "/test-path/",
-            "dh": "getsaleor.com",
+            "dh": "getvanphong.com",
             "dr": "example.com",
             "ul": "en-us",
         }

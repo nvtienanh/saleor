@@ -957,7 +957,7 @@ def test_room_query_error_when_id_and_slug_provided(
     }
     response = user_api_client.post_graphql(QUERY_ROOM, variables=variables)
     assert graphql_log_handler.messages == [
-        "saleor.graphql.errors.handled[INFO].GraphQLError"
+        "vanphong.graphql.errors.handled[INFO].GraphQLError"
     ]
     content = get_graphql_content(response, ignore_errors=True)
     assert len(content["errors"]) == 1
@@ -971,7 +971,7 @@ def test_room_query_error_when_no_param(
     variables = {}
     response = user_api_client.post_graphql(QUERY_ROOM, variables=variables)
     assert graphql_log_handler.messages == [
-        "saleor.graphql.errors.handled[INFO].GraphQLError"
+        "vanphong.graphql.errors.handled[INFO].GraphQLError"
     ]
     content = get_graphql_content(response, ignore_errors=True)
     assert len(content["errors"]) == 1
@@ -3130,7 +3130,7 @@ def test_room_create_with_collections_webhook(
         assert room.collections.first() == published_collection
 
     monkeypatch.setattr(
-        "saleor.plugins.manager.PluginsManager.room_created",
+        "vanphong.plugins.manager.PluginsManager.room_created",
         lambda _, room: assert_room_has_collections(room),
     )
 
@@ -3198,7 +3198,7 @@ MUTATION_UPDATE_ROOM = """
 """
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_update_room(
     updated_webhook_mock,
     staff_api_client,
@@ -3267,7 +3267,7 @@ def test_update_room(
     updated_webhook_mock.assert_called_once_with(room)
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_update_room_with_file_attribute_value(
     updated_webhook_mock,
     staff_api_client,
@@ -3324,7 +3324,7 @@ def test_update_room_with_file_attribute_value(
     updated_webhook_mock.assert_called_once_with(room)
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_update_room_with_file_attribute_value_new_value_is_not_created(
     updated_webhook_mock,
     staff_api_client,
@@ -4794,7 +4794,7 @@ def test_room_image_create_mutation(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.graphql.room.mutations.rooms."
+            "vanphong.graphql.room.mutations.rooms."
             "create_room_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -4896,7 +4896,7 @@ def test_room_image_update_mutation(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.graphql.room.mutations.rooms."
+            "vanphong.graphql.room.mutations.rooms."
             "create_room_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -5123,7 +5123,7 @@ def test_unassign_not_assigned_variant_image(
     assert content["data"]["variantImageUnassign"]["errors"][0]["field"] == ("imageId")
 
 
-@patch("saleor.room.tasks.update_variants_names.delay")
+@patch("vanphong.room.tasks.update_variants_names.delay")
 def test_room_type_update_changes_variant_name(
     mock_update_variants_names,
     staff_api_client,
@@ -5178,7 +5178,7 @@ def test_room_type_update_changes_variant_name(
     )
 
 
-@patch("saleor.room.tasks._update_variants_names")
+@patch("vanphong.room.tasks._update_variants_names")
 def test_room_update_variants_names(mock__update_variants_names, room_type):
     variant_attributes = [room_type.variant_attributes.first()]
     variant_attr_ids = [attr.pk for attr in variant_attributes]

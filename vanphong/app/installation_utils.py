@@ -11,7 +11,7 @@ REQUEST_TIMEOUT = 30
 
 def send_app_token(target_url: str, token: str):
     domain = Site.objects.get_current().domain
-    headers = {"x-saleor-domain": domain, "Content-Type": "application/json"}
+    headers = {"x-vanphong-domain": domain, "Content-Type": "application/json"}
     json_data = {"auth_token": token}
     response = requests.post(
         target_url, json=json_data, headers=headers, timeout=REQUEST_TIMEOUT

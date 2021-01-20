@@ -31,7 +31,7 @@ DEFAULT_CURRENCY = "USD"
 TIME_ZONE = "America/Chicago"
 LANGUAGE_CODE = "en"
 
-SEARCH_BACKEND = "saleor.search.backends.postgresql"
+SEARCH_BACKEND = "vanphong.search.backends.postgresql"
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
@@ -43,8 +43,8 @@ MAX_CHECKOUT_LINE_QUANTITY = 50
 
 AUTH_PASSWORD_VALIDATORS = []
 
-PASSWORD_HASHERS = ["saleor.tests.dummy_password_hasher.DummyHasher"]
-PLUGINS_MANAGER = "saleor.plugins.manager.PluginsManager"
+PASSWORD_HASHERS = ["vanphong.tests.dummy_password_hasher.DummyHasher"]
+PLUGINS_MANAGER = "vanphong.plugins.manager.PluginsManager"
 
 PLUGINS = []
 
@@ -52,7 +52,7 @@ PATTERNS_IGNORED_IN_QUERY_CAPTURES: List[Union[Pattern, SimpleLazyObject]] = [
     lazy_re_compile(r"^SET\s+")
 ]
 
-INSTALLED_APPS.append("saleor.tests")  # noqa: F405
+INSTALLED_APPS.append("vanphong.tests")  # noqa: F405
 
 JWT_EXPIRE = True
 

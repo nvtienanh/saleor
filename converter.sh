@@ -44,6 +44,12 @@ find_replace () {
                     sed -i 's/Warehouse/Hotel/g' $pathname
                     sed -i 's/warehouse/hotel/g' $pathname
                     sed -i 's/WAREHOUSE/HOTEL/g' $pathname
+
+                    # Change import saleor.xxx to vanphong.xxx
+                    sed -i 's/saleor/vanphong/g' $pathname
+
+                    # Convert LF to CRLF
+                    sed -i 's/$/\r/g' $pathname
                 esac
             fi
         fi

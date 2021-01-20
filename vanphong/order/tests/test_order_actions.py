@@ -62,8 +62,8 @@ def order_with_digital_line(order, digital_content, stock, site_settings):
     return order
 
 
-@patch("saleor.order.emails.send_fulfillment_confirmation.delay")
-@patch("saleor.order.emails.send_payment_confirmation.delay")
+@patch("vanphong.order.emails.send_fulfillment_confirmation.delay")
+@patch("vanphong.order.emails.send_payment_confirmation.delay")
 def test_handle_fully_paid_order_digital_lines(
     mock_send_payment_confirmation,
     mock_send_fulfillment_confirmation,
@@ -105,7 +105,7 @@ def test_handle_fully_paid_order_digital_lines(
     assert order.status == OrderStatus.FULFILLED
 
 
-@patch("saleor.order.emails.send_payment_confirmation.delay")
+@patch("vanphong.order.emails.send_payment_confirmation.delay")
 def test_handle_fully_paid_order(mock_send_payment_confirmation, order):
     handle_fully_paid_order(order)
     event_order_paid, event_email_sent = order.events.all()
@@ -120,7 +120,7 @@ def test_handle_fully_paid_order(mock_send_payment_confirmation, order):
     mock_send_payment_confirmation.assert_called_once_with(order.pk)
 
 
-@patch("saleor.order.emails.send_payment_confirmation.delay")
+@patch("vanphong.order.emails.send_payment_confirmation.delay")
 def test_handle_fully_paid_order_no_email(mock_send_payment_confirmation, order):
     order.user = None
     order.user_email = ""
@@ -203,7 +203,7 @@ def test_cancel_fulfillment_variant_witout_inventory_tracking(
     assert stock_quantity_before == line.order_line.variant.stocks.get().quantity
 
 
-@patch("saleor.order.actions.send_order_canceled_confirmation")
+@patch("vanphong.order.actions.send_order_canceled_confirmation")
 def test_cancel_order(
     send_order_canceled_confirmation_mock,
     fulfilled_order_with_all_cancelled_fulfillments,
@@ -230,7 +230,7 @@ def test_cancel_order(
     send_order_canceled_confirmation_mock.assert_called_once_with(order, None)
 
 
-@patch("saleor.order.actions.send_order_refunded_confirmation")
+@patch("vanphong.order.actions.send_order_refunded_confirmation")
 def test_order_refunded(
     send_order_refunded_confirmation_mock,
     order,
@@ -297,8 +297,8 @@ def test_fulfill_order_line_without_inventory_tracking(order_with_lines):
     assert line.quantity_fulfilled == quantity_fulfilled_before + line.quantity
 
 
-@patch("saleor.order.actions.emails.send_fulfillment_confirmation")
-@patch("saleor.order.utils.get_default_digital_content_settings")
+@patch("vanphong.order.actions.emails.send_fulfillment_confirmation")
+@patch("vanphong.order.utils.get_default_digital_content_settings")
 def test_fulfill_digital_lines(
     mock_digital_settings, mock_email_fulfillment, order_with_lines, media_root
 ):
@@ -326,7 +326,7 @@ def test_fulfill_digital_lines(
     assert mock_email_fulfillment.delay.called
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_create_refund_fulfillment_only_order_lines(
     mocked_refund, order_with_lines, payment_dummy
 ):
@@ -379,7 +379,7 @@ def test_create_refund_fulfillment_only_order_lines(
     mocked_refund.assert_called_once_with(payment_dummy, amount)
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_create_refund_fulfillment_multiple_order_line_refunds(
     mocked_refund, order_with_lines, payment_dummy
 ):
@@ -421,7 +421,7 @@ def test_create_refund_fulfillment_multiple_order_line_refunds(
     assert mocked_refund.call_count == 2
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_create_refund_fulfillment_included_shipping_costs(
     mocked_refund, order_with_lines, payment_dummy
 ):
@@ -462,7 +462,7 @@ def test_create_refund_fulfillment_included_shipping_costs(
     mocked_refund.assert_called_once_with(payment_dummy, amount)
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_create_refund_fulfillment_only_fulfillment_lines(
     mocked_refund, fulfilled_order, payment_dummy
 ):
@@ -501,7 +501,7 @@ def test_create_refund_fulfillment_only_fulfillment_lines(
     mocked_refund.assert_called_once_with(payment_dummy, amount)
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_create_refund_fulfillment_multiple_fulfillment_lines_refunds(
     mocked_refund, fulfilled_order, payment_dummy
 ):
@@ -544,7 +544,7 @@ def test_create_refund_fulfillment_multiple_fulfillment_lines_refunds(
     assert mocked_refund.call_count == 2
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_create_refund_fulfillment_custom_amount(
     mocked_refund, fulfilled_order, payment_dummy
 ):
@@ -582,7 +582,7 @@ def test_create_refund_fulfillment_custom_amount(
     mocked_refund.assert_called_once_with(payment_dummy, amount)
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_create_refund_fulfillment_multiple_refunds(
     mocked_refund,
     fulfilled_order,

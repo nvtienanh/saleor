@@ -183,7 +183,7 @@ def assert_max_num_queries(capture_queries):
 
 @pytest.fixture
 def setup_vatlayer(settings):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     data = {
         "active": True,
         "configuration": [
@@ -197,8 +197,8 @@ def setup_vatlayer(settings):
 @pytest.fixture(autouse=True)
 def setup_dummy_gateways(settings):
     settings.PLUGINS = [
-        "saleor.payment.gateways.dummy.plugin.DummyGatewayPlugin",
-        "saleor.payment.gateways.dummy_credit_card.plugin.DummyCreditCardGatewayPlugin",
+        "vanphong.payment.gateways.dummy.plugin.DummyGatewayPlugin",
+        "vanphong.payment.gateways.dummy_credit_card.plugin.DummyCreditCardGatewayPlugin",
     ]
     return settings
 
@@ -206,7 +206,7 @@ def setup_dummy_gateways(settings):
 @pytest.fixture
 def sample_gateway(settings):
     settings.PLUGINS += [
-        "saleor.plugins.tests.sample_plugins.ActiveDummyPaymentGateway"
+        "vanphong.plugins.tests.sample_plugins.ActiveDummyPaymentGateway"
     ]
 
 
@@ -215,7 +215,7 @@ def site_settings(db, settings) -> SiteSettings:
     """Create a site and matching site settings.
 
     This fixture is autouse because django.contrib.sites.models.Site and
-    saleor.site.models.SiteSettings have a one-to-one relationship and a site
+    vanphong.site.models.SiteSettings have a one-to-one relationship and a site
     should never exist without a matching settings object.
     """
     site = Site.objects.get_or_create(name="mirumee.com", domain="mirumee.com")[0]
@@ -1908,7 +1908,7 @@ def voucher_with_many_channels(voucher, channel_PLN):
 @pytest.fixture
 def voucher_percentage(channel_USD):
     voucher = Voucher.objects.create(
-        code="saleor",
+        code="vanphong",
         discount_value_type=DiscountValueType.PERCENTAGE,
     )
     VoucherChannelListing.objects.create(
@@ -3219,7 +3219,7 @@ def description_json():
         ],
         "entityMap": {
             "0": {
-                "data": {"href": "https://github.com/mirumee/saleor"},
+                "data": {"href": "https://github.com/mirumee/vanphong"},
                 "type": "LINK",
                 "mutability": "MUTABLE",
             }

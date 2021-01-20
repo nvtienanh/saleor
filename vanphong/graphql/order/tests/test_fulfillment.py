@@ -35,7 +35,7 @@ mutation fulfillOrder(
 """
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments")
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments")
 def test_order_fulfill(
     mock_create_fulfillments,
     staff_api_client,
@@ -85,7 +85,7 @@ def test_order_fulfill(
     )
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments")
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments")
 def test_order_fulfill_as_app(
     mock_create_fulfillments,
     app_api_client,
@@ -135,7 +135,7 @@ def test_order_fulfill_as_app(
     )
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments")
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments")
 def test_order_fulfill_many_hotels(
     mock_create_fulfillments,
     staff_api_client,
@@ -194,7 +194,7 @@ def test_order_fulfill_many_hotels(
     )
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments")
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments")
 def test_order_fulfill_without_notification(
     mock_create_fulfillments,
     staff_api_client,
@@ -236,7 +236,7 @@ def test_order_fulfill_without_notification(
     )
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments")
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments")
 def test_order_fulfill_lines_with_empty_quantity(
     mock_create_fulfillments,
     staff_api_client,
@@ -294,7 +294,7 @@ def test_order_fulfill_lines_with_empty_quantity(
     )
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments")
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments")
 def test_order_fulfill_zero_quantity(
     mock_create_fulfillments,
     staff_api_client,
@@ -334,7 +334,7 @@ def test_order_fulfill_zero_quantity(
     mock_create_fulfillments.assert_not_called()
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments")
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments")
 def test_order_fulfill_fulfilled_order(
     mock_create_fulfillments,
     staff_api_client,
@@ -374,7 +374,7 @@ def test_order_fulfill_fulfilled_order(
     mock_create_fulfillments.assert_not_called()
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments", autospec=True)
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments", autospec=True)
 def test_order_fulfill_hotel_with_insufficient_stock_exception(
     mock_create_fulfillments,
     staff_api_client,
@@ -423,7 +423,7 @@ def test_order_fulfill_hotel_with_insufficient_stock_exception(
     assert error["hotel"] == hotel_id
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments", autospec=True)
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments", autospec=True)
 def test_order_fulfill_hotel_duplicated_hotel_id(
     mock_create_fulfillments,
     staff_api_client,
@@ -465,7 +465,7 @@ def test_order_fulfill_hotel_duplicated_hotel_id(
     mock_create_fulfillments.assert_not_called()
 
 
-@patch("saleor.graphql.order.mutations.fulfillments.create_fulfillments", autospec=True)
+@patch("vanphong.graphql.order.mutations.fulfillments.create_fulfillments", autospec=True)
 def test_order_fulfill_hotel_duplicated_order_line_id(
     mock_create_fulfillments,
     staff_api_client,
@@ -508,7 +508,7 @@ def test_order_fulfill_hotel_duplicated_order_line_id(
     mock_create_fulfillments.assert_not_called()
 
 
-@patch("saleor.order.emails.send_fulfillment_update.delay")
+@patch("vanphong.order.emails.send_fulfillment_update.delay")
 def test_fulfillment_update_tracking(
     send_fulfillment_update_mock,
     staff_api_client,
@@ -550,7 +550,7 @@ FULFILLMENT_UPDATE_TRACKING_WITH_SEND_NOTIFICATION_QUERY = """
     """
 
 
-@patch("saleor.order.emails.send_fulfillment_update.delay")
+@patch("vanphong.order.emails.send_fulfillment_update.delay")
 def test_fulfillment_update_tracking_send_notification_true(
     send_fulfillment_update_mock,
     staff_api_client,
@@ -573,7 +573,7 @@ def test_fulfillment_update_tracking_send_notification_true(
     )
 
 
-@patch("saleor.order.emails.send_fulfillment_update.delay")
+@patch("vanphong.order.emails.send_fulfillment_update.delay")
 def test_fulfillment_update_tracking_send_notification_false(
     send_fulfillment_update_mock,
     staff_api_client,
@@ -680,7 +680,7 @@ def test_cancel_fulfillment_hotel_without_stock(
     assert allocation.quantity_allocated == order_line.quantity
 
 
-@patch("saleor.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
+@patch("vanphong.order.actions.send_fulfillment_confirmation_to_customer", autospec=True)
 def test_create_digital_fulfillment(
     mock_email_fulfillment,
     digital_content,
@@ -884,7 +884,7 @@ def test_fulfillment_refund_rooms_order_without_payment(
     assert fulfillment is None
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_fulfillment_refund_rooms_amount_and_shipping_costs(
     mocked_refund,
     staff_api_client,
@@ -910,7 +910,7 @@ def test_fulfillment_refund_rooms_amount_and_shipping_costs(
     )
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_fulfillment_refund_rooms_order_lines(
     mocked_refund,
     staff_api_client,
@@ -1005,7 +1005,7 @@ def test_fulfillment_refund_rooms_order_lines_quantity_bigger_than_unfulfilled(
     assert refund_fulfillment is None
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_fulfillment_refund_rooms_fulfillment_lines(
     mocked_refund,
     staff_api_client,
@@ -1120,7 +1120,7 @@ def test_fulfillment_refund_rooms_amount_bigger_than_captured_amount(
     assert refund_fulfillment is None
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_fulfillment_refund_rooms_fulfillment_lines_include_shipping_costs(
     mocked_refund,
     staff_api_client,
@@ -1167,7 +1167,7 @@ def test_fulfillment_refund_rooms_fulfillment_lines_include_shipping_costs(
     mocked_refund.assert_called_with(payment_dummy, amount)
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_fulfillment_refund_rooms_order_lines_include_shipping_costs(
     mocked_refund,
     staff_api_client,
@@ -1206,7 +1206,7 @@ def test_fulfillment_refund_rooms_order_lines_include_shipping_costs(
     mocked_refund.assert_called_with(payment_dummy, amount)
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_fulfillment_refund_rooms_fulfillment_lines_custom_amount(
     mocked_refund,
     staff_api_client,
@@ -1252,7 +1252,7 @@ def test_fulfillment_refund_rooms_fulfillment_lines_custom_amount(
     mocked_refund.assert_called_with(payment_dummy, amount_to_refund)
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_fulfillment_refund_rooms_order_lines_custom_amount(
     mocked_refund,
     staff_api_client,
@@ -1290,7 +1290,7 @@ def test_fulfillment_refund_rooms_order_lines_custom_amount(
     mocked_refund.assert_called_with(payment_dummy, amount_to_refund)
 
 
-@patch("saleor.order.actions.gateway.refund")
+@patch("vanphong.order.actions.gateway.refund")
 def test_fulfillment_refund_rooms_fulfillment_lines_and_order_lines(
     mocked_refund,
     hotel,

@@ -89,64 +89,64 @@ fake = Factory.create()
 ROOMS_LIST_DIR = "rooms-list/"
 
 IMAGES_MAPPING = {
-    61: ["saleordemoroom_paints_01.png"],
-    62: ["saleordemoroom_paints_02.png"],
-    63: ["saleordemoroom_paints_03.png"],
-    64: ["saleordemoroom_paints_04.png"],
-    65: ["saleordemoroom_paints_05.png"],
-    71: ["saleordemoroom_fd_juice_06.png"],
-    72: ["saleordemoroom_fd_juice_06.png"],  # FIXME inproper image
-    73: ["saleordemoroom_fd_juice_05.png"],
-    74: ["saleordemoroom_fd_juice_01.png"],
-    75: ["saleordemoroom_fd_juice_03.png"],  # FIXME inproper image
-    76: ["saleordemoroom_fd_juice_02.png"],  # FIXME inproper image
-    77: ["saleordemoroom_fd_juice_03.png"],
-    78: ["saleordemoroom_fd_juice_04.png"],
-    79: ["saleordemoroom_fd_juice_02.png"],
-    81: ["saleordemoroom_wine-red.png"],
-    82: ["saleordemoroom_wine-white.png"],
-    83: ["saleordemoroom_beer-02_1.png", "saleordemoroom_beer-02_2.png"],
-    84: ["saleordemoroom_beer-01_1.png", "saleordemoroom_beer-01_2.png"],
-    85: ["saleordemoroom_cuschion01.png"],
-    86: ["saleordemoroom_cuschion02.png"],
+    61: ["vanphongdemoroom_paints_01.png"],
+    62: ["vanphongdemoroom_paints_02.png"],
+    63: ["vanphongdemoroom_paints_03.png"],
+    64: ["vanphongdemoroom_paints_04.png"],
+    65: ["vanphongdemoroom_paints_05.png"],
+    71: ["vanphongdemoroom_fd_juice_06.png"],
+    72: ["vanphongdemoroom_fd_juice_06.png"],  # FIXME inproper image
+    73: ["vanphongdemoroom_fd_juice_05.png"],
+    74: ["vanphongdemoroom_fd_juice_01.png"],
+    75: ["vanphongdemoroom_fd_juice_03.png"],  # FIXME inproper image
+    76: ["vanphongdemoroom_fd_juice_02.png"],  # FIXME inproper image
+    77: ["vanphongdemoroom_fd_juice_03.png"],
+    78: ["vanphongdemoroom_fd_juice_04.png"],
+    79: ["vanphongdemoroom_fd_juice_02.png"],
+    81: ["vanphongdemoroom_wine-red.png"],
+    82: ["vanphongdemoroom_wine-white.png"],
+    83: ["vanphongdemoroom_beer-02_1.png", "vanphongdemoroom_beer-02_2.png"],
+    84: ["vanphongdemoroom_beer-01_1.png", "vanphongdemoroom_beer-01_2.png"],
+    85: ["vanphongdemoroom_cuschion01.png"],
+    86: ["vanphongdemoroom_cuschion02.png"],
     87: [
-        "saleordemoroom_sneakers_01_1.png",
-        "saleordemoroom_sneakers_01_2.png",
-        "saleordemoroom_sneakers_01_3.png",
-        "saleordemoroom_sneakers_01_4.png",
+        "vanphongdemoroom_sneakers_01_1.png",
+        "vanphongdemoroom_sneakers_01_2.png",
+        "vanphongdemoroom_sneakers_01_3.png",
+        "vanphongdemoroom_sneakers_01_4.png",
     ],
     88: [
-        "saleordemoroom_sneakers_02_1.png",
-        "saleordemoroom_sneakers_02_2.png",
-        "saleordemoroom_sneakers_02_3.png",
-        "saleordemoroom_sneakers_02_4.png",
+        "vanphongdemoroom_sneakers_02_1.png",
+        "vanphongdemoroom_sneakers_02_2.png",
+        "vanphongdemoroom_sneakers_02_3.png",
+        "vanphongdemoroom_sneakers_02_4.png",
     ],
-    89: ["saleordemoroom_cl_boot07_1.png", "saleordemoroom_cl_boot07_2.png"],
-    107: ["saleordemoroom_cl_polo01.png"],
-    108: ["saleordemoroom_cl_polo02.png"],
-    109: ["saleordemoroom_cl_polo03-woman.png"],
-    110: ["saleordemoroom_cl_polo04-woman.png"],
+    89: ["vanphongdemoroom_cl_boot07_1.png", "vanphongdemoroom_cl_boot07_2.png"],
+    107: ["vanphongdemoroom_cl_polo01.png"],
+    108: ["vanphongdemoroom_cl_polo02.png"],
+    109: ["vanphongdemoroom_cl_polo03-woman.png"],
+    110: ["vanphongdemoroom_cl_polo04-woman.png"],
     111: [
-        "saleordemoroom_cl_boot01_1.png",
-        "saleordemoroom_cl_boot01_2.png",
-        "saleordemoroom_cl_boot01_3.png",
+        "vanphongdemoroom_cl_boot01_1.png",
+        "vanphongdemoroom_cl_boot01_2.png",
+        "vanphongdemoroom_cl_boot01_3.png",
     ],
-    112: ["saleordemoroom_cl_boot03_1.png", "saleordemoroom_cl_boot03_2.png"],
-    113: ["saleordemoroom_cl_boot06_1.png", "saleordemoroom_cl_boot06_2.png"],
+    112: ["vanphongdemoroom_cl_boot03_1.png", "vanphongdemoroom_cl_boot03_2.png"],
+    113: ["vanphongdemoroom_cl_boot06_1.png", "vanphongdemoroom_cl_boot06_2.png"],
     114: [
-        "saleordemoroom_cl_boot06_1.png",
-        "saleordemoroom_cl_boot06_2.png",
+        "vanphongdemoroom_cl_boot06_1.png",
+        "vanphongdemoroom_cl_boot06_2.png",
     ],  # FIXME incorrect image
-    115: ["saleordemoroom_cl_bogo01_1.png"],
-    116: ["saleordemoroom_cl_bogo02_1.png"],
-    117: ["saleordemoroom_cl_bogo03_1.png"],
-    118: ["saleordemoroom_cl_bogo04_1.png", "saleordemoroom_cl_bogo04_2.png"],
-    119: ["saleor-digital-03_1.png"],
-    120: ["saleor-digital-03_2.png"],
-    121: ["saleor-digital-03_3.png"],
-    122: ["saleor-digital-03_4.png"],
-    123: ["saleor-digital-03_5.png"],
-    124: ["saleor-digital-03_6.png"],
+    115: ["vanphongdemoroom_cl_bogo01_1.png"],
+    116: ["vanphongdemoroom_cl_bogo02_1.png"],
+    117: ["vanphongdemoroom_cl_bogo03_1.png"],
+    118: ["vanphongdemoroom_cl_bogo04_1.png", "vanphongdemoroom_cl_bogo04_2.png"],
+    119: ["vanphong-digital-03_1.png"],
+    120: ["vanphong-digital-03_2.png"],
+    121: ["vanphong-digital-03_3.png"],
+    122: ["vanphong-digital-03_4.png"],
+    123: ["vanphong-digital-03_5.png"],
+    124: ["vanphong-digital-03_6.png"],
 }
 
 
@@ -389,7 +389,7 @@ def set_field_as_money(defaults, field):
 
 def create_rooms_by_schema(placeholder_dir, create_images):
     path = os.path.join(
-        settings.PROJECT_ROOT, "saleor", "static", "populatedb_data.json"
+        settings.PROJECT_ROOT, "vanphong", "static", "populatedb_data.json"
     )
     with open(path) as f:
         db_items = json.load(f)
@@ -528,7 +528,7 @@ def create_fake_user(save=True):
 
 # We don't want to spam the console with payment confirmations sent to
 # fake customers.
-@patch("saleor.order.emails.send_payment_confirmation.delay")
+@patch("vanphong.order.emails.send_payment_confirmation.delay")
 def create_fake_payment(mock_email_confirmation, order):
     payment = create_payment(
         gateway="mirumee.payments.dummy",
@@ -1284,7 +1284,7 @@ def create_page():
        Based on Python and Django, the latest major update introduces a modular
        front end with a GraphQL API and storefront and dashboard written in React
        to make Saleor a full-functionality open source e-commerce.</p>
-    <p><a href="https://github.com/mirumee/saleor">Get Saleor today!</a></p>
+    <p><a href="https://github.com/mirumee/vanphong">Get Saleor today!</a></p>
     """
     content_json = {
         "blocks": [
@@ -1319,7 +1319,7 @@ def create_page():
             {
                 "data": {
                     "text": (
-                        '<a href="https://github.com/mirumee/saleor">'
+                        '<a href="https://github.com/mirumee/vanphong">'
                         "Get Saleor today!</a>"
                     )
                 },
@@ -1391,13 +1391,13 @@ def create_menus():
             name=collection.name, collection=collection, parent=item
         )
 
-    item_saleor = bottom_menu.items.get_or_create(name="Saleor", url="/")[0]
+    item_vanphong = bottom_menu.items.get_or_create(name="Saleor", url="/")[0]
 
     page = Page.objects.order_by("?")[0]
-    item_saleor.children.get_or_create(name=page.title, page=page, menu=bottom_menu)
+    item_vanphong.children.get_or_create(name=page.title, page=page, menu=bottom_menu)
 
     api_url = build_absolute_uri(reverse("api"))
-    item_saleor.children.get_or_create(
+    item_vanphong.children.get_or_create(
         name="GraphQL API", url=api_url, menu=bottom_menu
     )
 

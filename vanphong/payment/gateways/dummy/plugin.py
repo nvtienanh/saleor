@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from saleor.plugins.base_plugin import BasePlugin, ConfigurationTypeField
+from vanphong.plugins.base_plugin import BasePlugin, ConfigurationTypeField
 
 from ..utils import get_supported_currencies
 from . import (

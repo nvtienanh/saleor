@@ -250,7 +250,7 @@ def test_payment_needs_to_be_active_for_any_action(func, payment_dummy):
 
 
 @patch.object(PluginsManager, "capture_payment")
-@patch("saleor.order.actions.handle_fully_paid_order")
+@patch("vanphong.order.actions.handle_fully_paid_order")
 def test_gateway_charge_failed(
     mock_handle_fully_paid_order,
     mock_capture_payment,
@@ -481,7 +481,7 @@ def test_is_currency_supported(
     # given
     dummy_gateway_config.supported_currencies = "USD, EUR"
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy.plugin.DummyGatewayPlugin._get_gateway_config",
+        "vanphong.payment.gateways.dummy.plugin.DummyGatewayPlugin._get_gateway_config",
         lambda _: dummy_gateway_config,
     )
 

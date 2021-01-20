@@ -65,7 +65,7 @@ interactions:
       - application/json
       User-Agent:
       - python-requests/2.23.0
-      x-saleor-domain:
+      x-vanphong-domain:
       - mirumee.com
     method: POST
     uri: http://localhost:3000/register

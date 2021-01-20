@@ -7,7 +7,7 @@ from ...discount.enums import DiscountValueTypeEnum
 from ...tests.utils import get_graphql_content
 
 
-@patch("saleor.graphql.room.mutations.rooms.update_room_discounted_price_task")
+@patch("vanphong.graphql.room.mutations.rooms.update_room_discounted_price_task")
 def test_room_variant_delete_updates_discounted_price(
     mock_update_room_discounted_price_task,
     staff_api_client,
@@ -40,7 +40,7 @@ def test_room_variant_delete_updates_discounted_price(
     mock_update_room_discounted_price_task.delay.assert_called_once_with(room.pk)
 
 
-@patch("saleor.room.utils.update_rooms_discounted_prices_task")
+@patch("vanphong.room.utils.update_rooms_discounted_prices_task")
 def test_category_delete_updates_discounted_price(
     mock_update_rooms_discounted_prices_task,
     staff_api_client,
@@ -86,7 +86,7 @@ def test_category_delete_updates_discounted_price(
 
 
 @patch(
-    "saleor.graphql.room.mutations.rooms"
+    "vanphong.graphql.room.mutations.rooms"
     ".update_rooms_discounted_prices_of_catalogues_task"
 )
 def test_collection_add_rooms_updates_discounted_price(
@@ -130,7 +130,7 @@ def test_collection_add_rooms_updates_discounted_price(
 
 
 @patch(
-    "saleor.graphql.room.mutations"
+    "vanphong.graphql.room.mutations"
     ".rooms.update_rooms_discounted_prices_of_catalogues_task"
 )
 def test_collection_remove_rooms_updates_discounted_price(
@@ -175,7 +175,7 @@ def test_collection_remove_rooms_updates_discounted_price(
 
 @freeze_time("2010-05-31 12:00:01")
 @patch(
-    "saleor.graphql.discount.mutations"
+    "vanphong.graphql.discount.mutations"
     ".update_rooms_discounted_prices_of_discount_task"
 )
 def test_sale_create_updates_rooms_discounted_prices(
@@ -228,7 +228,7 @@ def test_sale_create_updates_rooms_discounted_prices(
 
 
 @patch(
-    "saleor.graphql.discount.mutations"
+    "vanphong.graphql.discount.mutations"
     ".update_rooms_discounted_prices_of_discount_task"
 )
 def test_sale_update_updates_rooms_discounted_prices(
@@ -265,7 +265,7 @@ def test_sale_update_updates_rooms_discounted_prices(
 
 
 @patch(
-    "saleor.graphql.discount.mutations"
+    "vanphong.graphql.discount.mutations"
     ".update_rooms_discounted_prices_of_discount_task"
 )
 def test_sale_delete_updates_rooms_discounted_prices(
@@ -302,7 +302,7 @@ def test_sale_delete_updates_rooms_discounted_prices(
 
 
 @patch(
-    "saleor.graphql.discount.mutations"
+    "vanphong.graphql.discount.mutations"
     ".update_rooms_discounted_prices_of_catalogues_task"
 )
 def test_sale_add_catalogues_updates_rooms_discounted_prices(
@@ -356,7 +356,7 @@ def test_sale_add_catalogues_updates_rooms_discounted_prices(
 
 
 @patch(
-    "saleor.graphql.discount.mutations"
+    "vanphong.graphql.discount.mutations"
     ".update_rooms_discounted_prices_of_catalogues_task"
 )
 def test_sale_remove_catalogues_updates_rooms_discounted_prices(

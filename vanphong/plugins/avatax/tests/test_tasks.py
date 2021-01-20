@@ -76,7 +76,7 @@ def test_api_post_request_task_missing_response(
 ):
     mock_api_post_request = {"error": {"message": "Wrong credentials"}}
     monkeypatch.setattr(
-        "saleor.plugins.avatax.tasks.api_post_request", lambda *_: mock_api_post_request
+        "vanphong.plugins.avatax.tasks.api_post_request", lambda *_: mock_api_post_request
     )
 
     config = AvataxConfiguration(
@@ -106,7 +106,7 @@ def test_api_post_request_task_order_doesnt_have_any_lines_with_taxes_to_calcula
 ):
     mock_api_post_request = {"error": {"message": "Wrong credentials"}}
     monkeypatch.setattr(
-        "saleor.plugins.avatax.tasks.api_post_request", lambda *_: mock_api_post_request
+        "vanphong.plugins.avatax.tasks.api_post_request", lambda *_: mock_api_post_request
     )
 
     config = AvataxConfiguration(

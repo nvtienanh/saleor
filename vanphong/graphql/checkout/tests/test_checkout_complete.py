@@ -155,7 +155,7 @@ def test_checkout_complete_with_inactive_channel(
 
 
 @pytest.mark.integration
-@patch("saleor.plugins.manager.PluginsManager.order_confirmed")
+@patch("vanphong.plugins.manager.PluginsManager.order_confirmed")
 def test_checkout_complete(
     order_confirmed_mock,
     site_settings,
@@ -237,7 +237,7 @@ def test_checkout_complete(
     order_confirmed_mock.assert_called_once_with(order)
 
 
-@patch("saleor.plugins.manager.PluginsManager.order_confirmed")
+@patch("vanphong.plugins.manager.PluginsManager.order_confirmed")
 def test_checkout_complete_requires_confirmation(
     order_confirmed_mock,
     user_api_client,
@@ -408,7 +408,7 @@ def test_checkout_complete_without_inventory_tracking(
 @pytest.mark.integration
 @pytest.mark.parametrize("token, error", list(TOKEN_VALIDATION_MAPPING.items()))
 @patch(
-    "saleor.payment.gateways.dummy_credit_card.plugin."
+    "vanphong.payment.gateways.dummy_credit_card.plugin."
     "DummyCreditCardGatewayPlugin.DEFAULT_ACTIVE",
     True,
 )
@@ -714,7 +714,7 @@ def test_checkout_complete_insufficient_stock(
     assert orders_count == Order.objects.count()
 
 
-@patch("saleor.checkout.complete_checkout.gateway.refund")
+@patch("vanphong.checkout.complete_checkout.gateway.refund")
 def test_checkout_complete_insufficient_stock_payment_refunded(
     gateway_refund_mock,
     checkout_with_item,
@@ -768,7 +768,7 @@ def test_checkout_complete_insufficient_stock_payment_refunded(
     gateway_refund_mock.assert_called_once_with(payment)
 
 
-@patch("saleor.checkout.complete_checkout.gateway.void")
+@patch("vanphong.checkout.complete_checkout.gateway.void")
 def test_checkout_complete_insufficient_stock_payment_voided(
     gateway_void_mock,
     checkout_with_item,
@@ -891,7 +891,7 @@ def test_checkout_complete_without_redirect_url(
     ).exists(), "Checkout should have been deleted"
 
 
-@patch("saleor.checkout.complete_checkout.gateway.payment_refund_or_void")
+@patch("vanphong.checkout.complete_checkout.gateway.payment_refund_or_void")
 def test_checkout_complete_payment_payment_total_different_than_checkout(
     gateway_refund_or_void_mock,
     checkout_with_items,
@@ -967,7 +967,7 @@ def test_order_already_exists(
     assert Checkout.objects.count() == 0
 
 
-@patch("saleor.checkout.complete_checkout._create_order")
+@patch("vanphong.checkout.complete_checkout._create_order")
 def test_create_order_raises_insufficient_stock(
     mocked_create_order, user_api_client, checkout_ready_to_complete, payment_dummy
 ):

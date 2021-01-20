@@ -6,7 +6,7 @@ from ..tests.utils import get_config_value
 
 
 def test_update_config_items_keeps_bool_value(plugin_configuration, settings):
-    settings.PLUGINS = ["saleor.plugins.tests.sample_plugins.PluginSample"]
+    settings.PLUGINS = ["vanphong.plugins.tests.sample_plugins.PluginSample"]
     data_to_update = [
         {"name": "Username", "value": "new_admin@example.com"},
         {"name": "Use sandbox", "value": False},
@@ -182,7 +182,7 @@ def test_base_plugin__update_configuration_structure_configuration_has_change(
 
 
 def test_base_plugin__append_config_structure_to_config(settings):
-    settings.PLUGINS = ["saleor.plugins.tests.sample_plugins.PluginSample"]
+    settings.PLUGINS = ["vanphong.plugins.tests.sample_plugins.PluginSample"]
     manager = get_plugins_manager()
     plugin = manager.get_plugin(PluginSample.PLUGIN_ID)
     config = [
@@ -210,7 +210,7 @@ def test_base_plugin__append_config_structure_to_config(settings):
 
 
 def test_change_user_address_in_anonymize_plugin_reset_phone(address, settings):
-    settings.PLUGINS = ["saleor.plugins.anonymize.plugin.AnonymizePlugin"]
+    settings.PLUGINS = ["vanphong.plugins.anonymize.plugin.AnonymizePlugin"]
     manager = get_plugins_manager()
     anonymize_plugin = manager.get_plugin(AnonymizePlugin.PLUGIN_ID)
 

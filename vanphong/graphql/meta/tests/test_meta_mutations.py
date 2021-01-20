@@ -466,7 +466,7 @@ def test_add_public_metadata_for_fulfillment(
     )
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_add_public_metadata_for_room(
     updated_webhook_mock, staff_api_client, permission_manage_rooms, room
 ):
@@ -1113,7 +1113,7 @@ def test_delete_public_metadata_for_fulfillment(
     )
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_delete_public_metadata_for_room(
     updated_webhook_mock, staff_api_client, permission_manage_rooms, room
 ):
@@ -1821,7 +1821,7 @@ def test_add_private_metadata_for_fulfillment(
     )
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_add_private_metadata_for_room(
     updated_webhook_mock, staff_api_client, permission_manage_rooms, room
 ):
@@ -2496,7 +2496,7 @@ def test_delete_private_metadata_for_fulfillment(
     )
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_delete_private_metadata_for_room(
     updated_webhook_mock, staff_api_client, permission_manage_rooms, room
 ):

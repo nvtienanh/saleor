@@ -2,8 +2,8 @@
 
 from django.db import migrations
 
-import saleor.core.db.fields
-import saleor.core.sanitizers.editorjs_sanitizer
+import vanphong.core.db.fields
+import vanphong.core.sanitizers.editorjs_sanitizer
 
 
 class Migration(migrations.Migration):
@@ -16,19 +16,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="page",
             name="content_json",
-            field=saleor.core.db.fields.SanitizedJSONField(
+            field=vanphong.core.db.fields.SanitizedJSONField(
                 blank=True,
                 default=dict,
-                sanitizer=saleor.core.sanitizers.editorjs_sanitizer.clean_editor_js,
+                sanitizer=vanphong.core.sanitizers.editorjs_sanitizer.clean_editor_js,
             ),
         ),
         migrations.AlterField(
             model_name="pagetranslation",
             name="content_json",
-            field=saleor.core.db.fields.SanitizedJSONField(
+            field=vanphong.core.db.fields.SanitizedJSONField(
                 blank=True,
                 default=dict,
-                sanitizer=saleor.core.sanitizers.editorjs_sanitizer.clean_editor_js,
+                sanitizer=vanphong.core.sanitizers.editorjs_sanitizer.clean_editor_js,
             ),
         ),
     ]

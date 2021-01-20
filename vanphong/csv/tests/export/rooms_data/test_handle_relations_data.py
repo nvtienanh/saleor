@@ -26,7 +26,7 @@ from .utils import (
 )
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_rooms_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_rooms_relations_data")
 def test_get_rooms_relations_data(prepare_rooms_data_mocked, room_list):
     # given
     qs = Room.objects.all()
@@ -55,7 +55,7 @@ def test_get_rooms_relations_data(prepare_rooms_data_mocked, room_list):
     )
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_rooms_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_rooms_relations_data")
 def test_get_rooms_relations_data_no_relations_fields(
     prepare_rooms_data_mocked, room_list
 ):
@@ -72,7 +72,7 @@ def test_get_rooms_relations_data_no_relations_fields(
     prepare_rooms_data_mocked.assert_not_called()
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_rooms_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_rooms_relations_data")
 def test_get_rooms_relations_data_attribute_ids(
     prepare_rooms_data_mocked, room_list, file_attribute
 ):
@@ -100,7 +100,7 @@ def test_get_rooms_relations_data_attribute_ids(
     assert args[1:] == (set(), attribute_ids, channel_ids)
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_rooms_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_rooms_relations_data")
 def test_get_rooms_relations_data_channel_ids(
     prepare_rooms_data_mocked, room_list, channel_USD, channel_PLN
 ):
@@ -248,7 +248,7 @@ def test_prepare_rooms_relations_data_only_channel_ids(
     assert result == expected_result
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data(prepare_variants_data_mocked, room_list):
     # given
     qs = Room.objects.all()
@@ -280,7 +280,7 @@ def test_get_variants_relations_data(prepare_variants_data_mocked, room_list):
     )
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_no_relations_fields(
     prepare_variants_data_mocked, room_list
 ):
@@ -300,7 +300,7 @@ def test_get_variants_relations_data_no_relations_fields(
     prepare_variants_data_mocked.assert_not_called()
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_attribute_ids(
     prepare_variants_data_mocked, room_list, file_attribute
 ):
@@ -332,7 +332,7 @@ def test_get_variants_relations_data_attribute_ids(
     assert args[1:] == (set(), attribute_ids, hotel_ids, channel_ids)
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_hotel_ids(
     prepare_variants_data_mocked, room_list, hotels
 ):
@@ -357,7 +357,7 @@ def test_get_variants_relations_data_hotel_ids(
     assert args[1:] == (set(), attribute_ids, hotel_ids, channel_ids)
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_channel_ids(
     prepare_variants_data_mocked, room_list, channel_USD, channel_PLN
 ):
@@ -382,7 +382,7 @@ def test_get_variants_relations_data_channel_ids(
     assert args[1:] == (set(), attribute_ids, hotel_ids, channel_ids)
 
 
-@patch("saleor.csv.utils.rooms_data.prepare_variants_relations_data")
+@patch("vanphong.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_attributes_hotels_and_channels_ids(
     prepare_variants_data_mocked, room_list, hotels, channel_PLN, channel_USD
 ):

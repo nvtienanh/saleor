@@ -254,7 +254,7 @@ def test_costs_get_margin_for_variant_channel_listing(
     assert not get_margin_for_variant_channel_listing(variant_channel_listing)
 
 
-@patch("saleor.room.thumbnails.create_thumbnails")
+@patch("vanphong.room.thumbnails.create_thumbnails")
 def test_create_room_thumbnails(mock_create_thumbnails, room_with_image):
     room_image = room_with_image.images.first()
     create_room_thumbnails(room_image.pk)

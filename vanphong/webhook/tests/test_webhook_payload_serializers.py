@@ -1,4 +1,4 @@
-from saleor.webhook.payload_serializers import PythonSerializer
+from vanphong.webhook.payload_serializers import PythonSerializer
 
 
 def test_python_serializer_extra_model_fields(room_with_single_variant):

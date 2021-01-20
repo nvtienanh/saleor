@@ -84,7 +84,7 @@ def test_category_query_error_when_id_and_slug_provided(
     }
     response = user_api_client.post_graphql(QUERY_CATEGORY, variables=variables)
     assert graphql_log_handler.messages == [
-        "saleor.graphql.errors.handled[INFO].GraphQLError"
+        "vanphong.graphql.errors.handled[INFO].GraphQLError"
     ]
     content = get_graphql_content(response, ignore_errors=True)
     assert len(content["errors"]) == 1
@@ -96,7 +96,7 @@ def test_category_query_error_when_no_param(
     variables = {}
     response = user_api_client.post_graphql(QUERY_CATEGORY, variables=variables)
     assert graphql_log_handler.messages == [
-        "saleor.graphql.errors.handled[INFO].GraphQLError"
+        "vanphong.graphql.errors.handled[INFO].GraphQLError"
     ]
     content = get_graphql_content(response, ignore_errors=True)
     assert len(content["errors"]) == 1
@@ -263,7 +263,7 @@ def test_category_create_mutation(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.room.thumbnails."
+            "vanphong.room.thumbnails."
             "create_category_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -364,7 +364,7 @@ def test_category_create_mutation_without_background_image(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.room.thumbnails."
+            "vanphong.room.thumbnails."
             "create_category_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -427,7 +427,7 @@ def test_category_update_mutation(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.room.thumbnails."
+            "vanphong.room.thumbnails."
             "create_category_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -522,7 +522,7 @@ def test_category_update_mutation_without_background_image(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.room.thumbnails."
+            "vanphong.room.thumbnails."
             "create_category_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -729,7 +729,7 @@ def test_category_delete_mutation(
         category.refresh_from_db()
 
 
-@patch("saleor.room.utils.update_rooms_discounted_prices_task")
+@patch("vanphong.room.utils.update_rooms_discounted_prices_task")
 def test_category_delete_mutation_for_categories_tree(
     mock_update_rooms_discounted_prices_task,
     staff_api_client,
@@ -768,7 +768,7 @@ def test_category_delete_mutation_for_categories_tree(
     assert room_channel_listings.count() == 4
 
 
-@patch("saleor.room.utils.update_rooms_discounted_prices_task")
+@patch("vanphong.room.utils.update_rooms_discounted_prices_task")
 def test_category_delete_mutation_for_children_from_categories_tree(
     mock_update_rooms_discounted_prices_task,
     staff_api_client,

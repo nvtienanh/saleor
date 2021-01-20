@@ -118,7 +118,7 @@ def test_collection_query_error_when_id_and_slug_provided(
     }
     response = user_api_client.post_graphql(QUERY_COLLECTION, variables=variables)
     assert graphql_log_handler.messages == [
-        "saleor.graphql.errors.handled[INFO].GraphQLError"
+        "vanphong.graphql.errors.handled[INFO].GraphQLError"
     ]
     content = get_graphql_content(response, ignore_errors=True)
     assert len(content["errors"]) == 1
@@ -132,7 +132,7 @@ def test_collection_query_error_when_no_param(
     variables = {}
     response = user_api_client.post_graphql(QUERY_COLLECTION, variables=variables)
     assert graphql_log_handler.messages == [
-        "saleor.graphql.errors.handled[INFO].GraphQLError"
+        "vanphong.graphql.errors.handled[INFO].GraphQLError"
     ]
     content = get_graphql_content(response, ignore_errors=True)
     assert len(content["errors"]) == 1
@@ -377,7 +377,7 @@ def test_create_collection(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.room.thumbnails."
+            "vanphong.room.thumbnails."
             "create_collection_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -424,7 +424,7 @@ def test_create_collection_without_background_image(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.room.thumbnails."
+            "vanphong.room.thumbnails."
             "create_collection_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -500,7 +500,7 @@ def test_update_collection(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.room.thumbnails."
+            "vanphong.room.thumbnails."
             "create_collection_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,
@@ -556,7 +556,7 @@ def test_update_collection_with_background_image(
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.room.thumbnails."
+            "vanphong.room.thumbnails."
             "create_collection_background_image_thumbnails.delay"
         ),
         mock_create_thumbnails,

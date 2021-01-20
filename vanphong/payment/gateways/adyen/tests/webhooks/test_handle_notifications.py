@@ -644,7 +644,7 @@ def test_handle_pending_already_pending(
     assert payment.transactions.filter(kind=TransactionKind.PENDING).exists()
 
 
-@mock.patch("saleor.payment.gateways.adyen.webhooks.order_refunded")
+@mock.patch("vanphong.payment.gateways.adyen.webhooks.order_refunded")
 def test_handle_refund(
     mock_order_refunded, notification, adyen_plugin, payment_adyen_for_order
 ):
@@ -701,7 +701,7 @@ def test_handle_refund_invalid_payment_id(
     assert f"Unable to decode the payment ID {invalid_reference}." in caplog.text
 
 
-@mock.patch("saleor.payment.gateways.adyen.webhooks.order_refunded")
+@mock.patch("vanphong.payment.gateways.adyen.webhooks.order_refunded")
 def test_handle_refund_already_refunded(
     mock_order_refunded, notification, adyen_plugin, payment_adyen_for_order
 ):
@@ -932,7 +932,7 @@ def test_webhook_not_implemented_invalid_payment_id(
     assert f"Unable to decode the payment ID {invalid_reference}." in caplog.text
 
 
-@mock.patch("saleor.payment.gateways.adyen.webhooks.handle_refund")
+@mock.patch("vanphong.payment.gateways.adyen.webhooks.handle_refund")
 def test_handle_cancel_or_refund_action_refund(
     mock_handle_refund, notification, adyen_plugin, payment_adyen_for_order
 ):
@@ -951,7 +951,7 @@ def test_handle_cancel_or_refund_action_refund(
     mock_handle_refund.assert_called_once_with(notification, config)
 
 
-@mock.patch("saleor.payment.gateways.adyen.webhooks.handle_cancellation")
+@mock.patch("vanphong.payment.gateways.adyen.webhooks.handle_cancellation")
 def test_handle_cancel_or_refund_action_cancel(
     mock_handle_cancellation, notification, adyen_plugin, payment_adyen_for_order
 ):

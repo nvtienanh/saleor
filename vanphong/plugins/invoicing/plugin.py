@@ -14,7 +14,7 @@ class InvoicingPlugin(BasePlugin):
     PLUGIN_ID = "mirumee.invoicing"
     PLUGIN_NAME = "Invoicing"
     DEFAULT_ACTIVE = True
-    PLUGIN_DESCRIPTION = "Built-in saleor plugin that handles invoice creation."
+    PLUGIN_DESCRIPTION = "Built-in vanphong plugin that handles invoice creation."
 
     def invoice_request(
         self,

@@ -106,7 +106,7 @@ def send_webhook_using_google_cloud_pubsub(
     client.publish(
         topic_name,
         message,
-        saleorDomain=domain,
+        vanphongDomain=domain,
         eventType=event_type,
         signature=signature,
     )

@@ -2,7 +2,7 @@ from dataclasses import asdict
 
 import graphene
 
-from saleor.graphql.room.dataloaders.rooms import RoomByIdLoader
+from vanphong.graphql.room.dataloaders.rooms import RoomByIdLoader
 
 from ....core.permissions import RoomPermissions
 from ....graphql.core.types import Money, MoneyRange
@@ -39,7 +39,7 @@ class RoomChannelListing(CountableDjangoObjectType):
         description="Whether the room is available for purchase."
     )
     pricing = graphene.Field(
-        "saleor.graphql.room.types.rooms.RoomPricingInfo",
+        "vanphong.graphql.room.types.rooms.RoomPricingInfo",
         description=(
             "Lists the storefront room's pricing, the current price and discounts, "
             "only meant for displaying."

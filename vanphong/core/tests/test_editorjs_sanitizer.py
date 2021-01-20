@@ -12,10 +12,10 @@ from ..sanitizers.editorjs_sanitizer import clean_editor_js
         "The Saleor Winter Sale is snowed under with seasonal offers. Unreal rooms "
         "at unreal prices. Literally, they are not real rooms, but the Saleor demo "
         "store is a genuine e-commerce leader.",
-        'The Saleor Winter Sale is snowed <a href="https://docs.saleor.io/docs/">',
-        'The Saleor Sale is snowed <a href="https://docs.saleor.io/docs/">. Test.',
-        'The Saleor Winter Sale is snowed <a href="https://docs.saleor.io/docs/">. '
-        'Test <a href="https://docs.saleor.io/docs/">.',
+        'The Saleor Winter Sale is snowed <a href="https://docs.vanphong.io/docs/">',
+        'The Saleor Sale is snowed <a href="https://docs.vanphong.io/docs/">. Test.',
+        'The Saleor Winter Sale is snowed <a href="https://docs.vanphong.io/docs/">. '
+        'Test <a href="https://docs.vanphong.io/docs/">.',
         "",
         "The Saleor Winter Sale is snowed <a >",
     ],
@@ -53,7 +53,7 @@ def test_clean_editor_js_no_data():
     assert result == data
 
 
-@mock.patch("saleor.core.sanitizers.editorjs_sanitizer.parse_url")
+@mock.patch("vanphong.core.sanitizers.editorjs_sanitizer.parse_url")
 def test_clean_editor_js_invalid_url(parse_url_mock):
     # given
     response_mock = mock.Mock()
@@ -89,7 +89,7 @@ def test_clean_editor_js_for_list():
             {
                 "data": {
                     "text": "The Saleor Winter Sale is snowed "
-                    '<a href="https://docs.saleor.io/docs/">. Test.'
+                    '<a href="https://docs.vanphong.io/docs/">. Test.'
                 },
                 "type": "paragraph",
             },
@@ -99,7 +99,7 @@ def test_clean_editor_js_for_list():
                     "style": "unordered",
                     "items": [
                         "It is a block-styled editor "
-                        '<a href="https://docs.saleor.io/docs/">.',
+                        '<a href="https://docs.vanphong.io/docs/">.',
                         "It returns clean data output in JSON",
                         "Designed to be extendable and pluggable with a simple API",
                         "",
@@ -116,7 +116,7 @@ def test_clean_editor_js_for_list():
     assert result == data
 
 
-@mock.patch("saleor.core.sanitizers.editorjs_sanitizer.parse_url")
+@mock.patch("vanphong.core.sanitizers.editorjs_sanitizer.parse_url")
 def test_clean_editor_js_for_list_invalid_url(parse_url_mock):
     # given
     response_mock = mock.Mock()
@@ -124,7 +124,7 @@ def test_clean_editor_js_for_list_invalid_url(parse_url_mock):
     mocked_parse = mock.Mock(return_value=response_mock)
     parse_url_mock.side_effect = mocked_parse
 
-    url1 = "https://docs.saleor.io/docs/"
+    url1 = "https://docs.vanphong.io/docs/"
     url2 = "https://github.com/editor-js"
     text1 = 'The Saleor Winter Sale is snowed <a href="{}">. Test.'
     item_text_with_url = 'It is a block-styled editor <a href="{}">.'

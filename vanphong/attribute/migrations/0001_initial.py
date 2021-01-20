@@ -3,7 +3,7 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-import saleor.core.utils.json_serializer
+import vanphong.core.utils.json_serializer
 
 
 class Migration(migrations.Migration):
@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
                     models.JSONField(
                         blank=True,
                         default=dict,
-                        encoder=saleor.core.utils.json_serializer.CustomJsonEncoder,
+                        encoder=vanphong.core.utils.json_serializer.CustomJsonEncoder,
                         null=True,
                     ),
                 ),
@@ -87,7 +87,7 @@ class Migration(migrations.Migration):
                     models.JSONField(
                         blank=True,
                         default=dict,
-                        encoder=saleor.core.utils.json_serializer.CustomJsonEncoder,
+                        encoder=vanphong.core.utils.json_serializer.CustomJsonEncoder,
                         null=True,
                     ),
                 ),

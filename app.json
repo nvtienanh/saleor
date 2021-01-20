@@ -11,7 +11,7 @@
   ],
   "image": "heroku/python",
   "env": {
-    "DJANGO_SETTINGS_MODULE": "saleor.settings",
+    "DJANGO_SETTINGS_MODULE": "vanphong.settings",
     "DEBUG": "True",
     "NPM_CONFIG_PRODUCTION": "false",
     "ALLOWED_HOSTS": {

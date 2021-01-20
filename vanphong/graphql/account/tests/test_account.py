@@ -849,7 +849,7 @@ ACCOUNT_REGISTER_MUTATION = """
 @override_settings(
     ENABLE_ACCOUNT_CONFIRMATION_BY_EMAIL=True, ALLOWED_CLIENT_HOSTS=["localhost"]
 )
-@patch("saleor.account.emails._send_account_confirmation_email")
+@patch("vanphong.account.emails._send_account_confirmation_email")
 def test_customer_register(send_account_confirmation_email_mock, api_client):
     email = "customer@example.com"
     variables = {
@@ -879,7 +879,7 @@ def test_customer_register(send_account_confirmation_email_mock, api_client):
 
 
 @override_settings(ENABLE_ACCOUNT_CONFIRMATION_BY_EMAIL=False)
-@patch("saleor.account.emails._send_account_confirmation_email")
+@patch("vanphong.account.emails._send_account_confirmation_email")
 def test_customer_register_disabled_email_confirmation(
     send_account_confirmation_email_mock, api_client
 ):
@@ -893,7 +893,7 @@ def test_customer_register_disabled_email_confirmation(
 
 
 @override_settings(ENABLE_ACCOUNT_CONFIRMATION_BY_EMAIL=True)
-@patch("saleor.account.emails._send_account_confirmation_email")
+@patch("vanphong.account.emails._send_account_confirmation_email")
 def test_customer_register_no_redirect_url(
     send_account_confirmation_email_mock, api_client
 ):
@@ -946,7 +946,7 @@ CUSTOMER_CREATE_MUTATION = """
 """
 
 
-@patch("saleor.account.emails._send_set_password_email")
+@patch("vanphong.account.emails._send_set_password_email")
 def test_customer_create(
     _send_set_password_email_mock, staff_api_client, address, permission_manage_users
 ):
@@ -1000,7 +1000,7 @@ def test_customer_create(
 
 
 @freeze_time("2018-05-31 12:00:01")
-@patch("saleor.account.emails._send_set_user_password_email_with_url.delay")
+@patch("vanphong.account.emails._send_set_user_password_email_with_url.delay")
 def test_customer_create_send_password_with_url(
     _send_set_user_password_email_with_url_mock,
     staff_api_client,
@@ -1348,7 +1348,7 @@ ACCOUNT_REQUEST_DELETION_MUTATION = """
 """
 
 
-@patch("saleor.account.emails._send_delete_confirmation_email")
+@patch("vanphong.account.emails._send_delete_confirmation_email")
 def test_account_request_deletion(send_delete_confirmation_email_mock, user_api_client):
     user = user_api_client.user
     variables = {"redirectUrl": "https://www.example.com"}
@@ -1365,7 +1365,7 @@ def test_account_request_deletion(send_delete_confirmation_email_mock, user_api_
 
 
 @freeze_time("2018-05-31 12:00:01")
-@patch("saleor.account.emails._send_account_delete_confirmation_email_with_url.delay")
+@patch("vanphong.account.emails._send_account_delete_confirmation_email_with_url.delay")
 def test_account_request_deletion_token_validation(
     send_account_delete_confirmation_email_with_url_mock, user_api_client
 ):
@@ -1386,7 +1386,7 @@ def test_account_request_deletion_token_validation(
     url_validator(url)
 
 
-@patch("saleor.account.emails._send_account_delete_confirmation_email_with_url.delay")
+@patch("vanphong.account.emails._send_account_delete_confirmation_email_with_url.delay")
 def test_account_request_deletion_anonymous_user(
     send_account_delete_confirmation_email_with_url_mock, api_client
 ):
@@ -1396,7 +1396,7 @@ def test_account_request_deletion_anonymous_user(
     send_account_delete_confirmation_email_with_url_mock.assert_not_called()
 
 
-@patch("saleor.account.emails._send_account_delete_confirmation_email_with_url.delay")
+@patch("vanphong.account.emails._send_account_delete_confirmation_email_with_url.delay")
 def test_account_request_deletion_storefront_hosts_not_allowed(
     send_account_delete_confirmation_email_with_url_mock, user_api_client
 ):
@@ -1415,7 +1415,7 @@ def test_account_request_deletion_storefront_hosts_not_allowed(
 
 
 @freeze_time("2018-05-31 12:00:01")
-@patch("saleor.account.emails._send_account_delete_confirmation_email_with_url.delay")
+@patch("vanphong.account.emails._send_account_delete_confirmation_email_with_url.delay")
 def test_account_request_deletion_all_storefront_hosts_allowed(
     send_account_delete_confirmation_email_with_url_mock, user_api_client, settings
 ):
@@ -1438,7 +1438,7 @@ def test_account_request_deletion_all_storefront_hosts_allowed(
 
 
 @freeze_time("2018-05-31 12:00:01")
-@patch("saleor.account.emails._send_account_delete_confirmation_email_with_url.delay")
+@patch("vanphong.account.emails._send_account_delete_confirmation_email_with_url.delay")
 def test_account_request_deletion_subdomain(
     send_account_delete_confirmation_email_with_url_mock, user_api_client, settings
 ):
@@ -1533,7 +1533,7 @@ def test_account_delete_other_customer_token(user_api_client):
 
 
 @patch(
-    "saleor.graphql.account.utils.account_events.staff_user_deleted_a_customer_event"
+    "vanphong.graphql.account.utils.account_events.staff_user_deleted_a_customer_event"
 )
 def test_customer_delete(
     mocked_deletion_event,
@@ -1626,7 +1626,7 @@ STAFF_CREATE_MUTATION = """
 """
 
 
-@patch("saleor.account.emails._send_set_password_email")
+@patch("vanphong.account.emails._send_set_password_email")
 def test_staff_create(
     _send_set_password_email_mock,
     staff_api_client,
@@ -1707,7 +1707,7 @@ def test_staff_create_app_no_permission(
     assert_no_permission(response)
 
 
-@patch("saleor.account.emails._send_set_password_email")
+@patch("vanphong.account.emails._send_set_password_email")
 def test_staff_create_out_of_scope_group(
     _send_set_password_email_mock,
     staff_api_client,
@@ -1798,7 +1798,7 @@ def test_staff_create_out_of_scope_group(
 
 
 @freeze_time("2018-05-31 12:00:01")
-@patch("saleor.account.emails._send_set_user_password_email_with_url.delay")
+@patch("vanphong.account.emails._send_set_user_password_email_with_url.delay")
 def test_staff_create_send_password_with_url(
     _send_set_user_password_email_with_url_mock,
     staff_api_client,
@@ -3100,7 +3100,7 @@ CONFIRM_ACCOUNT_MUTATION = """
 """
 
 
-@patch("saleor.account.emails._send_password_reset_email")
+@patch("vanphong.account.emails._send_password_reset_email")
 def test_account_reset_password(
     send_password_reset_email_mock, user_api_client, customer_user
 ):
@@ -3119,7 +3119,7 @@ def test_account_reset_password(
 
 
 @freeze_time("2018-05-31 12:00:01")
-@patch("saleor.graphql.account.mutations.base.match_orders_with_new_user")
+@patch("vanphong.graphql.account.mutations.base.match_orders_with_new_user")
 def test_account_confirmation(
     match_orders_with_new_user_mock, api_client, customer_user
 ):
@@ -3140,7 +3140,7 @@ def test_account_confirmation(
 
 
 @freeze_time("2018-05-31 12:00:01")
-@patch("saleor.graphql.account.mutations.base.match_orders_with_new_user")
+@patch("vanphong.graphql.account.mutations.base.match_orders_with_new_user")
 def test_account_confirmation_invalid_user(
     match_orders_with_new_user_mock, user_api_client, customer_user
 ):
@@ -3158,7 +3158,7 @@ def test_account_confirmation_invalid_user(
     match_orders_with_new_user_mock.assert_not_called()
 
 
-@patch("saleor.graphql.account.mutations.base.match_orders_with_new_user")
+@patch("vanphong.graphql.account.mutations.base.match_orders_with_new_user")
 def test_account_confirmation_invalid_token(
     match_orders_with_new_user_mock, user_api_client, customer_user
 ):
@@ -3173,7 +3173,7 @@ def test_account_confirmation_invalid_token(
     match_orders_with_new_user_mock.assert_not_called()
 
 
-@patch("saleor.account.emails._send_password_reset_email")
+@patch("vanphong.account.emails._send_password_reset_email")
 def test_request_password_reset_email_for_staff(
     send_password_reset_email_mock, staff_api_client
 ):
@@ -3192,7 +3192,7 @@ def test_request_password_reset_email_for_staff(
     url_validator(url)
 
 
-@patch("saleor.account.emails._send_password_reset_email")
+@patch("vanphong.account.emails._send_password_reset_email")
 def test_account_reset_password_invalid_email(
     send_password_reset_email_mock, user_api_client
 ):
@@ -3207,7 +3207,7 @@ def test_account_reset_password_invalid_email(
     assert not send_password_reset_email_mock.called
 
 
-@patch("saleor.account.emails._send_password_reset_email")
+@patch("vanphong.account.emails._send_password_reset_email")
 def test_account_reset_password_user_is_inactive(
     send_password_reset_email_mock, user_api_client, customer_user
 ):
@@ -3228,7 +3228,7 @@ def test_account_reset_password_user_is_inactive(
     assert not send_password_reset_email_mock.called
 
 
-@patch("saleor.account.emails._send_password_reset_email")
+@patch("vanphong.account.emails._send_password_reset_email")
 def test_account_reset_password_storefront_hosts_not_allowed(
     send_password_reset_email_mock, user_api_client, customer_user
 ):
@@ -3241,7 +3241,7 @@ def test_account_reset_password_storefront_hosts_not_allowed(
     assert not send_password_reset_email_mock.called
 
 
-@patch("saleor.account.emails._send_password_reset_email")
+@patch("vanphong.account.emails._send_password_reset_email")
 def test_account_reset_password_all_storefront_hosts_allowed(
     send_password_reset_email_mock, user_api_client, customer_user, settings
 ):
@@ -3260,7 +3260,7 @@ def test_account_reset_password_all_storefront_hosts_allowed(
     url_validator(url)
 
 
-@patch("saleor.account.emails._send_password_reset_email")
+@patch("vanphong.account.emails._send_password_reset_email")
 def test_account_reset_password_subdomain(
     send_password_reset_email_mock, user_api_client, customer_user, settings
 ):
@@ -3509,7 +3509,7 @@ def test_user_avatar_update_mutation(monkeypatch, staff_api_client, media_root):
     mock_create_thumbnails = Mock(return_value=None)
     monkeypatch.setattr(
         (
-            "saleor.graphql.account.mutations.staff."
+            "vanphong.graphql.account.mutations.staff."
             "create_user_avatar_thumbnails.delay"
         ),
         mock_create_thumbnails,

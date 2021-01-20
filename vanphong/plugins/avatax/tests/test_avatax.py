@@ -80,10 +80,10 @@ def test_calculate_checkout_line_total(
 ):
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
+        "vanphong.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
         lambda _: {"PC040156": "desc"},
     )
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     checkout_with_item.shipping_address = address
     checkout_with_item.shipping_method = shipping_zone.shipping_methods.get()
@@ -146,10 +146,10 @@ def test_calculate_checkout_total_uses_default_calculation(
 ):
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
+        "vanphong.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
         lambda _: {"PC040156": "desc"},
     )
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     checkout_with_item.shipping_address = address
     checkout_with_item.save()
     site_settings.company_address = address_usa
@@ -213,13 +213,13 @@ def test_calculate_checkout_total(
 ):
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
+        "vanphong.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
         lambda _: {"PC040156": "desc"},
     )
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.AvataxPlugin._skip_plugin", lambda *_: False
+        "vanphong.plugins.avatax.plugin.AvataxPlugin._skip_plugin", lambda *_: False
     )
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     checkout_with_item.shipping_address = address
     checkout_with_item.save()
     site_settings.company_address = address_usa
@@ -267,10 +267,10 @@ def test_calculate_checkout_shipping(
 ):
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
+        "vanphong.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
         lambda _: {"PC040156": "desc"},
     )
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     site_settings.company_address = address_usa
     site_settings.save()
 
@@ -315,10 +315,10 @@ def test_calculate_checkout_subtotal(
     plugin_configuration()
     variant = stock.room_variant
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
+        "vanphong.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
         lambda _: {"PC040156": "desc"},
     )
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     site_settings.company_address = address_usa
     site_settings.include_taxes_in_prices = taxes_in_prices
     site_settings.save()
@@ -344,7 +344,7 @@ def test_calculate_order_shipping(
     order_line, shipping_zone, site_settings, address_usa, plugin_configuration
 ):
     plugin_configuration()
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     order = order_line.order
     method = shipping_zone.shipping_methods.get()
     order.shipping_address = order.billing_address.get_copy()
@@ -369,7 +369,7 @@ def test_calculate_order_line_unit(
     plugin_configuration,
 ):
     plugin_configuration()
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     order_line.unit_price = TaxedMoney(
         net=Money("10.00", "USD"), gross=Money("10.00", "USD")
     )
@@ -407,10 +407,10 @@ def test_preprocess_order_creation(
 
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
+        "vanphong.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
         lambda _: {"PC040156": "desc"},
     )
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     site_settings.company_address = address_usa
     site_settings.save()
 
@@ -433,10 +433,10 @@ def test_preprocess_order_creation_wrong_data(
     plugin_configuration("wrong", "wrong")
 
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
+        "vanphong.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
         lambda _: {"PC040156": "desc"},
     )
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     checkout_with_item.shipping_address = address
     checkout_with_item.shipping_method = shipping_zone.shipping_methods.get()
@@ -448,7 +448,7 @@ def test_preprocess_order_creation_wrong_data(
 
 @pytest.mark.vcr
 def test_get_cached_tax_codes_or_fetch(monkeypatch, settings):
-    monkeypatch.setattr("saleor.plugins.avatax.cache.get", lambda x, y: {})
+    monkeypatch.setattr("vanphong.plugins.avatax.cache.get", lambda x, y: {})
     config = AvataxConfiguration(username_or_account="test", password_or_license="test")
     tax_codes = get_cached_tax_codes_or_fetch(config)
     assert len(tax_codes) > 0
@@ -456,7 +456,7 @@ def test_get_cached_tax_codes_or_fetch(monkeypatch, settings):
 
 @pytest.mark.vcr
 def test_get_cached_tax_codes_or_fetch_wrong_response(monkeypatch):
-    monkeypatch.setattr("saleor.plugins.avatax.cache.get", lambda x, y: {})
+    monkeypatch.setattr("vanphong.plugins.avatax.cache.get", lambda x, y: {})
     config = AvataxConfiguration(
         username_or_account="wrong_data", password_or_license="wrong_data"
     )
@@ -467,7 +467,7 @@ def test_get_cached_tax_codes_or_fetch_wrong_response(monkeypatch):
 def test_checkout_needs_new_fetch(
     monkeypatch, checkout_with_item, address, shipping_method
 ):
-    monkeypatch.setattr("saleor.plugins.avatax.cache.get", lambda x: None)
+    monkeypatch.setattr("vanphong.plugins.avatax.cache.get", lambda x: None)
     checkout_with_item.shipping_address = address
     checkout_with_item.shipping_method = shipping_method
     config = AvataxConfiguration(
@@ -487,7 +487,7 @@ def test_taxes_need_new_fetch_uses_cached_data(
     )
     checkout_data = generate_request_data_from_checkout(checkout_with_item, config)
     monkeypatch.setattr(
-        "saleor.plugins.avatax.cache.get", lambda x: [checkout_data, None]
+        "vanphong.plugins.avatax.cache.get", lambda x: [checkout_data, None]
     )
     assert not taxes_need_new_fetch(checkout_data, str(checkout_with_item.token))
 
@@ -536,12 +536,12 @@ def test_get_checkout_line_tax_rate(
     # given
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_checkout_tax_data",
+        "vanphong.plugins.avatax.plugin.get_checkout_tax_data",
         lambda *_: AVALARA_TAX_DATA,
     )
     unit_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     line = checkout_with_item.lines.first()
 
     checkout_with_item.shipping_address = address
@@ -576,12 +576,12 @@ def test_get_checkout_line_tax_rate_checkout_not_valid_default_value_returned(
     # given
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_checkout_tax_data",
+        "vanphong.plugins.avatax.plugin.get_checkout_tax_data",
         lambda *_: AVALARA_TAX_DATA,
     )
     unit_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     line = checkout_with_item.lines.first()
 
     checkout_with_item.shipping_address = address
@@ -615,12 +615,12 @@ def test_get_checkout_line_tax_rate_error_in_response(
     # given
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_checkout_tax_data",
+        "vanphong.plugins.avatax.plugin.get_checkout_tax_data",
         lambda *_: {"error": "Example error"},
     )
     unit_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     line = checkout_with_item.lines.first()
 
     checkout_with_item.shipping_address = address
@@ -656,11 +656,11 @@ def test_get_order_line_tax_rate(
     order = order_line.order
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_order_tax_data", lambda *_: AVALARA_TAX_DATA
+        "vanphong.plugins.avatax.plugin.get_order_tax_data", lambda *_: AVALARA_TAX_DATA
     )
     unit_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     room = Room.objects.get(name=order_line.room_name)
 
@@ -689,11 +689,11 @@ def test_get_order_line_tax_rate_order_not_valid_default_value_returned(
     order = order_line.order
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_order_tax_data", lambda *_: AVALARA_TAX_DATA
+        "vanphong.plugins.avatax.plugin.get_order_tax_data", lambda *_: AVALARA_TAX_DATA
     )
     unit_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     room = Room.objects.get(name=order_line.room_name)
 
@@ -716,12 +716,12 @@ def test_get_order_line_tax_rate_error_in_response(
     order = order_line.order
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_order_tax_data",
+        "vanphong.plugins.avatax.plugin.get_order_tax_data",
         lambda *_: {"error": "Example error"},
     )
     unit_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     room = Room.objects.get(name=order_line.room_name)
 
@@ -749,12 +749,12 @@ def test_get_checkout_shipping_tax_rate(
     # given
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_checkout_tax_data",
+        "vanphong.plugins.avatax.plugin.get_checkout_tax_data",
         lambda *_: AVALARA_TAX_DATA,
     )
     shipping_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     line = checkout_with_item.lines.first()
 
     checkout_with_item.shipping_address = address
@@ -789,12 +789,12 @@ def test_get_checkout_shipping_tax_rate_checkout_not_valid_default_value_returne
     # given
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_checkout_tax_data",
+        "vanphong.plugins.avatax.plugin.get_checkout_tax_data",
         lambda *_: AVALARA_TAX_DATA,
     )
     shipping_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     line = checkout_with_item.lines.first()
 
     checkout_with_item.shipping_address = address
@@ -828,12 +828,12 @@ def test_get_checkout_shipping_tax_rate_error_in_response(
     # given
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_checkout_tax_data",
+        "vanphong.plugins.avatax.plugin.get_checkout_tax_data",
         lambda *_: {"error": "Example error"},
     )
     shipping_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     line = checkout_with_item.lines.first()
 
     checkout_with_item.shipping_address = address
@@ -868,16 +868,16 @@ def test_get_checkout_shipping_tax_rate_skip_plugin(
     # given
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_checkout_tax_data",
+        "vanphong.plugins.avatax.plugin.get_checkout_tax_data",
         lambda *_: {"error": "Example error"},
     )
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.AvataxPlugin._skip_plugin",
+        "vanphong.plugins.avatax.plugin.AvataxPlugin._skip_plugin",
         lambda *_: True,
     )
     shipping_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
     line = checkout_with_item.lines.first()
 
     checkout_with_item.shipping_address = address
@@ -913,11 +913,11 @@ def test_get_order_shipping_tax_rate(
     order = order_line.order
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_order_tax_data", lambda *_: AVALARA_TAX_DATA
+        "vanphong.plugins.avatax.plugin.get_order_tax_data", lambda *_: AVALARA_TAX_DATA
     )
     shipping_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     method = shipping_zone.shipping_methods.get()
     order.shipping_address = order.billing_address.get_copy()
@@ -939,11 +939,11 @@ def test_get_order_shipping_tax_rate_order_not_valid_default_value_returned(
     order = order_line.order
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_order_tax_data", lambda *_: AVALARA_TAX_DATA
+        "vanphong.plugins.avatax.plugin.get_order_tax_data", lambda *_: AVALARA_TAX_DATA
     )
     shipping_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     # when
     tax_rate = manager.get_order_shipping_tax_rate(order, shipping_price)
@@ -959,12 +959,12 @@ def test_get_order_shipping_tax_rate_error_in_response(
     order = order_line.order
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_order_tax_data",
+        "vanphong.plugins.avatax.plugin.get_order_tax_data",
         lambda *_: {"error": "Example error"},
     )
     shipping_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     method = shipping_zone.shipping_methods.get()
     order.shipping_address = order.billing_address.get_copy()
@@ -986,16 +986,16 @@ def test_get_order_shipping_tax_rate_skip_plugin(
     order = order_line.order
     plugin_configuration()
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_order_tax_data",
+        "vanphong.plugins.avatax.plugin.get_order_tax_data",
         lambda *_: {"error": "Example error"},
     )
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.AvataxPlugin._skip_plugin",
+        "vanphong.plugins.avatax.plugin.AvataxPlugin._skip_plugin",
         lambda *_: True,
     )
     shipping_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     method = shipping_zone.shipping_methods.get()
     order.shipping_address = order.billing_address.get_copy()
@@ -1011,7 +1011,7 @@ def test_get_order_shipping_tax_rate_skip_plugin(
 
 
 def test_get_plugin_configuration(settings):
-    settings.PLUGINS = ["saleor.plugins.avatax.plugin.AvataxPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.avatax.plugin.AvataxPlugin"]
     manager = get_plugins_manager()
     plugin = manager.get_plugin(AvataxPlugin.PLUGIN_ID)
 
@@ -1025,9 +1025,9 @@ def test_get_plugin_configuration(settings):
     assert "Autocommit" in configuration_fields
 
 
-@patch("saleor.plugins.avatax.plugin.api_get_request")
+@patch("vanphong.plugins.avatax.plugin.api_get_request")
 def test_save_plugin_configuration(api_get_request_mock, settings):
-    settings.PLUGINS = ["saleor.plugins.avatax.plugin.AvataxPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.avatax.plugin.AvataxPlugin"]
     api_get_request_mock.return_value = {"authenticated": True}
     manager = get_plugins_manager()
     manager.save_plugin_configuration(
@@ -1047,12 +1047,12 @@ def test_save_plugin_configuration(api_get_request_mock, settings):
     assert plugin_configuration.active
 
 
-@patch("saleor.plugins.avatax.plugin.api_get_request")
+@patch("vanphong.plugins.avatax.plugin.api_get_request")
 def test_save_plugin_configuration_authentication_failed(
     api_get_request_mock, settings
 ):
     # given
-    settings.PLUGINS = ["saleor.plugins.avatax.plugin.AvataxPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.avatax.plugin.AvataxPlugin"]
     api_get_request_mock.return_value = {"authenticated": False}
     manager = get_plugins_manager()
 
@@ -1081,7 +1081,7 @@ def test_save_plugin_configuration_cannot_be_enabled_without_config(
     settings, plugin_configuration
 ):
     plugin_configuration(None, None)
-    settings.PLUGINS = ["saleor.plugins.avatax.plugin.AvataxPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.avatax.plugin.AvataxPlugin"]
     manager = get_plugins_manager()
     with pytest.raises(ValidationError):
         manager.save_plugin_configuration(AvataxPlugin.PLUGIN_ID, {"active": True})
@@ -1093,13 +1093,13 @@ def test_show_taxes_on_storefront(plugin_configuration):
     assert manager.show_taxes_on_storefront() is False
 
 
-@patch("saleor.plugins.avatax.plugin.api_post_request_task.delay")
+@patch("vanphong.plugins.avatax.plugin.api_post_request_task.delay")
 def test_order_created(api_post_request_task_mock, order, plugin_configuration):
     # given
     plugin_conf = plugin_configuration()
     conf = {data["name"]: data["value"] for data in plugin_conf.configuration}
 
-    manager = get_plugins_manager(plugins=["saleor.plugins.avatax.plugin.AvataxPlugin"])
+    manager = get_plugins_manager(plugins=["vanphong.plugins.avatax.plugin.AvataxPlugin"])
 
     # when
     manager.order_created(order)
@@ -1166,14 +1166,14 @@ def test_plugin_uses_configuration_from_db(
     discount_info,
     settings,
 ):
-    settings.PLUGINS = ["saleor.plugins.avatax.plugin.AvataxPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.avatax.plugin.AvataxPlugin"]
     configuration = plugin_configuration(
         username="2000134479", password="697932CFCBDE505B", sandbox=False
     )
     manager = get_plugins_manager()
 
     monkeypatch.setattr(
-        "saleor.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
+        "vanphong.plugins.avatax.plugin.get_cached_tax_codes_or_fetch",
         lambda _: {"PC040156": "desc"},
     )
     site_settings.company_address = address_usa
@@ -1200,7 +1200,7 @@ def test_plugin_uses_configuration_from_db(
 
 def test_skip_disabled_plugin(settings, plugin_configuration):
     plugin_configuration(username=None, password=None)
-    settings.PLUGINS = ["saleor.plugins.avatax.plugin.AvataxPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.avatax.plugin.AvataxPlugin"]
     manager = get_plugins_manager()
     plugin: AvataxPlugin = manager.get_plugin(AvataxPlugin.PLUGIN_ID)
 
@@ -1217,7 +1217,7 @@ def test_get_tax_code_from_object_meta(room, settings, plugin_configuration):
         {META_CODE_KEY: "KEY", META_DESCRIPTION_KEY: "DESC"}
     )
     plugin_configuration(username=None, password=None)
-    settings.PLUGINS = ["saleor.plugins.avatax.plugin.AvataxPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.avatax.plugin.AvataxPlugin"]
     manager = get_plugins_manager()
     tax_type = manager.get_tax_code_from_object_meta(room)
 
@@ -1228,7 +1228,7 @@ def test_get_tax_code_from_object_meta(room, settings, plugin_configuration):
 
 def test_api_get_request_handles_request_errors(room, monkeypatch):
     mocked_response = Mock(side_effect=RequestException())
-    monkeypatch.setattr("saleor.plugins.avatax.requests.get", mocked_response)
+    monkeypatch.setattr("vanphong.plugins.avatax.requests.get", mocked_response)
 
     config = AvataxConfiguration(
         username_or_account="test",
@@ -1247,7 +1247,7 @@ def test_api_get_request_handles_request_errors(room, monkeypatch):
 
 def test_api_get_request_handles_json_errors(room, monkeypatch):
     mocked_response = Mock(side_effect=JSONDecodeError("", "", 0))
-    monkeypatch.setattr("saleor.plugins.avatax.requests.get", mocked_response)
+    monkeypatch.setattr("vanphong.plugins.avatax.requests.get", mocked_response)
 
     config = AvataxConfiguration(
         username_or_account="test",
@@ -1266,7 +1266,7 @@ def test_api_get_request_handles_json_errors(room, monkeypatch):
 
 def test_api_post_request_handles_request_errors(room, monkeypatch):
     mocked_response = Mock(side_effect=RequestException())
-    monkeypatch.setattr("saleor.plugins.avatax.requests.post", mocked_response)
+    monkeypatch.setattr("vanphong.plugins.avatax.requests.post", mocked_response)
 
     config = AvataxConfiguration(
         username_or_account="test",
@@ -1283,7 +1283,7 @@ def test_api_post_request_handles_request_errors(room, monkeypatch):
 
 def test_api_post_request_handles_json_errors(room, monkeypatch):
     mocked_response = Mock(side_effect=JSONDecodeError("", "", 0))
-    monkeypatch.setattr("saleor.plugins.avatax.requests.post", mocked_response)
+    monkeypatch.setattr("vanphong.plugins.avatax.requests.post", mocked_response)
 
     config = AvataxConfiguration(
         username_or_account="test",
@@ -1360,8 +1360,8 @@ def test_get_order_request_data_checks_when_taxes_are_not_included_to_price(
     assert line_without_taxes[0]["itemCode"] == line.room_sku
 
 
-@patch("saleor.plugins.avatax.get_order_request_data")
-@patch("saleor.plugins.avatax.get_cached_response_or_fetch")
+@patch("vanphong.plugins.avatax.get_order_request_data")
+@patch("vanphong.plugins.avatax.get_cached_response_or_fetch")
 def test_get_order_tax_data(
     get_cached_response_or_fetch_mock,
     get_order_request_data_mock,
@@ -1382,8 +1382,8 @@ def test_get_order_tax_data(
     assert response == return_value
 
 
-@patch("saleor.plugins.avatax.get_order_request_data")
-@patch("saleor.plugins.avatax.get_cached_response_or_fetch")
+@patch("vanphong.plugins.avatax.get_order_request_data")
+@patch("vanphong.plugins.avatax.get_cached_response_or_fetch")
 def test_get_order_tax_data_raised_error(
     get_cached_response_or_fetch_mock,
     get_order_request_data_mock,

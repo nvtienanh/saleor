@@ -155,7 +155,7 @@ def test_shop_fetch_tax_rates(
     monkeypatch, staff_api_client, permission_manage_settings, setup_vatlayer
 ):
     mocked_fetch = Mock()
-    monkeypatch.setattr("saleor.plugins.vatlayer.plugin.fetch_rates", mocked_fetch)
+    monkeypatch.setattr("vanphong.plugins.vatlayer.plugin.fetch_rates", mocked_fetch)
     staff_api_client.user.user_permissions.add(permission_manage_settings)
     response = staff_api_client.post_graphql(MUTATION_SHOP_FETCH_TAX_RATES)
     get_graphql_content(response)

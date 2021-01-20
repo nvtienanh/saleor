@@ -28,10 +28,10 @@ from ...utils.export import (
     "file_type",
     [FileTypes.CSV, FileTypes.XLSX],
 )
-@patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_rooms_in_batches")
-@patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
-@patch("saleor.csv.utils.export.save_csv_file_in_export_file")
+@patch("vanphong.csv.utils.export.create_file_with_headers")
+@patch("vanphong.csv.utils.export.export_rooms_in_batches")
+@patch("vanphong.csv.utils.export.send_email_with_link_to_download_file")
+@patch("vanphong.csv.utils.export.save_csv_file_in_export_file")
 def test_export_rooms(
     save_file_mock,
     send_email_mock,
@@ -78,10 +78,10 @@ def test_export_rooms(
     save_file_mock.assert_called_once_with(user_export_file, mock_file, ANY)
 
 
-@patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_rooms_in_batches")
-@patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
-@patch("saleor.csv.utils.export.save_csv_file_in_export_file")
+@patch("vanphong.csv.utils.export.create_file_with_headers")
+@patch("vanphong.csv.utils.export.export_rooms_in_batches")
+@patch("vanphong.csv.utils.export.send_email_with_link_to_download_file")
+@patch("vanphong.csv.utils.export.save_csv_file_in_export_file")
 def test_export_rooms_ids(
     save_file_mock,
     send_email_mock,
@@ -126,10 +126,10 @@ def test_export_rooms_ids(
     save_file_mock.assert_called_once_with(user_export_file, mock_file, ANY)
 
 
-@patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_rooms_in_batches")
-@patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
-@patch("saleor.csv.utils.export.save_csv_file_in_export_file")
+@patch("vanphong.csv.utils.export.create_file_with_headers")
+@patch("vanphong.csv.utils.export.export_rooms_in_batches")
+@patch("vanphong.csv.utils.export.send_email_with_link_to_download_file")
+@patch("vanphong.csv.utils.export.save_csv_file_in_export_file")
 def test_export_rooms_filter_is_published(
     save_file_mock,
     send_email_mock,
@@ -185,10 +185,10 @@ def test_export_rooms_filter_is_published(
     save_file_mock.assert_called_once_with(user_export_file, mock_file, ANY)
 
 
-@patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_rooms_in_batches")
-@patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
-@patch("saleor.csv.utils.export.save_csv_file_in_export_file")
+@patch("vanphong.csv.utils.export.create_file_with_headers")
+@patch("vanphong.csv.utils.export.export_rooms_in_batches")
+@patch("vanphong.csv.utils.export.send_email_with_link_to_download_file")
+@patch("vanphong.csv.utils.export.save_csv_file_in_export_file")
 def test_export_rooms_filter_collections(
     save_file_mock,
     send_email_mock,
@@ -236,10 +236,10 @@ def test_export_rooms_filter_collections(
     save_file_mock.assert_called_once_with(user_export_file, mock_file, ANY)
 
 
-@patch("saleor.csv.utils.export.create_file_with_headers")
-@patch("saleor.csv.utils.export.export_rooms_in_batches")
-@patch("saleor.csv.utils.export.send_email_with_link_to_download_file")
-@patch("saleor.csv.utils.export.save_csv_file_in_export_file")
+@patch("vanphong.csv.utils.export.create_file_with_headers")
+@patch("vanphong.csv.utils.export.export_rooms_in_batches")
+@patch("vanphong.csv.utils.export.send_email_with_link_to_download_file")
+@patch("vanphong.csv.utils.export.save_csv_file_in_export_file")
 def test_export_rooms_by_app(
     save_file_mock,
     send_email_mock,
@@ -457,7 +457,7 @@ def test_append_to_file_for_xlsx(user_export_file, tmpdir, media_root):
     shutil.rmtree(tmpdir)
 
 
-@patch("saleor.csv.utils.export.BATCH_SIZE", 1)
+@patch("vanphong.csv.utils.export.BATCH_SIZE", 1)
 def test_export_rooms_in_batches_for_csv(
     room_list,
     user_export_file,
@@ -514,7 +514,7 @@ def test_export_rooms_in_batches_for_csv(
     shutil.rmtree(tmpdir)
 
 
-@patch("saleor.csv.utils.export.BATCH_SIZE", 1)
+@patch("vanphong.csv.utils.export.BATCH_SIZE", 1)
 def test_export_rooms_in_batches_for_xlsx(
     room_list,
     user_export_file,

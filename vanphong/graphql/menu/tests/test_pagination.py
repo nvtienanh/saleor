@@ -6,7 +6,7 @@ from ...tests.utils import get_graphql_content
 
 @pytest.fixture
 def menus_for_pagination(db):
-    # We have "footer" and "navbar" from default saleor configuration
+    # We have "footer" and "navbar" from default vanphong configuration
     return Menu.objects.bulk_create(
         [
             Menu(name="menu1", slug="menu1"),

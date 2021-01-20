@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-import saleor.payment.gateway as gateway
+import vanphong.payment.gateway as gateway
 
 from .. import ChargeStatus, TransactionKind
 from ..interface import GatewayResponse
@@ -86,7 +86,7 @@ USED_GATEWAY = "mirumee.payments.dummy"
 @pytest.fixture
 def mock_payment_interface(mocker, fake_payment_interface):
     mgr = mocker.patch(
-        "saleor.payment.gateway.get_plugins_manager",
+        "vanphong.payment.gateway.get_plugins_manager",
         autospec=True,
         return_value=fake_payment_interface,
     )

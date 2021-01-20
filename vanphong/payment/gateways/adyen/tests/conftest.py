@@ -37,10 +37,10 @@ def adyen_plugin(settings):
         origin_url = origin_url or "http://127.0.0.1:3000"
         adyen_auto_capture = adyen_auto_capture or False
         auto_capture = auto_capture or False
-        settings.PLUGINS = ["saleor.payment.gateways.adyen.plugin.AdyenGatewayPlugin"]
+        settings.PLUGINS = ["vanphong.payment.gateways.adyen.plugin.AdyenGatewayPlugin"]
         manager = get_plugins_manager()
 
-        with mock.patch("saleor.payment.gateways.adyen.utils.apple_pay.requests.post"):
+        with mock.patch("vanphong.payment.gateways.adyen.utils.apple_pay.requests.post"):
             manager.save_plugin_configuration(
                 AdyenGatewayPlugin.PLUGIN_ID,
                 {

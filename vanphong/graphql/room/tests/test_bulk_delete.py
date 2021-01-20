@@ -65,7 +65,7 @@ def test_delete_categories(staff_api_client, category_list, permission_manage_ro
     ).exists()
 
 
-@patch("saleor.room.utils.update_rooms_discounted_prices_task")
+@patch("vanphong.room.utils.update_rooms_discounted_prices_task")
 def test_delete_categories_with_subcategories_and_rooms(
     mock_update_rooms_discounted_prices_task,
     staff_api_client,

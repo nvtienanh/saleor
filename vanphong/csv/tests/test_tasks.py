@@ -10,7 +10,7 @@ from ..models import ExportEvent
 from ..tasks import export_rooms_task, on_task_failure, on_task_success
 
 
-@patch("saleor.csv.tasks.export_rooms")
+@patch("vanphong.csv.tasks.export_rooms")
 def test_export_rooms_task(export_rooms_mock, user_export_file):
     # given
     scope = {"all": ""}
@@ -27,7 +27,7 @@ def test_export_rooms_task(export_rooms_mock, user_export_file):
     )
 
 
-@patch("saleor.csv.tasks.send_export_failed_info")
+@patch("vanphong.csv.tasks.send_export_failed_info")
 def test_on_task_failure(send_export_failed_info_mock, user_export_file):
     # given
     exc = Exception("Test")
@@ -68,7 +68,7 @@ def test_on_task_failure(send_export_failed_info_mock, user_export_file):
     )
 
 
-@patch("saleor.csv.tasks.send_export_failed_info")
+@patch("vanphong.csv.tasks.send_export_failed_info")
 def test_on_task_failure_for_app(send_export_failed_info_mock, app_export_file):
     # given
     exc = Exception("Test")

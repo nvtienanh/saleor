@@ -17,7 +17,7 @@ def test_collect_categories_tree_rooms(categories_tree):
     )
 
 
-@patch("saleor.room.utils.update_rooms_discounted_prices_task")
+@patch("vanphong.room.utils.update_rooms_discounted_prices_task")
 def test_delete_categories(
     mock_update_rooms_discounted_prices_task,
     categories_tree_with_published_rooms,

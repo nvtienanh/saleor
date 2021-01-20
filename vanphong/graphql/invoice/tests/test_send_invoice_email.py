@@ -22,7 +22,7 @@ INVOICE_SEND_EMAIL_MUTATION = """
 """
 
 
-@patch("saleor.invoice.emails.send_templated_mail")
+@patch("vanphong.invoice.emails.send_templated_mail")
 def test_invoice_send_email(
     email_mock, staff_api_client, permission_manage_orders, order
 ):
@@ -53,7 +53,7 @@ def test_invoice_send_email(
     ).exists()
 
 
-@patch("saleor.invoice.emails.send_templated_mail")
+@patch("vanphong.invoice.emails.send_templated_mail")
 def test_invoice_send_email_pending(
     email_mock, staff_api_client, permission_manage_orders, order
 ):
@@ -75,7 +75,7 @@ def test_invoice_send_email_pending(
     assert not order.events.filter(type=OrderEvents.INVOICE_SENT).exists()
 
 
-@patch("saleor.invoice.emails.send_templated_mail")
+@patch("vanphong.invoice.emails.send_templated_mail")
 def test_invoice_send_email_without_url_and_number(
     email_mock, staff_api_client, permission_manage_orders, order
 ):
@@ -96,8 +96,8 @@ def test_invoice_send_email_without_url_and_number(
     assert not order.events.filter(type=OrderEvents.INVOICE_SENT).exists()
 
 
-@patch("saleor.invoice.emails.send_templated_mail")
-@patch("saleor.order.models.Order.get_customer_email")
+@patch("vanphong.invoice.emails.send_templated_mail")
+@patch("vanphong.order.models.Order.get_customer_email")
 def test_invoice_send_email_without_email(
     order_mock, email_mock, staff_api_client, permission_manage_orders, order
 ):

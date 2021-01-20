@@ -59,7 +59,7 @@ EXPORT_ROOMS_MUTATION = """
         ),
     ],
 )
-@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+@patch("vanphong.graphql.csv.mutations.export_rooms_task.delay")
 def test_export_rooms_mutation(
     export_rooms_mock,
     staff_api_client,
@@ -96,7 +96,7 @@ def test_export_rooms_mutation(
     ).exists()
 
 
-@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+@patch("vanphong.graphql.csv.mutations.export_rooms_task.delay")
 def test_export_rooms_mutation_by_app(
     export_rooms_mock,
     app_api_client,
@@ -142,7 +142,7 @@ def test_export_rooms_mutation_by_app(
     ).exists()
 
 
-@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+@patch("vanphong.graphql.csv.mutations.export_rooms_task.delay")
 def test_export_rooms_mutation_ids_scope(
     export_rooms_mock,
     staff_api_client,
@@ -203,7 +203,7 @@ def test_export_rooms_mutation_ids_scope(
     ).exists()
 
 
-@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+@patch("vanphong.graphql.csv.mutations.export_rooms_task.delay")
 def test_export_rooms_mutation_with_hotel_and_attribute_ids(
     export_rooms_mock,
     staff_api_client,
@@ -305,7 +305,7 @@ def test_export_rooms_mutation_with_hotel_and_attribute_ids(
         ),
     ],
 )
-@patch("saleor.graphql.csv.mutations.export_rooms_task.delay")
+@patch("vanphong.graphql.csv.mutations.export_rooms_task.delay")
 def test_export_rooms_mutation_failed(
     export_rooms_mock,
     staff_api_client,

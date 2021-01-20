@@ -7,7 +7,7 @@ import django.core.validators
 import django.db.models.deletion
 from django.db import migrations, models
 
-import saleor.payment
+import vanphong.payment
 
 
 class Migration(migrations.Migration):
@@ -159,39 +159,39 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[
                             (
-                                saleor.payment.TransactionError("incorrect_number"),
+                                vanphong.payment.TransactionError("incorrect_number"),
                                 "incorrect_number",
                             ),
                             (
-                                saleor.payment.TransactionError("invalid_number"),
+                                vanphong.payment.TransactionError("invalid_number"),
                                 "invalid_number",
                             ),
                             (
-                                saleor.payment.TransactionError("incorrect_cvv"),
+                                vanphong.payment.TransactionError("incorrect_cvv"),
                                 "incorrect_cvv",
                             ),
                             (
-                                saleor.payment.TransactionError("invalid_cvv"),
+                                vanphong.payment.TransactionError("invalid_cvv"),
                                 "invalid_cvv",
                             ),
                             (
-                                saleor.payment.TransactionError("incorrect_zip"),
+                                vanphong.payment.TransactionError("incorrect_zip"),
                                 "incorrect_zip",
                             ),
                             (
-                                saleor.payment.TransactionError("incorrect_address"),
+                                vanphong.payment.TransactionError("incorrect_address"),
                                 "incorrect_address",
                             ),
                             (
-                                saleor.payment.TransactionError("invalid_expiry_date"),
+                                vanphong.payment.TransactionError("invalid_expiry_date"),
                                 "invalid_expiry_date",
                             ),
-                            (saleor.payment.TransactionError("expired"), "expired"),
+                            (vanphong.payment.TransactionError("expired"), "expired"),
                             (
-                                saleor.payment.TransactionError("processing_error"),
+                                vanphong.payment.TransactionError("processing_error"),
                                 "processing_error",
                             ),
-                            (saleor.payment.TransactionError("declined"), "declined"),
+                            (vanphong.payment.TransactionError("declined"), "declined"),
                         ],
                         max_length=256,
                         null=True,

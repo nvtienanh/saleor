@@ -125,10 +125,10 @@ class CustomerEvent(CountableDjangoObjectType):
     message = graphene.String(description="Content of the event.")
     count = graphene.Int(description="Number of objects concerned by the event.")
     order = graphene.Field(
-        "saleor.graphql.order.types.Order", description="The concerned order."
+        "vanphong.graphql.order.types.Order", description="The concerned order."
     )
     order_line = graphene.Field(
-        "saleor.graphql.order.types.OrderLine", description="The concerned order line."
+        "vanphong.graphql.order.types.OrderLine", description="The concerned order line."
     )
 
     class Meta:
@@ -170,7 +170,7 @@ class CustomerEvent(CountableDjangoObjectType):
 
 class UserPermission(Permission):
     source_permission_groups = graphene.List(
-        graphene.NonNull("saleor.graphql.account.types.Group"),
+        graphene.NonNull("vanphong.graphql.account.types.Group"),
         description="List of user permission groups which contains this permission.",
         user_id=graphene.Argument(
             graphene.ID,
@@ -207,12 +207,12 @@ class User(CountableDjangoObjectType):
         ),
     )
     gift_cards = PrefetchingConnectionField(
-        "saleor.graphql.giftcard.types.GiftCard",
+        "vanphong.graphql.giftcard.types.GiftCard",
         description="List of the user gift cards.",
     )
     note = graphene.String(description="A note about the customer.")
     orders = PrefetchingConnectionField(
-        "saleor.graphql.order.types.Order", description="List of user's orders."
+        "vanphong.graphql.order.types.Order", description="List of user's orders."
     )
     # deprecated, to remove in #5389
     permissions = graphene.List(
@@ -226,11 +226,11 @@ class User(CountableDjangoObjectType):
         UserPermission, description="List of user's permissions."
     )
     permission_groups = graphene.List(
-        "saleor.graphql.account.types.Group",
+        "vanphong.graphql.account.types.Group",
         description="List of user's permission groups.",
     )
     editable_groups = graphene.List(
-        "saleor.graphql.account.types.Group",
+        "vanphong.graphql.account.types.Group",
         description="List of user's permission groups which user can manage.",
     )
     avatar = graphene.Field(Image, size=graphene.Int(description="Size of the avatar."))
@@ -238,7 +238,7 @@ class User(CountableDjangoObjectType):
         CustomerEvent, description="List of events associated with the user."
     )
     stored_payment_sources = graphene.List(
-        "saleor.graphql.payment.types.PaymentSource",
+        "vanphong.graphql.payment.types.PaymentSource",
         description="List of stored payment sources.",
     )
 

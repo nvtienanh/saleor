@@ -31,7 +31,7 @@ third_url = "http://www.example.com/third/"
         (WebhookEventType.CUSTOMER_CREATED, 0, set()),
     ],
 )
-@mock.patch("saleor.plugins.webhook.tasks.send_webhook_request.delay")
+@mock.patch("vanphong.plugins.webhook.tasks.send_webhook_request.delay")
 def test_trigger_webhooks_for_event_calls_expected_events(
     mock_request,
     event_name,
@@ -75,9 +75,9 @@ def test_trigger_webhooks_for_event_calls_expected_events(
     assert target_url_calls == expected_target_urls
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_order_created(mocked_webhook_trigger, settings, order_with_lines):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.order_created(order_with_lines)
 
@@ -87,9 +87,9 @@ def test_order_created(mocked_webhook_trigger, settings, order_with_lines):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_order_confirmed(mocked_webhook_trigger, settings, order_with_lines):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.order_confirmed(order_with_lines)
 
@@ -99,9 +99,9 @@ def test_order_confirmed(mocked_webhook_trigger, settings, order_with_lines):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_customer_created(mocked_webhook_trigger, settings, customer_user):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.customer_created(customer_user)
 
@@ -111,9 +111,9 @@ def test_customer_created(mocked_webhook_trigger, settings, customer_user):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_order_fully_paid(mocked_webhook_trigger, settings, order_with_lines):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.order_fully_paid(order_with_lines)
 
@@ -123,9 +123,9 @@ def test_order_fully_paid(mocked_webhook_trigger, settings, order_with_lines):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_room_created(mocked_webhook_trigger, settings, room):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.room_created(room)
 
@@ -135,9 +135,9 @@ def test_room_created(mocked_webhook_trigger, settings, room):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_room_updated(mocked_webhook_trigger, settings, room):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.room_updated(room)
 
@@ -147,9 +147,9 @@ def test_room_updated(mocked_webhook_trigger, settings, room):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_order_updated(mocked_webhook_trigger, settings, order_with_lines):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.order_updated(order_with_lines)
 
@@ -159,9 +159,9 @@ def test_order_updated(mocked_webhook_trigger, settings, order_with_lines):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_order_cancelled(mocked_webhook_trigger, settings, order_with_lines):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.order_cancelled(order_with_lines)
 
@@ -171,11 +171,11 @@ def test_order_cancelled(mocked_webhook_trigger, settings, order_with_lines):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_checkout_quantity_changed(
     mocked_webhook_trigger, settings, checkout_with_items
 ):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.checkout_quantity_changed(checkout_with_items)
 
@@ -185,9 +185,9 @@ def test_checkout_quantity_changed(
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_checkout_created(mocked_webhook_trigger, settings, checkout_with_items):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.checkout_created(checkout_with_items)
 
@@ -197,9 +197,9 @@ def test_checkout_created(mocked_webhook_trigger, settings, checkout_with_items)
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_checkout_updated(mocked_webhook_trigger, settings, checkout_with_items):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     manager.checkout_updated(checkout_with_items)
 
@@ -209,9 +209,9 @@ def test_checkout_updated(mocked_webhook_trigger, settings, checkout_with_items)
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_invoice_request(mocked_webhook_trigger, settings, fulfilled_order):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     invoice = fulfilled_order.invoices.first()
     manager.invoice_request(fulfilled_order, invoice, invoice.number)
@@ -221,9 +221,9 @@ def test_invoice_request(mocked_webhook_trigger, settings, fulfilled_order):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_invoice_delete(mocked_webhook_trigger, settings, fulfilled_order):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     invoice = fulfilled_order.invoices.first()
     manager.invoice_delete(invoice)
@@ -233,9 +233,9 @@ def test_invoice_delete(mocked_webhook_trigger, settings, fulfilled_order):
     )
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_invoice_sent(mocked_webhook_trigger, settings, fulfilled_order):
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     manager = get_plugins_manager()
     invoice = fulfilled_order.invoices.first()
     manager.invoice_sent(invoice, fulfilled_order.user.email)

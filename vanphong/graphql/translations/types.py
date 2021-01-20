@@ -63,7 +63,7 @@ class AttributeValueTranslatableContent(CountableDjangoObjectType):
         AttributeValueTranslation, type_name="attribute value"
     )
     attribute_value = graphene.Field(
-        "saleor.graphql.attribute.types.AttributeValue",
+        "vanphong.graphql.attribute.types.AttributeValue",
         description="Represents a value of an attribute.",
     )
 
@@ -87,7 +87,7 @@ class AttributeTranslation(BaseTranslationType):
 class AttributeTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(AttributeTranslation, type_name="attribute")
     attribute = graphene.Field(
-        "saleor.graphql.attribute.types.Attribute",
+        "vanphong.graphql.attribute.types.Attribute",
         description="Custom attribute of a room.",
     )
 
@@ -113,7 +113,7 @@ class RoomVariantTranslatableContent(CountableDjangoObjectType):
         RoomVariantTranslation, type_name="room variant"
     )
     room_variant = graphene.Field(
-        "saleor.graphql.room.types.rooms.RoomVariant",
+        "vanphong.graphql.room.types.rooms.RoomVariant",
         description=(
             "Represents a version of a room such as different size or color."
         ),
@@ -139,7 +139,7 @@ class RoomTranslation(BaseTranslationType):
 class RoomTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(RoomTranslation, type_name="room")
     room = graphene.Field(
-        "saleor.graphql.room.types.rooms.Room",
+        "vanphong.graphql.room.types.rooms.Room",
         description="Represents an individual item for sale in the storefront.",
     )
 
@@ -163,7 +163,7 @@ class CollectionTranslation(BaseTranslationType):
 class CollectionTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(CollectionTranslation, type_name="collection")
     collection = graphene.Field(
-        "saleor.graphql.room.types.rooms.Collection",
+        "vanphong.graphql.room.types.rooms.Collection",
         description="Represents a collection of rooms.",
     )
 
@@ -190,7 +190,7 @@ class CategoryTranslation(BaseTranslationType):
 class CategoryTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(CategoryTranslation, type_name="category")
     category = graphene.Field(
-        "saleor.graphql.room.types.rooms.Category",
+        "vanphong.graphql.room.types.rooms.Category",
         description="Represents a single category of rooms.",
     )
 
@@ -221,7 +221,7 @@ class PageTranslation(BaseTranslationType):
 class PageTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(PageTranslation, type_name="page")
     page = graphene.Field(
-        "saleor.graphql.page.types.Page",
+        "vanphong.graphql.page.types.Page",
         description=(
             "A static page that can be manually added by a shop operator ",
             "through the dashboard.",
@@ -259,7 +259,7 @@ class VoucherTranslation(BaseTranslationType):
 class VoucherTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(VoucherTranslation, type_name="voucher")
     voucher = graphene.Field(
-        "saleor.graphql.discount.types.Voucher",
+        "vanphong.graphql.discount.types.Voucher",
         description=(
             "Vouchers allow giving discounts to particular customers on categories, "
             "collections or specific rooms. They can be used during checkout by "
@@ -288,7 +288,7 @@ class SaleTranslation(BaseTranslationType):
 class SaleTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(SaleTranslation, type_name="sale")
     sale = graphene.Field(
-        "saleor.graphql.discount.types.Sale",
+        "vanphong.graphql.discount.types.Sale",
         description=(
             "Sales allow creating discounts for categories, collections "
             "or rooms and are visible to all the customers."
@@ -323,7 +323,7 @@ class MenuItemTranslation(BaseTranslationType):
 class MenuItemTranslatableContent(CountableDjangoObjectType):
     translation = TranslationField(MenuItemTranslation, type_name="menu item")
     menu_item = graphene.Field(
-        "saleor.graphql.menu.types.MenuItem",
+        "vanphong.graphql.menu.types.MenuItem",
         description=(
             "Represents a single item of the related menu. Can store categories, "
             "collection or pages."
@@ -352,7 +352,7 @@ class ShippingMethodTranslatableContent(CountableDjangoObjectType):
         ShippingMethodTranslation, type_name="shipping method"
     )
     shipping_method = graphene.Field(
-        "saleor.graphql.shipping.types.ShippingMethod",
+        "vanphong.graphql.shipping.types.ShippingMethod",
         description=(
             "Shipping method are the methods you'll use to get customer's orders "
             " to them. They are directly exposed to the customers."

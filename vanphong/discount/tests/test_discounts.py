@@ -212,7 +212,7 @@ def test_specific_rooms_voucher_checkout_discount(
 ):
     discounts = []
     monkeypatch.setattr(
-        "saleor.checkout.utils.get_prices_of_discounted_specific_room",
+        "vanphong.checkout.utils.get_prices_of_discounted_specific_room",
         lambda manager, checkout, lines, voucher, channel, discounts: (
             Money(price, "USD") for price in prices
         ),

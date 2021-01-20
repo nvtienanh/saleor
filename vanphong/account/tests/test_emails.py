@@ -3,7 +3,7 @@ from unittest import mock
 from django.core import mail
 from templated_email import get_connection
 
-import saleor.account.emails as account_emails
+import vanphong.account.emails as account_emails
 
 
 def test_send_set_password_email(staff_user, site_settings):
@@ -20,7 +20,7 @@ def test_send_set_password_email(staff_user, site_settings):
     assert password_set_url in sended_message
 
 
-@mock.patch("saleor.account.emails.send_templated_mail")
+@mock.patch("vanphong.account.emails.send_templated_mail")
 def test_send_email_request_change(
     mocked_templated_email, site_settings, customer_user
 ):
@@ -56,7 +56,7 @@ def test_send_email_request_change(
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.account.emails.send_templated_mail")
+@mock.patch("vanphong.account.emails.send_templated_mail")
 def test_send_email_changed_notification(
     mocked_templated_email, site_settings, customer_user
 ):

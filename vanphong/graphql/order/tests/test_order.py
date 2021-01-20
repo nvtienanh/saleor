@@ -602,7 +602,7 @@ ORDER_CONFIRM_MUTATION = """
 """
 
 
-@patch("saleor.payment.gateway.capture")
+@patch("vanphong.payment.gateway.capture")
 def test_order_confirm(
     capture_mock,
     staff_api_client,
@@ -660,7 +660,7 @@ def test_order_confirm_unfulfilled(staff_api_client, order, permission_manage_or
     assert errors[0]["code"] == OrderErrorCode.INVALID.name
 
 
-@patch("saleor.payment.gateway.capture")
+@patch("vanphong.payment.gateway.capture")
 def test_order_confirm_wont_call_capture_for_non_active_payment(
     capture_mock,
     staff_api_client,
@@ -1196,7 +1196,7 @@ def test_draft_order_create_variant_with_0_price(
     assert created_draft_event.parameters == {}
 
 
-@patch("saleor.graphql.order.mutations.draft_orders.add_variant_to_draft_order")
+@patch("vanphong.graphql.order.mutations.draft_orders.add_variant_to_draft_order")
 def test_draft_order_create_tax_error(
     add_variant_to_draft_order_mock,
     staff_api_client,
@@ -1765,7 +1765,7 @@ def test_draft_order_update_with_non_draft_order(
     assert error["code"] == OrderErrorCode.INVALID.name
 
 
-@patch("saleor.graphql.order.mutations.draft_orders.update_order_prices")
+@patch("vanphong.graphql.order.mutations.draft_orders.update_order_prices")
 def test_draft_order_update_tax_error(
     update_order_prices_mock,
     staff_api_client,
@@ -2735,7 +2735,7 @@ ORDER_UPDATE_MUTATION = """
 """
 
 
-@patch("saleor.plugins.base_plugin.BasePlugin.order_updated")
+@patch("vanphong.plugins.base_plugin.BasePlugin.order_updated")
 def test_order_update(
     plugin_mock,
     staff_api_client,
@@ -2771,7 +2771,7 @@ def test_order_update(
     assert plugin_mock.called is True
 
 
-@patch("saleor.plugins.base_plugin.BasePlugin.order_updated")
+@patch("vanphong.plugins.base_plugin.BasePlugin.order_updated")
 def test_order_update_with_draft_order(
     plugin_mock,
     staff_api_client,
@@ -2972,8 +2972,8 @@ mutation cancelOrder($id: ID!) {
 """
 
 
-@patch("saleor.graphql.order.mutations.orders.cancel_order")
-@patch("saleor.graphql.order.mutations.orders.clean_order_cancel")
+@patch("vanphong.graphql.order.mutations.orders.cancel_order")
+@patch("vanphong.graphql.order.mutations.orders.clean_order_cancel")
 def test_order_cancel(
     mock_clean_order_cancel,
     mock_cancel_order,
@@ -2995,8 +2995,8 @@ def test_order_cancel(
     mock_cancel_order.assert_called_once_with(order=order, user=staff_api_client.user)
 
 
-@patch("saleor.graphql.order.mutations.orders.cancel_order")
-@patch("saleor.graphql.order.mutations.orders.clean_order_cancel")
+@patch("vanphong.graphql.order.mutations.orders.cancel_order")
+@patch("vanphong.graphql.order.mutations.orders.clean_order_cancel")
 def test_order_cancel_as_app(
     mock_clean_order_cancel,
     mock_cancel_order,
@@ -4107,7 +4107,7 @@ mutation CancelManyOrders($ids: [ID]!) {
 """
 
 
-@patch("saleor.graphql.order.bulk_mutations.orders.cancel_order")
+@patch("vanphong.graphql.order.bulk_mutations.orders.cancel_order")
 def test_order_bulk_cancel(
     mock_cancel_order,
     staff_api_client,
@@ -4136,7 +4136,7 @@ def test_order_bulk_cancel(
     mock_cancel_order.call_count == expected_count
 
 
-@patch("saleor.graphql.order.bulk_mutations.orders.cancel_order")
+@patch("vanphong.graphql.order.bulk_mutations.orders.cancel_order")
 def test_order_bulk_cancel_as_app(
     mock_cancel_order,
     app_api_client,

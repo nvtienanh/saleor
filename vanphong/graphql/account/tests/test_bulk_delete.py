@@ -10,7 +10,7 @@ from ...tests.utils import assert_no_permission, get_graphql_content
 
 
 @patch(
-    "saleor.graphql.account.utils.account_events.staff_user_deleted_a_customer_event"
+    "vanphong.graphql.account.utils.account_events.staff_user_deleted_a_customer_event"
 )
 def test_delete_customers(
     mocked_deletion_event,

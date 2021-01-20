@@ -68,7 +68,7 @@ def test_payment_void_gateway_error(
     assert payment_txn_preauth.charge_status == ChargeStatus.NOT_CHARGED
     payment_id = graphene.Node.to_global_id("Payment", payment_txn_preauth.pk)
     variables = {"paymentId": payment_id}
-    monkeypatch.setattr("saleor.payment.gateways.dummy.dummy_success", lambda: False)
+    monkeypatch.setattr("vanphong.payment.gateways.dummy.dummy_success", lambda: False)
     response = staff_api_client.post_graphql(
         VOID_QUERY, variables, permissions=[permission_manage_orders]
     )
@@ -519,7 +519,7 @@ def test_payment_capture_gateway_error(
     assert payment.charge_status == ChargeStatus.NOT_CHARGED
     payment_id = graphene.Node.to_global_id("Payment", payment.pk)
     variables = {"paymentId": payment_id, "amount": str(payment_txn_preauth.total)}
-    monkeypatch.setattr("saleor.payment.gateways.dummy.dummy_success", lambda: False)
+    monkeypatch.setattr("vanphong.payment.gateways.dummy.dummy_success", lambda: False)
 
     # when
     response = staff_api_client.post_graphql(
@@ -540,7 +540,7 @@ def test_payment_capture_gateway_error(
 
 
 @patch(
-    "saleor.payment.gateways.dummy_credit_card.plugin."
+    "vanphong.payment.gateways.dummy_credit_card.plugin."
     "DummyCreditCardGatewayPlugin.DEFAULT_ACTIVE",
     True,
 )
@@ -563,7 +563,7 @@ def test_payment_capture_gateway_dummy_credit_card_error(
     payment_id = graphene.Node.to_global_id("Payment", payment.pk)
     variables = {"paymentId": payment_id, "amount": str(payment_txn_preauth.total)}
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.dummy_success", lambda: False
+        "vanphong.payment.gateways.dummy_credit_card.dummy_success", lambda: False
     )
 
     # when
@@ -651,7 +651,7 @@ def test_payment_refund_error(
     payment.save()
     payment_id = graphene.Node.to_global_id("Payment", payment.pk)
     variables = {"paymentId": payment_id, "amount": str(payment.total)}
-    monkeypatch.setattr("saleor.payment.gateways.dummy.dummy_success", lambda: False)
+    monkeypatch.setattr("vanphong.payment.gateways.dummy.dummy_success", lambda: False)
     response = staff_api_client.post_graphql(
         REFUND_QUERY, variables, permissions=[permission_manage_orders]
     )
@@ -818,7 +818,7 @@ def test_list_payment_sources(
     card = PaymentMethodInfo(last_4="5678", exp_year=2020, exp_month=12, name="JohnDoe")
     source = CustomerSource(id="test1", gateway=gateway, credit_card_info=card)
     mock_get_source_list = mocker.patch(
-        "saleor.graphql.account.resolvers.gateway.list_payment_sources",
+        "vanphong.graphql.account.resolvers.gateway.list_payment_sources",
         return_value=[source],
         autospec=True,
     )
@@ -837,7 +837,7 @@ def test_stored_payment_sources_restriction(
     card = PaymentMethodInfo(last_4="5678", exp_year=2020, exp_month=12, name="JohnDoe")
     source = CustomerSource(id="test1", gateway="dummy", credit_card_info=card)
     mocker.patch(
-        "saleor.graphql.account.resolvers.gateway.list_payment_sources",
+        "vanphong.graphql.account.resolvers.gateway.list_payment_sources",
         return_value=[source],
         autospec=True,
     )

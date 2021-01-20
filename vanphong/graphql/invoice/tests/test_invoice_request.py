@@ -36,12 +36,12 @@ INVOICE_REQUEST_MUTATION = """
 @pytest.fixture(autouse=True)
 def setup_dummy_gateways(settings):
     settings.PLUGINS = [
-        "saleor.payment.gateways.dummy.plugin.DummyGatewayPlugin",
+        "vanphong.payment.gateways.dummy.plugin.DummyGatewayPlugin",
     ]
     return settings
 
 
-@patch("saleor.plugins.base_plugin.BasePlugin.invoice_request")
+@patch("vanphong.plugins.base_plugin.BasePlugin.invoice_request")
 def test_invoice_request(
     plugin_mock, staff_api_client, permission_manage_orders, order
 ):

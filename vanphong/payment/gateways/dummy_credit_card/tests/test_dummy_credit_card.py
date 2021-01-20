@@ -28,7 +28,7 @@ CANNOT_CHARGE_MORE_THAN_UNCAPTURED = "Unable to charge more than un-captured amo
 def setup_dummy_credit_card_gateway(settings):
     DummyCreditCardGatewayPlugin.DEFAULT_ACTIVE = True
     settings.PLUGINS = [
-        "saleor.payment.gateways.dummy_credit_card.plugin.DummyCreditCardGatewayPlugin"
+        "vanphong.payment.gateways.dummy_credit_card.plugin.DummyCreditCardGatewayPlugin"
     ]
     return settings
 
@@ -69,7 +69,7 @@ def test_authorize_failed(is_active, charge_status, error, payment_dummy_credit_
 
 def test_authorize_gateway_error(payment_dummy_credit_card, monkeypatch):
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.dummy_success", lambda: False
+        "vanphong.payment.gateways.dummy_credit_card.dummy_success", lambda: False
     )
     with pytest.raises(PaymentError) as e:
         gateway.authorize(payment=payment_dummy_credit_card, token="Fake")
@@ -80,7 +80,7 @@ def test_authorize_gateway_error(payment_dummy_credit_card, monkeypatch):
 def test_authorize_method_error(dummy_payment_data, dummy_gateway_config, monkeypatch):
     # given
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.dummy_success", lambda: False
+        "vanphong.payment.gateways.dummy_credit_card.dummy_success", lambda: False
     )
 
     # when
@@ -137,7 +137,7 @@ def test_void_gateway_error(payment_txn_preauth, monkeypatch):
     payment_txn_preauth.save()
 
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.dummy_success", lambda: False
+        "vanphong.payment.gateways.dummy_credit_card.dummy_success", lambda: False
     )
     with pytest.raises(PaymentError) as e:
         gateway.void(payment=payment_txn_preauth)
@@ -148,7 +148,7 @@ def test_void_gateway_error(payment_txn_preauth, monkeypatch):
 def test_void_method_error(dummy_payment_data, dummy_gateway_config, monkeypatch):
     # given
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.dummy_success", lambda: False
+        "vanphong.payment.gateways.dummy_credit_card.dummy_success", lambda: False
     )
 
     # when
@@ -304,7 +304,7 @@ def test_refund_failed(
 
 def test_refund_gateway_error(payment_txn_captured, monkeypatch):
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.dummy_success", lambda: False
+        "vanphong.payment.gateways.dummy_credit_card.dummy_success", lambda: False
     )
     payment = payment_txn_captured
     payment.gateway = "mirumee.payments.dummy_credit_card"
@@ -349,7 +349,7 @@ def test_process_payment_failed(token, error, payment_dummy_credit_card):
 def test_refund_method_error(dummy_payment_data, dummy_gateway_config, monkeypatch):
     # given
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.dummy_success", lambda: False
+        "vanphong.payment.gateways.dummy_credit_card.dummy_success", lambda: False
     )
 
     # when
@@ -368,7 +368,7 @@ def test_process_payment_pre_authorized(
     token = PREAUTHORIZED_TOKENS[1]
     dummy_gateway_config.auto_capture = False
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.plugin."
+        "vanphong.payment.gateways.dummy_credit_card.plugin."
         "DummyCreditCardGatewayPlugin._get_gateway_config",
         lambda _: dummy_gateway_config,
     )
@@ -392,7 +392,7 @@ def test_process_payment_pre_authorized_and_capture(
     token = PREAUTHORIZED_TOKENS[1]
     dummy_gateway_config.auto_capture = True
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.plugin."
+        "vanphong.payment.gateways.dummy_credit_card.plugin."
         "DummyCreditCardGatewayPlugin._get_gateway_config",
         lambda _: dummy_gateway_config,
     )
@@ -416,7 +416,7 @@ def test_process_payment_pre_authorized_and_capture_error(
     token = TOKEN_EXPIRED
     dummy_gateway_config.auto_capture = True
     monkeypatch.setattr(
-        "saleor.payment.gateways.dummy_credit_card.plugin."
+        "vanphong.payment.gateways.dummy_credit_card.plugin."
         "DummyCreditCardGatewayPlugin._get_gateway_config",
         lambda _: dummy_gateway_config,
     )

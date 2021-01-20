@@ -64,7 +64,7 @@ INTERNAL_IPS = get_list(os.environ.get("INTERNAL_IPS", "127.0.0.1"))
 
 DATABASES = {
     "default": dj_database_url.config(
-        default="postgres://saleor:saleor@localhost:5432/saleor", conn_max_age=600
+        default="postgres://vanphong:vanphong@localhost:5432/vanphong", conn_max_age=600
     )
 }
 
@@ -168,7 +168,7 @@ MEDIA_URL = os.environ.get("MEDIA_URL", "/media/")
 STATIC_ROOT = os.path.join(PROJECT_ROOT, "static")
 STATIC_URL = os.environ.get("STATIC_URL", "/static/")
 STATICFILES_DIRS = [
-    ("images", os.path.join(PROJECT_ROOT, "saleor", "static", "images"))
+    ("images", os.path.join(PROJECT_ROOT, "vanphong", "static", "images"))
 ]
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
@@ -336,7 +336,7 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
-        "saleor": {"level": "DEBUG", "propagate": True},
+        "vanphong": {"level": "DEBUG", "propagate": True},
         "vanphong.graphql.errors.handled": {
             "handlers": ["default"],
             "level": "INFO",
@@ -564,7 +564,7 @@ if "JAEGER_AGENT_HOST" in os.environ:
             },
             "logging": get_bool_from_env("JAEGER_LOGGING", False),
         },
-        service_name="saleor",
+        service_name="vanphong",
         validate=True,
     ).initialize_tracer()
 

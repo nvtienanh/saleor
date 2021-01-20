@@ -28,9 +28,9 @@ def test_get_room_limit_first_page(room):
     assert get_room_limit_first_page([room] * 16) == 4
 
 
-@patch("saleor.plugins.invoicing.utils.HTML")
-@patch("saleor.plugins.invoicing.utils.get_template")
-@patch("saleor.plugins.invoicing.utils.os")
+@patch("vanphong.plugins.invoicing.utils.HTML")
+@patch("vanphong.plugins.invoicing.utils.get_template")
+@patch("vanphong.plugins.invoicing.utils.os")
 def test_generate_invoice_pdf_for_order(
     os_mock, get_template_mock, HTML_mock, fulfilled_order
 ):

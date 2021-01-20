@@ -56,7 +56,7 @@ type_schema = {
 )
 def test_get_country_by_ip(ip_data, expected_country, monkeypatch):
     monkeypatch.setattr(
-        "saleor.core.utils._get_geo_data_by_ip", Mock(return_value=ip_data)
+        "vanphong.core.utils._get_geo_data_by_ip", Mock(return_value=ip_data)
     )
     country = get_country_by_ip("127.0.0.1")
     assert country == expected_country
@@ -154,7 +154,7 @@ def test_create_address(db):
 def test_create_fake_order(db, monkeypatch, image, media_root, hotel):
     # Tests shouldn't depend on images present in placeholder folder
     monkeypatch.setattr(
-        "saleor.core.utils.random_data.get_image", Mock(return_value=image)
+        "vanphong.core.utils.random_data.get_image", Mock(return_value=image)
     )
     for _ in random_data.create_channels():
         pass

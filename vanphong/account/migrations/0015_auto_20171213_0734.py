@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
-import saleor.account.models
+import vanphong.account.models
 
 
 class Migration(migrations.Migration):
@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="address",
             name="phone",
-            field=saleor.account.models.PossiblePhoneNumberField(
+            field=vanphong.account.models.PossiblePhoneNumberField(
                 blank=True, default="", max_length=128, verbose_name="phone number"
             ),
         )

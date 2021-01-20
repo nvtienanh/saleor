@@ -187,7 +187,7 @@ def test_vatlayer_plugin_caches_taxes(
 ):
     mocked_taxes = Mock(wraps=get_taxes_for_country)
     monkeypatch.setattr(
-        "saleor.plugins.vatlayer.plugin.get_taxes_for_country", mocked_taxes
+        "vanphong.plugins.vatlayer.plugin.get_taxes_for_country", mocked_taxes
     )
 
     manager = get_plugins_manager()
@@ -226,7 +226,7 @@ def test_calculate_checkout_total(
     taxes_in_prices,
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     checkout_with_item.shipping_address = address
     checkout_with_item.save()
@@ -284,7 +284,7 @@ def test_calculate_checkout_subtotal(
     checkout_with_item.save()
 
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
 
     room = variant.room
@@ -305,7 +305,7 @@ def test_calculate_checkout_subtotal(
 
 def test_calculate_order_shipping(vatlayer, order_line, shipping_zone, site_settings):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     order = order_line.order
     method = shipping_zone.shipping_methods.get()
@@ -322,7 +322,7 @@ def test_calculate_order_shipping_for_order_without_shipping(
     vatlayer, order_line, shipping_zone, site_settings
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     order = order_line.order
     order.shipping_method = None
@@ -333,7 +333,7 @@ def test_calculate_order_shipping_for_order_without_shipping(
 
 def test_calculate_order_line_unit(vatlayer, order_line, shipping_zone, site_settings):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     order_line.unit_price = TaxedMoney(
         net=Money("10.00", "USD"), gross=Money("10.00", "USD")
@@ -362,7 +362,7 @@ def test_get_tax_rate_percentage_value(
     vatlayer, order_line, shipping_zone, site_settings, room
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     country = Country("PL")
     tax_rate = manager.get_tax_rate_percentage_value(room, country)
@@ -370,7 +370,7 @@ def test_get_tax_rate_percentage_value(
 
 
 def test_save_plugin_configuration(vatlayer, settings):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     manager = get_plugins_manager()
     manager.save_plugin_configuration(VatlayerPlugin.PLUGIN_ID, {"active": False})
 
@@ -379,7 +379,7 @@ def test_save_plugin_configuration(vatlayer, settings):
 
 
 def test_save_plugin_configuration_cannot_be_enabled_without_config(settings):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     manager = get_plugins_manager()
     with pytest.raises(ValidationError):
         manager.save_plugin_configuration(
@@ -389,7 +389,7 @@ def test_save_plugin_configuration_cannot_be_enabled_without_config(settings):
 
 
 def test_show_taxes_on_storefront(vatlayer, settings):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     manager = get_plugins_manager()
     assert manager.show_taxes_on_storefront() is True
 
@@ -401,10 +401,10 @@ def test_get_tax_rate_type_choices(vatlayer, settings, monkeypatch):
         "admission to entertainment events",
     ]
     monkeypatch.setattr(
-        "saleor.plugins.vatlayer.plugin.get_tax_rate_types",
+        "vanphong.plugins.vatlayer.plugin.get_tax_rate_types",
         lambda: expected_choices,
     )
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     manager = get_plugins_manager()
     choices = manager.get_tax_rate_type_choices()
 
@@ -417,7 +417,7 @@ def test_get_tax_rate_type_choices(vatlayer, settings, monkeypatch):
 
 
 def test_apply_taxes_to_shipping_price_range(vatlayer, settings):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     money_range = MoneyRange(Money(100, "USD"), Money(200, "USD"))
     country = Country("PL")
     manager = get_plugins_manager()
@@ -434,7 +434,7 @@ def test_apply_taxes_to_shipping_price_range(vatlayer, settings):
 def test_apply_taxes_to_room(
     vatlayer, settings, variant, discount_info, channel_USD
 ):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     country = Country("PL")
     manager = get_plugins_manager()
     variant.room.metadata = {
@@ -455,7 +455,7 @@ def test_apply_taxes_to_room(
 def test_apply_taxes_to_room_uses_taxes_from_room_type(
     vatlayer, settings, variant, discount_info, channel_USD
 ):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     country = Country("PL")
     manager = get_plugins_manager()
     room = variant.room
@@ -478,7 +478,7 @@ def test_apply_taxes_to_room_uses_taxes_from_room_type(
 def test_calculations_checkout_total_with_vatlayer(
     vatlayer, settings, checkout_with_item
 ):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout_with_item)
     checkout_subtotal = calculations.checkout_total(
@@ -495,7 +495,7 @@ def test_calculations_checkout_total_with_vatlayer(
 def test_calculations_checkout_subtotal_with_vatlayer(
     vatlayer, settings, checkout_with_item
 ):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout_with_item)
     checkout_subtotal = calculations.checkout_subtotal(
@@ -512,7 +512,7 @@ def test_calculations_checkout_subtotal_with_vatlayer(
 def test_calculations_checkout_shipping_price_with_vatlayer(
     vatlayer, settings, checkout_with_item
 ):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     manager = get_plugins_manager()
     lines = fetch_checkout_lines(checkout_with_item)
     checkout_shipping_price = calculations.checkout_shipping_price(
@@ -527,7 +527,7 @@ def test_calculations_checkout_shipping_price_with_vatlayer(
 
 
 def test_skip_diabled_plugin(settings):
-    settings.PLUGINS = ["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     manager = get_plugins_manager()
     plugin: VatlayerPlugin = manager.get_plugin(VatlayerPlugin.PLUGIN_ID)
 
@@ -547,7 +547,7 @@ def test_get_checkout_line_tax_rate(
     shipping_zone,
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     checkout_with_item.shipping_address = address
     checkout_with_item.save()
@@ -589,7 +589,7 @@ def test_get_checkout_line_tax_rate_order_not_valid(
     checkout_with_item,
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
 
     line = checkout_with_item.lines.first()
@@ -629,7 +629,7 @@ def test_get_order_line_tax_rate(
     shipping_zone,
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     order = order_line.order
     room = Room.objects.get(name=order_line.room_name)
@@ -659,7 +659,7 @@ def test_get_order_line_tax_rate_order_no_address_given(
     vatlayer,
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     order = order_line.order
     room = Room.objects.get(name=order_line.room_name)
@@ -684,7 +684,7 @@ def test_get_checkout_shipping_tax_rate(
     shipping_zone,
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     checkout_with_item.shipping_address = address
     checkout_with_item.save()
@@ -726,7 +726,7 @@ def test_get_checkout_shipping_tax_rate_no_address(
     checkout_with_item,
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
 
     line = checkout_with_item.lines.first()
@@ -762,10 +762,10 @@ def test_get_checkout_shipping_tax_rate_skip_plugin(
     site_settings, vatlayer, checkout_with_item, monkeypatch, address, shipping_zone
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     monkeypatch.setattr(
-        "saleor.plugins.vatlayer.plugin.VatlayerPlugin._skip_plugin",
+        "vanphong.plugins.vatlayer.plugin.VatlayerPlugin._skip_plugin",
         lambda *_: True,
     )
 
@@ -811,7 +811,7 @@ def test_get_order_shipping_tax_rate(
     shipping_zone,
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     order = order_line.order
     room = Room.objects.get(name=order_line.room_name)
@@ -841,7 +841,7 @@ def test_get_order_shipping_tax_rate_no_address_given(
     vatlayer,
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     order = order_line.order
     room = Room.objects.get(name=order_line.room_name)
@@ -866,10 +866,10 @@ def test_get_order_shipping_tax_rate_skip_plugin(
     site_settings, order_line, vatlayer, monkeypatch
 ):
     manager = get_plugins_manager(
-        plugins=["saleor.plugins.vatlayer.plugin.VatlayerPlugin"]
+        plugins=["vanphong.plugins.vatlayer.plugin.VatlayerPlugin"]
     )
     monkeypatch.setattr(
-        "saleor.plugins.vatlayer.plugin.VatlayerPlugin._skip_plugin",
+        "vanphong.plugins.vatlayer.plugin.VatlayerPlugin._skip_plugin",
         lambda *_: True,
     )
     order = order_line.order

@@ -114,7 +114,7 @@ MUTATION_CHECKOUT_CREATE = """
 """
 
 
-@mock.patch("saleor.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
+@mock.patch("vanphong.plugins.webhook.plugin.trigger_webhooks_for_event.delay")
 def test_checkout_create_triggers_webhooks(
     mocked_webhook_trigger,
     user_api_client,
@@ -124,7 +124,7 @@ def test_checkout_create_triggers_webhooks(
     channel_USD,
 ):
     """Create checkout object using GraphQL API."""
-    settings.PLUGINS = ["saleor.plugins.webhook.plugin.WebhookPlugin"]
+    settings.PLUGINS = ["vanphong.plugins.webhook.plugin.WebhookPlugin"]
     variant = stock.room_variant
     variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
     shipping_address = graphql_address_data
@@ -1304,7 +1304,7 @@ MUTATION_CHECKOUT_LINES_ADD = """
 
 
 @mock.patch(
-    "saleor.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
+    "vanphong.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
     wraps=update_checkout_shipping_method_if_invalid,
 )
 def test_checkout_lines_add(
@@ -1543,7 +1543,7 @@ MUTATION_CHECKOUT_LINES_UPDATE = """
 
 
 @mock.patch(
-    "saleor.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
+    "vanphong.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
     wraps=update_checkout_shipping_method_if_invalid,
 )
 def test_checkout_lines_update(
@@ -1715,7 +1715,7 @@ MUTATION_CHECKOUT_LINES_DELETE = """
 
 
 @mock.patch(
-    "saleor.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
+    "vanphong.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
     wraps=update_checkout_shipping_method_if_invalid,
 )
 def test_checkout_line_delete(
@@ -1742,7 +1742,7 @@ def test_checkout_line_delete(
 
 
 @mock.patch(
-    "saleor.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
+    "vanphong.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
     wraps=update_checkout_shipping_method_if_invalid,
 )
 def test_checkout_line_delete_by_zero_quantity(
@@ -1881,7 +1881,7 @@ MUTATION_CHECKOUT_SHIPPING_ADDRESS_UPDATE = """
 
 
 @mock.patch(
-    "saleor.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
+    "vanphong.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
     wraps=update_checkout_shipping_method_if_invalid,
 )
 def test_checkout_shipping_address_update(
@@ -1921,7 +1921,7 @@ def test_checkout_shipping_address_update(
 
 
 @mock.patch(
-    "saleor.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
+    "vanphong.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
     wraps=update_checkout_shipping_method_if_invalid,
 )
 @override_settings(DEFAULT_COUNTRY="DE")
@@ -1970,7 +1970,7 @@ def test_checkout_shipping_address_update_changes_checkout_country(
 
 
 @mock.patch(
-    "saleor.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
+    "vanphong.graphql.checkout.mutations.update_checkout_shipping_method_if_invalid",
     wraps=update_checkout_shipping_method_if_invalid,
 )
 @override_settings(DEFAULT_COUNTRY="DE")
@@ -2185,7 +2185,7 @@ def fake_manager(mocker):
 @pytest.fixture
 def mock_get_manager(mocker, fake_manager):
     manager = mocker.patch(
-        "saleor.payment.gateway.get_plugins_manager",
+        "vanphong.payment.gateway.get_plugins_manager",
         autospec=True,
         return_value=fake_manager,
     )
@@ -2547,7 +2547,7 @@ MUTATION_UPDATE_SHIPPING_METHOD = """
 
 
 @pytest.mark.parametrize("is_valid_shipping_method", (True, False))
-@patch("saleor.graphql.checkout.mutations.clean_shipping_method")
+@patch("vanphong.graphql.checkout.mutations.clean_shipping_method")
 def test_checkout_shipping_method_update(
     mock_clean_shipping,
     staff_api_client,
@@ -2588,7 +2588,7 @@ def test_checkout_shipping_method_update(
         assert checkout.shipping_method is None
 
 
-@patch("saleor.shipping.models.check_shipping_method_for_zip_code")
+@patch("vanphong.shipping.models.check_shipping_method_for_zip_code")
 def test_checkout_shipping_method_update_excluded_zip_code(
     mock_check_zip_code, staff_api_client, shipping_method, checkout_with_item, address
 ):

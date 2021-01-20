@@ -7,7 +7,7 @@ import django.utils.timezone
 import django_countries.fields
 from django.db import migrations, models
 
-import saleor.account.models
+import vanphong.account.models
 
 
 class Migration(migrations.Migration):
@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="address",
             name="phone",
-            field=saleor.account.models.PossiblePhoneNumberField(
+            field=vanphong.account.models.PossiblePhoneNumberField(
                 blank=True, default="", max_length=128
             ),
         ),

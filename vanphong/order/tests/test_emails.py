@@ -54,7 +54,7 @@ def test_collect_data_for_email(order):
     assert "schema_markup" not in email_context
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_email_payment_confirmation(mocked_templated_email, order, site_settings):
     template = emails.CONFIRM_PAYMENT_TEMPLATE
     emails.send_payment_confirmation(order.pk)
@@ -77,7 +77,7 @@ def test_send_email_payment_confirmation(mocked_templated_email, order, site_set
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_staff_emails_without_notification_recipient(
     mocked_templated_email, order, site_settings
 ):
@@ -85,7 +85,7 @@ def test_send_staff_emails_without_notification_recipient(
     mocked_templated_email.assert_not_called()
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_staff_emails(
     mocked_templated_email, order, site_settings, staff_notification_recipient
 ):
@@ -112,7 +112,7 @@ def test_send_staff_emails(
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_email_order_confirmation(mocked_templated_email, order, site_settings):
     template = emails.CONFIRM_ORDER_TEMPLATE
     redirect_url = "https://www.example.com"
@@ -136,7 +136,7 @@ def test_send_email_order_confirmation(mocked_templated_email, order, site_setti
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_confirmation_emails_without_addresses_for_payment(
     mocked_templated_email, order, site_settings, digital_content
 ):
@@ -170,7 +170,7 @@ def test_send_confirmation_emails_without_addresses_for_payment(
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_confirmation_emails_without_addresses_for_order(
     mocked_templated_email, order, site_settings, digital_content
 ):
@@ -205,7 +205,7 @@ def test_send_confirmation_emails_without_addresses_for_order(
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_fulfillment_email_confirmation(
     mocked_templated_email, fulfilled_order, site_settings
 ):
@@ -241,7 +241,7 @@ def test_send_fulfillment_email_confirmation(
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_fulfillment_email_update(
     mocked_templated_email, fulfilled_order, site_settings
 ):
@@ -272,7 +272,7 @@ def test_send_fulfillment_email_update(
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_fulfillment_emails_with_tracking_number_as_url(
     mocked_templated_email, fulfilled_order, site_settings
 ):
@@ -305,7 +305,7 @@ def test_send_fulfillment_emails_with_tracking_number_as_url(
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_fulfillment_email_confirmation_with_tracking_number_as_url(
     mocked_templated_email, fulfilled_order, site_settings
 ):
@@ -343,7 +343,7 @@ def test_send_fulfillment_email_confirmation_with_tracking_number_as_url(
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_email_order_canceled(mocked_templated_email, order, site_settings):
     # given
     template = emails.ORDER_CANCEl_TEMPLATE
@@ -369,7 +369,7 @@ def test_send_email_order_canceled(mocked_templated_email, order, site_settings)
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_templated_mail")
+@mock.patch("vanphong.order.emails.send_templated_mail")
 def test_send_email_order_refunded(mocked_templated_email, order, site_settings):
     # given
     template = emails.ORDER_REFUND_TEMPLATE
@@ -397,7 +397,7 @@ def test_send_email_order_refunded(mocked_templated_email, order, site_settings)
     email_connection.get_email_message(to=recipients, **expected_call_kwargs)
 
 
-@mock.patch("saleor.order.emails.send_order_refunded.delay")
+@mock.patch("vanphong.order.emails.send_order_refunded.delay")
 def test_send_order_refunded_confirmation(send_order_refunded_mock, order):
     # when
     emails.send_order_refunded_confirmation(order, order.user, Decimal(5), "USD")
@@ -409,7 +409,7 @@ def test_send_order_refunded_confirmation(send_order_refunded_mock, order):
     assert order_event.type == OrderEvents.EMAIL_SENT
 
 
-@mock.patch("saleor.order.emails.send_order_canceled.delay")
+@mock.patch("vanphong.order.emails.send_order_canceled.delay")
 def test_send_order_canceled_confirmation(send_order_canceled_mock, order):
     # when
     emails.send_order_canceled_confirmation(order, order.user)

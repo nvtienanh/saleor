@@ -15,7 +15,7 @@ ERROR_MSG_MISSING_CHECKOUT = (
 )
 
 
-@mock.patch("saleor.payment.gateways.adyen.webhooks.api_call")
+@mock.patch("vanphong.payment.gateways.adyen.webhooks.api_call")
 def test_handle_additional_actions_post(
     api_call_mock, payment_adyen_for_checkout, adyen_plugin
 ):
@@ -67,10 +67,10 @@ def test_handle_additional_actions_post(
     [
         "adyencheckout://your.package.name",
         "myiOSapp://path",
-        "https://checkout.saleor.com/",
+        "https://checkout.vanphong.com/",
     ],
 )
-@mock.patch("saleor.payment.gateways.adyen.webhooks.api_call")
+@mock.patch("vanphong.payment.gateways.adyen.webhooks.api_call")
 def test_handle_additional_actions_handles_return_urls(
     api_call_mock, custom_url, payment_adyen_for_checkout, adyen_plugin
 ):
@@ -107,7 +107,7 @@ def test_handle_additional_actions_handles_return_urls(
     assert response.status_code == 302
 
 
-@mock.patch("saleor.payment.gateways.adyen.webhooks.api_call")
+@mock.patch("vanphong.payment.gateways.adyen.webhooks.api_call")
 def test_handle_additional_actions_get(
     api_call_mock, payment_adyen_for_checkout, adyen_plugin
 ):
@@ -351,7 +351,7 @@ def test_handle_additional_actions_payment_does_not_have_checkout(
     assert response.content.decode() == ERROR_MSG_MISSING_CHECKOUT
 
 
-@mock.patch("saleor.payment.gateways.adyen.webhooks.api_call")
+@mock.patch("vanphong.payment.gateways.adyen.webhooks.api_call")
 def test_handle_additional_actions_api_call_error(
     api_call_mock,
     payment_adyen_for_checkout,
@@ -448,7 +448,7 @@ def test_handle_additional_actions_payment_with_no_adyen_gateway(
     assert response.content.decode() == ERROR_MSG_MISSING_PAYMENT
 
 
-@mock.patch("saleor.payment.gateways.adyen.webhooks.api_call")
+@mock.patch("vanphong.payment.gateways.adyen.webhooks.api_call")
 def test_handle_additional_actions_lack_of_parameter_in_request(
     api_call_mock, payment_adyen_for_checkout
 ):

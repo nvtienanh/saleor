@@ -3,7 +3,7 @@
 from django.db import migrations, models
 from django.db.models import Q
 
-from saleor.plugins.manager import get_plugins_manager
+from vanphong.plugins.manager import get_plugins_manager
 
 
 def fill_plugins_name(apps, schema):

@@ -29,7 +29,7 @@ class Webhook(CountableDjangoObjectType):
         description="List of webhook events.",
         required=True,
     )
-    app = graphene.Field("saleor.graphql.app.types.App", required=True)
+    app = graphene.Field("vanphong.graphql.app.types.App", required=True)
 
     class Meta:
         description = "Webhook."

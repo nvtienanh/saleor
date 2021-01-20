@@ -272,7 +272,7 @@ def test_get_nodes(room_list):
     assert exc.value.args == (msg,)
 
 
-@patch("saleor.room.models.Room.objects")
+@patch("vanphong.room.models.Room.objects")
 def test_filter_by_query_param(qs):
     qs.filter.return_value = qs
 

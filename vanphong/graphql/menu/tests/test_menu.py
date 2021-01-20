@@ -83,7 +83,7 @@ def test_menu_query_error_when_id_and_name_provided(
     }
     response = user_api_client.post_graphql(QUERY_MENU, variables=variables)
     assert graphql_log_handler.messages == [
-        "saleor.graphql.errors.handled[INFO].GraphQLError"
+        "vanphong.graphql.errors.handled[INFO].GraphQLError"
     ]
     content = get_graphql_content(response, ignore_errors=True)
     assert len(content["errors"]) == 1
@@ -97,7 +97,7 @@ def test_menu_query_error_when_no_param(
     variables = {}
     response = user_api_client.post_graphql(QUERY_MENU, variables=variables)
     assert graphql_log_handler.messages == [
-        "saleor.graphql.errors.handled[INFO].GraphQLError"
+        "vanphong.graphql.errors.handled[INFO].GraphQLError"
     ]
     content = get_graphql_content(response, ignore_errors=True)
     assert len(content["errors"]) == 1
@@ -207,7 +207,7 @@ QUERY_MENU_WITH_SORT = """
 @pytest.mark.parametrize(
     "menu_sort, result_order",
     [
-        # We have "footer" and "navbar" from default saleor configuration
+        # We have "footer" and "navbar" from default vanphong configuration
         ({"field": "NAME", "direction": "ASC"}, ["footer", "menu1", "navbar"]),
         ({"field": "NAME", "direction": "DESC"}, ["navbar", "menu1", "footer"]),
         ({"field": "ITEMS_COUNT", "direction": "ASC"}, ["footer", "navbar", "menu1"]),

@@ -312,7 +312,7 @@ CREATE_VARIANT_MUTATION = """
 """
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_create_variant(
     updated_webhook_mock,
     staff_api_client,
@@ -363,7 +363,7 @@ def test_create_variant(
     updated_webhook_mock.assert_called_once_with(room)
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_create_variant_with_file_attribute(
     updated_webhook_mock,
     staff_api_client,
@@ -423,7 +423,7 @@ def test_create_variant_with_file_attribute(
     updated_webhook_mock.assert_called_once_with(room)
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_create_variant_with_file_attribute_new_value(
     updated_webhook_mock,
     staff_api_client,
@@ -486,7 +486,7 @@ def test_create_variant_with_file_attribute_new_value(
     updated_webhook_mock.assert_called_once_with(room)
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_create_variant_with_file_attribute_no_file_url_given(
     updated_webhook_mock,
     staff_api_client,
@@ -817,7 +817,7 @@ def test_create_room_variant_update_with_new_attributes(
     assert attributes[0]["attribute"]["id"] == size_attribute_id
 
 
-@patch("saleor.plugins.manager.PluginsManager.room_updated")
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
 def test_update_room_variant(
     updated_webhook_mock,
     staff_api_client,

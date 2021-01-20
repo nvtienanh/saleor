@@ -5,7 +5,7 @@ from enum import Enum
 from django.db import migrations
 from django.db.models import CharField
 
-from saleor.order.events import OrderEvents
+from vanphong.order.events import OrderEvents
 
 
 class OldOrderEvents(Enum):

@@ -117,11 +117,11 @@ def test_get_discount_for_checkout_value_voucher(
     checkout = Mock(spec=Checkout, quantity=total_quantity, channel=channel_USD)
     subtotal = TaxedMoney(Money(total, "USD"), Money(total, "USD"))
     monkeypatch.setattr(
-        "saleor.checkout.utils.calculations.checkout_subtotal",
+        "vanphong.checkout.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     monkeypatch.setattr(
-        "saleor.discount.utils.calculations.checkout_subtotal",
+        "vanphong.discount.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     manager = get_plugins_manager()
@@ -131,7 +131,7 @@ def test_get_discount_for_checkout_value_voucher(
     assert discount == Money(expected_value, "USD")
 
 
-@patch("saleor.discount.utils.validate_voucher")
+@patch("vanphong.discount.utils.validate_voucher")
 def test_get_voucher_discount_for_checkout_voucher_validation(
     mock_validate_voucher, voucher, checkout_with_voucher
 ):
@@ -187,11 +187,11 @@ def test_get_discount_for_checkout_entire_order_voucher_not_applicable(
     checkout = Mock(spec=Checkout, quantity=total_quantity, channel=channel_USD)
     subtotal = TaxedMoney(Money(total, "USD"), Money(total, "USD"))
     monkeypatch.setattr(
-        "saleor.checkout.utils.calculations.checkout_subtotal",
+        "vanphong.checkout.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     monkeypatch.setattr(
-        "saleor.discount.utils.calculations.checkout_subtotal",
+        "vanphong.discount.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     manager = get_plugins_manager()
@@ -262,21 +262,21 @@ def test_get_discount_for_checkout_specific_rooms_voucher_not_applicable(
 ):
     discounts = []
     monkeypatch.setattr(
-        "saleor.checkout.utils.get_prices_of_discounted_specific_room",
+        "vanphong.checkout.utils.get_prices_of_discounted_specific_room",
         lambda checkout, discounts, room: [],
     )
     monkeypatch.setattr(
-        "saleor.checkout.calculations.checkout_shipping_price",
+        "vanphong.checkout.calculations.checkout_shipping_price",
         lambda _: TaxedMoney(Money(0, "USD"), Money(0, "USD")),
     )
     monkeypatch.setattr(
-        "saleor.discount.utils.calculations.checkout_subtotal",
+        "vanphong.discount.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: TaxedMoney(
             Money(total, "USD"), Money(total, "USD")
         ),
     )
     monkeypatch.setattr(
-        "saleor.checkout.utils.calculations.checkout_subtotal",
+        "vanphong.checkout.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: TaxedMoney(
             Money(total, "USD"), Money(total, "USD")
         ),
@@ -326,15 +326,15 @@ def test_get_discount_for_checkout_shipping_voucher(
     manager = get_plugins_manager()
     subtotal = TaxedMoney(Money(100, "USD"), Money(100, "USD"))
     monkeypatch.setattr(
-        "saleor.checkout.utils.calculations.checkout_subtotal",
+        "vanphong.checkout.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     monkeypatch.setattr(
-        "saleor.discount.utils.calculations.checkout_subtotal",
+        "vanphong.discount.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     monkeypatch.setattr(
-        "saleor.checkout.utils.is_shipping_required", lambda lines: True
+        "vanphong.checkout.utils.is_shipping_required", lambda lines: True
     )
     shipping_total = Money(shipping_cost, "USD")
     checkout = Mock(
@@ -368,19 +368,19 @@ def test_get_discount_for_checkout_shipping_voucher_all_countries(
 ):
     subtotal = TaxedMoney(Money(100, "USD"), Money(100, "USD"))
     monkeypatch.setattr(
-        "saleor.checkout.utils.calculations.checkout_subtotal",
+        "vanphong.checkout.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     monkeypatch.setattr(
-        "saleor.discount.utils.calculations.checkout_subtotal",
+        "vanphong.discount.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     monkeypatch.setattr(
-        "saleor.checkout.utils.is_shipping_required", lambda lines: True
+        "vanphong.checkout.utils.is_shipping_required", lambda lines: True
     )
     shipping_total = TaxedMoney(Money(10, "USD"), Money(10, "USD"))
     monkeypatch.setattr(
-        "saleor.checkout.utils.calculations.checkout_shipping_price",
+        "vanphong.checkout.utils.calculations.checkout_shipping_price",
         lambda manager, checkout, lines, address, discounts: shipping_total,
     )
     checkout = Mock(
@@ -418,7 +418,7 @@ def test_get_discount_for_checkout_shipping_voucher_limited_countries(
     subtotal = TaxedMoney(net=Money(100, "USD"), gross=Money(100, "USD"))
     shipping_total = TaxedMoney(net=Money(10, "USD"), gross=Money(10, "USD"))
     monkeypatch.setattr(
-        "saleor.discount.utils.calculations.checkout_subtotal",
+        "vanphong.discount.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     checkout = Mock(
@@ -542,15 +542,15 @@ def test_get_discount_for_checkout_shipping_voucher_not_applicable(
     channel_USD,
 ):
     monkeypatch.setattr(
-        "saleor.checkout.utils.calculations.checkout_subtotal",
+        "vanphong.checkout.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     monkeypatch.setattr(
-        "saleor.discount.utils.calculations.checkout_subtotal",
+        "vanphong.discount.utils.calculations.checkout_subtotal",
         lambda manager, checkout, lines, address, discounts: subtotal,
     )
     monkeypatch.setattr(
-        "saleor.checkout.utils.is_shipping_required", lambda lines: is_shipping_required
+        "vanphong.checkout.utils.is_shipping_required", lambda lines: is_shipping_required
     )
     checkout = Mock(
         is_shipping_required=Mock(return_value=is_shipping_required),

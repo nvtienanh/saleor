@@ -33,7 +33,7 @@ def test_install_app_task_wrong_format_of_target_token_url():
 @pytest.mark.vcr
 def test_install_app_task_request_timeout(monkeypatch, app_installation):
     mocked_post = Mock(side_effect=RequestException("Timeout"))
-    monkeypatch.setattr("saleor.app.installation_utils.requests.post", mocked_post)
+    monkeypatch.setattr("vanphong.app.installation_utils.requests.post", mocked_post)
     install_app_task(app_installation.pk, activate=True)
     app_installation.refresh_from_db()
 
@@ -53,7 +53,7 @@ def test_install_app_task_wrong_response_code(monkeypatch):
     )
     mocked_post = Mock()
     mocked_post.status_code = 404
-    monkeypatch.setattr("saleor.app.installation_utils.requests.post", mocked_post)
+    monkeypatch.setattr("vanphong.app.installation_utils.requests.post", mocked_post)
     install_app_task(app_installation.pk, activate=True)
     app_installation.refresh_from_db()
 
@@ -68,7 +68,7 @@ def test_install_app_task_wrong_response_code(monkeypatch):
 def test_install_app_task_undefined_error(monkeypatch, app_installation):
     mock_install_app = Mock(side_effect=Exception("Unknow"))
 
-    monkeypatch.setattr("saleor.app.tasks.install_app", mock_install_app)
+    monkeypatch.setattr("vanphong.app.tasks.install_app", mock_install_app)
     install_app_task(app_installation.pk)
     app_installation.refresh_from_db()
     assert app_installation.status == JobStatus.FAILED

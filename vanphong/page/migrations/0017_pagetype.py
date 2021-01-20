@@ -2,7 +2,7 @@ import django.db.models.deletion
 from django.core.management.sql import emit_post_migrate_signal
 from django.db import migrations, models
 
-import saleor.core.utils.json_serializer
+import vanphong.core.utils.json_serializer
 
 
 def update_groups_with_manage_pages_with_new_permission(apps, schema_editor):
@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
                     models.JSONField(
                         blank=True,
                         default=dict,
-                        encoder=saleor.core.utils.json_serializer.CustomJsonEncoder,
+                        encoder=vanphong.core.utils.json_serializer.CustomJsonEncoder,
                         null=True,
                     ),
                 ),
@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
                     models.JSONField(
                         blank=True,
                         default=dict,
-                        encoder=saleor.core.utils.json_serializer.CustomJsonEncoder,
+                        encoder=vanphong.core.utils.json_serializer.CustomJsonEncoder,
                         null=True,
                     ),
                 ),

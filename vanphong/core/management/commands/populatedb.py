@@ -27,7 +27,7 @@ from ...utils.random_data import (
 
 class Command(BaseCommand):
     help = "Populate database with test objects"
-    placeholders_dir = "saleor/static/placeholders/"
+    placeholders_dir = "vanphong/static/placeholders/"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -71,7 +71,7 @@ class Command(BaseCommand):
             cursor.execute("PRAGMA synchronous = OFF;")
 
     def sequence_reset(self):
-        """Run a SQL sequence reset on all saleor.* apps.
+        """Run a SQL sequence reset on all vanphong.* apps.
 
         When a value is manually assigned to an auto-incrementing field
         it doesn't update the field's sequence, which might cause a conflict
@@ -79,7 +79,7 @@ class Command(BaseCommand):
         """
         commands = StringIO()
         for app in apps.get_app_configs():
-            if "saleor" in app.name:
+            if "vanphong" in app.name:
                 call_command(
                     "sqlsequencereset", app.label, stdout=commands, no_color=True
                 )
@@ -90,8 +90,8 @@ class Command(BaseCommand):
         # set only our custom plugin to not call external API when preparing
         # example database
         settings.PLUGINS = [
-            "saleor.payment.gateways.dummy.plugin.DummyGatewayPlugin",
-            "saleor.payment.gateways.dummy_credit_card.plugin."
+            "vanphong.payment.gateways.dummy.plugin.DummyGatewayPlugin",
+            "vanphong.payment.gateways.dummy_credit_card.plugin."
             "DummyCreditCardGatewayPlugin",
         ]
         self.make_database_faster()

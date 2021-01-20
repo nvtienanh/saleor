@@ -87,7 +87,7 @@ class ShippingMethod(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         description="Zip code exclude range of the shipping method.",
     )
     excluded_rooms = ChannelContextFilterConnectionField(
-        "saleor.graphql.room.types.rooms.Room",
+        "vanphong.graphql.room.types.rooms.Room",
         description="List of excluded rooms for the shipping method.",
     )
 

@@ -302,7 +302,7 @@ class RoomFilter(django_filters.FilterSet):
         field_name="minimal_price_amount",
     )
     attributes = ListObjectTypeFilter(
-        input_class="saleor.graphql.attribute.types.AttributeInput",
+        input_class="vanphong.graphql.attribute.types.AttributeInput",
         method=filter_attributes,
     )
     stock_availability = EnumFilter(

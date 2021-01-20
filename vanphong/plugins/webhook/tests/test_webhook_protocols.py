@@ -24,7 +24,7 @@ def test_trigger_webhooks_with_aws_sqs(
     mocked_client_constructor = MagicMock(spec=boto3.client, return_value=mocked_client)
 
     monkeypatch.setattr(
-        "saleor.plugins.webhook.tasks.boto3.client",
+        "vanphong.plugins.webhook.tasks.boto3.client",
         mocked_client_constructor,
     )
 
@@ -71,7 +71,7 @@ def test_trigger_webhooks_with_aws_sqs_and_secret_key(
     mocked_client_constructor = MagicMock(spec=boto3.client, return_value=mocked_client)
 
     monkeypatch.setattr(
-        "saleor.plugins.webhook.tasks.boto3.client",
+        "vanphong.plugins.webhook.tasks.boto3.client",
         mocked_client_constructor,
     )
 
@@ -121,20 +121,20 @@ def test_trigger_webhooks_with_google_pub_sub(
 ):
     mocked_publisher = MagicMock(spec=PublisherClient)
     monkeypatch.setattr(
-        "saleor.plugins.webhook.tasks.pubsub_v1.PublisherClient",
+        "vanphong.plugins.webhook.tasks.pubsub_v1.PublisherClient",
         lambda: mocked_publisher,
     )
     webhook.app.permissions.add(permission_manage_orders)
-    webhook.target_url = "gcpubsub://cloud.google.com/projects/saleor/topics/test"
+    webhook.target_url = "gcpubsub://cloud.google.com/projects/vanphong/topics/test"
     webhook.save()
 
     expected_data = serialize("json", [order_with_lines])
 
     trigger_webhooks_for_event(WebhookEventType.ORDER_CREATED, expected_data)
     mocked_publisher.publish.assert_called_once_with(
-        "projects/saleor/topics/test",
+        "projects/vanphong/topics/test",
         expected_data.encode("utf-8"),
-        saleorDomain="mirumee.com",
+        vanphongDomain="mirumee.com",
         eventType=WebhookEventType.ORDER_CREATED,
         signature="",
     )
@@ -150,11 +150,11 @@ def test_trigger_webhooks_with_google_pub_sub_and_secret_key(
 ):
     mocked_publisher = MagicMock(spec=PublisherClient)
     monkeypatch.setattr(
-        "saleor.plugins.webhook.tasks.pubsub_v1.PublisherClient",
+        "vanphong.plugins.webhook.tasks.pubsub_v1.PublisherClient",
         lambda: mocked_publisher,
     )
     webhook.app.permissions.add(permission_manage_orders)
-    webhook.target_url = "gcpubsub://cloud.google.com/projects/saleor/topics/test"
+    webhook.target_url = "gcpubsub://cloud.google.com/projects/vanphong/topics/test"
     webhook.secret_key = "secret_key"
     webhook.save()
 
@@ -164,16 +164,16 @@ def test_trigger_webhooks_with_google_pub_sub_and_secret_key(
     )
     trigger_webhooks_for_event(WebhookEventType.ORDER_CREATED, expected_data)
     mocked_publisher.publish.assert_called_once_with(
-        "projects/saleor/topics/test",
+        "projects/vanphong/topics/test",
         expected_data.encode("utf-8"),
-        saleorDomain="mirumee.com",
+        vanphongDomain="mirumee.com",
         eventType=WebhookEventType.ORDER_CREATED,
         signature=expected_signature,
     )
 
 
 @pytest.mark.vcr
-@patch("saleor.plugins.webhook.tasks.requests.post", wraps=requests.post)
+@patch("vanphong.plugins.webhook.tasks.requests.post", wraps=requests.post)
 def test_trigger_webhooks_with_http(
     mock_request,
     webhook,
@@ -206,7 +206,7 @@ def test_trigger_webhooks_with_http(
 
 
 @pytest.mark.vcr
-@patch("saleor.plugins.webhook.tasks.requests.post", wraps=requests.post)
+@patch("vanphong.plugins.webhook.tasks.requests.post", wraps=requests.post)
 def test_trigger_webhooks_with_http_and_secret_key(
     mock_request, webhook, order_with_lines, permission_manage_orders
 ):

@@ -23,8 +23,8 @@ from ..tests.sample_plugins import (
 
 
 def test_get_plugins_manager():
-    manager_path = "saleor.plugins.manager.PluginsManager"
-    plugin_path = "saleor.plugins.tests.sample_plugins.PluginSample"
+    manager_path = "vanphong.plugins.manager.PluginsManager"
+    plugin_path = "vanphong.plugins.tests.sample_plugins.PluginSample"
     manager = get_plugins_manager(manager_path=manager_path, plugins=[plugin_path])
     assert isinstance(manager, PluginsManager)
     assert len(manager.plugins) == 1
@@ -32,7 +32,7 @@ def test_get_plugins_manager():
 
 @pytest.mark.parametrize(
     "plugins, total_amount",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "15.0")],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "15.0")],
 )
 def test_manager_calculates_checkout_total(
     checkout_with_item, discount_info, plugins, total_amount
@@ -49,7 +49,7 @@ def test_manager_calculates_checkout_total(
 
 @pytest.mark.parametrize(
     "plugins, subtotal_amount",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "15.0")],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "15.0")],
 )
 def test_manager_calculates_checkout_subtotal(
     checkout_with_item, discount_info, plugins, subtotal_amount
@@ -65,7 +65,7 @@ def test_manager_calculates_checkout_subtotal(
 
 @pytest.mark.parametrize(
     "plugins, shipping_amount",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "0.0")],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "0.0")],
 )
 def test_manager_calculates_checkout_shipping(
     checkout_with_item, discount_info, plugins, shipping_amount
@@ -84,7 +84,7 @@ def test_manager_calculates_checkout_shipping(
 
 @pytest.mark.parametrize(
     "plugins, shipping_amount",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "10.0")],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "10.0")],
 )
 def test_manager_calculates_order_shipping(order_with_lines, plugins, shipping_amount):
     currency = order_with_lines.total.currency
@@ -101,7 +101,7 @@ def test_manager_calculates_order_shipping(order_with_lines, plugins, shipping_a
 
 @pytest.mark.parametrize(
     "plugins, amount",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "15.0")],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "15.0")],
 )
 def test_manager_calculates_checkout_line_total(
     checkout_with_item, discount_info, plugins, amount
@@ -129,7 +129,7 @@ def test_manager_get_checkout_line_tax_rate_sample_plugin(
     checkout_with_item, discount_info
 ):
     line = checkout_with_item.lines.all()[0]
-    plugins = ["saleor.plugins.tests.sample_plugins.PluginSample"]
+    plugins = ["vanphong.plugins.tests.sample_plugins.PluginSample"]
     unit_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
 
     variant = line.variant
@@ -184,7 +184,7 @@ def test_manager_get_order_line_tax_rate_sample_plugin(order_with_lines):
     order = order_with_lines
     line = order.lines.first()
     room = Room.objects.get(name=line.room_name)
-    plugins = ["saleor.plugins.tests.sample_plugins.PluginSample"]
+    plugins = ["vanphong.plugins.tests.sample_plugins.PluginSample"]
     unit_price = TaxedMoney(Money(12, "USD"), Money(15, "USD"))
     tax_rate = PluginsManager(plugins=plugins).get_order_line_tax_rate(
         order,
@@ -221,7 +221,7 @@ def test_manager_get_checkout_shipping_tax_rate_sample_plugin(
     checkout_with_item, discount_info
 ):
     line = checkout_with_item.lines.all()[0]
-    plugins = ["saleor.plugins.tests.sample_plugins.PluginSample"]
+    plugins = ["vanphong.plugins.tests.sample_plugins.PluginSample"]
     shipping_price = TaxedMoney(Money(12, "USD"), Money(14, "USD"))
 
     variant = line.variant
@@ -274,7 +274,7 @@ def test_manager_get_checkout_shipping_tax_rate_no_plugins(
 
 def test_manager_get_order_shipping_tax_rate_sample_plugin(order_with_lines):
     order = order_with_lines
-    plugins = ["saleor.plugins.tests.sample_plugins.PluginSample"]
+    plugins = ["vanphong.plugins.tests.sample_plugins.PluginSample"]
     shipping_price = TaxedMoney(Money(12, "USD"), Money(14, "USD"))
     tax_rate = PluginsManager(plugins=plugins).get_order_shipping_tax_rate(
         order,
@@ -305,7 +305,7 @@ def test_manager_get_order_shipping_tax_rate_no_plugins(
     "plugins, total_line_price, quantity",
     [
         (
-            ["saleor.plugins.tests.sample_plugins.PluginSample"],
+            ["vanphong.plugins.tests.sample_plugins.PluginSample"],
             TaxedMoney(
                 net=Money(amount=10, currency="USD"),
                 gross=Money(amount=12, currency="USD"),
@@ -340,7 +340,7 @@ def test_manager_calculates_checkout_line_unit_price(
 
 @pytest.mark.parametrize(
     "plugins, amount",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "12.30")],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "12.30")],
 )
 def test_manager_calculates_order_line(order_line, plugins, amount):
     currency = order_line.unit_price.currency
@@ -353,7 +353,7 @@ def test_manager_calculates_order_line(order_line, plugins, amount):
     "plugins, tax_rate_list",
     [
         (
-            ["saleor.plugins.tests.sample_plugins.PluginSample"],
+            ["vanphong.plugins.tests.sample_plugins.PluginSample"],
             [TaxType(code="123", description="abc")],
         ),
         ([], []),
@@ -365,7 +365,7 @@ def test_manager_uses_get_tax_rate_choices(plugins, tax_rate_list):
 
 @pytest.mark.parametrize(
     "plugins, show_taxes",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], True), ([], False)],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], True), ([], False)],
 )
 def test_manager_show_taxes_on_storefront(plugins, show_taxes):
     assert show_taxes == PluginsManager(plugins=plugins).show_taxes_on_storefront()
@@ -373,7 +373,7 @@ def test_manager_show_taxes_on_storefront(plugins, show_taxes):
 
 @pytest.mark.parametrize(
     "plugins, price",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "10.0")],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "10.0")],
 )
 def test_manager_apply_taxes_to_room(room, plugins, price, channel_USD):
     country = Country("PL")
@@ -395,7 +395,7 @@ def test_manager_apply_taxes_to_room(room, plugins, price, channel_USD):
 
 @pytest.mark.parametrize(
     "plugins, price_amount",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "10.0")],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], "1.0"), ([], "10.0")],
 )
 def test_manager_apply_taxes_to_shipping(
     shipping_method, address, plugins, price_amount, channel_USD
@@ -412,7 +412,7 @@ def test_manager_apply_taxes_to_shipping(
 
 @pytest.mark.parametrize(
     "plugins, amount",
-    [(["saleor.plugins.tests.sample_plugins.PluginSample"], "15.0"), ([], "0")],
+    [(["vanphong.plugins.tests.sample_plugins.PluginSample"], "15.0"), ([], "0")],
 )
 def test_manager_get_tax_rate_percentage_value(plugins, amount, room):
     country = Country("PL")
@@ -424,8 +424,8 @@ def test_manager_get_tax_rate_percentage_value(plugins, amount, room):
 
 def test_manager_get_plugin_configurations(plugin_configuration):
     plugins = [
-        "saleor.plugins.tests.sample_plugins.PluginSample",
-        "saleor.plugins.tests.sample_plugins.PluginInactive",
+        "vanphong.plugins.tests.sample_plugins.PluginSample",
+        "vanphong.plugins.tests.sample_plugins.PluginInactive",
     ]
     manager = PluginsManager(plugins=plugins)
     plugin_configs = manager._plugin_configs.values()
@@ -435,8 +435,8 @@ def test_manager_get_plugin_configurations(plugin_configuration):
 
 def test_manager_get_plugin_configuration(plugin_configuration):
     plugins = [
-        "saleor.plugins.tests.sample_plugins.PluginSample",
-        "saleor.plugins.tests.sample_plugins.PluginInactive",
+        "vanphong.plugins.tests.sample_plugins.PluginSample",
+        "vanphong.plugins.tests.sample_plugins.PluginInactive",
     ]
     manager = PluginsManager(plugins=plugins)
     plugin = manager.get_plugin(PluginSample.PLUGIN_ID)
@@ -447,7 +447,7 @@ def test_manager_get_plugin_configuration(plugin_configuration):
 
 
 def test_manager_save_plugin_configuration(plugin_configuration):
-    plugins = ["saleor.plugins.tests.sample_plugins.PluginSample"]
+    plugins = ["vanphong.plugins.tests.sample_plugins.PluginSample"]
     manager = PluginsManager(plugins=plugins)
     manager.save_plugin_configuration(PluginSample.PLUGIN_ID, {"active": False})
     plugin_configuration.refresh_from_db()
@@ -472,7 +472,7 @@ def test_plugin_updates_configuration_shape(
     )
 
     manager = PluginsManager(
-        plugins=["saleor.plugins.tests.sample_plugins.PluginSample"]
+        plugins=["vanphong.plugins.tests.sample_plugins.PluginSample"]
     )
     plugin = manager.get_plugin(PluginSample.PLUGIN_ID)
 
@@ -494,7 +494,7 @@ def test_plugin_add_new_configuration(
     config_structure = {"Foo": new_config_structure}
     monkeypatch.setattr(PluginInactive, "CONFIG_STRUCTURE", config_structure)
     manager = PluginsManager(
-        plugins=["saleor.plugins.tests.sample_plugins.PluginInactive"]
+        plugins=["vanphong.plugins.tests.sample_plugins.PluginInactive"]
     )
     plugin = manager.get_plugin(PluginInactive.PLUGIN_ID)
     assert len(plugin.configuration) == 1
@@ -509,9 +509,9 @@ def test_manager_serve_list_of_payment_gateways():
         currencies=ActivePaymentGateway.SUPPORTED_CURRENCIES,
     )
     plugins = [
-        "saleor.plugins.tests.sample_plugins.PluginSample",
-        "saleor.plugins.tests.sample_plugins.ActivePaymentGateway",
-        "saleor.plugins.tests.sample_plugins.InactivePaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.PluginSample",
+        "vanphong.plugins.tests.sample_plugins.ActivePaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.InactivePaymentGateway",
     ]
     manager = PluginsManager(plugins=plugins)
     assert manager.list_payment_gateways() == [expected_gateway]
@@ -534,8 +534,8 @@ def test_manager_serve_list_all_payment_gateways():
     ]
 
     plugins = [
-        "saleor.plugins.tests.sample_plugins.ActivePaymentGateway",
-        "saleor.plugins.tests.sample_plugins.InactivePaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.ActivePaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.InactivePaymentGateway",
     ]
     manager = PluginsManager(plugins=plugins)
     assert manager.list_payment_gateways(active_only=False) == expected_gateways
@@ -552,9 +552,9 @@ def test_manager_serve_list_all_payment_gateways_specified_currency():
     ]
 
     plugins = [
-        "saleor.plugins.tests.sample_plugins.ActivePaymentGateway",
-        "saleor.plugins.tests.sample_plugins.InactivePaymentGateway",
-        "saleor.plugins.tests.sample_plugins.ActiveDummyPaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.ActivePaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.InactivePaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.ActiveDummyPaymentGateway",
     ]
     manager = PluginsManager(plugins=plugins)
     assert (
@@ -580,9 +580,9 @@ def test_manager_serve_list_all_payment_gateways_specified_currency_two_gateways
     ]
 
     plugins = [
-        "saleor.plugins.tests.sample_plugins.ActivePaymentGateway",
-        "saleor.plugins.tests.sample_plugins.InactivePaymentGateway",
-        "saleor.plugins.tests.sample_plugins.ActiveDummyPaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.ActivePaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.InactivePaymentGateway",
+        "vanphong.plugins.tests.sample_plugins.ActiveDummyPaymentGateway",
     ]
     manager = PluginsManager(plugins=plugins)
     assert (
@@ -593,8 +593,8 @@ def test_manager_serve_list_all_payment_gateways_specified_currency_two_gateways
 
 def test_manager_webhook(rf):
     plugins = [
-        "saleor.plugins.tests.sample_plugins.PluginSample",
-        "saleor.plugins.tests.sample_plugins.PluginInactive",
+        "vanphong.plugins.tests.sample_plugins.PluginSample",
+        "vanphong.plugins.tests.sample_plugins.PluginInactive",
     ]
     manager = PluginsManager(plugins=plugins)
     plugin_path = "/webhook/paid"
@@ -608,7 +608,7 @@ def test_manager_webhook(rf):
 
 def test_manager_webhook_plugin_doesnt_have_webhook_support(rf):
     plugins = [
-        "saleor.plugins.tests.sample_plugins.PluginInactive",
+        "vanphong.plugins.tests.sample_plugins.PluginInactive",
     ]
 
     manager = PluginsManager(plugins=plugins)
@@ -621,8 +621,8 @@ def test_manager_webhook_plugin_doesnt_have_webhook_support(rf):
 
 def test_manager_inncorrect_plugin(rf):
     plugins = [
-        "saleor.plugins.tests.sample_plugins.PluginSample",
-        "saleor.plugins.tests.sample_plugins.PluginInactive",
+        "vanphong.plugins.tests.sample_plugins.PluginSample",
+        "vanphong.plugins.tests.sample_plugins.PluginInactive",
     ]
     manager = PluginsManager(plugins=plugins)
     plugin_path = "/webhook/paid"

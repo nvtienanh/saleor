@@ -2,8 +2,8 @@ from unittest import mock
 
 import pytest
 
-from saleor.payment import PaymentError
-from saleor.payment.gateways.adyen.utils.apple_pay import (
+from vanphong.payment import PaymentError
+from vanphong.payment.gateways.adyen.utils.apple_pay import (
     initialize_apple_pay_session,
     validate_payment_data_for_apple_pay,
 )
@@ -15,15 +15,15 @@ from saleor.payment.gateways.adyen.utils.apple_pay import (
         (
             "https://apple-pay-gateway.apple.com/paymentservices/startSession",
             "merchant.com.identifier",
-            "saleor.com",
+            "vanphong.com",
             None,
             "certifiate data",
         ),
-        (None, "merchant.com.identifier", "saleor.com", "Saleor", "certifiate data"),
+        (None, "merchant.com.identifier", "vanphong.com", "Saleor", "certifiate data"),
         (
             "https://apple-pay-gateway.apple.com/paymentservices/startSession",
             None,
-            "saleor.com",
+            "vanphong.com",
             "Saleor",
             "certifiate data",
         ),
@@ -37,14 +37,14 @@ from saleor.payment.gateways.adyen.utils.apple_pay import (
         (
             "https://not-whitelisted-domain.com/paymentservices/startSession",
             "merchant.com.identifier",
-            "saleor.com",
+            "vanphong.com",
             "Saleor",
             "certifiate data",
         ),
         (
             "https://apple-pay-gateway.apple.com/paymentservices/startSession",
             "merchant.com.identifier",
-            "saleor.com",
+            "vanphong.com",
             "Saleor",
             None,
         ),
@@ -62,7 +62,7 @@ def test_validate_payment_data_for_apple_pay_raises_payment_error(
 def test_validate_payment_data_for_apple_pay():
     validation_url = "https://apple-pay-gateway.apple.com/paymentservices/startSession"
     merchant_identifier = "merchant.com.identifier"
-    domain = "saleor.com"
+    domain = "vanphong.com"
     display_name = "Saleor "
     certificate = "certifiate data"
 
@@ -71,8 +71,8 @@ def test_validate_payment_data_for_apple_pay():
     )
 
 
-@mock.patch("saleor.payment.gateways.adyen.utils.apple_pay.NamedTemporaryFile")
-@mock.patch("saleor.payment.gateways.adyen.utils.apple_pay.requests.post")
+@mock.patch("vanphong.payment.gateways.adyen.utils.apple_pay.NamedTemporaryFile")
+@mock.patch("vanphong.payment.gateways.adyen.utils.apple_pay.requests.post")
 def test_initialize_payment_for_apple_pay(mocked_request, mocked_tmp_file):
     mocked_cert_file_name = "cert-file-name"
     mocked_file = mock.MagicMock()
@@ -91,7 +91,7 @@ def test_initialize_payment_for_apple_pay(mocked_request, mocked_tmp_file):
 
     validation_url = "https://apple-pay-gateway.apple.com/paymentservices/startSession"
     merchant_identifier = "merchant.com.identifier"
-    domain = "saleor.com"
+    domain = "vanphong.com"
     display_name = "Saleor Shop"
     certificate = "certifiate data"
 
@@ -115,7 +115,7 @@ def test_initialize_payment_for_apple_pay(mocked_request, mocked_tmp_file):
     )
 
 
-@mock.patch("saleor.payment.gateways.adyen.utils.apple_pay.requests.post")
+@mock.patch("vanphong.payment.gateways.adyen.utils.apple_pay.requests.post")
 def test_initialize_payment_for_apple_pay_request_failed(mocked_request):
 
     mocked_response = mock.Mock()
@@ -125,7 +125,7 @@ def test_initialize_payment_for_apple_pay_request_failed(mocked_request):
 
     validation_url = "https://apple-pay-gateway.apple.com/paymentservices/startSession"
     merchant_identifier = "merchant.com.identifier"
-    domain = "saleor.com"
+    domain = "vanphong.com"
     display_name = "Saleor Shop"
     certificate = "certifiate data"
 

@@ -8,7 +8,7 @@ from ..jwt import JWT_REFRESH_TOKEN_COOKIE_NAME, create_refresh_token
 def test_jwt_refresh_token_middleware(rf, customer_user, settings):
     refresh_token = create_refresh_token(customer_user)
     settings.MIDDLEWARE = [
-        "saleor.core.middleware.jwt_refresh_token_middleware",
+        "vanphong.core.middleware.jwt_refresh_token_middleware",
     ]
     request = rf.request()
     request.refresh_token = refresh_token
