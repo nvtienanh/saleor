@@ -50,6 +50,7 @@ from ...discount.models import Sale, SaleChannelListing, Voucher, VoucherChannel
 from ...discount.utils import fetch_discounts
 from ...giftcard.models import GiftCard
 from ...menu.models import Menu
+from ...order import OrderStatus
 from ...order.models import Fulfillment, Order, OrderLine
 from ...order.utils import update_order_status
 from ...page.models import Page, PageType
@@ -67,6 +68,7 @@ from ...product.models import (
     ProductType,
     ProductVariant,
     ProductVariantChannelListing,
+    VariantImage,
 )
 from ...product.tasks import update_products_discounted_prices_of_discount_task
 from ...product.thumbnails import (
@@ -275,7 +277,7 @@ def create_stocks(variant, warehouse_qs=None, **defaults):
         )
 
 
-def create_product_variants(variants_data):
+def create_product_variants(variants_data, create_images):
     for variant in variants_data:
         pk = variant["pk"]
         defaults = variant["fields"]
@@ -293,6 +295,9 @@ def create_product_variants(variants_data):
             product = variant.product
             product.default_variant = variant
             product.save(update_fields=["default_variant", "updated_at"])
+        if create_images:
+            image = variant.product.images.filter().first()
+            VariantImage.objects.create(variant=variant, image=image)
         quantity = random.randint(100, 500)
         create_stocks(variant, quantity=quantity)
 
@@ -323,7 +328,8 @@ def assign_attributes_to_product_types(
 
 
 def assign_attributes_to_page_types(
-    association_model: AttributePage, attributes: list,
+    association_model: AttributePage,
+    attributes: list,
 ):
     for value in attributes:
         pk = value["pk"]
@@ -407,7 +413,9 @@ def create_products_by_schema(placeholder_dir, create_images):
     create_product_channel_listings(
         product_channel_listings_data=types["product.productchannellisting"],
     )
-    create_product_variants(variants_data=types["product.productvariant"])
+    create_product_variants(
+        variants_data=types["product.productvariant"], create_images=create_images
+    )
     create_product_variant_channel_listings(
         product_variant_channel_listings_data=types[
             "product.productvariantchannellisting"
@@ -563,10 +571,18 @@ def create_order_lines(order, discounts, how_many=10):
     lines = []
     for _ in range(how_many):
         variant = next(variants_iter)
+        variant_channel_listing = variant.channel_listings.get(channel=channel)
         product = variant.product
         quantity = random.randrange(1, 5)
-        unit_price = variant.get_price(channel.slug, discounts)
+        unit_price = variant.get_price(
+            product,
+            product.collections.all(),
+            channel,
+            variant_channel_listing,
+            discounts,
+        )
         unit_price = TaxedMoney(net=unit_price, gross=unit_price)
+        total_price = unit_price * quantity
         lines.append(
             OrderLine(
                 order=order,
@@ -577,6 +593,7 @@ def create_order_lines(order, discounts, how_many=10):
                 quantity=quantity,
                 variant=variant,
                 unit_price=unit_price,
+                total_price=total_price,
                 tax_rate=0,
             )
         )
@@ -627,6 +644,9 @@ def create_fake_order(discounts, max_order_lines=5):
     )
     customer = random.choice([None, customers.first()])
 
+    # 20% chance to be unconfirmed order.
+    will_be_unconfirmed = random.choice([0, 0, 0, 0, 1])
+
     if customer:
         address = customer.default_shipping_address
         order_data = {
@@ -659,10 +679,12 @@ def create_fake_order(discounts, max_order_lines=5):
             "shipping_price": shipping_price,
         }
     )
+    if will_be_unconfirmed:
+        order_data["status"] = OrderStatus.UNCONFIRMED
 
     order = Order.objects.create(**order_data)
     lines = create_order_lines(order, discounts, random.randrange(1, max_order_lines))
-    order.total = sum([line.get_total() for line in lines], shipping_price)
+    order.total = sum([line.total_price for line in lines], shipping_price)
     weight = Weight(kg=0)
     for line in order:
         weight += line.variant.get_weight()
@@ -670,13 +692,17 @@ def create_fake_order(discounts, max_order_lines=5):
     order.save()
 
     create_fake_payment(order=order)
-    create_fulfillments(order)
+
+    if not will_be_unconfirmed:
+        create_fulfillments(order)
+
     return order
 
 
 def create_fake_sale():
     sale = Sale.objects.create(
-        name="Happy %s day!" % fake.word(), type=DiscountValueType.PERCENTAGE,
+        name="Happy %s day!" % fake.word(),
+        type=DiscountValueType.PERCENTAGE,
     )
     for channel in Channel.objects.all():
         SaleChannelListing.objects.create(
@@ -782,7 +808,8 @@ def create_channels():
         slug=settings.DEFAULT_CHANNEL_SLUG,
     )
     yield create_channel(
-        channel_name="Channel-PLN", currency_code="PLN",
+        channel_name="Channel-PLN",
+        currency_code="PLN",
     )
 
 

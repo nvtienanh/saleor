@@ -3,28 +3,26 @@ from typing import TYPE_CHECKING, Union
 from django.db import models
 from django.db.models import F, Q
 
+from ..account.utils import requestor_is_staff_member_or_app
 from ..core.models import ModelWithMetadata, SortableModel
-from ..core.permissions import ProductPermissions
 from ..core.utils.translations import TranslationProxy
 from ..page.models import Page, PageType
 from ..product.models import Product, ProductType, ProductVariant
 from . import AttributeInputType, AttributeType
 
 if TYPE_CHECKING:
-    from ..account.models import User
     from django.db.models import OrderBy
+
+    from ..account.models import User
+    from ..app.models import App
 
 
 class BaseAttributeQuerySet(models.QuerySet):
-    @staticmethod
-    def user_has_access_to_all(user: "User") -> bool:
-        return user.is_active and user.has_perm(ProductPermissions.MANAGE_PRODUCTS)
-
     def get_public_attributes(self):
         raise NotImplementedError
 
-    def get_visible_to_user(self, user: "User"):
-        if self.user_has_access_to_all(user):
+    def get_visible_to_user(self, requestor: Union["User", "App"]):
+        if requestor_is_staff_member_or_app(requestor):
             return self.all()
         return self.get_public_attributes()
 
@@ -253,11 +251,11 @@ class Attribute(ModelWithMetadata):
     is_variant_only = models.BooleanField(default=False, blank=True)
     visible_in_storefront = models.BooleanField(default=True, blank=True)
 
-    filterable_in_storefront = models.BooleanField(default=True, blank=True)
-    filterable_in_dashboard = models.BooleanField(default=True, blank=True)
+    filterable_in_storefront = models.BooleanField(default=False, blank=True)
+    filterable_in_dashboard = models.BooleanField(default=False, blank=True)
 
     storefront_search_position = models.IntegerField(default=0, blank=True)
-    available_in_grid = models.BooleanField(default=True, blank=True)
+    available_in_grid = models.BooleanField(default=False, blank=True)
 
     objects = AttributeQuerySet.as_manager()
     translated = TranslationProxy()
@@ -299,6 +297,8 @@ class AttributeValue(SortableModel):
     name = models.CharField(max_length=250)
     value = models.CharField(max_length=100, blank=True, default="")
     slug = models.SlugField(max_length=255, allow_unicode=True)
+    file_url = models.URLField(null=True, blank=True)
+    content_type = models.CharField(max_length=50, null=True, blank=True)
     attribute = models.ForeignKey(
         Attribute, related_name="values", on_delete=models.CASCADE
     )

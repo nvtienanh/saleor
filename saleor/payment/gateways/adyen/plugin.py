@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 
 import Adyen
 from django.contrib.auth.hashers import make_password
+from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse, HttpResponseNotFound
@@ -226,7 +227,8 @@ class AdyenGatewayPlugin(BasePlugin):
             return handle_webhook(request, config)
         elif path.startswith(ADDITIONAL_ACTION_PATH):
             return handle_additional_actions(
-                request, self.adyen.checkout.payments_details,
+                request,
+                self.adyen.checkout.payments_details,
             )
         return HttpResponseNotFound()
 
@@ -254,7 +256,9 @@ class AdyenGatewayPlugin(BasePlugin):
 
     @require_active_plugin
     def get_payment_gateway_for_checkout(
-        self, checkout: "Checkout", previous_value,
+        self,
+        checkout: "Checkout",
+        previous_value,
     ) -> Optional["PaymentGateway"]:
 
         config = self._get_gateway_config()
@@ -274,6 +278,11 @@ class AdyenGatewayPlugin(BasePlugin):
             ],
             currencies=self.get_supported_currencies([]),
         )
+
+    @property
+    def order_auto_confirmation(self):
+        site_settings = Site.objects.get_current().settings
+        return site_settings.automatically_confirm_all_new_orders
 
     @require_active_plugin
     def process_payment(
@@ -319,10 +328,16 @@ class AdyenGatewayPlugin(BasePlugin):
         error_message = result.message.get("refusalReason")
         if action:
             update_payment_with_action_required_data(
-                payment, action, result.message.get("details", []),
+                payment,
+                action,
+                result.message.get("details", []),
             )
         # If auto capture is enabled, let's make a capture the auth payment
-        elif self.config.auto_capture and result_code == AUTH_STATUS:
+        elif (
+            self.config.auto_capture
+            and result_code == AUTH_STATUS
+            and self.order_auto_confirmation
+        ):
             kind = TransactionKind.CAPTURE
             result = call_capture(
                 payment_information=payment_information,
@@ -375,7 +390,12 @@ class AdyenGatewayPlugin(BasePlugin):
         action_required = "action" in result.message
         if result_code in PENDING_STATUSES:
             kind = TransactionKind.PENDING
-        elif is_success and config.auto_capture and not action_required:
+        elif (
+            is_success
+            and config.auto_capture
+            and self.order_auto_confirmation
+            and not action_required
+        ):
             # For enabled auto_capture on Saleor side we need to proceed an additional
             # action
             kind = TransactionKind.CAPTURE
@@ -595,7 +615,7 @@ class AdyenGatewayPlugin(BasePlugin):
         """Validate if provided configuration is correct."""
         configuration = plugin_configuration.configuration
         configuration = {item["name"]: item["value"] for item in configuration}
-        apple_certificate = configuration["apple-pay-cert"]
+        apple_certificate = configuration.get("apple-pay-cert")
         if plugin_configuration.active and apple_certificate:
             global_apple_url = (
                 "https://apple-pay-gateway.apple.com/paymentservices/paymentSession"
