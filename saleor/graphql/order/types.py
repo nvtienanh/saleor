@@ -3,7 +3,6 @@ from django.core.exceptions import ValidationError
 from graphene import relay
 from promise import Promise
 
-from ...account.utils import requestor_is_staff_member_or_app
 from ...core.anonymize import obfuscate_address, obfuscate_email
 from ...core.exceptions import PermissionDenied
 from ...core.permissions import AccountPermissions, OrderPermissions, ProductPermissions
@@ -28,10 +27,7 @@ from ..giftcard.types import GiftCard
 from ..invoice.types import Invoice
 from ..meta.types import ObjectWithMetadata
 from ..payment.types import OrderAction, Payment, PaymentChargeStatusEnum
-from ..product.dataloaders import (
-    ProductChannelListingByProductIdAndChannelSlugLoader,
-    ProductVariantByIdLoader,
-)
+from ..product.resolvers import resolve_variant
 from ..product.types import ProductVariant
 from ..shipping.dataloaders import ShippingMethodByIdLoader
 from ..shipping.types import ShippingMethod
@@ -76,12 +72,6 @@ class OrderEvent(CountableDjangoObjectType):
     )
     warehouse = graphene.Field(
         Warehouse, description="The warehouse were items were restocked."
-    )
-    transaction_reference = graphene.String(
-        description="The transaction reference of captured payment."
-    )
-    shipping_costs_included = graphene.Boolean(
-        description="Define if shipping costs were included to the refund."
     )
 
     class Meta:
@@ -178,21 +168,13 @@ class OrderEvent(CountableDjangoObjectType):
 
     @staticmethod
     def resolve_fulfilled_items(root: models.OrderEvent, _info):
-        lines = root.parameters.get("fulfilled_items", [])
+        lines = root.parameters.get("fulfilled_items", None)
         return models.FulfillmentLine.objects.filter(pk__in=lines)
 
     @staticmethod
     def resolve_warehouse(root: models.OrderEvent, _info):
         warehouse = root.parameters.get("warehouse")
         return warehouse_models.Warehouse.objects.filter(pk=warehouse).first()
-
-    @staticmethod
-    def resolve_transaction_reference(root: models.OrderEvent, _info):
-        return root.parameters.get("transaction_reference")
-
-    @staticmethod
-    def resolve_shipping_costs_included(root: models.OrderEvent, _info):
-        return root.parameters.get("shipping_costs_included")
 
 
 class FulfillmentLine(CountableDjangoObjectType):
@@ -255,10 +237,7 @@ class OrderLine(CountableDjangoObjectType):
     unit_price = graphene.Field(
         TaxedMoney, description="Price of the single item in the order line."
     )
-    total_price = graphene.Field(
-        TaxedMoney,
-        description="Price of the order line.",
-    )
+    total_price = graphene.Field(TaxedMoney, description="Price of the order line.",)
     variant = graphene.Field(
         ProductVariant,
         required=False,
@@ -311,7 +290,7 @@ class OrderLine(CountableDjangoObjectType):
 
     @staticmethod
     def resolve_total_price(root: models.OrderLine, _info):
-        return root.total_price
+        return root.unit_price * root.quantity
 
     @staticmethod
     def resolve_translated_product_name(root: models.OrderLine, _info):
@@ -323,33 +302,8 @@ class OrderLine(CountableDjangoObjectType):
 
     @staticmethod
     def resolve_variant(root: models.OrderLine, info):
-        context = info.context
-        if not root.variant_id:
-            return None
-
-        def requestor_has_access_to_variant(data):
-            variant, channel = data
-
-            requester = get_user_or_app_from_context(context)
-            is_staff = requestor_is_staff_member_or_app(requester)
-            if is_staff:
-                return ChannelContext(node=variant, channel_slug=channel.slug)
-
-            def product_is_available(product_channel_listing):
-                if product_channel_listing and product_channel_listing.is_visible:
-                    return ChannelContext(node=variant, channel_slug=channel.slug)
-                return None
-
-            return (
-                ProductChannelListingByProductIdAndChannelSlugLoader(context)
-                .load((variant.product_id, channel.slug))
-                .then(product_is_available)
-            )
-
-        variant = ProductVariantByIdLoader(context).load(root.variant_id)
-        channel = ChannelByOrderLineIdLoader(context).load(root.id)
-
-        return Promise.all([variant, channel]).then(requestor_has_access_to_variant)
+        dataloader = ChannelByOrderLineIdLoader(info.context)
+        return resolve_variant(info, root, dataloader)
 
     @staticmethod
     @one_of_permissions_required(
@@ -440,7 +394,6 @@ class Order(CountableDjangoObjectType):
             "shipping_method",
             "shipping_method_name",
             "shipping_price",
-            "shipping_tax_rate",
             "status",
             "token",
             "tracking_client_id",
@@ -448,7 +401,6 @@ class Order(CountableDjangoObjectType):
             "user",
             "voucher",
             "weight",
-            "redirect_url",
         ]
 
     @staticmethod

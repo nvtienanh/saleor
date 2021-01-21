@@ -6,6 +6,7 @@ from django.db.models import JSONField  # type: ignore
 from django.db.models import F, Max, Q
 
 from . import JobStatus
+from .permissions import ProductPermissions
 from .utils.json_serializer import CustomJsonEncoder
 
 
@@ -47,10 +48,12 @@ class PublishedQuerySet(models.QuerySet):
             is_published=True,
         )
 
-    def visible_to_user(self, requestor):
-        from ..account.utils import requestor_is_staff_member_or_app
+    @staticmethod
+    def user_has_access_to_all(user):
+        return user.is_active and user.has_perm(ProductPermissions.MANAGE_PRODUCTS)
 
-        if requestor_is_staff_member_or_app(requestor):
+    def visible_to_user(self, user):
+        if self.user_has_access_to_all(user):
             return self.all()
         return self.published()
 

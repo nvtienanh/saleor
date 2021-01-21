@@ -10,7 +10,6 @@ from ....attribute import AttributeType
 from ....core.permissions import PagePermissions, PageTypePermissions
 from ....page import models
 from ....page.error_codes import PageErrorCode
-from ...attribute.utils import AttributeAssignmentMixin
 from ...core.mutations import ModelDeleteMutation, ModelMutation
 from ...core.types.common import PageError, SeoInput
 from ...core.utils import (
@@ -18,7 +17,7 @@ from ...core.utils import (
     get_duplicates_ids,
     validate_slug_and_generate_if_needed,
 )
-from ...product.mutations.products import AttributeValueInput
+from ...product.mutations.products import AttributeAssignmentMixin, AttributeValueInput
 
 if TYPE_CHECKING:
     from ....attribute.models import Attribute

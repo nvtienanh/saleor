@@ -1,8 +1,5 @@
 class OrderStatus:
-    DRAFT = "draft"  # fully editable, not finalized order created by staff users
-    UNCONFIRMED = (
-        "unconfirmed"  # order created by customers when confirmation is required
-    )
+    DRAFT = "draft"  # fully editable, not confirmed order created by staff users
     UNFULFILLED = "unfulfilled"  # order with no items marked as fulfilled
     PARTIALLY_FULFILLED = (
         "partially fulfilled"  # order with some items marked as fulfilled
@@ -12,7 +9,6 @@ class OrderStatus:
 
     CHOICES = [
         (DRAFT, "Draft"),
-        (UNCONFIRMED, "Unconfirmed"),
         (UNFULFILLED, "Unfulfilled"),
         (PARTIALLY_FULFILLED, "Partially fulfilled"),
         (FULFILLED, "Fulfilled"),
@@ -22,12 +18,10 @@ class OrderStatus:
 
 class FulfillmentStatus:
     FULFILLED = "fulfilled"  # group of products in an order marked as fulfilled
-    REFUNDED = "refunded"  # group of refunded products
     CANCELED = "canceled"  # fulfilled group of products in an order marked as canceled
 
     CHOICES = [
         (FULFILLED, "Fulfilled"),
-        (REFUNDED, "Refunded"),
         (CANCELED, "Canceled"),
     ]
 
@@ -35,7 +29,6 @@ class FulfillmentStatus:
 class OrderEvents:
     """The different order event types."""
 
-    CONFIRMED = "confirmed"
     DRAFT_CREATED = "draft_created"
     DRAFT_ADDED_PRODUCTS = "draft_added_products"
     DRAFT_REMOVED_PRODUCTS = "draft_removed_products"
@@ -68,7 +61,6 @@ class OrderEvents:
     FULFILLMENT_CANCELED = "fulfillment_canceled"
     FULFILLMENT_RESTOCKED_ITEMS = "fulfillment_restocked_items"
     FULFILLMENT_FULFILLED_ITEMS = "fulfillment_fulfilled_items"
-    FULFILLMENT_REFUNDED = "fulfillment_refunded"
     TRACKING_UPDATED = "tracking_updated"
     NOTE_ADDED = "note_added"
 
@@ -87,7 +79,6 @@ class OrderEvents:
         (ORDER_FULLY_PAID, "The order was fully paid"),
         (UPDATED_ADDRESS, "The address from the placed order was updated"),
         (EMAIL_SENT, "The email was sent"),
-        (CONFIRMED, "Order was confirmed"),
         (PAYMENT_AUTHORIZED, "The payment was authorized"),
         (PAYMENT_CAPTURED, "The payment was captured"),
         (EXTERNAL_SERVICE_NOTIFICATION, "Notification from external service"),
@@ -101,7 +92,6 @@ class OrderEvents:
         (FULFILLMENT_CANCELED, "A fulfillment was canceled"),
         (FULFILLMENT_RESTOCKED_ITEMS, "The items of the fulfillment were restocked"),
         (FULFILLMENT_FULFILLED_ITEMS, "Some items were fulfilled"),
-        (FULFILLMENT_REFUNDED, "Some items were refunded"),
         (TRACKING_UPDATED, "The fulfillment's tracking code was updated"),
         (NOTE_ADDED, "A note was added to the order"),
         (OTHER, "An unknown order event containing a message"),
@@ -111,7 +101,6 @@ class OrderEvents:
 class OrderEventsEmails:
     """The different order emails event types."""
 
-    CONFIRMED = "confirmed"
     PAYMENT = "payment_confirmation"
     SHIPPING = "shipping_confirmation"
     TRACKING_UPDATED = "tracking_updated"
@@ -123,7 +112,6 @@ class OrderEventsEmails:
 
     CHOICES = [
         (PAYMENT, "The payment confirmation email was sent"),
-        (CONFIRMED, "The order confirmed email was sent"),
         (SHIPPING, "The shipping confirmation email was sent"),
         (TRACKING_UPDATED, "The fulfillment tracking code email was sent"),
         (ORDER_CONFIRMATION, "The order placement confirmation email was sent"),

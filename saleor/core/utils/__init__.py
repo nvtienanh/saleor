@@ -134,9 +134,7 @@ def create_thumbnails(pk, model, size_set, image_attr=None):
 
 
 def generate_unique_slug(
-    instance: Type[Model],
-    slugable_value: str,
-    slug_field_name: str = "slug",
+    instance: Type[Model], slugable_value: str, slug_field_name: str = "slug",
 ) -> str:
     """Create unique slug for model instance.
 
@@ -159,7 +157,9 @@ def generate_unique_slug(
     search_field = f"{slug_field_name}__iregex"
     pattern = rf"{slug}-\d+$|{slug}$"
     slug_values = (
-        ModelClass._default_manager.filter(**{search_field: pattern})  # type: ignore
+        ModelClass._default_manager.filter(  # type: ignore
+            **{search_field: pattern}
+        )
         .exclude(pk=instance.pk)
         .values_list(slug_field_name, flat=True)
     )

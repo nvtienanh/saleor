@@ -1,10 +1,7 @@
 from functools import partial
 
-from graphene.relay import GlobalID
 from graphene.types.resolver import default_resolver
 from graphql import ResolveInfo
-
-DEFAULT_RESOLVERS = {default_resolver, GlobalID.id_resolver}
 
 
 def should_trace(info: ResolveInfo) -> bool:
@@ -30,6 +27,6 @@ def is_introspection_field(info: ResolveInfo):
 def is_default_resolver(resolver):
     while isinstance(resolver, partial):
         resolver = resolver.func
-        if resolver in DEFAULT_RESOLVERS:
+        if resolver is default_resolver:
             return True
-    return resolver in DEFAULT_RESOLVERS
+    return resolver is default_resolver

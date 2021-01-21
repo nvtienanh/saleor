@@ -1,17 +1,12 @@
 import graphene
 from graphene import relay
 
-from ...account.utils import requestor_is_staff_member_or_app
 from ...core.permissions import PagePermissions
 from ...menu import models
+from ...product.models import Collection
 from ..channel.dataloaders import ChannelBySlugLoader
-from ..channel.types import (
-    ChannelContext,
-    ChannelContextType,
-    ChannelContextTypeWithMetadata,
-)
+from ..channel.types import ChannelContext, ChannelContextType
 from ..core.connection import CountableDjangoObjectType
-from ..meta.types import ObjectWithMetadata
 from ..page.dataloaders import PageByIdLoader
 from ..product.dataloaders import (
     CategoryByIdLoader,
@@ -29,7 +24,7 @@ from .dataloaders import (
 )
 
 
-class Menu(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
+class Menu(ChannelContextType, CountableDjangoObjectType):
     items = graphene.List(lambda: MenuItem)
 
     class Meta:
@@ -38,7 +33,7 @@ class Menu(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             "Represents a single menu - an object that is used to help navigate "
             "through the store."
         )
-        interfaces = [relay.Node, ObjectWithMetadata]
+        interfaces = [relay.Node]
         only_fields = ["id", "name", "slug"]
         model = models.Menu
 
@@ -53,7 +48,7 @@ class Menu(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         )
 
 
-class MenuItem(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
+class MenuItem(ChannelContextType, CountableDjangoObjectType):
     children = graphene.List(lambda: MenuItem)
     url = graphene.String(description="URL to the menu item.")
     translation = TranslationField(
@@ -69,7 +64,7 @@ class MenuItem(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             "Represents a single item of the related menu. Can store categories, "
             "collection or pages."
         )
-        interfaces = [relay.Node, ObjectWithMetadata]
+        interfaces = [relay.Node]
         only_fields = [
             "category",
             "collection",
@@ -104,8 +99,10 @@ class MenuItem(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             return None
 
         requestor = get_user_or_app_from_context(info.context)
-        is_staff = requestor_is_staff_member_or_app(requestor)
-        if is_staff:
+        requestor_has_access_to_all = Collection.objects.user_has_access_to_all(
+            requestor
+        )
+        if requestor_has_access_to_all:
             return (
                 CollectionByIdLoader(info.context)
                 .load(root.node.collection_id)
@@ -125,8 +122,6 @@ class MenuItem(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
         def calculate_collection_availability(collection_channel_listing):
             def calculate_collection_availability_with_channel(channel):
-                if not channel:
-                    return None
                 collection_is_visible = (
                     collection_channel_listing.is_visible
                     if collection_channel_listing
@@ -158,18 +153,14 @@ class MenuItem(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     def resolve_menu(root: ChannelContext[models.MenuItem], info, **_kwargs):
         if root.node.menu_id:
             menu = MenuByIdLoader(info.context).load(root.node.menu_id)
-            return menu.then(
-                lambda menu: ChannelContext(node=menu, channel_slug=root.channel_slug)
-            )
+            return menu.then(lambda menu: ChannelContext(node=menu, channel_slug=None))
         return None
 
     @staticmethod
     def resolve_parent(root: ChannelContext[models.MenuItem], info, **_kwargs):
         if root.node.parent_id:
             menu = MenuItemByIdLoader(info.context).load(root.node.parent_id)
-            return menu.then(
-                lambda menu: ChannelContext(node=menu, channel_slug=root.channel_slug)
-            )
+            return menu.then(lambda menu: ChannelContext(node=menu, channel_slug=None))
         return None
 
     @staticmethod

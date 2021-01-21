@@ -11,10 +11,7 @@ class Migration(migrations.Migration):
     ]
 
     state_operations = [
-        migrations.RemoveField(
-            model_name="webhook",
-            name="app",
-        ),
+        migrations.RemoveField(model_name="webhook", name="app",),
     ]
 
     operations = [

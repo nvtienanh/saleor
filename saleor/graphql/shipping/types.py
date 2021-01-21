@@ -4,7 +4,6 @@ from graphene import relay
 from ...core.permissions import ShippingPermissions
 from ...core.weight import convert_weight_to_default_weight_unit
 from ...shipping import models
-from ..channel import ChannelQsContext
 from ..channel.dataloaders import ChannelByIdLoader
 from ..channel.types import (
     ChannelContext,
@@ -12,7 +11,6 @@ from ..channel.types import (
     ChannelContextTypeWithMetadata,
 )
 from ..core.connection import CountableDjangoObjectType
-from ..core.fields import ChannelContextFilterConnectionField
 from ..core.types import CountryDisplay, Money, MoneyRange
 from ..decorators import permission_required
 from ..meta.types import ObjectWithMetadata
@@ -25,7 +23,6 @@ from .dataloaders import (
     ShippingMethodChannelListingByShippingMethodIdLoader,
     ShippingMethodsByShippingZoneIdAndChannelSlugLoader,
     ShippingMethodsByShippingZoneIdLoader,
-    ZipCodeRulesByShippingMethodIdLoader,
 )
 from .enums import ShippingMethodTypeEnum
 
@@ -48,20 +45,6 @@ class ShippingMethodChannelListing(CountableDjangoObjectType):
         return ChannelByIdLoader(info.context).load(root.channel_id)
 
 
-class ShippingMethodZipCodeRule(CountableDjangoObjectType):
-    start = graphene.String(description="Start address range.")
-    end = graphene.String(description="End address range.")
-
-    class Meta:
-        description = "Represents shipping method zip code."
-        interfaces = [relay.Node]
-        model = models.ShippingMethodZipCodeRule
-        only_fields = [
-            "start",
-            "end",
-        ]
-
-
 class ShippingMethod(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     type = ShippingMethodTypeEnum(description="Type of the shipping method.")
     translation = TranslationField(
@@ -82,14 +65,6 @@ class ShippingMethod(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     minimum_order_price = graphene.Field(
         Money, description="The price of the cheapest variant (including discounts)."
     )
-    zip_code_rules = graphene.List(
-        ShippingMethodZipCodeRule,
-        description="Zip code exclude range of the shipping method.",
-    )
-    excluded_products = ChannelContextFilterConnectionField(
-        "saleor.graphql.product.types.products.Product",
-        description="List of excluded products for the shipping method.",
-    )
 
     class Meta:
         default_resolver = ChannelContextType.resolver_with_context
@@ -103,8 +78,6 @@ class ShippingMethod(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             "id",
             "maximum_order_weight",
             "minimum_order_weight",
-            "maximum_delivery_days",
-            "minimum_delivery_days",
             "name",
         ]
 
@@ -163,12 +136,6 @@ class ShippingMethod(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         return convert_weight_to_default_weight_unit(root.node.maximum_order_weight)
 
     @staticmethod
-    def resolve_zip_code_rules(
-        root: ChannelContext[models.ShippingMethod], info, **_kwargs
-    ):
-        return ZipCodeRulesByShippingMethodIdLoader(info.context).load(root.node.id)
-
-    @staticmethod
     def resolve_minimum_order_weight(
         root: ChannelContext[models.ShippingMethod], *_args
     ):
@@ -182,13 +149,6 @@ class ShippingMethod(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         return ShippingMethodChannelListingByShippingMethodIdLoader(info.context).load(
             root.node.id
         )
-
-    @staticmethod
-    @permission_required(ShippingPermissions.MANAGE_SHIPPING)
-    def resolve_excluded_products(
-        root: ChannelContext[models.ShippingMethod], _info, **_kwargs
-    ):
-        return ChannelQsContext(qs=root.node.excluded_products.all(), channel_slug=None)
 
 
 class ShippingZone(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
@@ -208,7 +168,6 @@ class ShippingZone(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     warehouses = graphene.List(
         Warehouse, description="List of warehouses for shipping zone."
     )
-    description = graphene.String(description="Description of a shipping zone.")
 
     class Meta:
         default_resolver = ChannelContextType.resolver_with_context

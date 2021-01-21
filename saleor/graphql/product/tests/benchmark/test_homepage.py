@@ -7,10 +7,7 @@ from ....tests.utils import get_graphql_content
 @pytest.mark.django_db
 @pytest.mark.count_queries(autouse=False)
 def test_retrieve_product_list(
-    api_client,
-    category,
-    categories_tree,
-    count_queries,
+    api_client, category, categories_tree, count_queries,
 ):
     query = """
         query ProductsList {

@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from ..account.models import User  # noqa: F401
 
 CONFIRM_ORDER_TEMPLATE = "order/confirm_order"
-CONFIRMED_ORDER_TEMPLATE = "order/confirmed_order"
 STAFF_CONFIRM_ORDER_TEMPLATE = "order/staff_confirm_order"
 CONFIRM_FULFILLMENT_TEMPLATE = "order/confirm_fulfillment"
 UPDATE_FULFILLMENT_TEMPLATE = "order/update_fulfillment"
@@ -73,11 +72,9 @@ def prepare_order_details_url(order: Order, redirect_url: str) -> str:
     return prepare_url(params, redirect_url)
 
 
-def collect_data_for_fulfillment_email(
-    order_pk, template, fulfillment_pk, redirect_url=""
-):
+def collect_data_for_fulfillment_email(order_pk, template, fulfillment_pk):
     fulfillment = Fulfillment.objects.get(pk=fulfillment_pk)
-    email_data = collect_data_for_email(order_pk, template, redirect_url)
+    email_data = collect_data_for_email(order_pk, template)
     lines = fulfillment.lines.all()
     physical_lines = [line for line in lines if not line.order_line.is_digital]
     digital_lines = [line for line in lines if line.order_line.is_digital]
@@ -106,19 +103,6 @@ def send_order_confirmation(order_pk, redirect_url, user_pk=None):
 
 
 @app.task
-def send_order_confirmed(order_pk, user_pk):
-    """Send email which tells customer that order has been confirmed."""
-    email_data = collect_data_for_email(order_pk, CONFIRMED_ORDER_TEMPLATE)
-    send_templated_mail(**email_data)
-    events.email_sent_event(
-        order=email_data["context"]["order"],
-        user=None,
-        user_pk=user_pk,
-        email_type=events.OrderEventsEmails.CONFIRMED,
-    )
-
-
-@app.task
 def send_staff_order_confirmation(order_pk, redirect_url):
     """Send order confirmation email."""
     staff_email_data = collect_staff_order_notification_data(
@@ -129,15 +113,15 @@ def send_staff_order_confirmation(order_pk, redirect_url):
 
 
 @app.task
-def send_fulfillment_confirmation(order_pk, fulfillment_pk, redirect_url):
+def send_fulfillment_confirmation(order_pk, fulfillment_pk):
     email_data = collect_data_for_fulfillment_email(
-        order_pk, CONFIRM_FULFILLMENT_TEMPLATE, fulfillment_pk, redirect_url
+        order_pk, CONFIRM_FULFILLMENT_TEMPLATE, fulfillment_pk
     )
     send_templated_mail(**email_data)
 
 
 def send_fulfillment_confirmation_to_customer(order, fulfillment, user):
-    send_fulfillment_confirmation.delay(order.pk, fulfillment.pk, order.redirect_url)
+    send_fulfillment_confirmation.delay(order.pk, fulfillment.pk)
 
     events.email_sent_event(
         order=order, user=user, email_type=events.OrderEventsEmails.FULFILLMENT

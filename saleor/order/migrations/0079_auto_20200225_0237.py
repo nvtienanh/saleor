@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name="fulfillment",
-            options={"ordering": ("pk",)},
+            name="fulfillment", options={"ordering": ("pk",)},
         ),
     ]

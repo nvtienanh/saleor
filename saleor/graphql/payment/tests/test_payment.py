@@ -6,7 +6,6 @@ import graphene
 import pytest
 
 from ....checkout import calculations
-from ....checkout.utils import fetch_checkout_lines
 from ....payment import PaymentError
 from ....payment.error_codes import PaymentErrorCode
 from ....payment.gateways.dummy_credit_card import (
@@ -21,7 +20,7 @@ from ....payment.interface import (
 )
 from ....payment.models import ChargeStatus, Payment, TransactionKind
 from ....payment.utils import fetch_customer_id, store_customer_id
-from ....plugins.manager import PluginsManager, get_plugins_manager
+from ....plugins.manager import PluginsManager
 from ...tests.utils import assert_no_permission, get_graphql_content
 from ..enums import OrderAction, PaymentChargeStatusEnum
 
@@ -113,11 +112,7 @@ def test_checkout_add_payment_without_shipping_method_and_not_shipping_required(
     checkout.save()
 
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.checkout_total(
-        manager=manager, checkout=checkout, lines=lines, address=address
-    )
+    total = calculations.checkout_total(checkout=checkout, lines=list(checkout))
     variables = {
         "checkoutId": checkout_id,
         "input": {
@@ -153,11 +148,7 @@ def test_checkout_add_payment_without_shipping_method_with_shipping_required(
     checkout.save()
 
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.checkout_total(
-        manager=manager, checkout=checkout, lines=lines, address=address
-    )
+    total = calculations.checkout_total(checkout=checkout, lines=list(checkout))
     variables = {
         "checkoutId": checkout_id,
         "input": {
@@ -184,11 +175,7 @@ def test_checkout_add_payment_with_shipping_method_and_shipping_required(
     checkout.save()
 
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.checkout_total(
-        manager=manager, checkout=checkout, lines=lines, address=address
-    )
+    total = calculations.checkout_total(checkout=checkout, lines=list(checkout))
     variables = {
         "checkoutId": checkout_id,
         "input": {
@@ -224,11 +211,7 @@ def test_checkout_add_payment(
     checkout.save()
 
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.checkout_total(
-        manager=manager, checkout=checkout, lines=lines, address=address
-    )
+    total = calculations.checkout_total(checkout=checkout, lines=list(checkout))
     return_url = "https://www.example.com"
     variables = {
         "checkoutId": checkout_id,
@@ -267,11 +250,7 @@ def test_checkout_add_payment_default_amount(
     checkout.save()
 
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.checkout_total(
-        manager=manager, checkout=checkout, lines=lines, address=address
-    )
+    total = calculations.checkout_total(checkout=checkout, lines=list(checkout))
 
     variables = {
         "checkoutId": checkout_id,
@@ -300,18 +279,17 @@ def test_checkout_add_payment_bad_amount(
     checkout.save()
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
 
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.checkout_total(
-        manager=manager, checkout=checkout, lines=lines, address=address
-    )
-
     variables = {
         "checkoutId": checkout_id,
         "input": {
             "gateway": DUMMY_GATEWAY,
             "token": "sample-token",
-            "amount": str(total.gross.amount + Decimal(1)),
+            "amount": str(
+                calculations.checkout_total(
+                    checkout=checkout, lines=list(checkout)
+                ).gross.amount
+                + Decimal(1)
+            ),
         },
     }
     response = user_api_client.post_graphql(CREATE_PAYMENT_MUTATION, variables)
@@ -350,11 +328,7 @@ def test_use_checkout_billing_address_as_payment_billing(
 ):
     checkout = checkout_without_shipping_required
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.checkout_total(
-        manager=manager, checkout=checkout, lines=lines, address=address
-    )
+    total = calculations.checkout_total(checkout=checkout, lines=list(checkout))
     variables = {
         "checkoutId": checkout_id,
         "input": {
@@ -398,11 +372,7 @@ def test_create_payment_for_checkout_with_active_payments(
     checkout.billing_address = address
     checkout.save()
 
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.checkout_total(
-        manager=manager, checkout=checkout, lines=lines, address=address
-    )
+    total = calculations.checkout_total(checkout=checkout, lines=list(checkout))
     checkout_id = graphene.Node.to_global_id("Checkout", checkout.pk)
     variables = {
         "checkoutId": checkout_id,

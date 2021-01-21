@@ -17,8 +17,7 @@ def remove_variant_image_duplicates(apps, schema_editor):
     variant_image_ids_to_remove = []
     for image_data in duplicated_images:
         ids = VariantImage.objects.filter(
-            variant=image_data["variant_images__variant"],
-            image__pk=image_data["pk"],
+            variant=image_data["variant_images__variant"], image__pk=image_data["pk"],
         )[1:].values_list("pk", flat=True)
         variant_image_ids_to_remove += ids
 
@@ -36,7 +35,6 @@ class Migration(migrations.Migration):
             remove_variant_image_duplicates, migrations.RunPython.noop
         ),
         migrations.AlterUniqueTogether(
-            name="variantimage",
-            unique_together={("variant", "image")},
+            name="variantimage", unique_together={("variant", "image")},
         ),
     ]

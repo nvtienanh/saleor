@@ -10,9 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(
-    autoretry_for=(TaxError,),
-    retry_backoff=60,
-    retry_kwargs={"max_retries": 5},
+    autoretry_for=(TaxError,), retry_backoff=60, retry_kwargs={"max_retries": 5},
 )
 def api_post_request_task(transaction_url, data, config, order_id):
     config = AvataxConfiguration(**config)

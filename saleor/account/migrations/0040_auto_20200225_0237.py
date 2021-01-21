@@ -18,8 +18,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AlterModelOptions(
-            name="staffnotificationrecipient",
-            options={"ordering": ("staff_email",)},
+            name="staffnotificationrecipient", options={"ordering": ("staff_email",)},
         ),
         migrations.AlterModelOptions(
             name="user",

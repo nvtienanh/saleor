@@ -1,5 +1,4 @@
-from django.core.serializers.json import DjangoJSONEncoder
-from django.core.serializers.json import Serializer as JsonSerializer
+from django.core.serializers.json import DjangoJSONEncoder, Serializer as JsonSerializer
 from draftjs_sanitizer import SafeJSONEncoder
 from prices import Money
 

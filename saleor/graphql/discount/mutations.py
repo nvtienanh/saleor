@@ -397,9 +397,7 @@ class VoucherChannelListingUpdate(BaseChannelListingMutation):
             if "min_amount_spent" in add_channel.keys():
                 defaults["min_spent_amount"] = add_channel.get("min_amount_spent", None)
             models.VoucherChannelListing.objects.update_or_create(
-                voucher=voucher,
-                channel=channel,
-                defaults=defaults,
+                voucher=voucher, channel=channel, defaults=defaults,
             )
 
     @classmethod
@@ -600,9 +598,7 @@ class SaleChannelListingUpdate(BaseChannelListingMutation):
             if "discount_value" in add_channel.keys():
                 defaults["discount_value"] = add_channel.get("discount_value")
             SaleChannelListing.objects.update_or_create(
-                sale=sale,
-                channel=channel,
-                defaults=defaults,
+                sale=sale, channel=channel, defaults=defaults,
             )
 
     @classmethod

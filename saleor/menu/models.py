@@ -2,14 +2,14 @@ from django.db import models
 from mptt.managers import TreeManager
 from mptt.models import MPTTModel
 
-from ..core.models import ModelWithMetadata, SortableModel
+from ..core.models import SortableModel
 from ..core.permissions import MenuPermissions
 from ..core.utils.translations import TranslationProxy
 from ..page.models import Page
 from ..product.models import Category, Collection
 
 
-class Menu(ModelWithMetadata):
+class Menu(models.Model):
     name = models.CharField(max_length=250)
     slug = models.SlugField(max_length=255, unique=True, allow_unicode=True)
 
@@ -21,7 +21,7 @@ class Menu(ModelWithMetadata):
         return self.name
 
 
-class MenuItem(ModelWithMetadata, MPTTModel, SortableModel):
+class MenuItem(MPTTModel, SortableModel):
     menu = models.ForeignKey(Menu, related_name="items", on_delete=models.CASCADE)
     name = models.CharField(max_length=128)
     parent = models.ForeignKey(
@@ -50,11 +50,7 @@ class MenuItem(ModelWithMetadata, MPTTModel, SortableModel):
         return self.name
 
     def get_ordering_queryset(self):
-        return (
-            self.menu.items.filter(level=0)
-            if not self.parent
-            else self.parent.children.all()
-        )
+        return self.menu.items.all() if not self.parent else self.parent.children.all()
 
     @property
     def linked_object(self):

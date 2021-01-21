@@ -1,5 +1,4 @@
-from ...payment import gateway as payment_gateway
-from ...payment import models
+from ...payment import gateway as payment_gateway, models
 from ...payment.utils import fetch_customer_id
 from ..utils.filters import filter_by_query_param
 

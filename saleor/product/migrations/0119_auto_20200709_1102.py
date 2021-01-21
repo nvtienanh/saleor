@@ -11,16 +11,13 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name="attributeproduct",
-            options={"ordering": ("sort_order", "pk")},
+            name="attributeproduct", options={"ordering": ("sort_order", "pk")},
         ),
         migrations.AlterModelOptions(
-            name="attributevalue",
-            options={"ordering": ("sort_order", "pk")},
+            name="attributevalue", options={"ordering": ("sort_order", "pk")},
         ),
         migrations.AlterModelOptions(
-            name="attributevariant",
-            options={"ordering": ("sort_order", "pk")},
+            name="attributevariant", options={"ordering": ("sort_order", "pk")},
         ),
         migrations.AlterModelOptions(
             name="product",
@@ -30,7 +27,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AlterModelOptions(
-            name="productimage",
-            options={"ordering": ("sort_order", "pk")},
+            name="productimage", options={"ordering": ("sort_order", "pk")},
         ),
     ]

@@ -1,6 +1,6 @@
 """Checkout-related ORM models."""
 from operator import attrgetter
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
 from django.conf import settings
@@ -25,9 +25,25 @@ if TYPE_CHECKING:
     # flake8: noqa
     from django_measurement import Weight
 
-    from ..checkout.utils import CheckoutLineInfo
     from ..payment.models import Payment
     from ..product.models import ProductVariant
+
+
+class CheckoutQueryset(models.QuerySet):
+    """A specialized queryset for dealing with checkouts."""
+
+    def for_display(self):
+        """Annotate the queryset for display purposes.
+
+        Prefetches additional data from the database to avoid the n+1 queries
+        problem.
+        """
+        return self.prefetch_related(
+            "lines__variant__translations",
+            "lines__variant__product__translations",
+            "lines__variant__product__images",
+            "lines__variant__product__product_type__product_attributes__values",
+        )  # noqa
 
 
 def get_default_country():
@@ -50,9 +66,7 @@ class Checkout(ModelWithMetadata):
     token = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     quantity = models.PositiveIntegerField(default=0)
     channel = models.ForeignKey(
-        Channel,
-        related_name="checkouts",
-        on_delete=models.PROTECT,
+        Channel, related_name="checkouts", on_delete=models.PROTECT,
     )
     billing_address = models.ForeignKey(
         Address, related_name="+", editable=False, null=True, on_delete=models.SET_NULL
@@ -69,9 +83,7 @@ class Checkout(ModelWithMetadata):
     )
     note = models.TextField(blank=True, default="")
 
-    currency = models.CharField(
-        max_length=settings.DEFAULT_CURRENCY_CODE_LENGTH,
-    )
+    currency = models.CharField(max_length=settings.DEFAULT_CURRENCY_CODE_LENGTH,)
     country = CountryField(default=get_default_country)
 
     discount_amount = models.DecimalField(
@@ -88,6 +100,8 @@ class Checkout(ModelWithMetadata):
 
     redirect_url = models.URLField(blank=True, null=True)
     tracking_code = models.CharField(max_length=255, blank=True, null=True)
+
+    objects = CheckoutQueryset.as_manager()
 
     class Meta:
         ordering = ("-last_change", "pk")
@@ -117,19 +131,11 @@ class Checkout(ModelWithMetadata):
             return zero_money(currency=self.currency)
         return Money(balance, self.currency)
 
-    def get_total_weight(
-        self, lines: Optional[Iterable["CheckoutLineInfo"]] = None
-    ) -> "Weight":
+    def get_total_weight(self) -> "Weight":
         # Cannot use `sum` as it parses an empty Weight to an int
         weights = zero_weight()
-        # TODO: we should use new data structure for lines in order like in checkout
-        if lines is None:
-            for line in self:
-                weights += line.variant.get_weight() * line.quantity
-        else:
-            for checkout_line_info in lines:
-                line = checkout_line_info.line
-                weights += line.variant.get_weight() * line.quantity
+        for line in self:
+            weights += line.variant.get_weight() * line.quantity
         return weights
 
     def get_line(self, variant: "ProductVariant") -> Optional["CheckoutLine"]:

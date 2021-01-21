@@ -6,9 +6,7 @@ import graphene
 import pytest
 
 from ......checkout import calculations
-from ......checkout.utils import fetch_checkout_lines
 from ......order import OrderEvents, OrderStatus
-from ......plugins.manager import get_plugins_manager
 from ..... import ChargeStatus, TransactionKind
 from ...utils.common import to_adyen_price
 from ...webhooks import (
@@ -141,11 +139,7 @@ def test_handle_authorization_for_pending_order(
 
 
 def test_handle_authorization_for_checkout(
-    notification,
-    adyen_plugin,
-    payment_adyen_for_checkout,
-    address,
-    shipping_method,
+    notification, adyen_plugin, payment_adyen_for_checkout, address, shipping_method,
 ):
     checkout = payment_adyen_for_checkout.checkout
     checkout.shipping_address = address
@@ -155,11 +149,7 @@ def test_handle_authorization_for_checkout(
     checkout_token = str(checkout.token)
 
     payment = payment_adyen_for_checkout
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.calculate_checkout_total_with_gift_cards(
-        manager, checkout, lines, address
-    )
+    total = calculations.calculate_checkout_total_with_gift_cards(checkout=checkout)
     payment.is_active = True
     payment.order = None
     payment.total = total.gross.amount
@@ -201,11 +191,7 @@ def test_handle_authorization_with_adyen_auto_capture(
     checkout.save()
 
     payment = payment_adyen_for_checkout
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.calculate_checkout_total_with_gift_cards(
-        manager, checkout, lines, address
-    )
+    total = calculations.calculate_checkout_total_with_gift_cards(checkout=checkout)
     payment.is_active = True
     payment.order = None
     payment.total = total.gross.amount
@@ -380,11 +366,7 @@ def test_handle_capture_for_order(notification, adyen_plugin, payment_adyen_for_
 
 
 def test_handle_capture_for_checkout(
-    notification,
-    adyen_plugin,
-    payment_adyen_for_checkout,
-    address,
-    shipping_method,
+    notification, adyen_plugin, payment_adyen_for_checkout, address, shipping_method,
 ):
     checkout = payment_adyen_for_checkout.checkout
     checkout.shipping_address = address
@@ -394,11 +376,7 @@ def test_handle_capture_for_checkout(
     checkout_token = str(checkout.token)
 
     payment = payment_adyen_for_checkout
-    manager = get_plugins_manager()
-    lines = fetch_checkout_lines(checkout)
-    total = calculations.calculate_checkout_total_with_gift_cards(
-        manager, checkout, lines, address
-    )
+    total = calculations.calculate_checkout_total_with_gift_cards(checkout=checkout)
     payment.is_active = True
     payment.order = None
     payment.total = total.gross.amount

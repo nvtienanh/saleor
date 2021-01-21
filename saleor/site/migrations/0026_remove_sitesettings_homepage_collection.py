@@ -10,8 +10,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name="sitesettings",
-            name="homepage_collection",
-        ),
+        migrations.RemoveField(model_name="sitesettings", name="homepage_collection",),
     ]

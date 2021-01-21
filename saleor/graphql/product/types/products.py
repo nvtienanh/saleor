@@ -1,5 +1,4 @@
 from dataclasses import asdict
-from typing import Optional
 
 import graphene
 from django.conf import settings
@@ -7,7 +6,6 @@ from graphene import relay
 from graphene_federation import key
 from graphql.error import GraphQLError
 
-from ....account.utils import requestor_is_staff_member_or_app
 from ....attribute import models as attribute_models
 from ....core.permissions import OrderPermissions, ProductPermissions
 from ....core.weight import convert_weight_to_default_weight_unit
@@ -21,8 +19,11 @@ from ....product.utils.availability import (
     get_product_availability,
     get_variant_availability,
 )
-from ....product.utils.variants import get_variant_selection_attributes
-from ....warehouse.availability import is_product_in_stock
+from ....warehouse.availability import (
+    get_available_quantity,
+    get_quantity_allocated,
+    is_product_in_stock,
+)
 from ...account.enums import CountryCodeEnum
 from ...attribute.filters import AttributeFilterInput
 from ...attribute.resolvers import resolve_attributes
@@ -39,11 +40,7 @@ from ...core.fields import (
     PrefetchingConnectionField,
 )
 from ...core.types import Image, Money, TaxedMoney, TaxedMoneyRange, TaxType
-from ...decorators import (
-    one_of_permissions_required,
-    permission_required,
-    staff_member_or_app_required,
-)
+from ...decorators import one_of_permissions_required, permission_required
 from ...discount.dataloaders import DiscountsByDateTimeLoader
 from ...meta.types import ObjectWithMetadata
 from ...order.dataloaders import (
@@ -65,7 +62,6 @@ from ...warehouse.dataloaders import (
 from ...warehouse.types import Stock
 from ..dataloaders import (
     CategoryByIdLoader,
-    CollectionChannelListingByCollectionIdAndChannelSlugLoader,
     CollectionChannelListingByCollectionIdLoader,
     CollectionsByProductIdLoader,
     ImagesByProductIdLoader,
@@ -84,7 +80,6 @@ from ..dataloaders import (
     VariantChannelListingByVariantIdLoader,
     VariantsChannelListingByProductIdAndChanneSlugLoader,
 )
-from ..enums import VariantAttributeScope
 from ..filters import ProductFilterInput
 from ..sorters import ProductOrder
 from .channels import (
@@ -151,6 +146,28 @@ class ProductPricingInfo(BasePricingInfo):
 
 @key(fields="id")
 class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
+    quantity = graphene.Int(
+        required=True,
+        description="Quantity of a product available for sale.",
+        deprecation_reason=(
+            "Use the stock field instead. This field will be removed after 2020-07-31."
+        ),
+    )
+    quantity_allocated = graphene.Int(
+        required=False,
+        description="Quantity allocated for orders.",
+        deprecation_reason=(
+            "Use the stock field instead. This field will be removed after 2020-07-31."
+        ),
+    )
+    stock_quantity = graphene.Int(
+        required=True,
+        description="Quantity of a product available for sale.",
+        deprecation_reason=(
+            "Use the quantityAvailable field instead. "
+            "This field will be removed after 2020-07-31."
+        ),
+    )
     channel_listings = graphene.List(
         graphene.NonNull(ProductVariantChannelListing),
         description="List of price information in channels for the product.",
@@ -162,14 +179,16 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             "only meant for displaying."
         ),
     )
+    is_available = graphene.Boolean(
+        description="Whether the variant is in stock and visible or not.",
+        deprecation_reason=(
+            "Use the stock field instead. This field will be removed after 2020-07-31."
+        ),
+    )
     attributes = graphene.List(
         graphene.NonNull(SelectedAttribute),
         required=True,
         description="List of attributes assigned to this variant.",
-        variant_selection=graphene.Argument(
-            VariantAttributeScope,
-            description="Define scope of returned attributes.",
-        ),
     )
     cost_price = graphene.Field(Money, description="Cost price of the variant.")
     margin = graphene.Int(description="Gross margin percentage value.")
@@ -254,39 +273,22 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         return getattr(root.node, "digital_content", None)
 
     @staticmethod
-    def resolve_attributes(
-        root: ChannelContext[models.ProductVariant],
-        info,
-        variant_selection: Optional[str] = None,
-    ):
-        def apply_variant_selection_filter(selected_attributes):
-            if not variant_selection or variant_selection == VariantAttributeScope.ALL:
-                return selected_attributes
-            attributes = [
-                selected_att["attribute"] for selected_att in selected_attributes
-            ]
-            variant_selection_attrs = get_variant_selection_attributes(attributes)
+    def resolve_stock_quantity(root: ChannelContext[models.ProductVariant], info):
+        if not root.node.track_inventory:
+            return settings.MAX_CHECKOUT_LINE_QUANTITY
 
-            if variant_selection == VariantAttributeScope.VARIANT_SELECTION:
-                return [
-                    selected_attribute
-                    for selected_attribute in selected_attributes
-                    if selected_attribute["attribute"] in variant_selection_attrs
-                ]
-            return [
-                selected_attribute
-                for selected_attribute in selected_attributes
-                if selected_attribute["attribute"] not in variant_selection_attrs
-            ]
+        return AvailableQuantityByProductVariantIdAndCountryCodeLoader(
+            info.context
+        ).load((root.node.id, info.context.country))
 
-        return (
-            SelectedAttributesByProductVariantIdLoader(info.context)
-            .load(root.node.id)
-            .then(apply_variant_selection_filter)
+    @staticmethod
+    def resolve_attributes(root: ChannelContext[models.ProductVariant], info):
+        return SelectedAttributesByProductVariantIdLoader(info.context).load(
+            root.node.id
         )
 
     @staticmethod
-    @staff_member_or_app_required
+    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
     def resolve_channel_listings(
         root: ChannelContext[models.ProductVariant], info, **_kwargs
     ):
@@ -319,11 +321,6 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
                             product_channel_listing,
                         ):
                             def calculate_pricing_with_collections(collections):
-                                if (
-                                    not variant_channel_listing
-                                    or not product_channel_listing
-                                ):
-                                    return None
                                 availability = get_variant_availability(
                                     variant=root.node,
                                     variant_channel_listing=variant_channel_listing,
@@ -366,11 +363,36 @@ class ProductVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         )
 
     @staticmethod
+    def resolve_is_available(root: ChannelContext[models.ProductVariant], info):
+        if not root.node.track_inventory:
+            return True
+
+        def is_variant_in_stock(available_quantity):
+            return available_quantity > 0
+
+        return (
+            AvailableQuantityByProductVariantIdAndCountryCodeLoader(info.context)
+            .load((root.node.id, info.context.country))
+            .then(is_variant_in_stock)
+        )
+
+    @staticmethod
+    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    def resolve_quantity(root: ChannelContext[models.ProductVariant], info):
+        return get_available_quantity(root.node, info.context.country)
+
+    @staticmethod
     @permission_required(ProductPermissions.MANAGE_PRODUCTS)
     def resolve_quantity_ordered(root: ChannelContext[models.ProductVariant], *_args):
         # This field is added through annotation when using the
         # `resolve_report_product_sales` resolver.
         return getattr(root.node, "quantity_ordered", None)
+
+    @staticmethod
+    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
+    def resolve_quantity_allocated(root: ChannelContext[models.ProductVariant], info):
+        country = info.context.country
+        return get_quantity_allocated(root.node, country)
 
     @staticmethod
     @permission_required(ProductPermissions.MANAGE_PRODUCTS)
@@ -584,8 +606,6 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
                             variants_channel_listing,
                         ):
                             def calculate_pricing_with_collections(collections):
-                                if not variants_channel_listing:
-                                    return None
                                 availability = get_product_availability(
                                     product=root.node,
                                     product_channel_listing=product_channel_listing,
@@ -624,7 +644,6 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     def resolve_is_available(root: ChannelContext[models.Product], info):
         if not root.channel_slug:
             return None
-        channel_slug = str(root.channel_slug)
 
         def calculate_is_available(product_channel_listing):
             country = info.context.country
@@ -636,7 +655,7 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
         return (
             ProductChannelListingByProductIdAndChannelSlugLoader(info.context)
-            .load((root.node.id, channel_slug))
+            .load((root.node.id, root.channel_slug))
             .then(calculate_is_available)
         )
 
@@ -675,51 +694,17 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         return ProductChannelListingByProductIdLoader(info.context).load(root.node.id)
 
     @staticmethod
+    @permission_required(ProductPermissions.MANAGE_PRODUCTS)
     def resolve_collections(root: ChannelContext[models.Product], info, **_kwargs):
-        requestor = get_user_or_app_from_context(info.context)
-        is_staff = requestor_is_staff_member_or_app(requestor)
-
-        def return_collections(collections):
-            if is_staff:
-                return [
-                    ChannelContext(node=collection, channel_slug=root.channel_slug)
-                    for collection in collections
-                ]
-
-            dataloader_keys = [
-                (collection.id, str(root.channel_slug)) for collection in collections
-            ]
-            CollectionChannelListingLoader = (
-                CollectionChannelListingByCollectionIdAndChannelSlugLoader
-            )
-            channel_listings = CollectionChannelListingLoader(info.context).load_many(
-                dataloader_keys
-            )
-
-            def return_visible_collections(channel_listings):
-                visible_collections = []
-                channel_listings_dict = {
-                    channel_listing.collection_id: channel_listing
-                    for channel_listing in channel_listings
-                    if channel_listing
-                }
-
-                for collection in collections:
-                    channel_listing = channel_listings_dict.get(collection.id)
-                    if channel_listing and channel_listing.is_visible:
-                        visible_collections.append(collection)
-
-                return [
-                    ChannelContext(node=collection, channel_slug=root.channel_slug)
-                    for collection in visible_collections
-                ]
-
-            return channel_listings.then(return_visible_collections)
-
         return (
             CollectionsByProductIdLoader(info.context)
             .load(root.node.id)
-            .then(return_collections)
+            .then(
+                lambda collections: [
+                    ChannelContext(node=collection, channel_slug=root.channel_slug)
+                    for collection in collections
+                ]
+            )
         )
 
     @staticmethod
@@ -734,7 +719,6 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     def resolve_is_available_for_purchase(root: ChannelContext[models.Product], info):
         if not root.channel_slug:
             return None
-        channel_slug = str(root.channel_slug)
 
         def calculate_is_available_for_purchase(product_channel_listing):
             if not product_channel_listing:
@@ -743,7 +727,7 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
         return (
             ProductChannelListingByProductIdAndChannelSlugLoader(info.context)
-            .load((root.node.id, channel_slug))
+            .load((root.node.id, root.channel_slug))
             .then(calculate_is_available_for_purchase)
         )
 
@@ -751,7 +735,6 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     def resolve_available_for_purchase(root: ChannelContext[models.Product], info):
         if not root.channel_slug:
             return None
-        channel_slug = str(root.channel_slug)
 
         def calculate_available_for_purchase(product_channel_listing):
             if not product_channel_listing:
@@ -760,7 +743,7 @@ class Product(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
         return (
             ProductChannelListingByProductIdAndChannelSlugLoader(info.context)
-            .load((root.node.id, channel_slug))
+            .load((root.node.id, root.channel_slug))
             .then(calculate_available_for_purchase)
         )
 
@@ -786,12 +769,7 @@ class ProductType(CountableDjangoObjectType):
         TaxType, description="A type of tax. Assigned by enabled tax gateway"
     )
     variant_attributes = graphene.List(
-        Attribute,
-        description="Variant attributes of that product type.",
-        variant_selection=graphene.Argument(
-            VariantAttributeScope,
-            description="Define scope of returned attributes.",
-        ),
+        Attribute, description="Variant attributes of that product type."
     )
     product_attributes = graphene.List(
         Attribute, description="Product attributes of that product type."
@@ -835,31 +813,15 @@ class ProductType(CountableDjangoObjectType):
         return ProductAttributesByProductTypeIdLoader(info.context).load(root.pk)
 
     @staticmethod
-    def resolve_variant_attributes(
-        root: models.ProductType,
-        info,
-        variant_selection: Optional[str] = None,
-    ):
-        def apply_variant_selection_filter(attributes):
-            if not variant_selection or variant_selection == VariantAttributeScope.ALL:
-                return attributes
-            variant_selection_attrs = get_variant_selection_attributes(attributes)
-            if variant_selection == VariantAttributeScope.VARIANT_SELECTION:
-                return variant_selection_attrs
-            return [attr for attr in attributes if attr not in variant_selection_attrs]
-
-        return (
-            VariantAttributesByProductTypeIdLoader(info.context)
-            .load(root.pk)
-            .then(apply_variant_selection_filter)
-        )
+    def resolve_variant_attributes(root: models.ProductType, info):
+        return VariantAttributesByProductTypeIdLoader(info.context).load(root.pk)
 
     @staticmethod
     def resolve_products(root: models.ProductType, info, channel=None, **_kwargs):
-        requestor = get_user_or_app_from_context(info.context)
+        user = info.context.user
         if channel is None:
             channel = get_default_channel_slug_or_graphql_error()
-        qs = root.products.visible_to_user(requestor, channel)
+        qs = root.products.visible_to_user(user, channel)
         return ChannelQsContext(qs=qs, channel_slug=channel)
 
     @staticmethod
@@ -931,8 +893,8 @@ class Collection(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
 
     @staticmethod
     def resolve_products(root: ChannelContext[models.Collection], info, **kwargs):
-        requestor = get_user_or_app_from_context(info.context)
-        qs = root.node.products.visible_to_user(requestor, root.channel_slug)
+        user = info.context.user
+        qs = root.node.products.visible_to_user(user, root.channel_slug)
         return ChannelQsContext(qs=qs, channel_slug=root.channel_slug)
 
     @staticmethod
@@ -1017,20 +979,20 @@ class Category(CountableDjangoObjectType):
     @staticmethod
     def resolve_products(root: models.Category, info, channel=None, **_kwargs):
         requestor = get_user_or_app_from_context(info.context)
-        is_staff = requestor_is_staff_member_or_app(requestor)
+        requestor_has_access_to_all = models.Product.objects.user_has_access_to_all(
+            requestor
+        )
         tree = root.get_descendants(include_self=True)
-        if channel is None and not is_staff:
+        if channel is None and not requestor_has_access_to_all:
             channel = get_default_channel_slug_or_graphql_error()
         qs = models.Product.objects.all()
-        if not is_staff:
+        if not requestor_has_access_to_all:
             qs = (
                 qs.published(channel)
                 .annotate_visible_in_listings(channel)
-                .exclude(
-                    visible_in_listings=False,
-                )
+                .exclude(visible_in_listings=False,)
             )
-        if channel and is_staff:
+        if channel and requestor_has_access_to_all:
             qs = qs.filter(channel_listings__channel__slug=channel)
         qs = qs.filter(category__in=tree)
         return ChannelQsContext(qs=qs, channel_slug=channel)

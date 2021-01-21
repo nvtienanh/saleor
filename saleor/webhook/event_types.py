@@ -9,7 +9,6 @@ from ..core.permissions import (
 class WebhookEventType:
     ANY = "any_events"
     ORDER_CREATED = "order_created"
-    ORDER_CONFIRMED = "order_confirmed"
     ORDER_FULLY_PAID = "order_fully_paid"
     ORDER_UPDATED = "order_updated"
     ORDER_CANCELLED = "order_cancelled"
@@ -35,7 +34,6 @@ class WebhookEventType:
     DISPLAY_LABELS = {
         ANY: "Any events",
         ORDER_CREATED: "Order created",
-        ORDER_CONFIRMED: "Order confirmed",
         ORDER_FULLY_PAID: "Order paid",
         ORDER_UPDATED: "Order updated",
         ORDER_CANCELLED: "Order cancelled",
@@ -56,7 +54,6 @@ class WebhookEventType:
     CHOICES = [
         (ANY, DISPLAY_LABELS[ANY]),
         (ORDER_CREATED, DISPLAY_LABELS[ORDER_CREATED]),
-        (ORDER_CONFIRMED, DISPLAY_LABELS[ORDER_CONFIRMED]),
         (ORDER_FULLY_PAID, DISPLAY_LABELS[ORDER_FULLY_PAID]),
         (ORDER_UPDATED, DISPLAY_LABELS[ORDER_UPDATED]),
         (ORDER_CANCELLED, DISPLAY_LABELS[ORDER_CANCELLED]),
@@ -76,7 +73,6 @@ class WebhookEventType:
 
     PERMISSIONS = {
         ORDER_CREATED: OrderPermissions.MANAGE_ORDERS,
-        ORDER_CONFIRMED: OrderPermissions.MANAGE_ORDERS,
         ORDER_FULLY_PAID: OrderPermissions.MANAGE_ORDERS,
         ORDER_UPDATED: OrderPermissions.MANAGE_ORDERS,
         ORDER_CANCELLED: OrderPermissions.MANAGE_ORDERS,

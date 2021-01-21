@@ -25,8 +25,7 @@ class DigitalContentUrl(CountableDjangoObjectType):
 
 class DigitalContent(CountableDjangoObjectType):
     urls = graphene.List(
-        lambda: DigitalContentUrl,
-        description="List of URLs for the digital variant.",
+        lambda: DigitalContentUrl, description="List of URLs for the digital variant.",
     )
 
     class Meta:
