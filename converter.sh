@@ -33,7 +33,7 @@ find_replace () {
             if ! [[ $pathname =~ "__pycache__" ]]; then
                 # Rename content
                 case "$pathname" in
-                    *.py|*.yaml|*.json|*.png)
+                    *.py|*.yaml|*.json)
                     printf 'Find and Replace: %s\n' "$pathname"
                     # Mapping Product -> Room
                     sed -i 's/Product/Room/g' $pathname
@@ -86,5 +86,7 @@ case "$1" in
     lf2crfl)
         lf2crfl "vanphong"
         ;;
+    clear_pycache)
+        find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 esac
 
