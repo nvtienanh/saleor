@@ -140,7 +140,6 @@ QUERY_ROOM_VARIANT_CHANNEL_LISTING = """
 def test_get_room_variant_channel_listing_as_staff_user(
     staff_api_client,
     room_available_in_many_channels,
-    permission_manage_rooms,
     channel_USD,
 ):
     # given
@@ -152,7 +151,6 @@ def test_get_room_variant_channel_listing_as_staff_user(
     response = staff_api_client.post_graphql(
         QUERY_ROOM_VARIANT_CHANNEL_LISTING,
         variables,
-        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
@@ -177,7 +175,6 @@ def test_get_room_variant_channel_listing_as_staff_user(
 def test_get_room_variant_channel_listing_as_app(
     app_api_client,
     room_available_in_many_channels,
-    permission_manage_rooms,
     channel_USD,
 ):
     # given
@@ -189,7 +186,6 @@ def test_get_room_variant_channel_listing_as_app(
     response = app_api_client.post_graphql(
         QUERY_ROOM_VARIANT_CHANNEL_LISTING,
         variables,
-        permissions=[permission_manage_rooms],
     )
     content = get_graphql_content(response)
 
@@ -1644,7 +1640,7 @@ def test_room_variants_visible_in_listings_by_customer(
     assert data["totalCount"] == room_count - 1
 
 
-def test_room_variants_visible_in_listings_by_staff_without_perm(
+def test_room_variants_visible_in_listings_by_staff_without_manage_rooms(
     staff_api_client, room_list, channel_USD
 ):
     # given
@@ -1657,7 +1653,7 @@ def test_room_variants_visible_in_listings_by_staff_without_perm(
         staff_api_client, variables={"channel": channel_USD.slug}
     )
 
-    assert data["totalCount"] == room_count - 1
+    assert data["totalCount"] == room_count
 
 
 def test_room_variants_visible_in_listings_by_staff_with_perm(
@@ -1678,7 +1674,7 @@ def test_room_variants_visible_in_listings_by_staff_with_perm(
     assert data["totalCount"] == room_count
 
 
-def test_room_variants_visible_in_listings_by_app_without_perm(
+def test_room_variants_visible_in_listings_by_app_without_manage_rooms(
     app_api_client, room_list, channel_USD
 ):
     # given
@@ -1689,7 +1685,7 @@ def test_room_variants_visible_in_listings_by_app_without_perm(
     # when
     data = _fetch_all_variants(app_api_client, variables={"channel": channel_USD.slug})
 
-    assert data["totalCount"] == room_count - 1
+    assert data["totalCount"] == room_count
 
 
 def test_room_variants_visible_in_listings_by_app_with_perm(

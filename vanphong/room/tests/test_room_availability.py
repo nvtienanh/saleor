@@ -269,14 +269,13 @@ def test_visible_to_customer_user(customer_user, room_list, channel_USD):
 
 
 def test_visible_to_staff_user(
-    customer_user, room_list, channel_USD, permission_manage_rooms
+    staff_user, room_list, channel_USD, permission_manage_rooms
 ):
     room = room_list[0]
     room.variants.all().delete()
-    customer_user.user_permissions.add(permission_manage_rooms)
 
     available_rooms = models.Room.objects.visible_to_user(
-        customer_user, channel_USD.slug
+        staff_user, channel_USD.slug
     )
     assert available_rooms.count() == 3
 

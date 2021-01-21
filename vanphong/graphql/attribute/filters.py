@@ -2,6 +2,7 @@ import django_filters
 from django.db.models import Q
 from graphene_django.filter import GlobalIDFilter, GlobalIDMultipleChoiceFilter
 
+from ...account.utils import requestor_is_staff_member_or_app
 from ...attribute.models import Attribute
 from ...room.models import Category, Room
 from ..attribute.enums import AttributeTypeEnum
@@ -31,7 +32,7 @@ def filter_attributes_by_room_types(qs, field, value, requestor, channel_slug):
         tree = category.get_descendants(include_self=True)
         room_qs = room_qs.filter(category__in=tree)
 
-        if not room_qs.user_has_access_to_all(requestor):
+        if not requestor_is_staff_member_or_app(requestor):
             room_qs = room_qs.annotate_visible_in_listings(channel_slug).exclude(
                 visible_in_listings=False
             )

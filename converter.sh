@@ -33,7 +33,7 @@ find_replace () {
             if ! [[ $pathname =~ "__pycache__" ]]; then
                 # Rename content
                 case "$pathname" in
-                    *.py|*.yaml)
+                    *.py|*.yaml|*.json|*.png)
                     printf 'Find and Replace: %s\n' "$pathname"
                     # Mapping Product -> Room
                     sed -i 's/Product/Room/g' $pathname
