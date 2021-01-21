@@ -32,6 +32,7 @@ dist/
 /media/
 /node_modules/
 /static/
+/pyvenv/
 
 # Exported results file
 django-queries-results.html
