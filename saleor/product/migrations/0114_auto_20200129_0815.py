@@ -55,9 +55,7 @@ class Migration(migrations.Migration):
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name="product",
-            name="name",
-            field=models.CharField(max_length=250),
+            model_name="product", name="name", field=models.CharField(max_length=250),
         ),
         migrations.RunPython(
             create_unique_slug_for_products, migrations.RunPython.noop

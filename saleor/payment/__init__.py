@@ -57,7 +57,6 @@ class TransactionKind:
     - REFUND - full or partial return of captured funds to the customer.
     """
 
-    EXTERNAL = "external"
     AUTH = "auth"
     CAPTURE = "capture"
     CAPTURE_FAILED = "capture_failed"
@@ -74,7 +73,6 @@ class TransactionKind:
     # Which were authorized, but needs to be confirmed manually by staff
     # eg. Braintree with "submit_for_settlement" enabled
     CHOICES = [
-        (EXTERNAL, "External reference"),
         (AUTH, "Authorization"),
         (PENDING, "Pending"),
         (ACTION_TO_CONFIRM, "Action to confirm"),

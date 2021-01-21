@@ -50,22 +50,18 @@ def resolve_staff_users(info, query, **_kwargs):
     return qs.distinct()
 
 
-def resolve_user(info, id=None, email=None):
+def resolve_user(info, id):
     requester = get_user_or_app_from_context(info.context)
     if requester:
-        filter_kwargs = {}
-        if id:
-            _model, filter_kwargs["pk"] = graphene.Node.from_global_id(id)
-        if email:
-            filter_kwargs["email"] = email
+        _model, user_pk = graphene.Node.from_global_id(id)
         if requester.has_perms(
             [AccountPermissions.MANAGE_STAFF, AccountPermissions.MANAGE_USERS]
         ):
-            return models.User.objects.filter(**filter_kwargs).first()
+            return models.User.objects.filter(pk=user_pk).first()
         if requester.has_perm(AccountPermissions.MANAGE_STAFF):
-            return models.User.objects.staff().filter(**filter_kwargs).first()
+            return models.User.objects.staff().filter(pk=user_pk).first()
         if requester.has_perm(AccountPermissions.MANAGE_USERS):
-            return models.User.objects.customers().filter(**filter_kwargs).first()
+            return models.User.objects.customers().filter(pk=user_pk).first()
     return PermissionDenied()
 
 

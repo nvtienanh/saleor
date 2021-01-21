@@ -78,9 +78,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={
-                "abstract": False,
-            },  # noqa: E231
+            options={"abstract": False,},  # noqa: E231
         ),
         migrations.CreateModel(
             name="InvoiceEvent",
@@ -154,8 +152,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={
-                "ordering": ("date",),
-            },  # noqa: E231
+            options={"ordering": ("date",),},  # noqa: E231
         ),
     ]

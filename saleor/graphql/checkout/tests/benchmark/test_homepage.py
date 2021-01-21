@@ -50,6 +50,7 @@ def test_user_checkout_details(user_api_client, customer_checkout, count_queries
             ...Price
           }
           variant {
+            stockQuantity
             ...ProductVariant
           }
           quantity

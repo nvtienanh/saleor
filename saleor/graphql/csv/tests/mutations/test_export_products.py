@@ -184,10 +184,7 @@ def test_export_products_mutation_ids_scope(
     export_file_data = data["exportFile"]
 
     export_products_mock.assert_called_once()
-    (
-        call_args,
-        call_kwargs,
-    ) = export_products_mock.call_args
+    (call_args, call_kwargs,) = export_products_mock.call_args
 
     assert set(call_args[1]["ids"]) == pks
     assert call_args[2] == {"fields": [ProductFieldEnum.NAME.value]}
@@ -260,10 +257,7 @@ def test_export_products_mutation_with_warehouse_and_attribute_ids(
     export_file_data = data["exportFile"]
 
     export_products_mock.assert_called_once()
-    (
-        call_args,
-        call_kwargs,
-    ) = export_products_mock.call_args
+    (call_args, call_kwargs,) = export_products_mock.call_args
 
     assert set(call_args[1]["ids"]) == pks
     assert call_args[2] == {

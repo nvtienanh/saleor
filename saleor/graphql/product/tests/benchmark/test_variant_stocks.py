@@ -52,9 +52,7 @@ def test_product_variants_stocks_create(
     ]
     variables = {"variantId": variant_id, "stocks": stocks}
     response = staff_api_client.post_graphql(
-        query,
-        variables,
-        permissions=[permission_manage_products],
+        query, variables, permissions=[permission_manage_products],
     )
     content = get_graphql_content(response)
     data = content["data"]["productVariantStocksCreate"]
@@ -115,9 +113,7 @@ def test_product_variants_stocks_update(
     ]
     variables = {"variantId": variant_id, "stocks": stocks}
     response = staff_api_client.post_graphql(
-        query,
-        variables,
-        permissions=[permission_manage_products],
+        query, variables, permissions=[permission_manage_products],
     )
     content = get_graphql_content(response)
     data = content["data"]["productVariantStocksUpdate"]
@@ -173,9 +169,7 @@ def test_product_variants_stocks_delete(
 
     variables = {"variantId": variant_id, "warehouseIds": warehouse_ids}
     response = staff_api_client.post_graphql(
-        query,
-        variables,
-        permissions=[permission_manage_products],
+        query, variables, permissions=[permission_manage_products],
     )
     content = get_graphql_content(response)
     data = content["data"]["productVariantStocksDelete"]

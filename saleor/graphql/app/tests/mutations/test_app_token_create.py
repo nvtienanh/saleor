@@ -48,9 +48,7 @@ def test_app_token_create(
 
 
 def test_app_token_create_for_app(
-    permission_manage_apps,
-    app_api_client,
-    permission_manage_orders,
+    permission_manage_apps, app_api_client, permission_manage_orders,
 ):
 
     app = App.objects.create(name="New_app")
@@ -62,9 +60,7 @@ def test_app_token_create_for_app(
     id = graphene.Node.to_global_id("App", app.id)
     variables = {"name": "Default token", "app": id}
     response = app_api_client.post_graphql(
-        query,
-        variables={"input": variables},
-        permissions=(permission_manage_apps,),
+        query, variables={"input": variables}, permissions=(permission_manage_apps,),
     )
     content = get_graphql_content(response)
     token_data = content["data"]["appTokenCreate"]["appToken"]
@@ -77,10 +73,7 @@ def test_app_token_create_for_app(
 
 
 def test_app_token_create_out_of_scope_app(
-    permission_manage_apps,
-    staff_api_client,
-    staff_user,
-    permission_manage_orders,
+    permission_manage_apps, staff_api_client, staff_user, permission_manage_orders,
 ):
     """Ensure user can't create token for app with wider scope of permissions."""
     app = App.objects.create(name="New_app")
@@ -91,9 +84,7 @@ def test_app_token_create_out_of_scope_app(
     variables = {"name": "Default token", "app": id}
 
     response = staff_api_client.post_graphql(
-        query,
-        variables={"input": variables},
-        permissions=(permission_manage_apps,),
+        query, variables={"input": variables}, permissions=(permission_manage_apps,),
     )
     content = get_graphql_content(response)
 
@@ -107,9 +98,7 @@ def test_app_token_create_out_of_scope_app(
 
 
 def test_app_token_create_superuser_can_create_token_for_any_app(
-    permission_manage_apps,
-    superuser_api_client,
-    permission_manage_orders,
+    permission_manage_apps, superuser_api_client, permission_manage_orders,
 ):
     """Ensure superuser can create token for app with any scope of permissions."""
     app = App.objects.create(name="New_app")
@@ -131,10 +120,7 @@ def test_app_token_create_superuser_can_create_token_for_any_app(
 
 
 def test_app_token_create_as_app_out_of_scope_app(
-    permission_manage_apps,
-    app_api_client,
-    app,
-    permission_manage_orders,
+    permission_manage_apps, app_api_client, app, permission_manage_orders,
 ):
     app = App.objects.create(name="New_app")
     query = APP_TOKEN_CREATE_MUTATION
@@ -143,9 +129,7 @@ def test_app_token_create_as_app_out_of_scope_app(
     id = graphene.Node.to_global_id("App", app.id)
     variables = {"name": "Default token", "app": id}
     response = app_api_client.post_graphql(
-        query,
-        variables={"input": variables},
-        permissions=(permission_manage_apps,),
+        query, variables={"input": variables}, permissions=(permission_manage_apps,),
     )
     content = get_graphql_content(response)
     data = content["data"]["appTokenCreate"]

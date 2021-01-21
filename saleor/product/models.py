@@ -31,7 +31,6 @@ from mptt.managers import TreeManager
 from mptt.models import MPTTModel
 from versatileimagefield.fields import PPOIField, VersatileImageField
 
-from ..account.utils import requestor_is_staff_member_or_app
 from ..channel.models import Channel
 from ..core.db.fields import SanitizedJSONField
 from ..core.models import ModelWithMetadata, PublishableModel, SortableModel
@@ -51,7 +50,6 @@ if TYPE_CHECKING:
     from prices import Money
 
     from ..account.models import User
-    from ..app.models import App
 
 
 class Category(MPTTModel, ModelWithMetadata, SeoModel):
@@ -161,14 +159,18 @@ class ProductsQueryset(models.QuerySet):
         query = ProductVariantChannelListing.objects.filter(
             variant_id=OuterRef("variants__id"), channel__slug=str(channel_slug)
         ).values_list("variant", flat=True)
-        return published.filter(variants__in=query).distinct()
+        return published.filter(variants__in=query)
 
-    def visible_to_user(self, requestor: Union["User", "App"], channel_slug: str):
-        if requestor_is_staff_member_or_app(requestor):
+    def visible_to_user(self, user: "User", channel_slug: str):
+        if self.user_has_access_to_all(user):
             if channel_slug:
                 return self.filter(channel_listings__channel__slug=str(channel_slug))
             return self.all()
         return self.published_with_variants(channel_slug)
+
+    @staticmethod
+    def user_has_access_to_all(user):
+        return user.is_active and user.has_perm(ProductPermissions.MANAGE_PRODUCTS)
 
     def annotate_publication_info(self, channel_slug: str):
         return self.annotate_is_published(channel_slug).annotate_publication_date(
@@ -473,19 +475,15 @@ class ProductVariant(SortableModel, ModelWithMetadata):
         return self.name or self.sku
 
     def get_price(
-        self,
-        product: Product,
-        collections: Iterable["Collection"],
-        channel: Channel,
-        channel_listing: "ProductVariantChannelListing",
-        discounts: Optional[Iterable[DiscountInfo]] = None,
+        self, channel_slug: str, discounts: Optional[Iterable[DiscountInfo]] = None
     ) -> "Money":
+        channel_listing = self.channel_listings.get(channel__slug=channel_slug)
         return calculate_discounted_price(
-            product=product,
+            product=self.product,
             price=channel_listing.price,
+            collections=self.product.collections.all(),
             discounts=discounts,
-            collections=collections,
-            channel=channel,
+            channel=channel_listing.channel,
         )
 
     def get_weight(self):
@@ -666,6 +664,10 @@ class CollectionProduct(SortableModel):
 
 
 class CollectionsQueryset(models.QuerySet):
+    @staticmethod
+    def user_has_access_to_all(user):
+        return user.is_active and user.has_perm(ProductPermissions.MANAGE_PRODUCTS)
+
     def published(self, channel_slug: str):
         today = datetime.date.today()
         return self.filter(
@@ -676,8 +678,8 @@ class CollectionsQueryset(models.QuerySet):
             channel_listings__is_published=True,
         )
 
-    def visible_to_user(self, requestor: Union["User", "App"], channel_slug: str):
-        if requestor_is_staff_member_or_app(requestor):
+    def visible_to_user(self, user: "User", channel_slug: str):
+        if self.user_has_access_to_all(user):
             if channel_slug:
                 return self.filter(channel_listings__channel__slug=str(channel_slug))
             return self.all()

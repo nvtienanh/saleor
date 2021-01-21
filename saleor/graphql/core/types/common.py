@@ -1,7 +1,4 @@
-from urllib.parse import urljoin
-
 import graphene
-from django.conf import settings
 
 from ....product.templatetags.product_images import get_thumbnail
 from ...translations.enums import LanguageCodeEnum
@@ -20,7 +17,6 @@ from ..enums import (
     MenuErrorCode,
     MetadataErrorCode,
     OrderErrorCode,
-    OrderSettingsErrorCode,
     PageErrorCode,
     PaymentErrorCode,
     PermissionEnum,
@@ -149,10 +145,6 @@ class MenuError(Error):
     code = MenuErrorCode(description="The error code.", required=True)
 
 
-class OrderSettingsError(Error):
-    code = OrderSettingsErrorCode(description="The error code.", required=True)
-
-
 class MetadataError(Error):
     code = MetadataErrorCode(description="The error code.", required=True)
 
@@ -160,12 +152,10 @@ class MetadataError(Error):
 class OrderError(Error):
     code = OrderErrorCode(description="The error code.", required=True)
     warehouse = graphene.ID(
-        description="Warehouse ID which causes the error.",
-        required=False,
+        description="Warehouse ID which causes the error.", required=False,
     )
     order_line = graphene.ID(
-        description="Order line ID which causes the error.",
-        required=False,
+        description="Order line ID which causes the error.", required=False,
     )
     variants = graphene.List(
         graphene.NonNull(graphene.ID),
@@ -342,15 +332,11 @@ class Image(graphene.ObjectType):
         return Image(url, alt)
 
 
-class File(graphene.ObjectType):
-    url = graphene.String(required=True, description="The URL of the file.")
+class UploadedFile(graphene.ObjectType):
+    url = graphene.String(required=True, description="The URL of the uploaded file.")
     content_type = graphene.String(
-        required=False, description="Content type of the file."
+        required=True, description="Content type of uploaded file."
     )
-
-    @staticmethod
-    def resolve_url(root, info):
-        return info.context.build_absolute_uri(urljoin(settings.MEDIA_URL, root.url))
 
 
 class PriceRangeInput(graphene.InputObjectType):

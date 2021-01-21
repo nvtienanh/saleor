@@ -20,8 +20,7 @@ class WebhookCreateInput(graphene.InputObjectType):
         ),
     )
     app = graphene.ID(
-        required=False,
-        description="ID of the app to which webhook belongs.",
+        required=False, description="ID of the app to which webhook belongs.",
     )
     is_active = graphene.Boolean(
         description="Determine if webhook will be set active or not.", required=False
@@ -64,8 +63,7 @@ class WebhookCreate(ModelMutation):
 
         if not app or not app.is_active:
             raise ValidationError(
-                "App doesn't exist or is disabled",
-                code=WebhookErrorCode.NOT_FOUND,
+                "App doesn't exist or is disabled", code=WebhookErrorCode.NOT_FOUND,
             )
         return cleaned_data
 
@@ -108,8 +106,7 @@ class WebhookUpdateInput(graphene.InputObjectType):
         required=False,
     )
     app = graphene.ID(
-        required=False,
-        description="ID of the app to which webhook belongs.",
+        required=False, description="ID of the app to which webhook belongs.",
     )
     is_active = graphene.Boolean(
         description="Determine if webhook will be set active or not.", required=False
@@ -149,8 +146,7 @@ class WebhookUpdate(ModelMutation):
 
         if not app or not app.is_active:
             raise ValidationError(
-                "App doesn't exist or is disabled",
-                code=WebhookErrorCode.NOT_FOUND,
+                "App doesn't exist or is disabled", code=WebhookErrorCode.NOT_FOUND,
             )
         return cleaned_data
 

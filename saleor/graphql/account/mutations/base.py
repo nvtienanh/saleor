@@ -4,8 +4,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
 
-from ....account import events as account_events
-from ....account import models
+from ....account import events as account_events, models
 from ....account.emails import (
     send_set_password_email_with_url,
     send_user_password_reset_email_with_url,
@@ -136,16 +135,6 @@ class RequestPasswordReset(BaseMutation):
                     "email": ValidationError(
                         "User with this email doesn't exist",
                         code=AccountErrorCode.NOT_FOUND,
-                    )
-                }
-            )
-
-        if not user.is_active:
-            raise ValidationError(
-                {
-                    "email": ValidationError(
-                        "User with this email is inactive",
-                        code=AccountErrorCode.INACTIVE,
                     )
                 }
             )

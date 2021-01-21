@@ -1,11 +1,17 @@
 from django.db import models
 
 from ..core.db.fields import SanitizedJSONField
-from ..core.models import ModelWithMetadata, PublishableModel
+from ..core.models import ModelWithMetadata, PublishableModel, PublishedQuerySet
 from ..core.permissions import PagePermissions, PageTypePermissions
 from ..core.sanitizers.editorjs_sanitizer import clean_editor_js
 from ..core.utils.translations import TranslationProxy
 from ..seo.models import SeoModel, SeoModelTranslation
+
+
+class PagePublishedQuerySet(PublishedQuerySet):
+    @staticmethod
+    def user_has_access_to_all(user):
+        return user.is_active and user.has_perm(PagePermissions.MANAGE_PAGES)
 
 
 class Page(ModelWithMetadata, SeoModel, PublishableModel):
@@ -20,6 +26,7 @@ class Page(ModelWithMetadata, SeoModel, PublishableModel):
     )
     created = models.DateTimeField(auto_now_add=True)
 
+    objects = PagePublishedQuerySet.as_manager()
     translated = TranslationProxy()
 
     class Meta:

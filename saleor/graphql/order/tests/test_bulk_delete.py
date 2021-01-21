@@ -1,7 +1,6 @@
 import graphene
 
-from ....order import OrderStatus
-from ....order import models as order_models
+from ....order import OrderStatus, models as order_models
 from ...tests.utils import get_graphql_content
 
 MUTATION_DELETE_ORDER_LINES = """

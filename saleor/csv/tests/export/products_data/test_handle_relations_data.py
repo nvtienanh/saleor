@@ -1,12 +1,10 @@
 from unittest.mock import patch
 
 from .....attribute.models import Attribute
-from .....attribute.utils import associate_attribute_values_to_instance
 from .....product.models import Product, ProductImage, VariantImage
 from .....warehouse.models import Warehouse
 from ....utils import ProductExportFields
 from ....utils.products_data import (
-    AttributeData,
     add_attribute_info_to_data,
     add_channel_info_to_data,
     add_collection_info_to_data,
@@ -74,15 +72,9 @@ def test_get_products_relations_data_no_relations_fields(
 
 @patch("saleor.csv.utils.products_data.prepare_products_relations_data")
 def test_get_products_relations_data_attribute_ids(
-    prepare_products_data_mocked, product_list, file_attribute
+    prepare_products_data_mocked, product_list
 ):
     # given
-    product = product_list[0]
-    product.product_type.product_attributes.add(file_attribute)
-    associate_attribute_values_to_instance(
-        product, file_attribute, file_attribute.values.first()
-    )
-
     qs = Product.objects.all()
     export_fields = {"name", "description"}
     attribute_ids = list(Attribute.objects.values_list("pk", flat=True))
@@ -91,6 +83,7 @@ def test_get_products_relations_data_attribute_ids(
     # when
     get_products_relations_data(qs, export_fields, attribute_ids, channel_ids)
 
+    # then
     # then
     assert prepare_products_data_mocked.call_count == 1
     args, kwargs = prepare_products_data_mocked.call_args
@@ -123,19 +116,12 @@ def test_get_products_relations_data_channel_ids(
 
 
 def test_prepare_products_relations_data(
-    product_with_image, collection_list, channel_USD, channel_PLN, file_attribute
+    product_with_image, collection_list, channel_USD, channel_PLN
 ):
     # given
     pk = product_with_image.pk
-
-    product_with_image.product_type.product_attributes.add(file_attribute)
-    associate_attribute_values_to_instance(
-        product_with_image, file_attribute, file_attribute.values.first()
-    )
-
     collection_list[0].products.add(product_with_image)
     collection_list[1].products.add(product_with_image)
-
     qs = Product.objects.all()
     fields = set(
         ProductExportFields.HEADERS_TO_FIELDS_MAPPING["product_many_to_many"].values()
@@ -302,16 +288,9 @@ def test_get_variants_relations_data_no_relations_fields(
 
 @patch("saleor.csv.utils.products_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_attribute_ids(
-    prepare_variants_data_mocked, product_list, file_attribute
+    prepare_variants_data_mocked, product_list
 ):
     # given
-    product = product_list[0]
-    product.product_type.variant_attributes.add(file_attribute)
-    variant = product.variants.first()
-    associate_attribute_values_to_instance(
-        variant, file_attribute, file_attribute.values.first()
-    )
-
     qs = Product.objects.all()
     export_fields = {"name", "variants__sku"}
     attribute_ids = list(Attribute.objects.values_list("pk", flat=True))
@@ -413,16 +392,8 @@ def test_prepare_variants_relations_data(
     media_root,
     channel_PLN,
     channel_USD,
-    file_attribute,
 ):
     # given
-    product = product_with_variant_with_two_attributes
-    product.product_type.variant_attributes.add(file_attribute)
-    variant = product.variants.first()
-    associate_attribute_values_to_instance(
-        variant, file_attribute, file_attribute.values.first()
-    )
-
     qs = Product.objects.all()
     variant = product_with_variant_with_two_attributes.variants.first()
     product_image = ProductImage.objects.create(
@@ -674,9 +645,10 @@ def test_add_attribute_info_to_data(product):
     pk = product.pk
     slug = "test_attribute_slug"
     value = "test value"
-    attribute_data = AttributeData(
-        slug=slug, value=value, file_url=None, input_type="dropdown"
-    )
+    attribute_data = {
+        "slug": slug,
+        "value": value,
+    }
     input_data = {pk: {}}
 
     # when
@@ -696,9 +668,10 @@ def test_add_attribute_info_to_data_update_attribute_data(product):
     value = "test value"
     expected_header = f"{slug} (variant attribute)"
 
-    attribute_data = AttributeData(
-        slug=slug, value=value, file_url=None, input_type="dropdown"
-    )
+    attribute_data = {
+        "slug": slug,
+        "value": value,
+    }
     input_data = {pk: {expected_header: {"value1"}}}
 
     # when
@@ -713,9 +686,10 @@ def test_add_attribute_info_to_data_update_attribute_data(product):
 def test_add_attribute_info_to_data_no_slug(product):
     # given
     pk = product.pk
-    attribute_data = AttributeData(
-        slug=None, value=None, file_url=None, input_type="dropdown"
-    )
+    attribute_data = {
+        "slug": None,
+        "value": None,
+    }
     input_data = {pk: {}}
 
     # when
@@ -725,26 +699,6 @@ def test_add_attribute_info_to_data_no_slug(product):
 
     # then
     assert result == input_data
-
-
-def test_add_file_attribute_info_to_data(product):
-    # given
-    pk = product.pk
-    slug = "testtxt"
-    test_url = "test.txt"
-    attribute_data = AttributeData(
-        slug=slug, value=None, file_url=test_url, input_type="file"
-    )
-    input_data = {pk: {}}
-
-    # when
-    result = add_attribute_info_to_data(
-        product.pk, attribute_data, "product attribute", input_data
-    )
-
-    # then
-    expected_header = f"{slug} (product attribute)"
-    assert result[pk][expected_header] == {"http://mirumee.com/media/" + test_url}
 
 
 def test_add_warehouse_info_to_data(product):

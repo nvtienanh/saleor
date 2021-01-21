@@ -68,10 +68,7 @@ class PermissionGroupCreate(ModelMutation):
 
     @classmethod
     def clean_input(
-        cls,
-        info,
-        instance,
-        data,
+        cls, info, instance, data,
     ):
         cleaned_input = super().clean_input(info, instance, data)
 
@@ -207,10 +204,7 @@ class PermissionGroupUpdate(PermissionGroupCreate):
 
     @classmethod
     def clean_input(
-        cls,
-        info,
-        instance,
-        data,
+        cls, info, instance, data,
     ):
         requestor = info.context.user
         cls.ensure_requestor_can_manage_group(requestor, instance)
@@ -263,10 +257,7 @@ class PermissionGroupUpdate(PermissionGroupCreate):
 
     @classmethod
     def ensure_permissions_can_be_removed(
-        cls,
-        errors: dict,
-        group: auth_models.Group,
-        permissions: List["str"],
+        cls, errors: dict, group: auth_models.Group, permissions: List["str"],
     ):
         missing_perms = get_not_manageable_permissions_after_removing_perms_from_group(
             group, permissions
@@ -388,10 +379,7 @@ class PermissionGroupUpdate(PermissionGroupCreate):
 
     @classmethod
     def check_for_duplicates(
-        cls,
-        errors: dict,
-        input_data: dict,
-        fields: Tuple[str, str, str],
+        cls, errors: dict, input_data: dict, fields: Tuple[str, str, str],
     ):
         """Check if any items are on both input field.
 

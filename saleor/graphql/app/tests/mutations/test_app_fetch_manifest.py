@@ -42,10 +42,7 @@ def test_app_fetch_manifest(staff_api_client, staff_user, permission_manage_apps
         "manifest_url": manifest_url,
     }
     staff_user.user_permissions.set([permission_manage_apps])
-    response = staff_api_client.post_graphql(
-        query,
-        variables=variables,
-    )
+    response = staff_api_client.post_graphql(query, variables=variables,)
     content = get_graphql_content(response)
     errors = content["data"]["appFetchManifest"]["appErrors"]
     manifest = content["data"]["appFetchManifest"]["manifest"]
@@ -73,10 +70,7 @@ def test_app_fetch_manifest_missing_permission(staff_api_client, staff_user):
     variables = {
         "manifest_url": manifest_url,
     }
-    response = staff_api_client.post_graphql(
-        query,
-        variables=variables,
-    )
+    response = staff_api_client.post_graphql(query, variables=variables,)
     assert_no_permission(response)
 
 
@@ -90,10 +84,7 @@ def test_app_fetch_manifest_incorrect_permission_in_manifest(
         "manifest_url": manifest_url,
     }
     staff_user.user_permissions.set([permission_manage_apps])
-    response = staff_api_client.post_graphql(
-        query,
-        variables=variables,
-    )
+    response = staff_api_client.post_graphql(query, variables=variables,)
     content = get_graphql_content(response)
     errors = content["data"]["appFetchManifest"]["appErrors"]
     manifest = content["data"]["appFetchManifest"]["manifest"]
@@ -116,10 +107,7 @@ def test_app_fetch_manifest_unable_to_connect(
         "manifest_url": manifest_url,
     }
     staff_user.user_permissions.set([permission_manage_apps])
-    response = staff_api_client.post_graphql(
-        query,
-        variables=variables,
-    )
+    response = staff_api_client.post_graphql(query, variables=variables,)
     content = get_graphql_content(response)
     errors = content["data"]["appFetchManifest"]["appErrors"]
 
@@ -141,10 +129,7 @@ def test_app_fetch_manifest_wrong_format_of_response(
         "manifest_url": manifest_url,
     }
     staff_user.user_permissions.set([permission_manage_apps])
-    response = staff_api_client.post_graphql(
-        query,
-        variables=variables,
-    )
+    response = staff_api_client.post_graphql(query, variables=variables,)
     content = get_graphql_content(response)
     errors = content["data"]["appFetchManifest"]["appErrors"]
 
@@ -169,10 +154,7 @@ def test_app_fetch_manifest_handle_exception(
         "manifest_url": manifest_url,
     }
     staff_user.user_permissions.set([permission_manage_apps])
-    response = staff_api_client.post_graphql(
-        query,
-        variables=variables,
-    )
+    response = staff_api_client.post_graphql(query, variables=variables,)
     content = get_graphql_content(response)
     errors = content["data"]["appFetchManifest"]["appErrors"]
 

@@ -146,8 +146,7 @@ class AppCreate(ModelMutation):
 
     class Arguments:
         input = AppInput(
-            required=True,
-            description="Fields required to create a new app.",
+            required=True, description="Fields required to create a new app.",
         )
 
     class Meta:
@@ -188,8 +187,7 @@ class AppUpdate(ModelMutation):
     class Arguments:
         id = graphene.ID(description="ID of an app to update.", required=True)
         input = AppInput(
-            required=True,
-            description="Fields required to update an existing app.",
+            required=True, description="Fields required to update an existing app.",
         )
 
     class Meta:
@@ -363,8 +361,7 @@ class AppInstallInput(graphene.InputObjectType):
 class AppInstall(ModelMutation):
     class Arguments:
         input = AppInstallInput(
-            required=True,
-            description="Fields required to install a new app.",
+            required=True, description="Fields required to install a new app.",
         )
 
     class Meta:

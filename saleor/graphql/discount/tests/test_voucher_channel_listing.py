@@ -109,8 +109,7 @@ def test_voucher_channel_listing_update_as_customer(
 
     # when
     response = user_api_client.post_graphql(
-        VOUCHER_CHANNEL_LISTING_UPDATE_MUTATION,
-        variables=variables,
+        VOUCHER_CHANNEL_LISTING_UPDATE_MUTATION, variables=variables,
     )
 
     # then
@@ -131,8 +130,7 @@ def test_voucher_channel_listing_update_as_anonymous(
 
     # when
     response = api_client.post_graphql(
-        VOUCHER_CHANNEL_LISTING_UPDATE_MUTATION,
-        variables=variables,
+        VOUCHER_CHANNEL_LISTING_UPDATE_MUTATION, variables=variables,
     )
 
     # then
@@ -196,11 +194,7 @@ def test_voucher_channel_listing_create_many_channel(
 
 
 def test_voucher_channel_listing_create_and_remove(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
-    channel_PLN,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD, channel_PLN,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)
@@ -242,10 +236,7 @@ def test_voucher_channel_listing_create_and_remove(
 
 
 def test_voucher_channel_listing_update(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)
@@ -286,10 +277,7 @@ def test_voucher_channel_listing_update(
 
 
 def test_voucher_channel_listing_update_without_discount_value(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)
@@ -324,10 +312,7 @@ def test_voucher_channel_listing_update_without_discount_value(
 
 
 def test_voucher_channel_listing_remove_channel(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)
@@ -353,10 +338,7 @@ def test_voucher_channel_listing_remove_channel(
 
 
 def test_voucher_channel_listing_update_with_null_as_discount_value(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)
@@ -391,10 +373,7 @@ def test_voucher_channel_listing_update_with_null_as_discount_value(
 
 
 def test_voucher_channel_listing_create_with_null_as_discount_value(
-    staff_api_client,
-    voucher_without_channel,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher_without_channel, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher = voucher_without_channel
@@ -430,10 +409,7 @@ def test_voucher_channel_listing_create_with_null_as_discount_value(
 
 
 def test_voucher_channel_listing_create_without_discount_value(
-    staff_api_client,
-    voucher_without_channel,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher_without_channel, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher = voucher_without_channel
@@ -461,10 +437,7 @@ def test_voucher_channel_listing_create_without_discount_value(
 
 
 def test_voucher_channel_listing_update_duplicates_in_add(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)
@@ -496,10 +469,7 @@ def test_voucher_channel_listing_update_duplicates_in_add(
 
 
 def test_voucher_channel_listing_update_duplicates_in_remove(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)
@@ -526,10 +496,7 @@ def test_voucher_channel_listing_update_duplicates_in_remove(
 
 
 def test_voucher_channel_listing_update_duplicates_in_add_and_remove(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)
@@ -559,10 +526,7 @@ def test_voucher_channel_listing_update_duplicates_in_add_and_remove(
 
 
 def test_voucher_channel_listing_update_invalid_precision_discount_value(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)
@@ -597,10 +561,7 @@ def test_voucher_channel_listing_update_invalid_precision_discount_value(
 
 
 def test_voucher_channel_listing_update_invalid_precision_min_amount_spent(
-    staff_api_client,
-    voucher,
-    permission_manage_discounts,
-    channel_USD,
+    staff_api_client, voucher, permission_manage_discounts, channel_USD,
 ):
     # given
     voucher_id = graphene.Node.to_global_id("Voucher", voucher.pk)

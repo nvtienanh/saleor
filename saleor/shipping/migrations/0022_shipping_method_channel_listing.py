@@ -20,8 +20,7 @@ def create_shipping_method_channel_listing(apps, schema_editor):
         channel = channels_dict.get(currency)
         if not channel:
             channel, _ = Channel.objects.get_or_create(
-                currency_code=currency,
-                defaults={"name": name, "slug": slugify(name)},
+                currency_code=currency, defaults={"name": name, "slug": slugify(name)},
             )
             channels_dict[currency] = channel
         if shipping_method.type == "price":
@@ -104,19 +103,11 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(create_shipping_method_channel_listing),
         migrations.RemoveField(
-            model_name="shippingmethod",
-            name="maximum_order_price_amount",
+            model_name="shippingmethod", name="maximum_order_price_amount",
         ),
         migrations.RemoveField(
-            model_name="shippingmethod",
-            name="minimum_order_price_amount",
+            model_name="shippingmethod", name="minimum_order_price_amount",
         ),
-        migrations.RemoveField(
-            model_name="shippingmethod",
-            name="price_amount",
-        ),
-        migrations.RemoveField(
-            model_name="shippingmethod",
-            name="currency",
-        ),
+        migrations.RemoveField(model_name="shippingmethod", name="price_amount",),
+        migrations.RemoveField(model_name="shippingmethod", name="currency",),
     ]
