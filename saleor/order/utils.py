@@ -1,3 +1,4 @@
+from decimal import Decimal
 from functools import wraps
 from typing import Iterable, List
 
@@ -11,7 +12,7 @@ from ..core.taxes import zero_money
 from ..core.weight import zero_weight
 from ..discount.models import NotApplicable, Voucher, VoucherType
 from ..discount.utils import get_products_voucher_discount, validate_voucher_in_order
-from ..order import OrderStatus
+from ..order import FulfillmentStatus, OrderStatus
 from ..order.models import Order, OrderLine
 from ..plugins.manager import get_plugins_manager
 from ..product.utils.digital_products import get_default_digital_content_settings
@@ -159,13 +160,49 @@ def update_order_prices(order, discounts):
     recalculate_order(order)
 
 
+def _calculate_quantity_including_returns(order):
+    lines = list(order.lines.all())
+    total_quantity = sum([line.quantity for line in lines])
+    quantity_fulfilled = sum([line.quantity_fulfilled for line in lines])
+    quantity_returned = 0
+    quantity_replaced = 0
+    for fulfillment in order.fulfillments.all():
+        # count returned quantity for order
+        if fulfillment.status in [
+            FulfillmentStatus.RETURNED,
+            FulfillmentStatus.REFUNDED_AND_RETURNED,
+        ]:
+            quantity_returned += fulfillment.get_total_quantity()
+        # count replaced quantity for order
+        elif fulfillment.status == FulfillmentStatus.REPLACED:
+            quantity_replaced += fulfillment.get_total_quantity()
+
+    # Subtract the replace quantity as it shouldn't be taken into consideration for
+    # calculating the order status
+    total_quantity -= quantity_replaced
+    quantity_fulfilled -= quantity_replaced
+    return total_quantity, quantity_fulfilled, quantity_returned
+
+
 def update_order_status(order):
     """Update order status depending on fulfillments."""
-    quantity_fulfilled = order.quantity_fulfilled
-    total_quantity = order.get_total_quantity()
 
-    if quantity_fulfilled <= 0:
+    (
+        total_quantity,
+        quantity_fulfilled,
+        quantity_returned,
+    ) = _calculate_quantity_including_returns(order)
+
+    # total_quantity == 0 means that all products have been replaced, we don't change
+    # the order status in that case
+    if total_quantity == 0:
+        status = order.status
+    elif quantity_fulfilled <= 0:
         status = OrderStatus.UNFULFILLED
+    elif 0 < quantity_returned < total_quantity:
+        status = OrderStatus.PARTIALLY_RETURNED
+    elif quantity_returned == total_quantity:
+        status = OrderStatus.RETURNED
     elif quantity_fulfilled < total_quantity:
         status = OrderStatus.PARTIALLY_FULFILLED
     else:
@@ -256,7 +293,19 @@ def change_order_line_quantity(user, line, old_quantity, new_quantity):
     """Change the quantity of ordered items in a order line."""
     if new_quantity:
         line.quantity = new_quantity
-        line.save(update_fields=["quantity"])
+        total_price_net_amount = line.quantity * line.unit_price_net_amount
+        total_price_gross_amount = line.quantity * line.unit_price_gross_amount
+        line.total_price_net_amount = total_price_net_amount.quantize(Decimal("0.001"))
+        line.total_price_gross_amount = total_price_gross_amount.quantize(
+            Decimal("0.001")
+        )
+        line.save(
+            update_fields=[
+                "quantity",
+                "total_price_net_amount",
+                "total_price_gross_amount",
+            ]
+        )
     else:
         delete_order_line(line)
 
