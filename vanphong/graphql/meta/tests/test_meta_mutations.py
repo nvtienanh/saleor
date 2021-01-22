@@ -2790,3 +2790,75 @@ def test_delete_private_metadata_for_one_key(
         checkout_id,
         key="to_clear",
     )
+
+
+def test_add_public_metadata_for_hotel(
+    staff_api_client, permission_manage_rooms, hotel
+):
+    # given
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
+
+    # when
+    response = execute_update_public_metadata_for_item(
+        staff_api_client, permission_manage_rooms, hotel_id, "Hotel"
+    )
+
+    # then
+    assert item_contains_proper_public_metadata(
+        response["data"]["updateMetadata"]["item"], hotel, hotel_id
+    )
+
+
+def test_delete_public_metadata_for_hotel(
+    staff_api_client, permission_manage_rooms, hotel
+):
+    # given
+    hotel.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    hotel.save(update_fields=["metadata"])
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
+
+    # when
+    response = execute_clear_public_metadata_for_item(
+        staff_api_client, permission_manage_rooms, hotel_id, "Hotel"
+    )
+
+    # then
+    assert item_without_public_metadata(
+        response["data"]["deleteMetadata"]["item"], hotel, hotel_id
+    )
+
+
+def test_add_private_metadata_for_hotel(
+    staff_api_client, permission_manage_rooms, hotel
+):
+    # given
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
+
+    # when
+    response = execute_update_private_metadata_for_item(
+        staff_api_client, permission_manage_rooms, hotel_id, "Hotel"
+    )
+
+    # then
+    assert item_contains_proper_private_metadata(
+        response["data"]["updatePrivateMetadata"]["item"], hotel, hotel_id
+    )
+
+
+def test_delete_private_metadata_for_hotel(
+    staff_api_client, permission_manage_rooms, hotel
+):
+    # given
+    hotel.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
+    hotel.save(update_fields=["private_metadata"])
+    hotel_id = graphene.Node.to_global_id("Hotel", hotel.pk)
+
+    # when
+    response = execute_clear_private_metadata_for_item(
+        staff_api_client, permission_manage_rooms, hotel_id, "Hotel"
+    )
+
+    # then
+    assert item_without_private_metadata(
+        response["data"]["deletePrivateMetadata"]["item"], hotel, hotel_id
+    )

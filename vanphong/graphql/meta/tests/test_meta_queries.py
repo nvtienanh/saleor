@@ -2829,3 +2829,177 @@ def test_query_private_meta_for_page_type_as_app(
     metadata = content["data"]["pageType"]["privateMetadata"][0]
     assert metadata["key"] == PRIVATE_KEY
     assert metadata["value"] == PRIVATE_VALUE
+
+
+QUERY_HOTEL_PUBLIC_META = """
+    query hotelMeta($id: ID!){
+         hotel(id: $id){
+            metadata{
+                key
+                value
+            }
+        }
+    }
+"""
+
+
+def test_query_public_meta_for_hotel_as_anonymous_user(api_client, hotel):
+    # given
+    hotel.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    hotel.save(update_fields=["metadata"])
+    variables = {
+        "id": graphene.Node.to_global_id("Hotel", hotel.pk),
+    }
+
+    # when
+    response = api_client.post_graphql(QUERY_HOTEL_PUBLIC_META, variables)
+
+    # then
+    assert_no_permission(response)
+
+
+def test_query_public_meta_for_hotel_as_customer(user_api_client, hotel):
+    # given
+    hotel.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    hotel.save(update_fields=["metadata"])
+    variables = {
+        "id": graphene.Node.to_global_id("Hotel", hotel.pk),
+    }
+
+    # when
+    response = user_api_client.post_graphql(QUERY_HOTEL_PUBLIC_META, variables)
+
+    # then
+    assert_no_permission(response)
+
+
+def test_query_public_meta_for_hotel_as_staff(
+    staff_api_client, hotel, permission_manage_rooms
+):
+    # given
+    hotel.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    hotel.save(update_fields=["metadata"])
+    variables = {"id": graphene.Node.to_global_id("Hotel", hotel.pk)}
+
+    # when
+    response = staff_api_client.post_graphql(
+        QUERY_HOTEL_PUBLIC_META,
+        variables,
+        [permission_manage_rooms],
+        check_no_permissions=False,
+    )
+    content = get_graphql_content(response)
+
+    # then
+    metadata = content["data"]["hotel"]["metadata"][0]
+    assert metadata["key"] == PUBLIC_KEY
+    assert metadata["value"] == PUBLIC_VALUE
+
+
+def test_query_public_meta_for_hotel_as_app(
+    app_api_client, hotel, permission_manage_rooms
+):
+    # given
+    hotel.store_value_in_metadata({PUBLIC_KEY: PUBLIC_VALUE})
+    hotel.save(update_fields=["metadata"])
+    variables = {"id": graphene.Node.to_global_id("Hotel", hotel.pk)}
+
+    # when
+    response = app_api_client.post_graphql(
+        QUERY_HOTEL_PUBLIC_META,
+        variables,
+        [permission_manage_rooms],
+        check_no_permissions=False,
+    )
+    content = get_graphql_content(response)
+
+    # then
+    metadata = content["data"]["hotel"]["metadata"][0]
+    assert metadata["key"] == PUBLIC_KEY
+    assert metadata["value"] == PUBLIC_VALUE
+
+
+QUERY_HOTEL_PRIVATE_META = """
+    query hotelMeta($id: ID!){
+        hotel(id: $id){
+            privateMetadata{
+                key
+                value
+            }
+        }
+    }
+"""
+
+
+def test_query_private_meta_for_hotel_as_anonymous_user(api_client, hotel):
+    # given
+    variables = {
+        "id": graphene.Node.to_global_id("Hotel", hotel.pk),
+    }
+
+    # when
+    response = api_client.post_graphql(QUERY_HOTEL_PRIVATE_META, variables)
+
+    # then
+    assert_no_permission(response)
+
+
+def test_query_private_meta_for_hotel_as_customer(user_api_client, hotel):
+    # given
+    variables = {
+        "id": graphene.Node.to_global_id("Hotel", hotel.pk),
+    }
+
+    # when
+    response = user_api_client.post_graphql(QUERY_HOTEL_PUBLIC_META, variables)
+
+    # then
+    assert_no_permission(response)
+
+
+def test_query_private_meta_for_hotel_as_staff(
+    staff_api_client, hotel, permission_manage_rooms
+):
+    # given
+    hotel.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
+    hotel.save(update_fields=["private_metadata"])
+    variables = {"id": graphene.Node.to_global_id("Hotel", hotel.pk)}
+
+    # when
+    response = staff_api_client.post_graphql(
+        QUERY_HOTEL_PRIVATE_META,
+        variables,
+        [permission_manage_rooms],
+        check_no_permissions=False,
+    )
+    content = get_graphql_content(response)
+
+    # then
+    metadata = content["data"]["hotel"]["privateMetadata"][0]
+    assert metadata["key"] == PRIVATE_KEY
+    assert metadata["value"] == PRIVATE_VALUE
+
+
+def test_query_private_meta_for_hotel_as_app(
+    app_api_client, hotel, permission_manage_rooms
+):
+    # given
+    hotel.store_value_in_private_metadata({PRIVATE_KEY: PRIVATE_VALUE})
+    hotel.save(update_fields=["private_metadata"])
+    variables = {
+        "id": graphene.Node.to_global_id("Hotel", hotel.pk),
+    }
+
+    # when
+    response = app_api_client.post_graphql(
+        QUERY_HOTEL_PRIVATE_META,
+        variables,
+        [permission_manage_rooms],
+        check_no_permissions=False,
+    )
+    content = get_graphql_content(response)
+
+    # then
+    metadata = content["data"]["hotel"]["privateMetadata"][0]
+    assert metadata["key"] == PRIVATE_KEY
+    assert metadata["value"] == PRIVATE_VALUE

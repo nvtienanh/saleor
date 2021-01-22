@@ -18,7 +18,7 @@ from ...payment.models import Payment
 from ...product.models import Collection
 from ...warehouse.models import Stock
 from ...warehouse.tests.utils import get_quantity_allocated_for_stock
-from .. import OrderEvents, OrderStatus, models
+from .. import FulfillmentStatus, OrderEvents, OrderStatus, models
 from ..emails import send_fulfillment_confirmation_to_customer
 from ..events import OrderEvent, OrderEventsEmails, email_sent_event
 from ..models import Order
@@ -255,7 +255,7 @@ def test_restock_fulfillment_lines(fulfilled_order, warehouse):
     )
 
 
-def test_update_order_status(fulfilled_order):
+def test_update_order_status_partially_fulfilled(fulfilled_order):
     fulfillment = fulfilled_order.fulfillments.first()
     line = fulfillment.lines.first()
     order_line = line.order_line
@@ -267,15 +267,79 @@ def test_update_order_status(fulfilled_order):
 
     assert fulfilled_order.status == OrderStatus.PARTIALLY_FULFILLED
 
-    line = fulfillment.lines.first()
-    order_line = line.order_line
 
-    order_line.quantity_fulfilled -= line.quantity
-    order_line.save()
-    line.delete()
+def test_update_order_status_unfulfilled(order_with_lines):
+    order_with_lines.status = OrderStatus.FULFILLED
+    order_with_lines.save()
+
+    update_order_status(order_with_lines)
+
+    order_with_lines.refresh_from_db()
+    assert order_with_lines.status == OrderStatus.UNFULFILLED
+
+
+def test_update_order_status_fulfilled(fulfilled_order):
+    fulfillment = fulfilled_order.fulfillments.first()
+    fulfillment_line = fulfillment.lines.first()
+    fulfillment_line.quantity -= 3
+    fulfillment_line.save()
+    fulfilled_order.status = OrderStatus.UNFULFILLED
+    fulfilled_order.save()
+    replaced_fulfillment = fulfilled_order.fulfillments.create(
+        status=FulfillmentStatus.REPLACED
+    )
+    replaced_fulfillment.lines.create(
+        quantity=3, order_line=fulfillment_line.order_line
+    )
+
     update_order_status(fulfilled_order)
 
-    assert fulfilled_order.status == OrderStatus.UNFULFILLED
+    fulfilled_order.refresh_from_db()
+    assert fulfilled_order.status == OrderStatus.FULFILLED
+
+
+def test_update_order_status_returned(fulfilled_order):
+    fulfilled_order.fulfillments.all().update(status=FulfillmentStatus.RETURNED)
+    fulfilled_order.status = OrderStatus.UNFULFILLED
+    fulfilled_order.save()
+
+    update_order_status(fulfilled_order)
+
+    fulfilled_order.refresh_from_db()
+    assert fulfilled_order.status == OrderStatus.RETURNED
+
+
+def test_update_order_status_partially_returned(fulfilled_order):
+    fulfillment = fulfilled_order.fulfillments.first()
+    fulfillment_line = fulfillment.lines.first()
+    fulfillment_line.quantity -= 3
+    fulfillment_line.save()
+    returned_fulfillment = fulfilled_order.fulfillments.create(
+        status=FulfillmentStatus.RETURNED
+    )
+    replaced_fulfillment = fulfilled_order.fulfillments.create(
+        status=FulfillmentStatus.REPLACED
+    )
+    refunded_and_returned_fulfillment = fulfilled_order.fulfillments.create(
+        status=FulfillmentStatus.REFUNDED_AND_RETURNED
+    )
+    returned_fulfillment.lines.create(
+        quantity=1, order_line=fulfillment_line.order_line
+    )
+    replaced_fulfillment.lines.create(
+        quantity=1, order_line=fulfillment_line.order_line
+    )
+    refunded_and_returned_fulfillment.lines.create(
+        quantity=1, order_line=fulfillment_line.order_line
+    )
+
+    fulfilled_order.status = OrderStatus.UNFULFILLED
+    fulfilled_order.save()
+
+    update_order_status(fulfilled_order)
+
+    fulfilled_order.refresh_from_db()
+    assert fulfilled_order.status == OrderStatus.PARTIALLY_RETURNED
 
 
 def test_validate_fulfillment_tracking_number_as_url(fulfilled_order):
@@ -791,6 +855,17 @@ def test_ordered_item_change_quantity(transactional_db, order_with_lines):
     change_order_line_quantity(None, lines[1], lines[1].quantity, 0)
     change_order_line_quantity(None, lines[0], lines[0].quantity, 0)
     assert order_with_lines.get_total_quantity() == 0
+
+
+def test_change_order_line_quantity_changes_total_prices(
+    transactional_db, order_with_lines
+):
+    assert not order_with_lines.events.count()
+    line = order_with_lines.lines.all()[0]
+    new_quantity = line.quantity + 1
+    change_order_line_quantity(None, line, line.quantity, new_quantity)
+    line.refresh_from_db()
+    assert line.total_price == line.unit_price * new_quantity
 
 
 @patch("saleor.order.actions.emails.send_fulfillment_confirmation")

@@ -8,17 +8,21 @@ from django.db.models import Q
 
 from ....attribute import AttributeType
 from ....attribute import models as attribute_models
-from ....core.permissions import RoomTypePermissions
+from ....core.permissions import RoomPermissions, RoomTypePermissions
 from ....room import models
 from ....room.error_codes import RoomErrorCode
-from ...attribute.mutations import BaseReorderAttributesMutation
+from ...attribute.mutations import (
+    BaseReorderAttributesMutation,
+    BaseReorderAttributeValuesMutation,
+)
 from ...attribute.types import Attribute
+from ...channel import ChannelContext
 from ...core.inputs import ReorderInput
 from ...core.mutations import BaseMutation
 from ...core.types.common import RoomError
 from ...core.utils import from_global_id_strict_type
 from ...core.utils.reordering import perform_reordering
-from ...room.types import RoomType
+from ...room.types import Room, RoomType, RoomVariant
 from ..enums import RoomAttributeType
 
 
@@ -324,3 +328,116 @@ class RoomTypeReorderAttributes(BaseReorderAttributesMutation):
             perform_reordering(attributes_m2m, operations)
 
         return RoomTypeReorderAttributes(room_type=room_type)
+
+
+class RoomReorderAttributeValues(BaseReorderAttributeValuesMutation):
+    room = graphene.Field(
+        Room, description="Room from which attribute values are reordered."
+    )
+
+    class Meta:
+        description = "Reorder room attribute values."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
+
+    class Arguments:
+        room_id = graphene.Argument(
+            graphene.ID, required=True, description="ID of a room."
+        )
+        attribute_id = graphene.Argument(
+            graphene.ID, required=True, description="ID of an attribute."
+        )
+        moves = graphene.List(
+            ReorderInput,
+            required=True,
+            description="The list of reordering operations for given attribute values.",
+        )
+
+    @classmethod
+    def perform_mutation(cls, _root, info, **data):
+        room_id = data["room_id"]
+        room = cls.perform(
+            room_id, "room", data, "roomvalueassignment", RoomErrorCode
+        )
+
+        return RoomReorderAttributeValues(
+            room=ChannelContext(node=room, channel_slug=None)
+        )
+
+    @staticmethod
+    def get_instance(instance_id: str):
+        pk = from_global_id_strict_type(
+            instance_id, only_type=Room, field="room_id"
+        )
+
+        try:
+            room = models.Room.objects.prefetch_related("attributes").get(pk=pk)
+        except ObjectDoesNotExist:
+            raise ValidationError(
+                {
+                    "room_id": ValidationError(
+                        (f"Couldn't resolve to a room: {instance_id}"),
+                        code=RoomErrorCode.NOT_FOUND.value,
+                    )
+                }
+            )
+        return room
+
+
+class RoomVariantReorderAttributeValues(BaseReorderAttributeValuesMutation):
+    room_variant = graphene.Field(
+        RoomVariant,
+        description="Room variant from which attribute values are reordered.",
+    )
+
+    class Meta:
+        description = "Reorder room variant attribute values."
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = RoomError
+        error_type_field = "room_errors"
+
+    class Arguments:
+        variant_id = graphene.Argument(
+            graphene.ID, required=True, description="ID of a room variant."
+        )
+        attribute_id = graphene.Argument(
+            graphene.ID, required=True, description="ID of an attribute."
+        )
+        moves = graphene.List(
+            ReorderInput,
+            required=True,
+            description="The list of reordering operations for given attribute values.",
+        )
+
+    @classmethod
+    def perform_mutation(cls, _root, info, **data):
+        variant_id = data["variant_id"]
+        variant = cls.perform(
+            variant_id, "variant", data, "variantvalueassignment", RoomErrorCode
+        )
+
+        return RoomVariantReorderAttributeValues(
+            room_variant=ChannelContext(node=variant, channel_slug=None)
+        )
+
+    @staticmethod
+    def get_instance(instance_id: str):
+        pk = from_global_id_strict_type(
+            instance_id, only_type=RoomVariant, field="variant_id"
+        )
+
+        try:
+            variant = models.RoomVariant.objects.prefetch_related("attributes").get(
+                pk=pk
+            )
+        except ObjectDoesNotExist:
+            raise ValidationError(
+                {
+                    "variant_id": ValidationError(
+                        (f"Couldn't resolve to a room variant: {instance_id}"),
+                        code=RoomErrorCode.NOT_FOUND.value,
+                    )
+                }
+            )
+        return variant

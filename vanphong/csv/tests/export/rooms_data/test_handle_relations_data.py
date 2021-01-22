@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
-from .....attribute.models import Attribute
+from .....attribute.models import Attribute, AttributeValue
 from .....attribute.utils import associate_attribute_values_to_instance
-from .....room.models import Room, RoomImage, VariantImage
+from .....room.models import Room, RoomImage, RoomVariant, VariantImage
 from .....hotel.models import Hotel
 from ....utils import RoomExportFields
 from ....utils.rooms_data import (
@@ -74,13 +74,38 @@ def test_get_rooms_relations_data_no_relations_fields(
 
 @patch("vanphong.csv.utils.rooms_data.prepare_rooms_relations_data")
 def test_get_rooms_relations_data_attribute_ids(
-    prepare_rooms_data_mocked, room_list, file_attribute
+    prepare_rooms_data_mocked,
+    room_list,
+    file_attribute,
+    room_type_page_reference_attribute,
+    room_type_room_reference_attribute,
+    page,
 ):
     # given
     room = room_list[0]
-    room.room_type.room_attributes.add(file_attribute)
+    room.room_type.room_attributes.add(
+        file_attribute,
+        room_type_page_reference_attribute,
+        room_type_room_reference_attribute,
+    )
     associate_attribute_values_to_instance(
         room, file_attribute, file_attribute.values.first()
+    )
+    page_ref_value = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        slug=f"{room.pk}_{page.pk}",
+        name=page.title,
+    )
+    associate_attribute_values_to_instance(
+        room, room_type_page_reference_attribute, page_ref_value
+    )
+    room_ref_value = AttributeValue.objects.create(
+        attribute=room_type_room_reference_attribute,
+        slug=f"{room.pk}_{room_list[1].pk}",
+        name=room_list[1].name,
+    )
+    associate_attribute_values_to_instance(
+        room, room_type_room_reference_attribute, room_ref_value
     )
 
     qs = Room.objects.all()
@@ -123,14 +148,30 @@ def test_get_rooms_relations_data_channel_ids(
 
 
 def test_prepare_rooms_relations_data(
-    room_with_image, collection_list, channel_USD, channel_PLN, file_attribute
+    room_with_image,
+    collection_list,
+    channel_USD,
+    channel_PLN,
+    file_attribute,
+    room_type_page_reference_attribute,
+    page,
 ):
     # given
     pk = room_with_image.pk
 
-    room_with_image.room_type.room_attributes.add(file_attribute)
+    room_with_image.room_type.room_attributes.add(
+        file_attribute, room_type_page_reference_attribute
+    )
     associate_attribute_values_to_instance(
         room_with_image, file_attribute, file_attribute.values.first()
+    )
+    ref_value = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        slug=f"{room_with_image.pk}_{page.pk}",
+        name=page.title,
+    )
+    associate_attribute_values_to_instance(
+        room_with_image, room_type_page_reference_attribute, ref_value
     )
 
     collection_list[0].rooms.add(room_with_image)
@@ -302,14 +343,41 @@ def test_get_variants_relations_data_no_relations_fields(
 
 @patch("vanphong.csv.utils.rooms_data.prepare_variants_relations_data")
 def test_get_variants_relations_data_attribute_ids(
-    prepare_variants_data_mocked, room_list, file_attribute
+    prepare_variants_data_mocked,
+    room_list,
+    file_attribute,
+    room_type_page_reference_attribute,
+    room_type_room_reference_attribute,
+    page,
 ):
     # given
     room = room_list[0]
-    room.room_type.variant_attributes.add(file_attribute)
+    room.room_type.variant_attributes.add(
+        file_attribute,
+        room_type_page_reference_attribute,
+        room_type_room_reference_attribute,
+    )
     variant = room.variants.first()
     associate_attribute_values_to_instance(
         variant, file_attribute, file_attribute.values.first()
+    )
+    # add page reference attribute
+    page_ref_value = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        slug=f"{variant.pk}_{page.pk}",
+        name=page.title,
+    )
+    associate_attribute_values_to_instance(
+        variant, room_type_page_reference_attribute, page_ref_value
+    )
+    # add room reference attribute
+    room_ref_value = AttributeValue.objects.create(
+        attribute=room_type_room_reference_attribute,
+        slug=f"{variant.pk}_{room_list[1].pk}",
+        name=room_list[1].name,
+    )
+    associate_attribute_values_to_instance(
+        variant, room_type_room_reference_attribute, room_ref_value
     )
 
     qs = Room.objects.all()
@@ -409,18 +477,44 @@ def test_get_variants_relations_data_attributes_hotels_and_channels_ids(
 
 def test_prepare_variants_relations_data(
     room_with_variant_with_two_attributes,
+    room,
     image,
     media_root,
     channel_PLN,
     channel_USD,
     file_attribute,
+    room_type_page_reference_attribute,
+    room_type_room_reference_attribute,
+    page,
 ):
     # given
-    room = room_with_variant_with_two_attributes
-    room.room_type.variant_attributes.add(file_attribute)
-    variant = room.variants.first()
+    room_1 = room_with_variant_with_two_attributes
+    room_1.room_type.variant_attributes.add(
+        file_attribute,
+        room_type_page_reference_attribute,
+        room_type_room_reference_attribute,
+    )
+    variant = room_1.variants.first()
     associate_attribute_values_to_instance(
         variant, file_attribute, file_attribute.values.first()
+    )
+    # add page reference attribute
+    page_ref_value = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        slug=f"{variant.pk}_{page.pk}",
+        name=page.title,
+    )
+    associate_attribute_values_to_instance(
+        variant, room_type_page_reference_attribute, page_ref_value
+    )
+    # add prodcut reference attribute
+    room_ref_value = AttributeValue.objects.create(
+        attribute=room_type_room_reference_attribute,
+        slug=f"{variant.pk}_{room.pk}",
+        name=room.name,
+    )
+    associate_attribute_values_to_instance(
+        variant, room_type_room_reference_attribute, room_ref_value
     )
 
     qs = Room.objects.all()
@@ -441,25 +535,26 @@ def test_prepare_variants_relations_data(
     )
 
     # then
-    pk = variant.pk
-    images = ", ".join(
-        [
-            "http://mirumee.com/media/" + image.image.name
-            for image in variant.images.all()
-        ]
-    )
-    expected_result = {pk: {"variants__images__image": images}}
+    expected_result = {}
+    for variant in RoomVariant.objects.all():
+        pk = variant.pk
+        images = ", ".join(
+            [
+                "http://mirumee.com/media/" + image.image.name
+                for image in variant.images.all()
+            ]
+        )
+        expected_result[pk] = {"variants__images__image": images} if images else {}
+        expected_result = add_variant_attribute_data_to_expected_data(
+            expected_result, variant, attribute_ids, pk
+        )
+        expected_result = add_stocks_to_expected_data(
+            expected_result, variant, hotel_ids, pk
+        )
 
-    expected_result = add_variant_attribute_data_to_expected_data(
-        expected_result, variant, attribute_ids, pk
-    )
-    expected_result = add_stocks_to_expected_data(
-        expected_result, variant, hotel_ids, pk
-    )
-
-    expected_result = add_channel_to_expected_variant_data(
-        expected_result, variant, channel_ids, pk
-    )
+        expected_result = add_channel_to_expected_variant_data(
+            expected_result, variant, channel_ids, pk
+        )
 
     assert result == expected_result
 
@@ -675,7 +770,7 @@ def test_add_attribute_info_to_data(room):
     slug = "test_attribute_slug"
     value = "test value"
     attribute_data = AttributeData(
-        slug=slug, value=value, file_url=None, input_type="dropdown"
+        slug=slug, value=value, file_url=None, input_type="dropdown", entity_type=None
     )
     input_data = {pk: {}}
 
@@ -697,7 +792,7 @@ def test_add_attribute_info_to_data_update_attribute_data(room):
     expected_header = f"{slug} (variant attribute)"
 
     attribute_data = AttributeData(
-        slug=slug, value=value, file_url=None, input_type="dropdown"
+        slug=slug, value=value, file_url=None, input_type="dropdown", entity_type=None
     )
     input_data = {pk: {expected_header: {"value1"}}}
 
@@ -714,7 +809,7 @@ def test_add_attribute_info_to_data_no_slug(room):
     # given
     pk = room.pk
     attribute_data = AttributeData(
-        slug=None, value=None, file_url=None, input_type="dropdown"
+        slug=None, value=None, file_url=None, input_type="dropdown", entity_type=None
     )
     input_data = {pk: {}}
 
@@ -733,7 +828,7 @@ def test_add_file_attribute_info_to_data(room):
     slug = "testtxt"
     test_url = "test.txt"
     attribute_data = AttributeData(
-        slug=slug, value=None, file_url=test_url, input_type="file"
+        slug=slug, value=None, file_url=test_url, input_type="file", entity_type=None
     )
     input_data = {pk: {}}
 
@@ -745,6 +840,57 @@ def test_add_file_attribute_info_to_data(room):
     # then
     expected_header = f"{slug} (room attribute)"
     assert result[pk][expected_header] == {"http://mirumee.com/media/" + test_url}
+
+
+def test_add_reference_attribute_info_to_data(room, page):
+    # given
+    pk = room.pk
+    slug = "test_attribute_slug"
+    value = f"{room.id}_{page.id}"
+    attribute_data = AttributeData(
+        slug=slug,
+        value=value,
+        file_url=None,
+        input_type="reference",
+        entity_type="Page",
+    )
+    input_data = {pk: {}}
+
+    # when
+    result = add_attribute_info_to_data(
+        room.pk, attribute_data, "room attribute", input_data
+    )
+
+    # then
+    expected_header = f"{slug} (room attribute)"
+    assert result[pk][expected_header] == {f"Page_{page.id}"}
+
+
+def test_add_reference_info_to_data_update_attribute_data(room, page):
+    # given
+    pk = room.pk
+    slug = "test_attribute_slug"
+    value = f"{room.id}_{page.id}"
+    expected_header = f"{slug} (variant attribute)"
+    values = {"Page_989"}
+
+    attribute_data = AttributeData(
+        slug=slug,
+        value=value,
+        file_url=None,
+        input_type="reference",
+        entity_type="Page",
+    )
+    input_data = {pk: {expected_header: values}}
+
+    # when
+    result = add_attribute_info_to_data(
+        room.pk, attribute_data, "variant attribute", input_data
+    )
+
+    # then
+    values.add(f"Page_{page.id}")
+    assert result[pk][expected_header] == values
 
 
 def test_add_hotel_info_to_data(room):

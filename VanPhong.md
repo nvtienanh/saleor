@@ -24,7 +24,7 @@ git clone https://github.com/VanThuongSG/vanphong-api.git
 
 ```bash
 cd van-phong-api
-python3 -m venv py38
+python -m venv pyvenv
 # activate virtual environment
 source pyvenv/bin/activate
 # Install requirement packages
@@ -45,7 +45,7 @@ grant all privileges on database saleor to saleor;
 - Django migrate:
 
 ```bash
-source py38/bin/activate
+source pyvenv/bin/activate
 # Window: source pyvenv/Scripts/activate
 # python manage.py makemigrations
 python manage.py migrate
@@ -118,9 +118,9 @@ python -m pip install --global-option=build_ext --global-option="-IC:\cygwin64\u
 
 # Same example but with explicit selection of pygraphviz or pydot
 python ./manage.py graph_models -a -g -o database_visualization.png
-python ./manage.py graph_models --pygraphviz -a -g -o database_visualization.png
+python ./manage.py graph_models --pygraphviz -a -g -o database_visualization.svg
 # Create a graph for only certain models
-python ./manage.py graph_models --pygraphviz -a --arrow-shape normal -g -o database_visualization.png
+python ./manage.py graph_models --pygraphviz -a --arrow-shape normal -g -o database_visualization.svg
 # Create a graph for only certain models
 python ./manage.py graph_models --pygraphviz -a -I Hotel,Room -o hotel_room_subsystem.png
 # Create a dot file for only the 'foo' and 'bar' applications of your project

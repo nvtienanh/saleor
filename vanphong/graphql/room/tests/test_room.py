@@ -37,7 +37,7 @@ from ....room.tasks import update_variants_names
 from ....room.tests.utils import create_image, create_pdf_file_with_image_ext
 from ....room.utils.costs import get_room_costs_data
 from ....hotel.models import Allocation, Stock, Hotel
-from ...core.enums import ReportingPeriod
+from ...core.enums import AttributeErrorCode, ReportingPeriod
 from ...tests.utils import (
     assert_no_permission,
     get_graphql_content,
@@ -1894,6 +1894,67 @@ def test_room_with_collections(
     assert len(data["collections"]) == 1
 
 
+def test_get_room_with_sorted_attribute_values(
+    staff_api_client,
+    room,
+    permission_manage_rooms,
+    room_type_page_reference_attribute,
+    page_list,
+):
+    # given
+    query = """
+        query getRoom($roomID: ID!) {
+            room(id: $roomID) {
+                attributes {
+                    attribute {
+                        name
+                    }
+                    values {
+                        id
+                        slug
+                        reference
+                    }
+                }
+            }
+        }
+        """
+    room_type = room.room_type
+    room_type.room_attributes.set([room_type_page_reference_attribute])
+
+    attr_value_1 = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        name=page_list[0].title,
+        slug=f"{room.pk}_{page_list[0].pk}",
+    )
+    attr_value_2 = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        name=page_list[1].title,
+        slug=f"{room.pk}_{page_list[1].pk}",
+    )
+
+    associate_attribute_values_to_instance(
+        room, room_type_page_reference_attribute, attr_value_2, attr_value_1
+    )
+
+    room_id = graphene.Node.to_global_id("Room", room.id)
+    variables = {"roomID": room_id}
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
+
+    # when
+    response = staff_api_client.post_graphql(query, variables)
+
+    # then
+    content = get_graphql_content(response)
+    data = content["data"]["room"]
+    assert len(data["attributes"]) == 1
+    values = data["attributes"][0]["values"]
+    assert len(values) == 2
+    assert [value["id"] for value in values] == [
+        graphene.Node.to_global_id("AttributeValue", val.pk)
+        for val in [attr_value_2, attr_value_1]
+    ]
+
+
 def test_filter_rooms_by_wrong_attributes(user_api_client, room, channel_USD):
     room_attr = room.room_type.room_attributes.get(slug="color")
     attr_value = (
@@ -2126,6 +2187,7 @@ CREATE_ROOM_MUTATION = """
                 roomCreate(
                     input: $input) {
                         room {
+                            id
                             category {
                                 name
                             }
@@ -2148,6 +2210,7 @@ CREATE_ROOM_MUTATION = """
                                 values {
                                     slug
                                     name
+                                    reference
                                     file {
                                         url
                                         contentType
@@ -2284,7 +2347,6 @@ def test_create_room_with_file_attribute(
     file_attribute,
     color_attribute,
     permission_manage_rooms,
-    settings,
 ):
     query = CREATE_ROOM_MUTATION
 
@@ -2331,6 +2393,7 @@ def test_create_room_with_file_attribute(
                     "name": existing_value.name,
                     "slug": f"{existing_value.slug}-2",
                     "file": {"url": existing_value.file_url, "contentType": None},
+                    "reference": None,
                 }
             ],
         },
@@ -2342,6 +2405,216 @@ def test_create_room_with_file_attribute(
     assert file_attribute.values.count() == values_count + 1
 
 
+def test_create_room_with_page_reference_attribute(
+    staff_api_client,
+    room_type,
+    category,
+    color_attribute,
+    room_type_page_reference_attribute,
+    permission_manage_rooms,
+    page,
+):
+    query = CREATE_ROOM_MUTATION
+
+    values_count = room_type_page_reference_attribute.values.count()
+
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.pk)
+    category_id = graphene.Node.to_global_id("Category", category.pk)
+    room_name = "test name"
+    room_slug = "room-test-slug"
+
+    # Add second attribute
+    room_type.room_attributes.add(room_type_page_reference_attribute)
+    reference_attr_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.id
+    )
+    reference = graphene.Node.to_global_id("Page", page.pk)
+
+    # test creating root room
+    variables = {
+        "input": {
+            "roomType": room_type_id,
+            "category": category_id,
+            "name": room_name,
+            "slug": room_slug,
+            "attributes": [{"id": reference_attr_id, "references": [reference]}],
+        }
+    }
+
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+    content = get_graphql_content(response)
+    data = content["data"]["roomCreate"]
+    assert data["roomErrors"] == []
+    assert data["room"]["name"] == room_name
+    assert data["room"]["slug"] == room_slug
+    assert data["room"]["roomType"]["name"] == room_type.name
+    assert data["room"]["category"]["name"] == category.name
+    _, room_id = graphene.Node.from_global_id(data["room"]["id"])
+    expected_attributes_data = [
+        {"attribute": {"slug": color_attribute.slug}, "values": []},
+        {
+            "attribute": {"slug": room_type_page_reference_attribute.slug},
+            "values": [
+                {
+                    "slug": f"{room_id}_{page.id}",
+                    "name": page.title,
+                    "file": None,
+                    "reference": reference,
+                }
+            ],
+        },
+    ]
+    for attr_data in data["room"]["attributes"]:
+        assert attr_data in expected_attributes_data
+
+    room_type_page_reference_attribute.refresh_from_db()
+    assert room_type_page_reference_attribute.values.count() == values_count + 1
+
+
+def test_create_room_with_room_reference_attribute(
+    staff_api_client,
+    room_type,
+    category,
+    color_attribute,
+    room_type_room_reference_attribute,
+    permission_manage_rooms,
+    room,
+):
+    query = CREATE_ROOM_MUTATION
+
+    values_count = room_type_room_reference_attribute.values.count()
+
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.pk)
+    category_id = graphene.Node.to_global_id("Category", category.pk)
+    room_name = "test name"
+    room_slug = "room-test-slug"
+
+    # Add second attribute
+    room_type.room_attributes.add(room_type_room_reference_attribute)
+    reference_attr_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.id
+    )
+    reference = graphene.Node.to_global_id("Room", room.pk)
+
+    # test creating root room
+    variables = {
+        "input": {
+            "roomType": room_type_id,
+            "category": category_id,
+            "name": room_name,
+            "slug": room_slug,
+            "attributes": [{"id": reference_attr_id, "references": [reference]}],
+        }
+    }
+
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+    content = get_graphql_content(response)
+    data = content["data"]["roomCreate"]
+    assert data["roomErrors"] == []
+    assert data["room"]["name"] == room_name
+    assert data["room"]["slug"] == room_slug
+    assert data["room"]["roomType"]["name"] == room_type.name
+    assert data["room"]["category"]["name"] == category.name
+    _, room_id = graphene.Node.from_global_id(data["room"]["id"])
+    expected_attributes_data = [
+        {"attribute": {"slug": color_attribute.slug}, "values": []},
+        {
+            "attribute": {"slug": room_type_room_reference_attribute.slug},
+            "values": [
+                {
+                    "slug": f"{room_id}_{room.id}",
+                    "name": room.name,
+                    "file": None,
+                    "reference": reference,
+                }
+            ],
+        },
+    ]
+    for attr_data in data["room"]["attributes"]:
+        assert attr_data in expected_attributes_data
+
+    room_type_room_reference_attribute.refresh_from_db()
+    assert room_type_room_reference_attribute.values.count() == values_count + 1
+
+
+def test_create_room_with_room_reference_attribute_values_saved_in_order(
+    staff_api_client,
+    room_type,
+    category,
+    color_attribute,
+    room_type_room_reference_attribute,
+    permission_manage_rooms,
+    room_list,
+):
+    query = CREATE_ROOM_MUTATION
+
+    values_count = room_type_room_reference_attribute.values.count()
+
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.pk)
+    category_id = graphene.Node.to_global_id("Category", category.pk)
+    room_name = "test name"
+    room_slug = "room-test-slug"
+
+    # Add second attribute
+    room_type.room_attributes.set([room_type_room_reference_attribute])
+    reference_attr_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.id
+    )
+    reference_1 = graphene.Node.to_global_id("Room", room_list[0].pk)
+    reference_2 = graphene.Node.to_global_id("Room", room_list[1].pk)
+    reference_3 = graphene.Node.to_global_id("Room", room_list[2].pk)
+
+    # test creating root room
+    reference_ids = [reference_3, reference_1, reference_2]
+    reference_instances = [room_list[2], room_list[0], room_list[1]]
+    variables = {
+        "input": {
+            "roomType": room_type_id,
+            "category": category_id,
+            "name": room_name,
+            "slug": room_slug,
+            "attributes": [{"id": reference_attr_id, "references": reference_ids}],
+        }
+    }
+
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+    content = get_graphql_content(response)
+    data = content["data"]["roomCreate"]
+    assert data["roomErrors"] == []
+    assert data["room"]["name"] == room_name
+    assert data["room"]["slug"] == room_slug
+    assert data["room"]["roomType"]["name"] == room_type.name
+    assert data["room"]["category"]["name"] == category.name
+    _, room_id = graphene.Node.from_global_id(data["room"]["id"])
+    expected_values = [
+        {
+            "slug": f"{room_id}_{room.id}",
+            "name": room.name,
+            "file": None,
+            "reference": reference,
+        }
+        for room, reference in zip(reference_instances, reference_ids)
+    ]
+
+    assert len(data["room"]["attributes"]) == 1
+    attribute_data = data["room"]["attributes"][0]
+    assert (
+        attribute_data["attribute"]["slug"]
+        == room_type_room_reference_attribute.slug
+    )
+    assert len(attribute_data["values"]) == 3
+    assert attribute_data["values"] == expected_values
+
+    room_type_room_reference_attribute.refresh_from_db()
+    assert room_type_room_reference_attribute.values.count() == values_count + 3
+
+
 def test_create_room_with_file_attribute_new_attribute_value(
     staff_api_client,
     room_type,
@@ -2349,7 +2622,6 @@ def test_create_room_with_file_attribute_new_attribute_value(
     file_attribute,
     color_attribute,
     permission_manage_rooms,
-    settings,
 ):
     query = CREATE_ROOM_MUTATION
 
@@ -2395,6 +2667,7 @@ def test_create_room_with_file_attribute_new_attribute_value(
                 {
                     "name": non_existing_value,
                     "slug": slugify(non_existing_value, allow_unicode=True),
+                    "reference": None,
                     "file": {
                         "url": "http://testserver/media/" + non_existing_value,
                         "contentType": None,
@@ -2417,7 +2690,6 @@ def test_create_room_with_file_attribute_not_required_no_file_url_given(
     file_attribute,
     color_attribute,
     permission_manage_rooms,
-    settings,
 ):
     query = CREATE_ROOM_MUTATION
 
@@ -2470,9 +2742,7 @@ def test_create_room_with_file_attribute_required_no_file_url_given(
     room_type,
     category,
     file_attribute,
-    color_attribute,
     permission_manage_rooms,
-    settings,
 ):
     query = CREATE_ROOM_MUTATION
 
@@ -2511,6 +2781,108 @@ def test_create_room_with_file_attribute_required_no_file_url_given(
     assert errors[0]["field"] == "attributes"
     assert errors[0]["attributes"] == [
         graphene.Node.to_global_id("Attribute", file_attribute.pk)
+    ]
+
+
+def test_create_room_with_page_reference_attribute_required_no_references(
+    staff_api_client,
+    room_type,
+    category,
+    room_type_page_reference_attribute,
+    permission_manage_rooms,
+):
+    query = CREATE_ROOM_MUTATION
+
+    room_type_page_reference_attribute.value_required = True
+    room_type_page_reference_attribute.save(update_fields=["value_required"])
+
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.pk)
+    category_id = graphene.Node.to_global_id("Category", category.pk)
+    room_name = "test name"
+    room_slug = "room-test-slug"
+
+    # Add second attribute
+    room_type.room_attributes.add(room_type_page_reference_attribute)
+    reference_attr_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.id
+    )
+
+    # test creating root room
+    variables = {
+        "input": {
+            "roomType": room_type_id,
+            "category": category_id,
+            "name": room_name,
+            "slug": room_slug,
+            "attributes": [{"id": reference_attr_id, "references": []}],
+        }
+    }
+
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+    content = get_graphql_content(response)
+    data = content["data"]["roomCreate"]
+    errors = data["roomErrors"]
+    assert not data["room"]
+    assert len(errors) == 1
+    assert errors[0]["code"] == RoomErrorCode.REQUIRED.name
+    assert errors[0]["field"] == "attributes"
+    assert errors[0]["attributes"] == [
+        graphene.Node.to_global_id(
+            "Attribute", room_type_page_reference_attribute.pk
+        )
+    ]
+
+
+def test_create_room_with_room_reference_attribute_required_no_references(
+    staff_api_client,
+    room_type,
+    category,
+    room_type_room_reference_attribute,
+    permission_manage_rooms,
+):
+    query = CREATE_ROOM_MUTATION
+
+    room_type_room_reference_attribute.value_required = True
+    room_type_room_reference_attribute.save(update_fields=["value_required"])
+
+    room_type_id = graphene.Node.to_global_id("RoomType", room_type.pk)
+    category_id = graphene.Node.to_global_id("Category", category.pk)
+    room_name = "test name"
+    room_slug = "room-test-slug"
+
+    # Add second attribute
+    room_type.room_attributes.add(room_type_room_reference_attribute)
+    reference_attr_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.id
+    )
+
+    # test creating root room
+    variables = {
+        "input": {
+            "roomType": room_type_id,
+            "category": category_id,
+            "name": room_name,
+            "slug": room_slug,
+            "attributes": [{"id": reference_attr_id, "references": []}],
+        }
+    }
+
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+    content = get_graphql_content(response)
+    data = content["data"]["roomCreate"]
+    errors = data["roomErrors"]
+    assert not data["room"]
+    assert len(errors) == 1
+    assert errors[0]["code"] == RoomErrorCode.REQUIRED.name
+    assert errors[0]["field"] == "attributes"
+    assert errors[0]["attributes"] == [
+        graphene.Node.to_global_id(
+            "Attribute", room_type_room_reference_attribute.pk
+        )
     ]
 
 
@@ -2741,7 +3113,6 @@ def test_create_room_no_slug_in_input(
     staff_api_client,
     room_type,
     category,
-    size_attribute,
     description_json,
     permission_manage_rooms,
     monkeypatch,
@@ -2790,9 +3161,6 @@ def test_create_room_no_slug_in_input(
 def test_create_room_no_category_id(
     staff_api_client,
     room_type,
-    category,
-    size_attribute,
-    description_json,
     permission_manage_rooms,
     monkeypatch,
 ):
@@ -2910,7 +3278,6 @@ def test_create_room_invalid_room_attributes(
     weight_attribute,
     description_json,
     permission_manage_rooms,
-    settings,
     monkeypatch,
 ):
     query = CREATE_ROOM_MUTATION
@@ -3175,8 +3542,10 @@ MUTATION_UPDATE_ROOM = """
                             name
                         }
                         values {
+                            id
                             name
                             slug
+                            reference
                             file {
                                 url
                                 contentType
@@ -3268,11 +3637,9 @@ def test_update_room_with_file_attribute_value(
     updated_webhook_mock,
     staff_api_client,
     file_attribute,
-    non_default_category,
     room,
     room_type,
     permission_manage_rooms,
-    color_attribute,
 ):
     # given
     query = MUTATION_UPDATE_ROOM
@@ -3306,8 +3673,10 @@ def test_update_room_with_file_attribute_value(
         "attribute": {"id": attribute_id, "name": file_attribute.name},
         "values": [
             {
+                "id": ANY,
                 "name": new_value,
                 "slug": slugify(new_value),
+                "reference": None,
                 "file": {
                     "url": "http://testserver/media/" + new_value,
                     "contentType": None,
@@ -3339,6 +3708,8 @@ def test_update_room_with_file_attribute_value_new_value_is_not_created(
     existing_value = file_attribute.values.first()
     associate_attribute_values_to_instance(room, file_attribute, existing_value)
 
+    values_count = file_attribute.values.count()
+
     variables = {
         "roomId": room_id,
         "input": {
@@ -3363,8 +3734,10 @@ def test_update_room_with_file_attribute_value_new_value_is_not_created(
         "attribute": {"id": attribute_id, "name": file_attribute.name},
         "values": [
             {
+                "id": graphene.Node.to_global_id("AttributeValue", existing_value.pk),
                 "name": existing_value.name,
                 "slug": existing_value.slug,
+                "reference": None,
                 "file": {
                     "url": existing_value.file_url,
                     "contentType": existing_value.content_type,
@@ -3373,6 +3746,9 @@ def test_update_room_with_file_attribute_value_new_value_is_not_created(
         ],
     }
     assert expected_file_att_data in attributes
+
+    file_attribute.refresh_from_db()
+    assert file_attribute.values.count() == values_count
 
     updated_webhook_mock.assert_called_once_with(room)
 
@@ -3400,6 +3776,459 @@ def test_update_room_rating(
     assert data["room"]["rating"] == expected_rating
     room.refresh_from_db()
     assert room.rating == expected_rating
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_update_room_with_page_reference_attribute_value(
+    updated_webhook_mock,
+    staff_api_client,
+    room_type_page_reference_attribute,
+    room,
+    room_type,
+    page,
+    permission_manage_rooms,
+):
+    # given
+    query = MUTATION_UPDATE_ROOM
+
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.pk
+    )
+    room_type.room_attributes.add(room_type_page_reference_attribute)
+
+    values_count = room_type_page_reference_attribute.values.count()
+
+    reference = graphene.Node.to_global_id("Page", page.pk)
+
+    variables = {
+        "roomId": room_id,
+        "input": {"attributes": [{"id": attribute_id, "references": [reference]}]},
+    }
+
+    # when
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+
+    # then
+    content = get_graphql_content(response)
+    data = content["data"]["roomUpdate"]
+    assert data["roomErrors"] == []
+
+    attributes = data["room"]["attributes"]
+
+    assert len(attributes) == 2
+    expected_file_att_data = {
+        "attribute": {
+            "id": attribute_id,
+            "name": room_type_page_reference_attribute.name,
+        },
+        "values": [
+            {
+                "id": ANY,
+                "name": page.title,
+                "slug": f"{room.id}_{page.id}",
+                "file": None,
+                "reference": reference,
+            }
+        ],
+    }
+    assert expected_file_att_data in attributes
+
+    updated_webhook_mock.assert_called_once_with(room)
+
+    room_type_page_reference_attribute.refresh_from_db()
+    assert room_type_page_reference_attribute.values.count() == values_count + 1
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_update_room_with_page_reference_attribute_existing_value(
+    updated_webhook_mock,
+    staff_api_client,
+    room_type_page_reference_attribute,
+    room,
+    room_type,
+    page,
+    permission_manage_rooms,
+):
+    # given
+    query = MUTATION_UPDATE_ROOM
+
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.pk
+    )
+    room_type.room_attributes.add(room_type_page_reference_attribute)
+    attr_value = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        name=page.title,
+        slug=f"{room.pk}_{page.pk}",
+    )
+    associate_attribute_values_to_instance(
+        room, room_type_page_reference_attribute, attr_value
+    )
+
+    values_count = room_type_page_reference_attribute.values.count()
+
+    reference = graphene.Node.to_global_id("Page", page.pk)
+
+    variables = {
+        "roomId": room_id,
+        "input": {"attributes": [{"id": attribute_id, "references": [reference]}]},
+    }
+
+    # when
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+
+    # then
+    content = get_graphql_content(response)
+    data = content["data"]["roomUpdate"]
+    assert data["roomErrors"] == []
+
+    attributes = data["room"]["attributes"]
+
+    assert len(attributes) == 2
+    expected_file_att_data = {
+        "attribute": {
+            "id": attribute_id,
+            "name": room_type_page_reference_attribute.name,
+        },
+        "values": [
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_value.pk),
+                "name": page.title,
+                "slug": f"{room.id}_{page.id}",
+                "file": None,
+                "reference": reference,
+            }
+        ],
+    }
+    assert expected_file_att_data in attributes
+
+    updated_webhook_mock.assert_called_once_with(room)
+
+    room_type_page_reference_attribute.refresh_from_db()
+    assert room_type_page_reference_attribute.values.count() == values_count
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_update_room_with_page_reference_attribute_value_not_given(
+    updated_webhook_mock,
+    staff_api_client,
+    room_type_page_reference_attribute,
+    room,
+    room_type,
+    permission_manage_rooms,
+):
+    # given
+    query = MUTATION_UPDATE_ROOM
+
+    room_type_page_reference_attribute.value_required = True
+    room_type_page_reference_attribute.save(update_fields=["value_required"])
+
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.pk
+    )
+    room_type.room_attributes.add(room_type_page_reference_attribute)
+
+    variables = {
+        "roomId": room_id,
+        "input": {"attributes": [{"id": attribute_id, "values": ["test"]}]},
+    }
+
+    # when
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+
+    # then
+    content = get_graphql_content(response)
+    data = content["data"]["roomUpdate"]
+    errors = data["roomErrors"]
+
+    assert not data["room"]
+    assert len(errors) == 1
+    assert errors[0]["field"] == "attributes"
+    assert errors[0]["code"] == AttributeErrorCode.REQUIRED.name
+
+    updated_webhook_mock.assert_not_called()
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_update_room_with_room_reference_attribute_value(
+    updated_webhook_mock,
+    staff_api_client,
+    room_type_room_reference_attribute,
+    room_list,
+    room_type,
+    permission_manage_rooms,
+):
+    # given
+    query = MUTATION_UPDATE_ROOM
+
+    room = room_list[0]
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    room_ref = room_list[1]
+
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.pk
+    )
+    room_type.room_attributes.add(room_type_room_reference_attribute)
+
+    values_count = room_type_room_reference_attribute.values.count()
+
+    reference = graphene.Node.to_global_id("Room", room_ref.pk)
+
+    variables = {
+        "roomId": room_id,
+        "input": {"attributes": [{"id": attribute_id, "references": [reference]}]},
+    }
+
+    # when
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+
+    # then
+    content = get_graphql_content(response)
+    data = content["data"]["roomUpdate"]
+    assert data["roomErrors"] == []
+
+    attributes = data["room"]["attributes"]
+
+    assert len(attributes) == 2
+    expected_file_att_data = {
+        "attribute": {
+            "id": attribute_id,
+            "name": room_type_room_reference_attribute.name,
+        },
+        "values": [
+            {
+                "id": ANY,
+                "name": room_ref.name,
+                "slug": f"{room.id}_{room_ref.id}",
+                "file": None,
+                "reference": reference,
+            }
+        ],
+    }
+    assert expected_file_att_data in attributes
+
+    updated_webhook_mock.assert_called_once_with(room)
+
+    room_type_room_reference_attribute.refresh_from_db()
+    assert room_type_room_reference_attribute.values.count() == values_count + 1
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_update_room_with_room_reference_attribute_existing_value(
+    updated_webhook_mock,
+    staff_api_client,
+    room_type_room_reference_attribute,
+    room_list,
+    room_type,
+    permission_manage_rooms,
+):
+    # given
+    query = MUTATION_UPDATE_ROOM
+
+    room = room_list[0]
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    room_ref = room_list[1]
+
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.pk
+    )
+    room_type.room_attributes.add(room_type_room_reference_attribute)
+    attr_value = AttributeValue.objects.create(
+        attribute=room_type_room_reference_attribute,
+        name=room_ref.name,
+        slug=f"{room.pk}_{room_ref.pk}",
+    )
+    associate_attribute_values_to_instance(
+        room, room_type_room_reference_attribute, attr_value
+    )
+
+    values_count = room_type_room_reference_attribute.values.count()
+
+    reference = graphene.Node.to_global_id("Room", room_ref.pk)
+
+    variables = {
+        "roomId": room_id,
+        "input": {"attributes": [{"id": attribute_id, "references": [reference]}]},
+    }
+
+    # when
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+
+    # then
+    content = get_graphql_content(response)
+    data = content["data"]["roomUpdate"]
+    assert data["roomErrors"] == []
+
+    attributes = data["room"]["attributes"]
+
+    assert len(attributes) == 2
+    expected_file_att_data = {
+        "attribute": {
+            "id": attribute_id,
+            "name": room_type_room_reference_attribute.name,
+        },
+        "values": [
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_value.pk),
+                "name": room_ref.name,
+                "slug": f"{room.id}_{room_ref.id}",
+                "file": None,
+                "reference": reference,
+            }
+        ],
+    }
+    assert expected_file_att_data in attributes
+
+    updated_webhook_mock.assert_called_once_with(room)
+
+    room_type_room_reference_attribute.refresh_from_db()
+    assert room_type_room_reference_attribute.values.count() == values_count
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_update_room_with_room_reference_attribute_value_not_given(
+    updated_webhook_mock,
+    staff_api_client,
+    room_type_room_reference_attribute,
+    room,
+    room_type,
+    permission_manage_rooms,
+):
+    # given
+    query = MUTATION_UPDATE_ROOM
+
+    room_type_room_reference_attribute.value_required = True
+    room_type_room_reference_attribute.save(update_fields=["value_required"])
+
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.pk
+    )
+    room_type.room_attributes.add(room_type_room_reference_attribute)
+
+    variables = {
+        "roomId": room_id,
+        "input": {"attributes": [{"id": attribute_id, "values": ["test"]}]},
+    }
+
+    # when
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+
+    # then
+    content = get_graphql_content(response)
+    data = content["data"]["roomUpdate"]
+    errors = data["roomErrors"]
+
+    assert not data["room"]
+    assert len(errors) == 1
+    assert errors[0]["field"] == "attributes"
+    assert errors[0]["code"] == AttributeErrorCode.REQUIRED.name
+
+    updated_webhook_mock.assert_not_called()
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_update_room_change_values_ordering(
+    updated_webhook_mock,
+    staff_api_client,
+    room,
+    permission_manage_rooms,
+    page_list,
+    room_type_page_reference_attribute,
+):
+    # given
+    query = MUTATION_UPDATE_ROOM
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.pk
+    )
+
+    room_type = room.room_type
+    room_type.room_attributes.set([room_type_page_reference_attribute])
+
+    attr_value_1 = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        name=page_list[0].title,
+        slug=f"{room.pk}_{page_list[0].pk}",
+    )
+    attr_value_2 = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        name=page_list[1].title,
+        slug=f"{room.pk}_{page_list[1].pk}",
+    )
+
+    associate_attribute_values_to_instance(
+        room, room_type_page_reference_attribute, attr_value_2, attr_value_1
+    )
+
+    assert list(
+        room.attributes.first().roomvalueassignment.values_list(
+            "value_id", flat=True
+        )
+    ) == [attr_value_2.pk, attr_value_1.pk]
+
+    variables = {
+        "roomId": room_id,
+        "input": {
+            "attributes": [
+                {
+                    "id": attribute_id,
+                    "references": [
+                        graphene.Node.to_global_id("Page", page_list[0].pk),
+                        graphene.Node.to_global_id("Page", page_list[1].pk),
+                    ],
+                }
+            ]
+        },
+    }
+
+    # when
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+
+    # then
+    content = get_graphql_content(response)
+    data = content["data"]["roomUpdate"]
+    assert data["roomErrors"] == []
+
+    attributes = data["room"]["attributes"]
+
+    assert len(attributes) == 1
+    values = attributes[0]["values"]
+    assert len(values) == 2
+    assert [value["id"] for value in values] == [
+        graphene.Node.to_global_id("AttributeValue", val.pk)
+        for val in [attr_value_1, attr_value_2]
+    ]
+    room.refresh_from_db()
+    assert list(
+        room.attributes.first().roomvalueassignment.values_list(
+            "value_id", flat=True
+        )
+    ) == [attr_value_1.pk, attr_value_2.pk]
+
+    updated_webhook_mock.assert_called_once_with(room)
 
 
 UPDATE_ROOM_SLUG_MUTATION = """
@@ -4060,6 +4889,7 @@ def test_room_type_query_only_variant_selections_value_set(
     room_type,
     file_attribute_with_file_input_type_without_values,
     author_page_attribute,
+    room_type_page_reference_attribute,
     room,
     permission_manage_rooms,
     monkeypatch,
@@ -4078,7 +4908,9 @@ def test_room_type_query_only_variant_selections_value_set(
     )
 
     room_type.variant_attributes.add(
-        file_attribute_with_file_input_type_without_values, author_page_attribute
+        file_attribute_with_file_input_type_without_values,
+        author_page_attribute,
+        room_type_page_reference_attribute,
     )
 
     variables = {

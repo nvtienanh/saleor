@@ -11,6 +11,12 @@ copy_rename () {
                 newpath="$(echo $pathname | sed -e 's/product/room/g')"
                 newpath="$(echo $newpath | sed -e 's/warehouse/hotel/g')"
                 newpath="$(echo $newpath | sed -e 's/saleor/vanphong/')"
+
+                # Rename .png file
+                case "$pathname" in
+                    *.png)
+                    newpath="$(echo $newpath | sed -e 's/saleor/vanphong/g')"
+                esac
                 
                 # Move new path
                 if ! [ -z "$newpath" ]; then

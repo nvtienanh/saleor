@@ -8,6 +8,7 @@ from ..account.enums import CountryCodeEnum
 from ..channel import ChannelContext
 from ..core.connection import CountableDjangoObjectType
 from ..decorators import one_of_permissions_required
+from ..meta.types import ObjectWithMetadata
 
 
 class HotelAddressInput(graphene.InputObjectType):
@@ -48,7 +49,7 @@ class Hotel(CountableDjangoObjectType):
     class Meta:
         description = "Represents hotel."
         model = models.Hotel
-        interfaces = [graphene.relay.Node]
+        interfaces = [graphene.relay.Node, ObjectWithMetadata]
         only_fields = [
             "id",
             "name",

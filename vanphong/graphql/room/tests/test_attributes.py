@@ -10,6 +10,7 @@ from ....attribute.models import (
     AttributeValue,
     AttributeVariant,
 )
+from ....attribute.utils import associate_attribute_values_to_instance
 from ....room.error_codes import RoomErrorCode
 from ....room.models import RoomType
 from ...attribute.enums import AttributeTypeEnum
@@ -707,7 +708,6 @@ def test_retrieve_room_attributes_input_type(
               node {
                 attributes {
                   values {
-                    type
                     inputType
                   }
                 }
@@ -727,7 +727,6 @@ def test_retrieve_room_attributes_input_type(
 
     for gql_attr in found_rooms[0]["node"]["attributes"]:
         assert len(gql_attr["values"]) == 1
-        assert gql_attr["values"][0]["type"] == "STRING"
         assert gql_attr["values"][0]["inputType"] == "DROPDOWN"
 
 
@@ -895,3 +894,476 @@ def test_sort_attributes_within_room_type(
         gql_type, gql_attr_id = graphene.Node.from_global_id(attr["id"])
         assert gql_type == "Attribute"
         assert int(gql_attr_id) == expected_pk
+
+
+ROOM_REORDER_ATTRIBUTE_VALUES_MUTATION = """
+    mutation RoomReorderAttributeValues(
+      $roomId: ID!
+      $attributeId: ID!
+      $moves: [ReorderInput]!
+    ) {
+      roomReorderAttributeValues(
+        roomId: $roomId
+        attributeId: $attributeId
+        moves: $moves
+      ) {
+        room {
+          id
+          attributes {
+            attribute {
+                id
+                slug
+            }
+            values {
+                id
+            }
+          }
+        }
+
+        roomErrors {
+          field
+          message
+          code
+          attributes
+          values
+        }
+      }
+    }
+"""
+
+
+def test_sort_room_attribute_values(
+    staff_api_client,
+    permission_manage_rooms,
+    room,
+    room_type_page_reference_attribute,
+):
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
+
+    room_type = room.room_type
+    room_type.room_attributes.clear()
+    room_type.room_attributes.add(room_type_page_reference_attribute)
+
+    room_id = graphene.Node.to_global_id("Room", room.id)
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.id
+    )
+    attr_values = AttributeValue.objects.bulk_create(
+        [
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{room.pk}_1",
+                name="test name 1",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{room.pk}_2",
+                name="test name 2",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{room.pk}_3",
+                name="test name 3",
+            ),
+        ]
+    )
+    associate_attribute_values_to_instance(
+        room, room_type_page_reference_attribute, *attr_values
+    )
+
+    variables = {
+        "roomId": room_id,
+        "attributeId": attribute_id,
+        "moves": [
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_values[0].pk),
+                "sortOrder": +1,
+            },
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_values[2].pk),
+                "sortOrder": -1,
+            },
+        ],
+    }
+
+    expected_order = [attr_values[1].pk, attr_values[2].pk, attr_values[0].pk]
+
+    content = get_graphql_content(
+        staff_api_client.post_graphql(
+            ROOM_REORDER_ATTRIBUTE_VALUES_MUTATION, variables
+        )
+    )["data"]["roomReorderAttributeValues"]
+    assert not content["roomErrors"]
+
+    assert content["room"]["id"] == room_id, "Did not return the correct room"
+
+    gql_attribute_values = content["room"]["attributes"][0]["values"]
+    assert len(gql_attribute_values) == 3
+
+    for attr, expected_pk in zip(gql_attribute_values, expected_order):
+        db_type, value_pk = graphene.Node.from_global_id(attr["id"])
+        assert db_type == "AttributeValue"
+        assert int(value_pk) == expected_pk
+
+
+def test_sort_room_attribute_values_invalid_attribute_id(
+    staff_api_client,
+    permission_manage_rooms,
+    room,
+    room_type_page_reference_attribute,
+    color_attribute,
+):
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
+
+    room_type = room.room_type
+    room_type.room_attributes.clear()
+    room_type.room_attributes.add(room_type_page_reference_attribute)
+
+    room_id = graphene.Node.to_global_id("Room", room.id)
+    attr_values = AttributeValue.objects.bulk_create(
+        [
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{room.pk}_1",
+                name="test name 1",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{room.pk}_2",
+                name="test name 2",
+            ),
+        ]
+    )
+    associate_attribute_values_to_instance(
+        room, room_type_page_reference_attribute, *attr_values
+    )
+
+    variables = {
+        "roomId": room_id,
+        "attributeId": graphene.Node.to_global_id("Attribute", color_attribute.pk),
+        "moves": [
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_values[0].pk),
+                "sortOrder": +1,
+            },
+        ],
+    }
+
+    content = get_graphql_content(
+        staff_api_client.post_graphql(
+            ROOM_REORDER_ATTRIBUTE_VALUES_MUTATION, variables
+        )
+    )["data"]["roomReorderAttributeValues"]
+    errors = content["roomErrors"]
+    assert not content["room"]
+    assert len(errors) == 1
+    assert errors[0]["code"] == RoomErrorCode.NOT_FOUND.name
+    assert errors[0]["field"] == "attributeId"
+
+
+def test_sort_room_attribute_values_invalid_value_id(
+    staff_api_client,
+    permission_manage_rooms,
+    room,
+    room_type_page_reference_attribute,
+    size_page_attribute,
+):
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
+
+    room_type = room.room_type
+    room_type.room_attributes.clear()
+    room_type.room_attributes.add(room_type_page_reference_attribute)
+
+    room_id = graphene.Node.to_global_id("Room", room.id)
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.id
+    )
+    attr_values = AttributeValue.objects.bulk_create(
+        [
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{room.pk}_1",
+                name="test name 1",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{room.pk}_2",
+                name="test name 2",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{room.pk}_3",
+                name="test name 3",
+            ),
+        ]
+    )
+    associate_attribute_values_to_instance(
+        room, room_type_page_reference_attribute, *attr_values
+    )
+
+    invalid_value_id = graphene.Node.to_global_id(
+        "AttributeValue", size_page_attribute.values.first().pk
+    )
+
+    variables = {
+        "roomId": room_id,
+        "attributeId": attribute_id,
+        "moves": [
+            {"id": invalid_value_id, "sortOrder": +1},
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_values[2].pk),
+                "sortOrder": -1,
+            },
+        ],
+    }
+
+    content = get_graphql_content(
+        staff_api_client.post_graphql(
+            ROOM_REORDER_ATTRIBUTE_VALUES_MUTATION, variables
+        )
+    )["data"]["roomReorderAttributeValues"]
+    errors = content["roomErrors"]
+    assert not content["room"]
+    assert len(errors) == 1
+    assert errors[0]["code"] == RoomErrorCode.NOT_FOUND.name
+    assert errors[0]["field"] == "moves"
+    assert errors[0]["values"] == [invalid_value_id]
+
+
+ROOM_VARIANT_REORDER_ATTRIBUTE_VALUES_MUTATION = """
+    mutation RoomVariantReorderAttributeValues(
+      $variantId: ID!
+      $attributeId: ID!
+      $moves: [ReorderInput]!
+    ) {
+      roomVariantReorderAttributeValues(
+        variantId: $variantId
+        attributeId: $attributeId
+        moves: $moves
+      ) {
+        roomVariant {
+          id
+          attributes {
+            attribute {
+                id
+                slug
+            }
+            values {
+                id
+            }
+          }
+        }
+
+        roomErrors {
+          field
+          message
+          code
+          attributes
+          values
+        }
+      }
+    }
+"""
+
+
+def test_sort_room_variant_attribute_values(
+    staff_api_client,
+    permission_manage_rooms,
+    room,
+    room_type_page_reference_attribute,
+):
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
+
+    variant = room.variants.first()
+    room_type = room.room_type
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(room_type_page_reference_attribute)
+
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.id
+    )
+    attr_values = AttributeValue.objects.bulk_create(
+        [
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{variant.pk}_1",
+                name="test name 1",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{variant.pk}_2",
+                name="test name 2",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{variant.pk}_3",
+                name="test name 3",
+            ),
+        ]
+    )
+    associate_attribute_values_to_instance(
+        variant, room_type_page_reference_attribute, *attr_values
+    )
+
+    variables = {
+        "variantId": variant_id,
+        "attributeId": attribute_id,
+        "moves": [
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_values[0].pk),
+                "sortOrder": +1,
+            },
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_values[2].pk),
+                "sortOrder": -1,
+            },
+        ],
+    }
+
+    expected_order = [attr_values[1].pk, attr_values[2].pk, attr_values[0].pk]
+
+    content = get_graphql_content(
+        staff_api_client.post_graphql(
+            ROOM_VARIANT_REORDER_ATTRIBUTE_VALUES_MUTATION, variables
+        )
+    )["data"]["roomVariantReorderAttributeValues"]
+    assert not content["roomErrors"]
+
+    assert (
+        content["roomVariant"]["id"] == variant_id
+    ), "Did not return the correct room variant"
+
+    gql_attribute_values = content["roomVariant"]["attributes"][0]["values"]
+    assert len(gql_attribute_values) == 3
+
+    for attr, expected_pk in zip(gql_attribute_values, expected_order):
+        db_type, value_pk = graphene.Node.from_global_id(attr["id"])
+        assert db_type == "AttributeValue"
+        assert int(value_pk) == expected_pk
+
+
+def test_sort_room_variant_attribute_values_invalid_attribute_id(
+    staff_api_client,
+    permission_manage_rooms,
+    room,
+    room_type_page_reference_attribute,
+    color_attribute,
+):
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
+
+    variant = room.variants.first()
+    room_type = room.room_type
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(room_type_page_reference_attribute)
+
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
+    attr_values = AttributeValue.objects.bulk_create(
+        [
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{variant.pk}_1",
+                name="test name 1",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{variant.pk}_2",
+                name="test name 2",
+            ),
+        ]
+    )
+    associate_attribute_values_to_instance(
+        variant, room_type_page_reference_attribute, *attr_values
+    )
+
+    variables = {
+        "variantId": variant_id,
+        "attributeId": graphene.Node.to_global_id("Attribute", color_attribute.pk),
+        "moves": [
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_values[0].pk),
+                "sortOrder": +1,
+            },
+        ],
+    }
+
+    content = get_graphql_content(
+        staff_api_client.post_graphql(
+            ROOM_VARIANT_REORDER_ATTRIBUTE_VALUES_MUTATION, variables
+        )
+    )["data"]["roomVariantReorderAttributeValues"]
+    errors = content["roomErrors"]
+    assert not content["roomVariant"]
+    assert len(errors) == 1
+    assert errors[0]["code"] == RoomErrorCode.NOT_FOUND.name
+    assert errors[0]["field"] == "attributeId"
+
+
+def test_sort_room_variant_attribute_values_invalid_value_id(
+    staff_api_client,
+    permission_manage_rooms,
+    room,
+    room_type_page_reference_attribute,
+    size_page_attribute,
+):
+    staff_api_client.user.user_permissions.add(permission_manage_rooms)
+
+    variant = room.variants.first()
+    room_type = room.room_type
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(room_type_page_reference_attribute)
+
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.id)
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.id
+    )
+    attr_values = AttributeValue.objects.bulk_create(
+        [
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{variant.pk}_1",
+                name="test name 1",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{variant.pk}_2",
+                name="test name 2",
+            ),
+            AttributeValue(
+                attribute=room_type_page_reference_attribute,
+                slug=f"{variant.pk}_3",
+                name="test name 3",
+            ),
+        ]
+    )
+    associate_attribute_values_to_instance(
+        variant, room_type_page_reference_attribute, *attr_values
+    )
+
+    invalid_value_id = graphene.Node.to_global_id(
+        "AttributeValue", size_page_attribute.values.first().pk
+    )
+
+    variables = {
+        "variantId": variant_id,
+        "attributeId": attribute_id,
+        "moves": [
+            {"id": invalid_value_id, "sortOrder": +1},
+            {
+                "id": graphene.Node.to_global_id("AttributeValue", attr_values[2].pk),
+                "sortOrder": -1,
+            },
+        ],
+    }
+
+    content = get_graphql_content(
+        staff_api_client.post_graphql(
+            ROOM_VARIANT_REORDER_ATTRIBUTE_VALUES_MUTATION, variables
+        )
+    )["data"]["roomVariantReorderAttributeValues"]
+    errors = content["roomErrors"]
+    assert not content["roomVariant"]
+    assert len(errors) == 1
+    assert errors[0]["code"] == RoomErrorCode.NOT_FOUND.name
+    assert errors[0]["field"] == "moves"
+    assert errors[0]["values"] == [invalid_value_id]

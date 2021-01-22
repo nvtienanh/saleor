@@ -8,6 +8,7 @@ from measurement.measures import Weight
 from prices import Money, TaxedMoney
 
 from ....attribute import AttributeInputType
+from ....attribute.models import AttributeValue
 from ....attribute.utils import associate_attribute_values_to_instance
 from ....core.weight import WeightUnits
 from ....order import OrderStatus
@@ -271,6 +272,7 @@ CREATE_VARIANT_MUTATION = """
                       code
                     }
                     roomVariant {
+                        id
                         name
                         sku
                         attributes {
@@ -280,6 +282,7 @@ CREATE_VARIANT_MUTATION = """
                             values {
                                 name
                                 slug
+                                reference
                                 file {
                                     url
                                     contentType
@@ -543,6 +546,274 @@ def test_create_variant_with_file_attribute_no_file_url_given(
     assert file_attribute.values.count() == values_count
 
     updated_webhook_mock.assert_called_once_with(room)
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_create_variant_with_page_reference_attribute(
+    updated_webhook_mock,
+    staff_api_client,
+    room,
+    room_type,
+    room_type_page_reference_attribute,
+    page_list,
+    permission_manage_rooms,
+    hotel,
+):
+    query = CREATE_VARIANT_MUTATION
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    sku = "1"
+
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(room_type_page_reference_attribute)
+    ref_attr_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.id
+    )
+
+    page_ref_1 = graphene.Node.to_global_id("Page", page_list[0].pk)
+    page_ref_2 = graphene.Node.to_global_id("Page", page_list[1].pk)
+
+    values_count = room_type_page_reference_attribute.values.count()
+
+    stocks = [
+        {
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
+            "quantity": 20,
+        }
+    ]
+
+    variables = {
+        "roomId": room_id,
+        "sku": sku,
+        "stocks": stocks,
+        "attributes": [{"id": ref_attr_id, "references": [page_ref_1, page_ref_2]}],
+        "trackInventory": True,
+    }
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+    content = get_graphql_content(response)["data"]["roomVariantCreate"]
+    assert not content["roomErrors"]
+    data = content["roomVariant"]
+    assert data["sku"] == sku
+    variant_id = data["id"]
+    _, variant_pk = graphene.Node.from_global_id(variant_id)
+    assert (
+        data["attributes"][0]["attribute"]["slug"]
+        == room_type_page_reference_attribute.slug
+    )
+    expected_values = [
+        {
+            "slug": f"{variant_pk}_{page_list[0].pk}",
+            "file": None,
+            "reference": page_ref_1,
+            "name": page_list[0].title,
+        },
+        {
+            "slug": f"{variant_pk}_{page_list[1].pk}",
+            "file": None,
+            "reference": page_ref_2,
+            "name": page_list[1].title,
+        },
+    ]
+    for value in expected_values:
+        assert value in data["attributes"][0]["values"]
+    assert len(data["stocks"]) == 1
+    assert data["stocks"][0]["quantity"] == stocks[0]["quantity"]
+    assert data["stocks"][0]["hotel"]["slug"] == hotel.slug
+
+    room_type_page_reference_attribute.refresh_from_db()
+    assert room_type_page_reference_attribute.values.count() == values_count + 2
+
+    updated_webhook_mock.assert_called_once_with(room)
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_create_variant_with_page_reference_attribute_no_references_given(
+    updated_webhook_mock,
+    staff_api_client,
+    room,
+    room_type,
+    room_type_page_reference_attribute,
+    permission_manage_rooms,
+    hotel,
+):
+    query = CREATE_VARIANT_MUTATION
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    sku = "1"
+
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(room_type_page_reference_attribute)
+    ref_attr_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.id
+    )
+
+    values_count = room_type_page_reference_attribute.values.count()
+
+    stocks = [
+        {
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
+            "quantity": 20,
+        }
+    ]
+
+    variables = {
+        "roomId": room_id,
+        "sku": sku,
+        "stocks": stocks,
+        "attributes": [{"id": ref_attr_id, "file": "test.jpg"}],
+        "trackInventory": True,
+    }
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+    content = get_graphql_content(response)["data"]["roomVariantCreate"]
+    errors = content["roomErrors"]
+    data = content["roomVariant"]
+    assert not data
+    assert len(errors) == 1
+    assert errors[0]["code"] == RoomErrorCode.REQUIRED.name
+    assert errors[0]["field"] == "attributes"
+    assert errors[0]["attributes"] == [ref_attr_id]
+
+    room_type_page_reference_attribute.refresh_from_db()
+    assert room_type_page_reference_attribute.values.count() == values_count
+
+    updated_webhook_mock.assert_not_called()
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_create_variant_with_room_reference_attribute(
+    updated_webhook_mock,
+    staff_api_client,
+    room,
+    room_type,
+    room_type_room_reference_attribute,
+    room_list,
+    permission_manage_rooms,
+    hotel,
+):
+    query = CREATE_VARIANT_MUTATION
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    sku = "1"
+
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(room_type_room_reference_attribute)
+    ref_attr_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.id
+    )
+
+    room_ref_1 = graphene.Node.to_global_id("Room", room_list[0].pk)
+    room_ref_2 = graphene.Node.to_global_id("Room", room_list[1].pk)
+
+    values_count = room_type_room_reference_attribute.values.count()
+
+    stocks = [
+        {
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
+            "quantity": 20,
+        }
+    ]
+
+    variables = {
+        "roomId": room_id,
+        "sku": sku,
+        "stocks": stocks,
+        "attributes": [
+            {"id": ref_attr_id, "references": [room_ref_1, room_ref_2]}
+        ],
+        "trackInventory": True,
+    }
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+    content = get_graphql_content(response)["data"]["roomVariantCreate"]
+    assert not content["roomErrors"]
+    data = content["roomVariant"]
+    assert data["sku"] == sku
+    variant_id = data["id"]
+    _, variant_pk = graphene.Node.from_global_id(variant_id)
+    assert (
+        data["attributes"][0]["attribute"]["slug"]
+        == room_type_room_reference_attribute.slug
+    )
+    expected_values = [
+        {
+            "slug": f"{variant_pk}_{room_list[0].pk}",
+            "file": None,
+            "reference": room_ref_1,
+            "name": room_list[0].name,
+        },
+        {
+            "slug": f"{variant_pk}_{room_list[1].pk}",
+            "file": None,
+            "reference": room_ref_2,
+            "name": room_list[1].name,
+        },
+    ]
+    for value in expected_values:
+        assert value in data["attributes"][0]["values"]
+    assert len(data["stocks"]) == 1
+    assert data["stocks"][0]["quantity"] == stocks[0]["quantity"]
+    assert data["stocks"][0]["hotel"]["slug"] == hotel.slug
+
+    room_type_room_reference_attribute.refresh_from_db()
+    assert room_type_room_reference_attribute.values.count() == values_count + 2
+
+    updated_webhook_mock.assert_called_once_with(room)
+
+
+@patch("vanphong.plugins.manager.PluginsManager.room_updated")
+def test_create_variant_with_room_reference_attribute_no_references_given(
+    updated_webhook_mock,
+    staff_api_client,
+    room,
+    room_type,
+    room_type_room_reference_attribute,
+    permission_manage_rooms,
+    hotel,
+):
+    query = CREATE_VARIANT_MUTATION
+    room_id = graphene.Node.to_global_id("Room", room.pk)
+    sku = "1"
+
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(room_type_room_reference_attribute)
+    ref_attr_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.id
+    )
+
+    values_count = room_type_room_reference_attribute.values.count()
+
+    stocks = [
+        {
+            "hotel": graphene.Node.to_global_id("Hotel", hotel.pk),
+            "quantity": 20,
+        }
+    ]
+
+    variables = {
+        "roomId": room_id,
+        "sku": sku,
+        "stocks": stocks,
+        "attributes": [{"id": ref_attr_id, "file": "test.jpg"}],
+        "trackInventory": True,
+    }
+    response = staff_api_client.post_graphql(
+        query, variables, permissions=[permission_manage_rooms]
+    )
+    content = get_graphql_content(response)["data"]["roomVariantCreate"]
+    errors = content["roomErrors"]
+    data = content["roomVariant"]
+    assert not data
+    assert len(errors) == 1
+    assert errors[0]["code"] == RoomErrorCode.REQUIRED.name
+    assert errors[0]["field"] == "attributes"
+    assert errors[0]["attributes"] == [ref_attr_id]
+
+    room_type_room_reference_attribute.refresh_from_db()
+    assert room_type_room_reference_attribute.values.count() == values_count
+
+    updated_webhook_mock.assert_not_called()
 
 
 def test_create_room_variant_with_negative_weight(
@@ -932,12 +1203,14 @@ QUERY_UPDATE_VARIANT_ATTRIBUTES = """
                             slug
                         }
                         values {
+                            id
                             slug
                             name
                             file {
                                 url
                                 contentType
                             }
+                            reference
                         }
                     }
                 }
@@ -1268,6 +1541,203 @@ def test_update_room_variant_with_file_attribute_new_value_is_not_created(
     assert value_data["name"] == existing_value.name
     assert value_data["file"]["url"] == existing_value.file_url
     assert value_data["file"]["contentType"] == existing_value.content_type
+
+
+def test_update_room_variant_with_page_reference_attribute(
+    staff_api_client,
+    room,
+    page,
+    room_type_page_reference_attribute,
+    permission_manage_rooms,
+):
+    variant = room.variants.first()
+    sku = str(uuid4())[:12]
+    assert not variant.sku == sku
+
+    room_type = room.room_type
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(room_type_page_reference_attribute)
+
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    ref_attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_page_reference_attribute.pk
+    )
+    reference = graphene.Node.to_global_id("Page", page.pk)
+
+    variables = {
+        "id": variant_id,
+        "sku": sku,
+        "attributes": [{"id": ref_attribute_id, "references": [reference]}],
+    }
+
+    response = staff_api_client.post_graphql(
+        QUERY_UPDATE_VARIANT_ATTRIBUTES,
+        variables,
+        permissions=[permission_manage_rooms],
+    )
+    content = get_graphql_content(response)
+
+    data = content["data"]["roomVariantUpdate"]
+    assert not data["errors"]
+    variant_data = data["roomVariant"]
+    assert variant_data
+    assert variant_data["sku"] == sku
+    assert len(variant_data["attributes"]) == 1
+    assert (
+        variant_data["attributes"][0]["attribute"]["slug"]
+        == room_type_page_reference_attribute.slug
+    )
+    assert len(variant_data["attributes"][0]["values"]) == 1
+    assert (
+        variant_data["attributes"][0]["values"][0]["slug"] == f"{variant.pk}_{page.pk}"
+    )
+    assert variant_data["attributes"][0]["values"][0]["reference"] == reference
+
+
+def test_update_room_variant_with_room_reference_attribute(
+    staff_api_client,
+    room_list,
+    room_type_room_reference_attribute,
+    permission_manage_rooms,
+):
+    room = room_list[0]
+    room_ref = room_list[1]
+
+    variant = room.variants.first()
+    sku = str(uuid4())[:12]
+    assert not variant.sku == sku
+
+    room_type = room.room_type
+    room_type.variant_attributes.clear()
+    room_type.variant_attributes.add(room_type_room_reference_attribute)
+
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+    ref_attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.pk
+    )
+    reference = graphene.Node.to_global_id("Room", room_ref.pk)
+
+    variables = {
+        "id": variant_id,
+        "sku": sku,
+        "attributes": [{"id": ref_attribute_id, "references": [reference]}],
+    }
+
+    response = staff_api_client.post_graphql(
+        QUERY_UPDATE_VARIANT_ATTRIBUTES,
+        variables,
+        permissions=[permission_manage_rooms],
+    )
+    content = get_graphql_content(response)
+
+    data = content["data"]["roomVariantUpdate"]
+    assert not data["errors"]
+    variant_data = data["roomVariant"]
+    assert variant_data
+    assert variant_data["sku"] == sku
+    assert len(variant_data["attributes"]) == 1
+    assert (
+        variant_data["attributes"][0]["attribute"]["slug"]
+        == room_type_room_reference_attribute.slug
+    )
+    assert len(variant_data["attributes"][0]["values"]) == 1
+    assert (
+        variant_data["attributes"][0]["values"][0]["slug"]
+        == f"{variant.pk}_{room_ref.pk}"
+    )
+    assert variant_data["attributes"][0]["values"][0]["reference"] == reference
+
+
+def test_update_room_variant_change_attribute_values_ordering(
+    staff_api_client,
+    variant,
+    room_type_room_reference_attribute,
+    permission_manage_rooms,
+    room_list,
+):
+    # given
+    room_type = variant.room.room_type
+    room_type.variant_attributes.set([room_type_room_reference_attribute])
+    sku = str(uuid4())[:12]
+
+    variant_id = graphene.Node.to_global_id("RoomVariant", variant.pk)
+
+    attribute_id = graphene.Node.to_global_id(
+        "Attribute", room_type_room_reference_attribute.pk
+    )
+
+    attr_value_1 = AttributeValue.objects.create(
+        attribute=room_type_room_reference_attribute,
+        name=room_list[0].name,
+        slug=f"{variant.pk}_{room_list[0].pk}",
+    )
+    attr_value_2 = AttributeValue.objects.create(
+        attribute=room_type_room_reference_attribute,
+        name=room_list[1].name,
+        slug=f"{variant.pk}_{room_list[1].pk}",
+    )
+    attr_value_3 = AttributeValue.objects.create(
+        attribute=room_type_room_reference_attribute,
+        name=room_list[2].name,
+        slug=f"{variant.pk}_{room_list[2].pk}",
+    )
+
+    associate_attribute_values_to_instance(
+        variant,
+        room_type_room_reference_attribute,
+        attr_value_3,
+        attr_value_2,
+        attr_value_1,
+    )
+
+    assert list(
+        variant.attributes.first().variantvalueassignment.values_list(
+            "value_id", flat=True
+        )
+    ) == [attr_value_3.pk, attr_value_2.pk, attr_value_1.pk]
+
+    new_ref_order = [room_list[1], room_list[0], room_list[2]]
+    variables = {
+        "id": variant_id,
+        "sku": sku,
+        "attributes": [
+            {
+                "id": attribute_id,
+                "references": [
+                    graphene.Node.to_global_id("Room", ref.pk)
+                    for ref in new_ref_order
+                ],
+            }
+        ],
+    }
+
+    # when
+    response = staff_api_client.post_graphql(
+        QUERY_UPDATE_VARIANT_ATTRIBUTES,
+        variables,
+        permissions=[permission_manage_rooms],
+    )
+
+    # then
+    content = get_graphql_content(response)
+    data = content["data"]["roomVariantUpdate"]
+    assert data["roomErrors"] == []
+
+    attributes = data["roomVariant"]["attributes"]
+
+    assert len(attributes) == 1
+    values = attributes[0]["values"]
+    assert len(values) == 3
+    assert [value["id"] for value in values] == [
+        graphene.Node.to_global_id("AttributeValue", val.pk)
+        for val in [attr_value_2, attr_value_1, attr_value_3]
+    ]
+    variant.refresh_from_db()
+    assert list(
+        variant.attributes.first().variantvalueassignment.values_list(
+            "value_id", flat=True
+        )
+    ) == [attr_value_2.pk, attr_value_1.pk, attr_value_3.pk]
 
 
 @pytest.mark.parametrize(
