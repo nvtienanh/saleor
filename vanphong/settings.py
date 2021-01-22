@@ -524,6 +524,7 @@ PLUGINS = [
     "vanphong.payment.gateways.braintree.plugin.BraintreeGatewayPlugin",
     "vanphong.payment.gateways.razorpay.plugin.RazorpayGatewayPlugin",
     "vanphong.payment.gateways.adyen.plugin.AdyenGatewayPlugin",
+    "vanphong.payment.gateways.authorize_net.plugin.AuthorizeNetGatewayPlugin",
     "vanphong.plugins.invoicing.plugin.InvoicingPlugin",
 ]
 

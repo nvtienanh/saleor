@@ -10,6 +10,7 @@ from ...order import models as order_models
 from ...page import models as page_models
 from ...room import models as room_models
 from ...shipping import models as shipping_models
+from ...hotel import models as hotel_models
 from ..utils import get_user_or_app_from_context
 from .permissions import PRIVATE_META_PERMISSION_MAP
 
@@ -28,6 +29,7 @@ def resolve_object_with_metadata_type(instance: ModelWithMetadata):
     from ..page import types as page_types
     from ..room import types as room_types
     from ..shipping import types as shipping_types
+    from ..hotel import types as hotel_types
 
     MODEL_TO_TYPE_MAP = {
         attribute_models.Attribute: attribute_types.Attribute,
@@ -49,6 +51,7 @@ def resolve_object_with_metadata_type(instance: ModelWithMetadata):
         shipping_models.ShippingZone: shipping_types.ShippingZone,
         app_models.App: app_types.App,
         account_models.User: account_types.User,
+        hotel_models.Hotel: hotel_types.Hotel,
     }
     return MODEL_TO_TYPE_MAP.get(instance.__class__, None)
 

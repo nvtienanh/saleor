@@ -1,6 +1,6 @@
 from measurement.measures import Weight
 
-from .....attribute.models import Attribute
+from .....attribute.models import Attribute, AttributeValue
 from .....attribute.utils import associate_attribute_values_to_instance
 from .....channel.models import Channel
 from .....room.models import Room, RoomVariant, VariantImage
@@ -227,16 +227,72 @@ def test_get_rooms_data_for_specified_hotels_channels_and_attributes(
     room_with_image,
     room_with_variant_with_two_attributes,
     file_attribute,
+    room_type_page_reference_attribute,
+    room_type_room_reference_attribute,
+    page_list,
 ):
     # given
     room.variants.add(variant_with_many_stocks)
-    room.room_type.variant_attributes.add(file_attribute)
-    room.room_type.room_attributes.add(file_attribute)
+    room.room_type.variant_attributes.add(
+        file_attribute,
+        room_type_page_reference_attribute,
+        room_type_room_reference_attribute,
+    )
+    room.room_type.room_attributes.add(
+        file_attribute,
+        room_type_page_reference_attribute,
+        room_type_room_reference_attribute,
+    )
+
+    # add file attribute
     associate_attribute_values_to_instance(
         variant_with_many_stocks, file_attribute, file_attribute.values.first()
     )
     associate_attribute_values_to_instance(
         room, file_attribute, file_attribute.values.first()
+    )
+
+    # add page reference attribute
+    room_page_ref_value = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        slug=f"{room.pk}_{page_list[0].pk}",
+        name=page_list[0].title,
+    )
+    variant_page_ref_value = AttributeValue.objects.create(
+        attribute=room_type_page_reference_attribute,
+        slug=f"{variant_with_many_stocks.pk}_{page_list[1].pk}",
+        name=page_list[1].title,
+    )
+    associate_attribute_values_to_instance(
+        variant_with_many_stocks,
+        room_type_page_reference_attribute,
+        variant_page_ref_value,
+    )
+    associate_attribute_values_to_instance(
+        room, room_type_page_reference_attribute, room_page_ref_value
+    )
+
+    # add room reference attribute
+    variant_room_ref_value = AttributeValue.objects.create(
+        attribute=room_type_room_reference_attribute,
+        slug=(
+            f"{variant_with_many_stocks.pk}"
+            f"_{room_with_variant_with_two_attributes.pk}"
+        ),
+        name=room_with_variant_with_two_attributes.name,
+    )
+    room_room_ref_value = AttributeValue.objects.create(
+        attribute=room_type_room_reference_attribute,
+        slug=f"{room.pk}_{room_with_image.pk}",
+        name=room_with_image.name,
+    )
+    associate_attribute_values_to_instance(
+        variant_with_many_stocks,
+        room_type_room_reference_attribute,
+        variant_room_ref_value,
+    )
+    associate_attribute_values_to_instance(
+        room, room_type_room_reference_attribute, room_room_ref_value
     )
 
     rooms = Room.objects.all()

@@ -42,7 +42,9 @@ from .filters import (
 from .mutations.attributes import (
     RoomAttributeAssign,
     RoomAttributeUnassign,
+    RoomReorderAttributeValues,
     RoomTypeReorderAttributes,
+    RoomVariantReorderAttributeValues,
 )
 from .mutations.channels import (
     CollectionChannelListingUpdate,
@@ -405,6 +407,7 @@ class RoomMutations(graphene.ObjectType):
     room_type_bulk_delete = RoomTypeBulkDelete.Field()
     room_type_update = RoomTypeUpdate.Field()
     room_type_reorder_attributes = RoomTypeReorderAttributes.Field()
+    room_reorder_attribute_values = RoomReorderAttributeValues.Field()
 
     digital_content_create = DigitalContentCreate.Field()
     digital_content_delete = DigitalContentDelete.Field()
@@ -423,6 +426,9 @@ class RoomMutations(graphene.ObjectType):
     room_variant_set_default = RoomVariantSetDefault.Field()
     room_variant_translate = RoomVariantTranslate.Field()
     room_variant_channel_listing_update = RoomVariantChannelListingUpdate.Field()
+    room_variant_reorder_attribute_values = (
+        RoomVariantReorderAttributeValues.Field()
+    )
 
     variant_image_assign = VariantImageAssign.Field()
     variant_image_unassign = VariantImageUnassign.Field()
