@@ -36,6 +36,7 @@ from ..enums import (
     WebhookErrorCode,
     WeightUnitsEnum,
     WishlistErrorCode,
+    PlaceErrorCode,
 )
 from .money import VAT
 
@@ -314,6 +315,10 @@ class WishlistError(RoomWithoutVariantError):
 
 class TranslationError(Error):
     code = TranslationErrorCode(description="The error code.", required=True)
+
+
+class PlaceError(Error):
+    code = PlaceErrorCode(description="The error code.", required=True)
 
 
 class SeoInput(graphene.InputObjectType):

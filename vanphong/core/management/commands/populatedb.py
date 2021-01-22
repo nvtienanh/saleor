@@ -18,6 +18,7 @@ from ...utils.random_data import (
     create_permission_groups,
     create_room_sales,
     create_rooms_by_schema,
+    create_places_by_schema,
     create_shipping_zones,
     create_staffs,
     create_users,
@@ -102,6 +103,8 @@ class Command(BaseCommand):
             self.stdout.write(msg)
         create_rooms_by_schema(self.placeholders_dir, create_images)
         self.stdout.write("Created rooms")
+        create_places_by_schema()
+        self.stdout.write("Created places")
         for msg in create_room_sales(5):
             self.stdout.write(msg)
         for msg in create_vouchers():

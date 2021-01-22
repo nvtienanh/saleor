@@ -1,0 +1,62 @@
+[
+    {
+        "model": "place.place",
+        "pk": 1,
+        "fields": {
+            "name": "Hồ Chí Minh",
+            "province": "Hồ Chí Minh",
+            "place_type": "Thành phố",
+            "featured_image": "http://baochinhphu.vn/Uploaded/hoangtrongdien/2020_08_21/tphcm-1499397412004.jpg",
+            "country": "Việt Nam",
+            "hotels": 15
+        }
+    },
+    {
+        "model": "place.place",
+        "pk": 2,
+        "fields": {
+            "name": "Hà Nội",
+            "province": "Hà Nội",
+            "place_type": "Thủ đô",
+            "featured_image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Hanoi_Montage.jpg/800px-Hanoi_Montage.jpg",
+            "country": "Việt Nam",
+            "hotels": 200
+        }
+    },
+    {
+        "model": "place.place",
+        "pk": 3,
+        "fields": {
+            "name": "Đà Nẵng",
+            "province": "Đà Nẵng",
+            "place_type": "Thành phố",
+            "featured_image": "http://baochinhphu.vn/Uploaded/phungthithuhuyen/2020_09_18/da-nang-khong-to-chuc-le-ky-niem-45-nam-ngay-giai-phong%20(1).jpg",
+            "country": "Việt Nam",
+            "hotels": 20
+        }
+    },
+    {
+        "model": "place.place",
+        "pk": 4,
+        "fields": {
+            "name": "Suối Tiến",
+            "province": "Hồ Chí Minh",
+            "place_type": "Khu du lịch",
+            "featured_image": "https://giathuecanho.com/wp-content/uploads/2019/10/khu-du-lich-suoi-tien-1.jpg",
+            "country": "Việt Nam",
+            "hotels": 31
+        }
+    },
+    {
+        "model": "place.place",
+        "pk": 5,
+        "fields": {
+            "name": "Hạ Long",
+            "province": "Quảng Ninh",
+            "place_type": "Thắng cảnh",
+            "featured_image": "https://www.kynghidongduong.vn/images/product/img2/vinh-ha-long-kynghidongduong-vn.jpg",
+            "country": "Việt Nam",
+            "hotels": 55
+        }
+    }
+]

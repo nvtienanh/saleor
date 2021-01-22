@@ -84,6 +84,7 @@ from ...shipping.models import (
 )
 from ...hotel.management import increase_stock
 from ...hotel.models import Stock, Hotel
+from ...place.models import Place
 
 fake = Factory.create()
 ROOMS_LIST_DIR = "rooms-list/"
@@ -446,6 +447,24 @@ def create_rooms_by_schema(placeholder_dir, create_images):
         collection_channel_listings_data=types["room.collectionchannellisting"],
     )
     assign_rooms_to_collections(associations=types["room.collectionroom"])
+
+
+def create_places_by_schema():
+    path = os.path.join(
+        settings.PROJECT_ROOT, "vanphong", "static", "populatedb_place.json"
+    )
+    with open(path, encoding='utf-8') as f:
+        db_items = json.load(f)
+    types = defaultdict(list)
+    # Sort db objects by its model
+    for item in db_items:
+        model = item.pop("model")
+        types[model].append(item)
+
+    for place in types["place.place"]:
+        pk = place["pk"]
+        defaults = place["fields"]
+        Place.objects.update_or_create(pk=pk, defaults=defaults)
 
 
 class SaleorProvider(BaseProvider):

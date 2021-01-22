@@ -254,6 +254,7 @@ INSTALLED_APPS = [
     "vanphong.webhook",
     "vanphong.wishlist",
     "vanphong.app",
+    "vanphong.place",
     # External apps
     "versatileimagefield",
     "django_measurement",

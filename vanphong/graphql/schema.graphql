@@ -192,7 +192,7 @@ type AddressValidationData {
 type Allocation implements Node {
   id: ID!
   quantity: Int!
-  warehouse: Warehouse!
+  hotel: Hotel!
 }
 
 type App implements Node & ObjectWithMetadata {
@@ -388,8 +388,8 @@ type AssignNavigation {
 
 type Attribute implements Node & ObjectWithMetadata {
   id: ID!
-  productTypes(before: String, after: String, first: Int, last: Int): ProductTypeCountableConnection!
-  productVariantTypes(before: String, after: String, first: Int, last: Int): ProductTypeCountableConnection!
+  roomTypes(before: String, after: String, first: Int, last: Int): RoomTypeCountableConnection!
+  roomVariantTypes(before: String, after: String, first: Int, last: Int): RoomTypeCountableConnection!
   privateMetadata: [MetadataItem]!
   metadata: [MetadataItem]!
   inputType: AttributeInputTypeEnum
@@ -454,7 +454,7 @@ type AttributeDelete {
 
 enum AttributeEntityTypeEnum {
   PAGE
-  PRODUCT
+  ROOM
 }
 
 type AttributeError {
@@ -543,7 +543,7 @@ type AttributeTranslation implements Node {
 }
 
 enum AttributeTypeEnum {
-  PRODUCT_TYPE
+  ROOM_TYPE
   PAGE_TYPE
 }
 
@@ -640,28 +640,28 @@ input BulkAttributeValueInput {
   values: [String]!
 }
 
-type BulkProductError {
+type BulkRoomError {
   field: String
   message: String
-  code: ProductErrorCode!
+  code: RoomErrorCode!
   attributes: [ID!]
   values: [ID!]
   index: Int
-  warehouses: [ID!]
+  hotels: [ID!]
   channels: [ID!]
 }
 
 type BulkStockError {
   field: String
   message: String
-  code: ProductErrorCode!
+  code: RoomErrorCode!
   attributes: [ID!]
   values: [ID!]
   index: Int
 }
 
 input CatalogueInput {
-  products: [ID]
+  rooms: [ID]
   categories: [ID]
   collections: [ID]
 }
@@ -679,7 +679,7 @@ type Category implements Node & ObjectWithMetadata {
   privateMetadata: [MetadataItem]!
   metadata: [MetadataItem]!
   ancestors(before: String, after: String, first: Int, last: Int): CategoryCountableConnection
-  products(channel: String, before: String, after: String, first: Int, last: Int): ProductCountableConnection
+  rooms(channel: String, before: String, after: String, first: Int, last: Int): RoomCountableConnection
   url: String @deprecated(reason: "This field will be removed after 2020-07-31.")
   children(before: String, after: String, first: Int, last: Int): CategoryCountableConnection
   backgroundImage(size: Int): Image
@@ -689,7 +689,7 @@ type Category implements Node & ObjectWithMetadata {
 type CategoryBulkDelete {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   count: Int!
-  productErrors: [ProductError!]!
+  roomErrors: [RoomError!]!
 }
 
 type CategoryCountableConnection {
@@ -705,13 +705,13 @@ type CategoryCountableEdge {
 
 type CategoryCreate {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
+  roomErrors: [RoomError!]!
   category: Category
 }
 
 type CategoryDelete {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
+  roomErrors: [RoomError!]!
   category: Category
 }
 
@@ -732,7 +732,7 @@ input CategoryInput {
 
 enum CategorySortField {
   NAME
-  PRODUCT_COUNT
+  ROOM_COUNT
   SUBCATEGORY_COUNT
 }
 
@@ -771,7 +771,7 @@ type CategoryTranslation implements Node {
 
 type CategoryUpdate {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
+  roomErrors: [RoomError!]!
   category: Category
 }
 
@@ -953,8 +953,8 @@ enum CheckoutErrorCode {
   BILLING_ADDRESS_NOT_SET
   CHECKOUT_NOT_FULLY_PAID
   GRAPHQL_ERROR
-  PRODUCT_NOT_PUBLISHED
-  PRODUCT_UNAVAILABLE_FOR_PURCHASE
+  ROOM_NOT_PUBLISHED
+  ROOM_UNAVAILABLE_FOR_PURCHASE
   INSUFFICIENT_STOCK
   INVALID
   INVALID_SHIPPING_METHOD
@@ -976,7 +976,7 @@ enum CheckoutErrorCode {
 
 type CheckoutLine implements Node {
   id: ID!
-  variant: ProductVariant!
+  variant: RoomVariant!
   quantity: Int!
   totalPrice: TaxedMoney
   requiresShipping: Boolean
@@ -1056,13 +1056,13 @@ type Collection implements Node & ObjectWithMetadata {
   slug: String!
   privateMetadata: [MetadataItem]!
   metadata: [MetadataItem]!
-  products(filter: ProductFilterInput, sortBy: ProductOrder, before: String, after: String, first: Int, last: Int): ProductCountableConnection
+  rooms(filter: RoomFilterInput, sortBy: RoomOrder, before: String, after: String, first: Int, last: Int): RoomCountableConnection
   backgroundImage(size: Int): Image
   translation(languageCode: LanguageCodeEnum!): CollectionTranslation
   channelListings: [CollectionChannelListing!]
 }
 
-type CollectionAddProducts {
+type CollectionAddRooms {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   collection: Collection
   collectionErrors: [CollectionError!]!
@@ -1071,7 +1071,7 @@ type CollectionAddProducts {
 type CollectionBulkDelete {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   count: Int!
-  productErrors: [ProductError!]!
+  roomErrors: [RoomError!]!
 }
 
 type CollectionChannelListing implements Node {
@@ -1084,7 +1084,7 @@ type CollectionChannelListing implements Node {
 type CollectionChannelListingError {
   field: String
   message: String
-  code: ProductErrorCode!
+  code: RoomErrorCode!
   attributes: [ID!]
   values: [ID!]
   channels: [ID!]
@@ -1128,7 +1128,7 @@ input CollectionCreateInput {
   backgroundImageAlt: String
   seo: SeoInput
   publicationDate: Date
-  products: [ID]
+  rooms: [ID]
 }
 
 type CollectionDelete {
@@ -1140,7 +1140,7 @@ type CollectionDelete {
 type CollectionError {
   field: String
   message: String
-  products: [ID!]
+  rooms: [ID!]
   code: CollectionErrorCode!
 }
 
@@ -1151,7 +1151,7 @@ enum CollectionErrorCode {
   NOT_FOUND
   REQUIRED
   UNIQUE
-  CANNOT_MANAGE_PRODUCT_WITHOUT_VARIANT
+  CANNOT_MANAGE_ROOM_WITHOUT_VARIANT
 }
 
 input CollectionFilterInput {
@@ -1178,13 +1178,13 @@ enum CollectionPublished {
   HIDDEN
 }
 
-type CollectionRemoveProducts {
+type CollectionRemoveRooms {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   collection: Collection
   collectionErrors: [CollectionError!]!
 }
 
-type CollectionReorderProducts {
+type CollectionReorderRooms {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   collection: Collection
   collectionErrors: [CollectionError!]!
@@ -1193,7 +1193,7 @@ type CollectionReorderProducts {
 enum CollectionSortField {
   NAME
   AVAILABILITY
-  PRODUCT_COUNT
+  ROOM_COUNT
   PUBLICATION_DATE
 }
 
@@ -1647,7 +1647,7 @@ type DeletePrivateMetadata {
 type DigitalContent implements Node & ObjectWithMetadata {
   useDefaultSettings: Boolean!
   automaticFulfillment: Boolean!
-  productVariant: ProductVariant!
+  roomVariant: RoomVariant!
   contentFile: String!
   maxDownloads: Int
   urlValidDays: Int
@@ -1670,15 +1670,15 @@ type DigitalContentCountableEdge {
 
 type DigitalContentCreate {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  variant: ProductVariant
+  variant: RoomVariant
   content: DigitalContent
-  productErrors: [ProductError!]!
+  roomErrors: [RoomError!]!
 }
 
 type DigitalContentDelete {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  variant: ProductVariant
-  productErrors: [ProductError!]!
+  variant: RoomVariant
+  roomErrors: [RoomError!]!
 }
 
 input DigitalContentInput {
@@ -1690,9 +1690,9 @@ input DigitalContentInput {
 
 type DigitalContentUpdate {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  variant: ProductVariant
+  variant: RoomVariant
   content: DigitalContent
-  productErrors: [ProductError!]!
+  roomErrors: [RoomError!]!
 }
 
 input DigitalContentUploadInput {
@@ -1714,7 +1714,7 @@ type DigitalContentUrl implements Node {
 
 type DigitalContentUrlCreate {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
+  roomErrors: [RoomError!]!
   digitalContentUrl: DigitalContentUrl
 }
 
@@ -1725,7 +1725,7 @@ input DigitalContentUrlCreateInput {
 type DiscountError {
   field: String
   message: String
-  products: [ID!]
+  rooms: [ID!]
   code: DiscountErrorCode!
   channels: [ID!]
 }
@@ -1737,7 +1737,7 @@ enum DiscountErrorCode {
   NOT_FOUND
   REQUIRED
   UNIQUE
-  CANNOT_MANAGE_PRODUCT_WITHOUT_VARIANT
+  CANNOT_MANAGE_ROOM_WITHOUT_VARIANT
   DUPLICATED_INPUT_ITEM
 }
 
@@ -1921,20 +1921,20 @@ input ExportFileSortingInput {
 
 input ExportInfoInput {
   attributes: [ID!]
-  warehouses: [ID!]
+  hotels: [ID!]
   channels: [ID!]
-  fields: [ProductFieldEnum!]
+  fields: [RoomFieldEnum!]
 }
 
-type ExportProducts {
+type ExportRooms {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   exportFile: ExportFile
   exportErrors: [ExportError!]!
 }
 
-input ExportProductsInput {
+input ExportRoomsInput {
   scope: ExportScope!
-  filter: ProductFilterInput
+  filter: RoomFilterInput
   ids: [ID!]
   exportInfo: ExportInfoInput
   fileType: FileTypesEnum!
@@ -1972,7 +1972,7 @@ type Fulfillment implements Node & ObjectWithMetadata {
   metadata: [MetadataItem]!
   lines: [FulfillmentLine]
   statusDisplay: String
-  warehouse: Warehouse
+  hotel: Hotel
 }
 
 type FulfillmentCancel {
@@ -1983,7 +1983,7 @@ type FulfillmentCancel {
 }
 
 input FulfillmentCancelInput {
-  warehouseId: ID!
+  hotelId: ID!
 }
 
 type FulfillmentLine implements Node {
@@ -1992,14 +1992,14 @@ type FulfillmentLine implements Node {
   orderLine: OrderLine
 }
 
-type FulfillmentRefundProducts {
+type FulfillmentRefundRooms {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   fulfillment: Fulfillment
   order: Order
   orderErrors: [OrderError!]!
 }
 
-type FulfillmentReturnProducts {
+type FulfillmentReturnRooms {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   returnFulfillment: Fulfillment
   replaceFulfillment: Fulfillment
@@ -2136,6 +2136,116 @@ type GroupCountableConnection {
 type GroupCountableEdge {
   node: Group!
   cursor: String!
+}
+
+type Hotel implements Node & ObjectWithMetadata {
+  id: ID!
+  name: String!
+  slug: String!
+  companyName: String!
+  shippingZones(before: String, after: String, first: Int, last: Int): ShippingZoneCountableConnection!
+  address: Address!
+  email: String!
+  privateMetadata: [MetadataItem]!
+  metadata: [MetadataItem]!
+}
+
+input HotelAddressInput {
+  streetAddress1: String!
+  streetAddress2: String
+  city: String!
+  cityArea: String
+  postalCode: String
+  country: CountryCode!
+  countryArea: String
+  phone: String
+}
+
+type HotelCountableConnection {
+  pageInfo: PageInfo!
+  edges: [HotelCountableEdge!]!
+  totalCount: Int
+}
+
+type HotelCountableEdge {
+  node: Hotel!
+  cursor: String!
+}
+
+type HotelCreate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  hotelErrors: [HotelError!]!
+  hotel: Hotel
+}
+
+input HotelCreateInput {
+  slug: String
+  companyName: String
+  email: String
+  name: String!
+  address: HotelAddressInput!
+  shippingZones: [ID]
+}
+
+type HotelDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  hotelErrors: [HotelError!]!
+  hotel: Hotel
+}
+
+type HotelError {
+  field: String
+  message: String
+  code: HotelErrorCode!
+}
+
+enum HotelErrorCode {
+  ALREADY_EXISTS
+  GRAPHQL_ERROR
+  INVALID
+  NOT_FOUND
+  REQUIRED
+  UNIQUE
+}
+
+input HotelFilterInput {
+  search: String
+  ids: [ID]
+}
+
+type HotelShippingZoneAssign {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  hotelErrors: [HotelError!]!
+  hotel: Hotel
+}
+
+type HotelShippingZoneUnassign {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  hotelErrors: [HotelError!]!
+  hotel: Hotel
+}
+
+enum HotelSortField {
+  NAME
+}
+
+input HotelSortingInput {
+  direction: OrderDirection!
+  field: HotelSortField!
+}
+
+type HotelUpdate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  hotelErrors: [HotelError!]!
+  hotel: Hotel
+}
+
+input HotelUpdateInput {
+  slug: String
+  companyName: String
+  email: String
+  name: String
+  address: HotelAddressInput
 }
 
 type Image {
@@ -2547,20 +2657,24 @@ type MoneyRange {
   stop: Money
 }
 
-input MoveProductInput {
-  productId: ID!
+input MoveRoomInput {
+  roomId: ID!
   sortOrder: Int
 }
 
 type Mutation {
+  placeCreate(input: PlaceCreateInput!): PlaceCreate
+  placeDelete(id: ID!): PlaceDelete
+  placeBulkDelete(ids: [ID]!): PlaceBulkDelete
+  placeUpdate(id: ID!, input: PlaceInput!): PlaceUpdate
   webhookCreate(input: WebhookCreateInput!): WebhookCreate
   webhookDelete(id: ID!): WebhookDelete
   webhookUpdate(id: ID!, input: WebhookUpdateInput!): WebhookUpdate
-  createWarehouse(input: WarehouseCreateInput!): WarehouseCreate
-  updateWarehouse(id: ID!, input: WarehouseUpdateInput!): WarehouseUpdate
-  deleteWarehouse(id: ID!): WarehouseDelete
-  assignWarehouseShippingZone(id: ID!, shippingZoneIds: [ID!]!): WarehouseShippingZoneAssign
-  unassignWarehouseShippingZone(id: ID!, shippingZoneIds: [ID!]!): WarehouseShippingZoneUnassign
+  createHotel(input: HotelCreateInput!): HotelCreate
+  updateHotel(id: ID!, input: HotelUpdateInput!): HotelUpdate
+  deleteHotel(id: ID!): HotelDelete
+  assignHotelShippingZone(id: ID!, shippingZoneIds: [ID!]!): HotelShippingZoneAssign
+  unassignHotelShippingZone(id: ID!, shippingZoneIds: [ID!]!): HotelShippingZoneUnassign
   staffNotificationRecipientCreate(input: StaffNotificationRecipientInput!): StaffNotificationRecipientCreate
   staffNotificationRecipientUpdate(id: ID!, input: StaffNotificationRecipientInput!): StaffNotificationRecipientUpdate
   staffNotificationRecipientDelete(id: ID!): StaffNotificationRecipientDelete
@@ -2578,62 +2692,62 @@ type Mutation {
   shippingPriceBulkDelete(ids: [ID]!): ShippingPriceBulkDelete
   shippingPriceUpdate(id: ID!, input: ShippingPriceInput!): ShippingPriceUpdate
   shippingPriceTranslate(id: ID!, input: NameTranslationInput!, languageCode: LanguageCodeEnum!): ShippingPriceTranslate
-  shippingPriceExcludeProducts(id: ID!, input: ShippingPriceExcludeProductsInput!): ShippingPriceExcludeProducts
-  shippingPriceRemoveProductFromExclude(id: ID!, products: [ID]!): ShippingPriceRemoveProductFromExclude
+  shippingPriceExcludeRooms(id: ID!, input: ShippingPriceExcludeRoomsInput!): ShippingPriceExcludeRooms
+  shippingPriceRemoveRoomFromExclude(id: ID!, rooms: [ID]!): ShippingPriceRemoveRoomFromExclude
   shippingZoneCreate(input: ShippingZoneCreateInput!): ShippingZoneCreate
   shippingZoneDelete(id: ID!): ShippingZoneDelete
   shippingZoneBulkDelete(ids: [ID]!): ShippingZoneBulkDelete
   shippingZoneUpdate(id: ID!, input: ShippingZoneUpdateInput!): ShippingZoneUpdate
-  productAttributeAssign(operations: [ProductAttributeAssignInput]!, productTypeId: ID!): ProductAttributeAssign
-  productAttributeUnassign(attributeIds: [ID]!, productTypeId: ID!): ProductAttributeUnassign
+  roomAttributeAssign(operations: [RoomAttributeAssignInput]!, roomTypeId: ID!): RoomAttributeAssign
+  roomAttributeUnassign(attributeIds: [ID]!, roomTypeId: ID!): RoomAttributeUnassign
   categoryCreate(input: CategoryInput!, parent: ID): CategoryCreate
   categoryDelete(id: ID!): CategoryDelete
   categoryBulkDelete(ids: [ID]!): CategoryBulkDelete
   categoryUpdate(id: ID!, input: CategoryInput!): CategoryUpdate
   categoryTranslate(id: ID!, input: TranslationInput!, languageCode: LanguageCodeEnum!): CategoryTranslate
-  collectionAddProducts(collectionId: ID!, products: [ID]!): CollectionAddProducts
+  collectionAddRooms(collectionId: ID!, rooms: [ID]!): CollectionAddRooms
   collectionCreate(input: CollectionCreateInput!): CollectionCreate
   collectionDelete(id: ID!): CollectionDelete
-  collectionReorderProducts(collectionId: ID!, moves: [MoveProductInput]!): CollectionReorderProducts
+  collectionReorderRooms(collectionId: ID!, moves: [MoveRoomInput]!): CollectionReorderRooms
   collectionBulkDelete(ids: [ID]!): CollectionBulkDelete
-  collectionRemoveProducts(collectionId: ID!, products: [ID]!): CollectionRemoveProducts
+  collectionRemoveRooms(collectionId: ID!, rooms: [ID]!): CollectionRemoveRooms
   collectionUpdate(id: ID!, input: CollectionInput!): CollectionUpdate
   collectionTranslate(id: ID!, input: TranslationInput!, languageCode: LanguageCodeEnum!): CollectionTranslate
   collectionChannelListingUpdate(id: ID!, input: CollectionChannelListingUpdateInput!): CollectionChannelListingUpdate
-  productCreate(input: ProductCreateInput!): ProductCreate
-  productDelete(id: ID!): ProductDelete
-  productBulkDelete(ids: [ID]!): ProductBulkDelete
-  productUpdate(id: ID!, input: ProductInput!): ProductUpdate
-  productTranslate(id: ID!, input: TranslationInput!, languageCode: LanguageCodeEnum!): ProductTranslate
-  productChannelListingUpdate(id: ID!, input: ProductChannelListingUpdateInput!): ProductChannelListingUpdate
-  productImageCreate(input: ProductImageCreateInput!): ProductImageCreate
-  productVariantReorder(moves: [ReorderInput]!, productId: ID!): ProductVariantReorder
-  productImageDelete(id: ID!): ProductImageDelete
-  productImageBulkDelete(ids: [ID]!): ProductImageBulkDelete
-  productImageReorder(imagesIds: [ID]!, productId: ID!): ProductImageReorder
-  productImageUpdate(id: ID!, input: ProductImageUpdateInput!): ProductImageUpdate
-  productTypeCreate(input: ProductTypeInput!): ProductTypeCreate
-  productTypeDelete(id: ID!): ProductTypeDelete
-  productTypeBulkDelete(ids: [ID]!): ProductTypeBulkDelete
-  productTypeUpdate(id: ID!, input: ProductTypeInput!): ProductTypeUpdate
-  productTypeReorderAttributes(moves: [ReorderInput]!, productTypeId: ID!, type: ProductAttributeType!): ProductTypeReorderAttributes
-  productReorderAttributeValues(attributeId: ID!, moves: [ReorderInput]!, productId: ID!): ProductReorderAttributeValues
+  roomCreate(input: RoomCreateInput!): RoomCreate
+  roomDelete(id: ID!): RoomDelete
+  roomBulkDelete(ids: [ID]!): RoomBulkDelete
+  roomUpdate(id: ID!, input: RoomInput!): RoomUpdate
+  roomTranslate(id: ID!, input: TranslationInput!, languageCode: LanguageCodeEnum!): RoomTranslate
+  roomChannelListingUpdate(id: ID!, input: RoomChannelListingUpdateInput!): RoomChannelListingUpdate
+  roomImageCreate(input: RoomImageCreateInput!): RoomImageCreate
+  roomVariantReorder(moves: [ReorderInput]!, roomId: ID!): RoomVariantReorder
+  roomImageDelete(id: ID!): RoomImageDelete
+  roomImageBulkDelete(ids: [ID]!): RoomImageBulkDelete
+  roomImageReorder(imagesIds: [ID]!, roomId: ID!): RoomImageReorder
+  roomImageUpdate(id: ID!, input: RoomImageUpdateInput!): RoomImageUpdate
+  roomTypeCreate(input: RoomTypeInput!): RoomTypeCreate
+  roomTypeDelete(id: ID!): RoomTypeDelete
+  roomTypeBulkDelete(ids: [ID]!): RoomTypeBulkDelete
+  roomTypeUpdate(id: ID!, input: RoomTypeInput!): RoomTypeUpdate
+  roomTypeReorderAttributes(moves: [ReorderInput]!, roomTypeId: ID!, type: RoomAttributeType!): RoomTypeReorderAttributes
+  roomReorderAttributeValues(attributeId: ID!, moves: [ReorderInput]!, roomId: ID!): RoomReorderAttributeValues
   digitalContentCreate(input: DigitalContentUploadInput!, variantId: ID!): DigitalContentCreate
   digitalContentDelete(variantId: ID!): DigitalContentDelete
   digitalContentUpdate(input: DigitalContentInput!, variantId: ID!): DigitalContentUpdate
   digitalContentUrlCreate(input: DigitalContentUrlCreateInput!): DigitalContentUrlCreate
-  productVariantCreate(input: ProductVariantCreateInput!): ProductVariantCreate
-  productVariantDelete(id: ID!): ProductVariantDelete
-  productVariantBulkCreate(product: ID!, variants: [ProductVariantBulkCreateInput]!): ProductVariantBulkCreate
-  productVariantBulkDelete(ids: [ID]!): ProductVariantBulkDelete
-  productVariantStocksCreate(stocks: [StockInput!]!, variantId: ID!): ProductVariantStocksCreate
-  productVariantStocksDelete(variantId: ID!, warehouseIds: [ID!]): ProductVariantStocksDelete
-  productVariantStocksUpdate(stocks: [StockInput!]!, variantId: ID!): ProductVariantStocksUpdate
-  productVariantUpdate(id: ID!, input: ProductVariantInput!): ProductVariantUpdate
-  productVariantSetDefault(productId: ID!, variantId: ID!): ProductVariantSetDefault
-  productVariantTranslate(id: ID!, input: NameTranslationInput!, languageCode: LanguageCodeEnum!): ProductVariantTranslate
-  productVariantChannelListingUpdate(id: ID!, input: [ProductVariantChannelListingAddInput!]!): ProductVariantChannelListingUpdate
-  productVariantReorderAttributeValues(attributeId: ID!, moves: [ReorderInput]!, variantId: ID!): ProductVariantReorderAttributeValues
+  roomVariantCreate(input: RoomVariantCreateInput!): RoomVariantCreate
+  roomVariantDelete(id: ID!): RoomVariantDelete
+  roomVariantBulkCreate(room: ID!, variants: [RoomVariantBulkCreateInput]!): RoomVariantBulkCreate
+  roomVariantBulkDelete(ids: [ID]!): RoomVariantBulkDelete
+  roomVariantStocksCreate(stocks: [StockInput!]!, variantId: ID!): RoomVariantStocksCreate
+  roomVariantStocksDelete(hotelIds: [ID!], variantId: ID!): RoomVariantStocksDelete
+  roomVariantStocksUpdate(stocks: [StockInput!]!, variantId: ID!): RoomVariantStocksUpdate
+  roomVariantUpdate(id: ID!, input: RoomVariantInput!): RoomVariantUpdate
+  roomVariantSetDefault(roomId: ID!, variantId: ID!): RoomVariantSetDefault
+  roomVariantTranslate(id: ID!, input: NameTranslationInput!, languageCode: LanguageCodeEnum!): RoomVariantTranslate
+  roomVariantChannelListingUpdate(id: ID!, input: [RoomVariantChannelListingAddInput!]!): RoomVariantChannelListingUpdate
+  roomVariantReorderAttributeValues(attributeId: ID!, moves: [ReorderInput]!, variantId: ID!): RoomVariantReorderAttributeValues
   variantImageAssign(imageId: ID!, variantId: ID!): VariantImageAssign
   variantImageUnassign(imageId: ID!, variantId: ID!): VariantImageUnassign
   paymentCapture(amount: PositiveDecimal, paymentId: ID!): PaymentCapture
@@ -2670,8 +2784,8 @@ type Mutation {
   orderFulfill(input: OrderFulfillInput!, order: ID): OrderFulfill
   orderFulfillmentCancel(id: ID!, input: FulfillmentCancelInput!): FulfillmentCancel
   orderFulfillmentUpdateTracking(id: ID!, input: FulfillmentUpdateTrackingInput!): FulfillmentUpdateTracking
-  orderFulfillmentRefundProducts(input: OrderRefundProductsInput!, order: ID!): FulfillmentRefundProducts
-  orderFulfillmentReturnProducts(input: OrderReturnProductsInput!, order: ID!): FulfillmentReturnProducts
+  orderFulfillmentRefundRooms(input: OrderRefundRoomsInput!, order: ID!): FulfillmentRefundRooms
+  orderFulfillmentReturnRooms(input: OrderReturnRoomsInput!, order: ID!): FulfillmentReturnRooms
   orderMarkAsPaid(id: ID!, transactionReference: String): OrderMarkAsPaid
   orderRefund(amount: PositiveDecimal!, id: ID!): OrderRefund
   orderUpdate(id: ID!, input: OrderUpdateInput!): OrderUpdate
@@ -2720,7 +2834,7 @@ type Mutation {
   voucherCataloguesRemove(id: ID!, input: CatalogueInput!): VoucherRemoveCatalogues
   voucherTranslate(id: ID!, input: NameTranslationInput!, languageCode: LanguageCodeEnum!): VoucherTranslate
   voucherChannelListingUpdate(id: ID!, input: VoucherChannelListingInput!): VoucherChannelListingUpdate
-  exportProducts(input: ExportProductsInput!): ExportProducts
+  exportRooms(input: ExportRoomsInput!): ExportRooms
   fileUpload(file: Upload!): FileUpload
   checkoutAddPromoCode(checkoutId: ID!, promoCode: String!): CheckoutAddPromoCode
   checkoutBillingAddressUpdate(billingAddress: AddressInput!, checkoutId: ID!): CheckoutBillingAddressUpdate
@@ -2942,7 +3056,7 @@ type OrderError {
   field: String
   message: String
   code: OrderErrorCode!
-  warehouse: ID
+  hotel: ID
   orderLine: ID
   variants: [ID!]
 }
@@ -2958,8 +3072,8 @@ enum OrderErrorCode {
   FULFILL_ORDER_LINE
   GRAPHQL_ERROR
   INVALID
-  PRODUCT_NOT_PUBLISHED
-  PRODUCT_UNAVAILABLE_FOR_PURCHASE
+  ROOM_NOT_PUBLISHED
+  ROOM_UNAVAILABLE_FOR_PURCHASE
   NOT_FOUND
   ORDER_NO_SHIPPING_ADDRESS
   PAYMENT_ERROR
@@ -2996,7 +3110,7 @@ type OrderEvent implements Node {
   oversoldItems: [String]
   lines: [OrderEventOrderLineObject]
   fulfilledItems: [FulfillmentLine]
-  warehouse: Warehouse
+  hotel: Hotel
   transactionReference: String
   shippingCostsIncluded: Boolean
   relatedOrder: Order
@@ -3034,8 +3148,8 @@ enum OrderEventsEmailsEnum {
 enum OrderEventsEnum {
   DRAFT_CREATED
   DRAFT_CREATED_FROM_REPLACE
-  DRAFT_ADDED_PRODUCTS
-  DRAFT_REMOVED_PRODUCTS
+  DRAFT_ADDED_ROOMS
+  DRAFT_REMOVED_ROOMS
   PLACED
   PLACED_FROM_DRAFT
   OVERSOLD_ITEMS
@@ -3095,14 +3209,14 @@ input OrderFulfillLineInput {
 
 input OrderFulfillStockInput {
   quantity: Int!
-  warehouse: ID!
+  hotel: ID!
 }
 
 type OrderLine implements Node {
   id: ID!
-  productName: String!
+  roomName: String!
   variantName: String!
-  productSku: String!
+  roomSku: String!
   isShippingRequired: Boolean!
   quantity: Int!
   quantityFulfilled: Int!
@@ -3111,8 +3225,8 @@ type OrderLine implements Node {
   thumbnail(size: Int): Image
   unitPrice: TaxedMoney
   totalPrice: TaxedMoney
-  variant: ProductVariant
-  translatedProductName: String!
+  variant: RoomVariant
+  translatedRoomName: String!
   translatedVariantName: String!
   allocations: [Allocation!]
 }
@@ -3148,7 +3262,7 @@ input OrderRefundLineInput {
   quantity: Int!
 }
 
-input OrderRefundProductsInput {
+input OrderRefundRoomsInput {
   orderLines: [OrderRefundLineInput!]
   fulfillmentLines: [OrderRefundFulfillmentLineInput!]
   amountToRefund: PositiveDecimal
@@ -3167,7 +3281,7 @@ input OrderReturnLineInput {
   replace: Boolean = false
 }
 
-input OrderReturnProductsInput {
+input OrderReturnRoomsInput {
   orderLines: [OrderReturnLineInput!]
   fulfillmentLines: [OrderReturnFulfillmentLineInput!]
   amountToRefund: PositiveDecimal
@@ -3653,12 +3767,13 @@ enum PermissionEnum {
   MANAGE_ORDERS
   MANAGE_PAGES
   MANAGE_PAGE_TYPES_AND_ATTRIBUTES
-  MANAGE_PRODUCTS
-  MANAGE_PRODUCT_TYPES_AND_ATTRIBUTES
+  MANAGE_ROOMS
+  MANAGE_ROOM_TYPES_AND_ATTRIBUTES
   MANAGE_SHIPPING
   MANAGE_SETTINGS
   MANAGE_TRANSLATIONS
   MANAGE_CHECKOUTS
+  MANAGE_PLACES
 }
 
 type PermissionGroupCreate {
@@ -3723,6 +3838,96 @@ input PermissionGroupUpdateInput {
   name: String
   removePermissions: [PermissionEnum!]
   removeUsers: [ID!]
+}
+
+type Place implements Node {
+  name: String!
+  province: String!
+  placeType: String!
+  country: String!
+  hotels: Int!
+  featuredImage: String!
+  id: ID!
+}
+
+type PlaceBulkDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  count: Int!
+  placeErrors: [PlaceError!]!
+}
+
+type PlaceCountableConnection {
+  pageInfo: PageInfo!
+  edges: [PlaceCountableEdge!]!
+  totalCount: Int
+}
+
+type PlaceCountableEdge {
+  node: Place!
+  cursor: String!
+}
+
+type PlaceCreate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  placeErrors: [PlaceError!]!
+  place: Place
+}
+
+input PlaceCreateInput {
+  name: String!
+  province: String!
+  placeType: String!
+  country: String!
+  hotels: Int!
+  featuredImage: String!
+}
+
+type PlaceDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  placeErrors: [PlaceError!]!
+  place: Place
+}
+
+type PlaceError {
+  field: String
+  message: String
+  code: PlaceErrorCode!
+}
+
+enum PlaceErrorCode {
+  CANNOT_ASSIGN_NODE
+  GRAPHQL_ERROR
+  INVALID
+  INVALID_PLACE_ITEM
+  NO_PLACE_ITEM_PROVIDED
+  NOT_FOUND
+  REQUIRED
+  TOO_MANY_PLACE_ITEMS
+  UNIQUE
+}
+
+input PlaceFilterInput {
+  search: String
+}
+
+input PlaceInput {
+  name: String
+}
+
+enum PlaceSortField {
+  NAME
+  ITEMS_COUNT
+}
+
+input PlaceSortingInput {
+  direction: OrderDirection!
+  field: PlaceSortField!
+}
+
+type PlaceUpdate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  placeErrors: [PlaceError!]!
+  place: Place
 }
 
 type Plugin implements Node {
@@ -3792,615 +3997,6 @@ input PriceRangeInput {
   lte: Float
 }
 
-type Product implements Node & ObjectWithMetadata {
-  id: ID!
-  seoTitle: String
-  seoDescription: String
-  name: String!
-  description: String!
-  descriptionJson: JSONString!
-  productType: ProductType!
-  slug: String!
-  category: Category
-  updatedAt: DateTime
-  chargeTaxes: Boolean!
-  weight: Weight
-  defaultVariant: ProductVariant
-  rating: Float
-  privateMetadata: [MetadataItem]!
-  metadata: [MetadataItem]!
-  url: String! @deprecated(reason: "This field will be removed after 2020-07-31.")
-  thumbnail(size: Int): Image
-  pricing: ProductPricingInfo
-  isAvailable: Boolean
-  taxType: TaxType
-  attributes: [SelectedAttribute!]!
-  channelListings: [ProductChannelListing!]
-  imageById(id: ID): ProductImage
-  variants: [ProductVariant]
-  images: [ProductImage]
-  collections: [Collection]
-  translation(languageCode: LanguageCodeEnum!): ProductTranslation
-  availableForPurchase: Date
-  isAvailableForPurchase: Boolean
-}
-
-type ProductAttributeAssign {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productType: ProductType
-  productErrors: [ProductError!]!
-}
-
-input ProductAttributeAssignInput {
-  id: ID!
-  type: ProductAttributeType!
-}
-
-enum ProductAttributeType {
-  PRODUCT
-  VARIANT
-}
-
-type ProductAttributeUnassign {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productType: ProductType
-  productErrors: [ProductError!]!
-}
-
-type ProductBulkDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  count: Int!
-  productErrors: [ProductError!]!
-}
-
-type ProductChannelListing implements Node {
-  id: ID!
-  publicationDate: Date
-  isPublished: Boolean!
-  channel: Channel!
-  visibleInListings: Boolean!
-  availableForPurchase: Date
-  discountedPrice: Money
-  purchaseCost: MoneyRange
-  margin: Margin
-  isAvailableForPurchase: Boolean
-  pricing: ProductPricingInfo
-}
-
-input ProductChannelListingAddInput {
-  channelId: ID!
-  isPublished: Boolean
-  publicationDate: Date
-  visibleInListings: Boolean
-  isAvailableForPurchase: Boolean
-  availableForPurchaseDate: Date
-}
-
-type ProductChannelListingError {
-  field: String
-  message: String
-  code: ProductErrorCode!
-  attributes: [ID!]
-  values: [ID!]
-  channels: [ID!]
-}
-
-type ProductChannelListingUpdate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  product: Product
-  productChannelListingErrors: [ProductChannelListingError!]!
-}
-
-input ProductChannelListingUpdateInput {
-  addChannels: [ProductChannelListingAddInput!]
-  removeChannels: [ID!]
-}
-
-type ProductCountableConnection {
-  pageInfo: PageInfo!
-  edges: [ProductCountableEdge!]!
-  totalCount: Int
-}
-
-type ProductCountableEdge {
-  node: Product!
-  cursor: String!
-}
-
-type ProductCreate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
-  product: Product
-}
-
-input ProductCreateInput {
-  attributes: [AttributeValueInput]
-  category: ID
-  chargeTaxes: Boolean
-  collections: [ID]
-  description: String
-  descriptionJson: JSONString
-  name: String
-  slug: String
-  taxCode: String
-  seo: SeoInput
-  weight: WeightScalar
-  rating: Float
-  productType: ID!
-}
-
-type ProductDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
-  product: Product
-}
-
-type ProductError {
-  field: String
-  message: String
-  code: ProductErrorCode!
-  attributes: [ID!]
-  values: [ID!]
-}
-
-enum ProductErrorCode {
-  ALREADY_EXISTS
-  ATTRIBUTE_ALREADY_ASSIGNED
-  ATTRIBUTE_CANNOT_BE_ASSIGNED
-  ATTRIBUTE_VARIANTS_DISABLED
-  DUPLICATED_INPUT_ITEM
-  GRAPHQL_ERROR
-  INVALID
-  PRODUCT_WITHOUT_CATEGORY
-  NOT_PRODUCTS_IMAGE
-  NOT_PRODUCTS_VARIANT
-  NOT_FOUND
-  REQUIRED
-  UNIQUE
-  VARIANT_NO_DIGITAL_CONTENT
-  CANNOT_MANAGE_PRODUCT_WITHOUT_VARIANT
-  PRODUCT_NOT_ASSIGNED_TO_CHANNEL
-}
-
-enum ProductFieldEnum {
-  NAME
-  DESCRIPTION
-  PRODUCT_TYPE
-  CATEGORY
-  VISIBLE
-  PRODUCT_WEIGHT
-  COLLECTIONS
-  CHARGE_TAXES
-  PRODUCT_IMAGES
-  VARIANT_SKU
-  VARIANT_WEIGHT
-  VARIANT_IMAGES
-}
-
-input ProductFilterInput {
-  isPublished: Boolean
-  collections: [ID]
-  categories: [ID]
-  hasCategory: Boolean
-  attributes: [AttributeInput]
-  stockAvailability: StockAvailability
-  productType: ID
-  stocks: ProductStockFilterInput
-  search: String
-  price: PriceRangeInput
-  minimalPrice: PriceRangeInput
-  productTypes: [ID]
-  ids: [ID]
-  channel: String
-}
-
-type ProductImage implements Node {
-  id: ID!
-  sortOrder: Int
-  alt: String!
-  url(size: Int): String!
-}
-
-type ProductImageBulkDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  count: Int!
-  productErrors: [ProductError!]!
-}
-
-type ProductImageCreate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  product: Product
-  image: ProductImage
-  productErrors: [ProductError!]!
-}
-
-input ProductImageCreateInput {
-  alt: String
-  image: Upload!
-  product: ID!
-}
-
-type ProductImageDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  product: Product
-  image: ProductImage
-  productErrors: [ProductError!]!
-}
-
-type ProductImageReorder {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  product: Product
-  images: [ProductImage]
-  productErrors: [ProductError!]!
-}
-
-type ProductImageUpdate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  product: Product
-  image: ProductImage
-  productErrors: [ProductError!]!
-}
-
-input ProductImageUpdateInput {
-  alt: String
-}
-
-input ProductInput {
-  attributes: [AttributeValueInput]
-  category: ID
-  chargeTaxes: Boolean
-  collections: [ID]
-  description: String
-  descriptionJson: JSONString
-  name: String
-  slug: String
-  taxCode: String
-  seo: SeoInput
-  weight: WeightScalar
-  rating: Float
-}
-
-input ProductOrder {
-  direction: OrderDirection!
-  channel: String
-  attributeId: ID
-  field: ProductOrderField
-}
-
-enum ProductOrderField {
-  NAME
-  PRICE
-  MINIMAL_PRICE
-  DATE
-  TYPE
-  PUBLISHED
-  PUBLICATION_DATE
-  COLLECTION
-  RATING
-}
-
-type ProductPricingInfo {
-  onSale: Boolean
-  discount: TaxedMoney
-  discountLocalCurrency: TaxedMoney
-  priceRange: TaxedMoneyRange
-  priceRangeUndiscounted: TaxedMoneyRange
-  priceRangeLocalCurrency: TaxedMoneyRange
-}
-
-type ProductReorderAttributeValues {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  product: Product
-  productErrors: [ProductError!]!
-}
-
-input ProductStockFilterInput {
-  warehouseIds: [ID!]
-  quantity: IntRangeInput
-}
-
-type ProductTranslatableContent implements Node {
-  id: ID!
-  seoTitle: String
-  seoDescription: String
-  name: String!
-  description: String!
-  descriptionJson: JSONString!
-  translation(languageCode: LanguageCodeEnum!): ProductTranslation
-  product: Product
-}
-
-type ProductTranslate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  translationErrors: [TranslationError!]!
-  product: Product
-}
-
-type ProductTranslation implements Node {
-  id: ID!
-  seoTitle: String
-  seoDescription: String
-  name: String!
-  description: String!
-  descriptionJson: JSONString!
-  language: LanguageDisplay!
-}
-
-type ProductType implements Node & ObjectWithMetadata {
-  id: ID!
-  name: String!
-  slug: String!
-  hasVariants: Boolean!
-  isShippingRequired: Boolean!
-  isDigital: Boolean!
-  weight: Weight
-  privateMetadata: [MetadataItem]!
-  metadata: [MetadataItem]!
-  products(channel: String, before: String, after: String, first: Int, last: Int): ProductCountableConnection @deprecated(reason: "Use the top-level `products` query with the `productTypes` filter.")
-  taxRate: TaxRateType
-  taxType: TaxType
-  variantAttributes(variantSelection: VariantAttributeScope): [Attribute]
-  productAttributes: [Attribute]
-  availableAttributes(filter: AttributeFilterInput, before: String, after: String, first: Int, last: Int): AttributeCountableConnection
-}
-
-type ProductTypeBulkDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  count: Int!
-  productErrors: [ProductError!]!
-}
-
-enum ProductTypeConfigurable {
-  CONFIGURABLE
-  SIMPLE
-}
-
-type ProductTypeCountableConnection {
-  pageInfo: PageInfo!
-  edges: [ProductTypeCountableEdge!]!
-  totalCount: Int
-}
-
-type ProductTypeCountableEdge {
-  node: ProductType!
-  cursor: String!
-}
-
-type ProductTypeCreate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
-  productType: ProductType
-}
-
-type ProductTypeDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
-  productType: ProductType
-}
-
-enum ProductTypeEnum {
-  DIGITAL
-  SHIPPABLE
-}
-
-input ProductTypeFilterInput {
-  search: String
-  configurable: ProductTypeConfigurable
-  productType: ProductTypeEnum
-  ids: [ID]
-}
-
-input ProductTypeInput {
-  name: String
-  slug: String
-  hasVariants: Boolean
-  productAttributes: [ID]
-  variantAttributes: [ID]
-  isShippingRequired: Boolean
-  isDigital: Boolean
-  weight: WeightScalar
-  taxCode: String
-}
-
-type ProductTypeReorderAttributes {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productType: ProductType
-  productErrors: [ProductError!]!
-}
-
-enum ProductTypeSortField {
-  NAME
-  DIGITAL
-  SHIPPING_REQUIRED
-}
-
-input ProductTypeSortingInput {
-  direction: OrderDirection!
-  field: ProductTypeSortField!
-}
-
-type ProductTypeUpdate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
-  productType: ProductType
-}
-
-type ProductUpdate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
-  product: Product
-}
-
-type ProductVariant implements Node & ObjectWithMetadata {
-  id: ID!
-  name: String!
-  sku: String!
-  product: Product!
-  trackInventory: Boolean!
-  weight: Weight
-  privateMetadata: [MetadataItem]!
-  metadata: [MetadataItem]!
-  channelListings: [ProductVariantChannelListing!]
-  pricing: VariantPricingInfo
-  attributes(variantSelection: VariantAttributeScope): [SelectedAttribute!]!
-  costPrice: Money
-  margin: Int
-  quantityOrdered: Int
-  revenue(period: ReportingPeriod): TaxedMoney
-  images: [ProductImage]
-  translation(languageCode: LanguageCodeEnum!): ProductVariantTranslation
-  digitalContent: DigitalContent
-  stocks(countryCode: CountryCode): [Stock]
-  quantityAvailable(countryCode: CountryCode): Int!
-}
-
-type ProductVariantBulkCreate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  count: Int!
-  productVariants: [ProductVariant!]!
-  bulkProductErrors: [BulkProductError!]!
-}
-
-input ProductVariantBulkCreateInput {
-  attributes: [BulkAttributeValueInput]!
-  sku: String!
-  trackInventory: Boolean
-  weight: WeightScalar
-  stocks: [StockInput!]
-  channelListings: [ProductVariantChannelListingAddInput!]
-}
-
-type ProductVariantBulkDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  count: Int!
-  productErrors: [ProductError!]!
-}
-
-type ProductVariantChannelListing implements Node {
-  id: ID!
-  channel: Channel!
-  price: Money
-  costPrice: Money
-  margin: Int
-}
-
-input ProductVariantChannelListingAddInput {
-  channelId: ID!
-  price: PositiveDecimal!
-  costPrice: PositiveDecimal
-}
-
-type ProductVariantChannelListingUpdate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  variant: ProductVariant
-  productChannelListingErrors: [ProductChannelListingError!]!
-}
-
-type ProductVariantCountableConnection {
-  pageInfo: PageInfo!
-  edges: [ProductVariantCountableEdge!]!
-  totalCount: Int
-}
-
-type ProductVariantCountableEdge {
-  node: ProductVariant!
-  cursor: String!
-}
-
-type ProductVariantCreate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
-  productVariant: ProductVariant
-}
-
-input ProductVariantCreateInput {
-  attributes: [AttributeValueInput]!
-  sku: String
-  trackInventory: Boolean
-  weight: WeightScalar
-  product: ID!
-  stocks: [StockInput!]
-}
-
-type ProductVariantDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
-  productVariant: ProductVariant
-}
-
-input ProductVariantFilterInput {
-  search: String
-  sku: [String]
-}
-
-input ProductVariantInput {
-  attributes: [AttributeValueInput]
-  sku: String
-  trackInventory: Boolean
-  weight: WeightScalar
-}
-
-type ProductVariantReorder {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  product: Product
-  productErrors: [ProductError!]!
-}
-
-type ProductVariantReorderAttributeValues {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productVariant: ProductVariant
-  productErrors: [ProductError!]!
-}
-
-type ProductVariantSetDefault {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  product: Product
-  productErrors: [ProductError!]!
-}
-
-type ProductVariantStocksCreate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productVariant: ProductVariant
-  bulkStockErrors: [BulkStockError!]!
-}
-
-type ProductVariantStocksDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productVariant: ProductVariant
-  stockErrors: [StockError!]!
-}
-
-type ProductVariantStocksUpdate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productVariant: ProductVariant
-  bulkStockErrors: [BulkStockError!]!
-}
-
-type ProductVariantTranslatableContent implements Node {
-  id: ID!
-  name: String!
-  translation(languageCode: LanguageCodeEnum!): ProductVariantTranslation
-  productVariant: ProductVariant
-}
-
-type ProductVariantTranslate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  translationErrors: [TranslationError!]!
-  productVariant: ProductVariant
-}
-
-type ProductVariantTranslation implements Node {
-  id: ID!
-  name: String!
-  language: LanguageDisplay!
-}
-
-type ProductVariantUpdate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productErrors: [ProductError!]!
-  productVariant: ProductVariant
-}
-
 input PublishableChannelListingInput {
   channelId: ID!
   isPublished: Boolean
@@ -4408,11 +4004,13 @@ input PublishableChannelListingInput {
 }
 
 type Query {
+  place(id: ID, name: String): Place
+  places(sortBy: PlaceSortingInput, filter: PlaceFilterInput, before: String, after: String, first: Int, last: Int): PlaceCountableConnection
   webhook(id: ID!): Webhook
   webhookEvents: [WebhookEvent]
   webhookSamplePayload(eventType: WebhookSampleEventTypeEnum!): JSONString
-  warehouse(id: ID!): Warehouse
-  warehouses(filter: WarehouseFilterInput, sortBy: WarehouseSortingInput, before: String, after: String, first: Int, last: Int): WarehouseCountableConnection
+  hotel(id: ID!): Hotel
+  hotels(filter: HotelFilterInput, sortBy: HotelSortingInput, before: String, after: String, first: Int, last: Int): HotelCountableConnection
   translations(kind: TranslatableKinds!, before: String, after: String, first: Int, last: Int): TranslatableItemConnection
   translation(id: ID!, kind: TranslatableKinds!): TranslatableItem
   stock(id: ID!): Stock
@@ -4427,13 +4025,13 @@ type Query {
   category(id: ID, slug: String): Category
   collection(id: ID, slug: String, channel: String): Collection
   collections(filter: CollectionFilterInput, sortBy: CollectionSortingInput, channel: String, before: String, after: String, first: Int, last: Int): CollectionCountableConnection
-  product(id: ID, slug: String, channel: String): Product
-  products(filter: ProductFilterInput, sortBy: ProductOrder, stockAvailability: StockAvailability, channel: String, before: String, after: String, first: Int, last: Int): ProductCountableConnection
-  productType(id: ID!): ProductType
-  productTypes(filter: ProductTypeFilterInput, sortBy: ProductTypeSortingInput, before: String, after: String, first: Int, last: Int): ProductTypeCountableConnection
-  productVariant(id: ID, sku: String, channel: String): ProductVariant
-  productVariants(ids: [ID], channel: String, filter: ProductVariantFilterInput, before: String, after: String, first: Int, last: Int): ProductVariantCountableConnection
-  reportProductSales(period: ReportingPeriod!, channel: String!, before: String, after: String, first: Int, last: Int): ProductVariantCountableConnection
+  room(id: ID, slug: String, channel: String): Room
+  rooms(filter: RoomFilterInput, sortBy: RoomOrder, stockAvailability: StockAvailability, channel: String, before: String, after: String, first: Int, last: Int): RoomCountableConnection
+  roomType(id: ID!): RoomType
+  roomTypes(filter: RoomTypeFilterInput, sortBy: RoomTypeSortingInput, before: String, after: String, first: Int, last: Int): RoomTypeCountableConnection
+  roomVariant(id: ID, sku: String, channel: String): RoomVariant
+  roomVariants(ids: [ID], channel: String, filter: RoomVariantFilterInput, before: String, after: String, first: Int, last: Int): RoomVariantCountableConnection
+  reportRoomSales(period: ReportingPeriod!, channel: String!, before: String, after: String, first: Int, last: Int): RoomVariantCountableConnection
   payment(id: ID!): Payment
   payments(before: String, after: String, first: Int, last: Int): PaymentCountableConnection
   page(id: ID, slug: String): Page
@@ -4517,6 +4115,615 @@ type RequestPasswordReset {
   accountErrors: [AccountError!]!
 }
 
+type Room implements Node & ObjectWithMetadata {
+  id: ID!
+  seoTitle: String
+  seoDescription: String
+  name: String!
+  description: String!
+  descriptionJson: JSONString!
+  roomType: RoomType!
+  slug: String!
+  category: Category
+  updatedAt: DateTime
+  chargeTaxes: Boolean!
+  weight: Weight
+  defaultVariant: RoomVariant
+  rating: Float
+  privateMetadata: [MetadataItem]!
+  metadata: [MetadataItem]!
+  url: String! @deprecated(reason: "This field will be removed after 2020-07-31.")
+  thumbnail(size: Int): Image
+  pricing: RoomPricingInfo
+  isAvailable: Boolean
+  taxType: TaxType
+  attributes: [SelectedAttribute!]!
+  channelListings: [RoomChannelListing!]
+  imageById(id: ID): RoomImage
+  variants: [RoomVariant]
+  images: [RoomImage]
+  collections: [Collection]
+  translation(languageCode: LanguageCodeEnum!): RoomTranslation
+  availableForPurchase: Date
+  isAvailableForPurchase: Boolean
+}
+
+type RoomAttributeAssign {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomType: RoomType
+  roomErrors: [RoomError!]!
+}
+
+input RoomAttributeAssignInput {
+  id: ID!
+  type: RoomAttributeType!
+}
+
+enum RoomAttributeType {
+  ROOM
+  VARIANT
+}
+
+type RoomAttributeUnassign {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomType: RoomType
+  roomErrors: [RoomError!]!
+}
+
+type RoomBulkDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  count: Int!
+  roomErrors: [RoomError!]!
+}
+
+type RoomChannelListing implements Node {
+  id: ID!
+  publicationDate: Date
+  isPublished: Boolean!
+  channel: Channel!
+  visibleInListings: Boolean!
+  availableForPurchase: Date
+  discountedPrice: Money
+  purchaseCost: MoneyRange
+  margin: Margin
+  isAvailableForPurchase: Boolean
+  pricing: RoomPricingInfo
+}
+
+input RoomChannelListingAddInput {
+  channelId: ID!
+  isPublished: Boolean
+  publicationDate: Date
+  visibleInListings: Boolean
+  isAvailableForPurchase: Boolean
+  availableForPurchaseDate: Date
+}
+
+type RoomChannelListingError {
+  field: String
+  message: String
+  code: RoomErrorCode!
+  attributes: [ID!]
+  values: [ID!]
+  channels: [ID!]
+}
+
+type RoomChannelListingUpdate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  room: Room
+  roomChannelListingErrors: [RoomChannelListingError!]!
+}
+
+input RoomChannelListingUpdateInput {
+  addChannels: [RoomChannelListingAddInput!]
+  removeChannels: [ID!]
+}
+
+type RoomCountableConnection {
+  pageInfo: PageInfo!
+  edges: [RoomCountableEdge!]!
+  totalCount: Int
+}
+
+type RoomCountableEdge {
+  node: Room!
+  cursor: String!
+}
+
+type RoomCreate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomErrors: [RoomError!]!
+  room: Room
+}
+
+input RoomCreateInput {
+  attributes: [AttributeValueInput]
+  category: ID
+  chargeTaxes: Boolean
+  collections: [ID]
+  description: String
+  descriptionJson: JSONString
+  name: String
+  slug: String
+  taxCode: String
+  seo: SeoInput
+  weight: WeightScalar
+  rating: Float
+  roomType: ID!
+}
+
+type RoomDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomErrors: [RoomError!]!
+  room: Room
+}
+
+type RoomError {
+  field: String
+  message: String
+  code: RoomErrorCode!
+  attributes: [ID!]
+  values: [ID!]
+}
+
+enum RoomErrorCode {
+  ALREADY_EXISTS
+  ATTRIBUTE_ALREADY_ASSIGNED
+  ATTRIBUTE_CANNOT_BE_ASSIGNED
+  ATTRIBUTE_VARIANTS_DISABLED
+  DUPLICATED_INPUT_ITEM
+  GRAPHQL_ERROR
+  INVALID
+  ROOM_WITHOUT_CATEGORY
+  NOT_ROOMS_IMAGE
+  NOT_ROOMS_VARIANT
+  NOT_FOUND
+  REQUIRED
+  UNIQUE
+  VARIANT_NO_DIGITAL_CONTENT
+  CANNOT_MANAGE_ROOM_WITHOUT_VARIANT
+  ROOM_NOT_ASSIGNED_TO_CHANNEL
+}
+
+enum RoomFieldEnum {
+  NAME
+  DESCRIPTION
+  ROOM_TYPE
+  CATEGORY
+  VISIBLE
+  ROOM_WEIGHT
+  COLLECTIONS
+  CHARGE_TAXES
+  ROOM_IMAGES
+  VARIANT_SKU
+  VARIANT_WEIGHT
+  VARIANT_IMAGES
+}
+
+input RoomFilterInput {
+  isPublished: Boolean
+  collections: [ID]
+  categories: [ID]
+  hasCategory: Boolean
+  attributes: [AttributeInput]
+  stockAvailability: StockAvailability
+  roomType: ID
+  stocks: RoomStockFilterInput
+  search: String
+  price: PriceRangeInput
+  minimalPrice: PriceRangeInput
+  roomTypes: [ID]
+  ids: [ID]
+  channel: String
+}
+
+type RoomImage implements Node {
+  id: ID!
+  sortOrder: Int
+  alt: String!
+  url(size: Int): String!
+}
+
+type RoomImageBulkDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  count: Int!
+  roomErrors: [RoomError!]!
+}
+
+type RoomImageCreate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  room: Room
+  image: RoomImage
+  roomErrors: [RoomError!]!
+}
+
+input RoomImageCreateInput {
+  alt: String
+  image: Upload!
+  room: ID!
+}
+
+type RoomImageDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  room: Room
+  image: RoomImage
+  roomErrors: [RoomError!]!
+}
+
+type RoomImageReorder {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  room: Room
+  images: [RoomImage]
+  roomErrors: [RoomError!]!
+}
+
+type RoomImageUpdate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  room: Room
+  image: RoomImage
+  roomErrors: [RoomError!]!
+}
+
+input RoomImageUpdateInput {
+  alt: String
+}
+
+input RoomInput {
+  attributes: [AttributeValueInput]
+  category: ID
+  chargeTaxes: Boolean
+  collections: [ID]
+  description: String
+  descriptionJson: JSONString
+  name: String
+  slug: String
+  taxCode: String
+  seo: SeoInput
+  weight: WeightScalar
+  rating: Float
+}
+
+input RoomOrder {
+  direction: OrderDirection!
+  channel: String
+  attributeId: ID
+  field: RoomOrderField
+}
+
+enum RoomOrderField {
+  NAME
+  PRICE
+  MINIMAL_PRICE
+  DATE
+  TYPE
+  PUBLISHED
+  PUBLICATION_DATE
+  COLLECTION
+  RATING
+}
+
+type RoomPricingInfo {
+  onSale: Boolean
+  discount: TaxedMoney
+  discountLocalCurrency: TaxedMoney
+  priceRange: TaxedMoneyRange
+  priceRangeUndiscounted: TaxedMoneyRange
+  priceRangeLocalCurrency: TaxedMoneyRange
+}
+
+type RoomReorderAttributeValues {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  room: Room
+  roomErrors: [RoomError!]!
+}
+
+input RoomStockFilterInput {
+  hotelIds: [ID!]
+  quantity: IntRangeInput
+}
+
+type RoomTranslatableContent implements Node {
+  id: ID!
+  seoTitle: String
+  seoDescription: String
+  name: String!
+  description: String!
+  descriptionJson: JSONString!
+  translation(languageCode: LanguageCodeEnum!): RoomTranslation
+  room: Room
+}
+
+type RoomTranslate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  translationErrors: [TranslationError!]!
+  room: Room
+}
+
+type RoomTranslation implements Node {
+  id: ID!
+  seoTitle: String
+  seoDescription: String
+  name: String!
+  description: String!
+  descriptionJson: JSONString!
+  language: LanguageDisplay!
+}
+
+type RoomType implements Node & ObjectWithMetadata {
+  id: ID!
+  name: String!
+  slug: String!
+  hasVariants: Boolean!
+  isShippingRequired: Boolean!
+  isDigital: Boolean!
+  weight: Weight
+  privateMetadata: [MetadataItem]!
+  metadata: [MetadataItem]!
+  rooms(channel: String, before: String, after: String, first: Int, last: Int): RoomCountableConnection @deprecated(reason: "Use the top-level `rooms` query with the `roomTypes` filter.")
+  taxRate: TaxRateType
+  taxType: TaxType
+  variantAttributes(variantSelection: VariantAttributeScope): [Attribute]
+  roomAttributes: [Attribute]
+  availableAttributes(filter: AttributeFilterInput, before: String, after: String, first: Int, last: Int): AttributeCountableConnection
+}
+
+type RoomTypeBulkDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  count: Int!
+  roomErrors: [RoomError!]!
+}
+
+enum RoomTypeConfigurable {
+  CONFIGURABLE
+  SIMPLE
+}
+
+type RoomTypeCountableConnection {
+  pageInfo: PageInfo!
+  edges: [RoomTypeCountableEdge!]!
+  totalCount: Int
+}
+
+type RoomTypeCountableEdge {
+  node: RoomType!
+  cursor: String!
+}
+
+type RoomTypeCreate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomErrors: [RoomError!]!
+  roomType: RoomType
+}
+
+type RoomTypeDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomErrors: [RoomError!]!
+  roomType: RoomType
+}
+
+enum RoomTypeEnum {
+  DIGITAL
+  SHIPPABLE
+}
+
+input RoomTypeFilterInput {
+  search: String
+  configurable: RoomTypeConfigurable
+  roomType: RoomTypeEnum
+  ids: [ID]
+}
+
+input RoomTypeInput {
+  name: String
+  slug: String
+  hasVariants: Boolean
+  roomAttributes: [ID]
+  variantAttributes: [ID]
+  isShippingRequired: Boolean
+  isDigital: Boolean
+  weight: WeightScalar
+  taxCode: String
+}
+
+type RoomTypeReorderAttributes {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomType: RoomType
+  roomErrors: [RoomError!]!
+}
+
+enum RoomTypeSortField {
+  NAME
+  DIGITAL
+  SHIPPING_REQUIRED
+}
+
+input RoomTypeSortingInput {
+  direction: OrderDirection!
+  field: RoomTypeSortField!
+}
+
+type RoomTypeUpdate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomErrors: [RoomError!]!
+  roomType: RoomType
+}
+
+type RoomUpdate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomErrors: [RoomError!]!
+  room: Room
+}
+
+type RoomVariant implements Node & ObjectWithMetadata {
+  id: ID!
+  name: String!
+  sku: String!
+  room: Room!
+  trackInventory: Boolean!
+  weight: Weight
+  privateMetadata: [MetadataItem]!
+  metadata: [MetadataItem]!
+  channelListings: [RoomVariantChannelListing!]
+  pricing: VariantPricingInfo
+  attributes(variantSelection: VariantAttributeScope): [SelectedAttribute!]!
+  costPrice: Money
+  margin: Int
+  quantityOrdered: Int
+  revenue(period: ReportingPeriod): TaxedMoney
+  images: [RoomImage]
+  translation(languageCode: LanguageCodeEnum!): RoomVariantTranslation
+  digitalContent: DigitalContent
+  stocks(countryCode: CountryCode): [Stock]
+  quantityAvailable(countryCode: CountryCode): Int!
+}
+
+type RoomVariantBulkCreate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  count: Int!
+  roomVariants: [RoomVariant!]!
+  bulkRoomErrors: [BulkRoomError!]!
+}
+
+input RoomVariantBulkCreateInput {
+  attributes: [BulkAttributeValueInput]!
+  sku: String!
+  trackInventory: Boolean
+  weight: WeightScalar
+  stocks: [StockInput!]
+  channelListings: [RoomVariantChannelListingAddInput!]
+}
+
+type RoomVariantBulkDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  count: Int!
+  roomErrors: [RoomError!]!
+}
+
+type RoomVariantChannelListing implements Node {
+  id: ID!
+  channel: Channel!
+  price: Money
+  costPrice: Money
+  margin: Int
+}
+
+input RoomVariantChannelListingAddInput {
+  channelId: ID!
+  price: PositiveDecimal!
+  costPrice: PositiveDecimal
+}
+
+type RoomVariantChannelListingUpdate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  variant: RoomVariant
+  roomChannelListingErrors: [RoomChannelListingError!]!
+}
+
+type RoomVariantCountableConnection {
+  pageInfo: PageInfo!
+  edges: [RoomVariantCountableEdge!]!
+  totalCount: Int
+}
+
+type RoomVariantCountableEdge {
+  node: RoomVariant!
+  cursor: String!
+}
+
+type RoomVariantCreate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomErrors: [RoomError!]!
+  roomVariant: RoomVariant
+}
+
+input RoomVariantCreateInput {
+  attributes: [AttributeValueInput]!
+  sku: String
+  trackInventory: Boolean
+  weight: WeightScalar
+  room: ID!
+  stocks: [StockInput!]
+}
+
+type RoomVariantDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomErrors: [RoomError!]!
+  roomVariant: RoomVariant
+}
+
+input RoomVariantFilterInput {
+  search: String
+  sku: [String]
+}
+
+input RoomVariantInput {
+  attributes: [AttributeValueInput]
+  sku: String
+  trackInventory: Boolean
+  weight: WeightScalar
+}
+
+type RoomVariantReorder {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  room: Room
+  roomErrors: [RoomError!]!
+}
+
+type RoomVariantReorderAttributeValues {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomVariant: RoomVariant
+  roomErrors: [RoomError!]!
+}
+
+type RoomVariantSetDefault {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  room: Room
+  roomErrors: [RoomError!]!
+}
+
+type RoomVariantStocksCreate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomVariant: RoomVariant
+  bulkStockErrors: [BulkStockError!]!
+}
+
+type RoomVariantStocksDelete {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomVariant: RoomVariant
+  stockErrors: [StockError!]!
+}
+
+type RoomVariantStocksUpdate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomVariant: RoomVariant
+  bulkStockErrors: [BulkStockError!]!
+}
+
+type RoomVariantTranslatableContent implements Node {
+  id: ID!
+  name: String!
+  translation(languageCode: LanguageCodeEnum!): RoomVariantTranslation
+  roomVariant: RoomVariant
+}
+
+type RoomVariantTranslate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  translationErrors: [TranslationError!]!
+  roomVariant: RoomVariant
+}
+
+type RoomVariantTranslation implements Node {
+  id: ID!
+  name: String!
+  language: LanguageDisplay!
+}
+
+type RoomVariantUpdate {
+  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
+  roomErrors: [RoomError!]!
+  roomVariant: RoomVariant
+}
+
 type Sale implements Node {
   id: ID!
   name: String!
@@ -4525,7 +4732,7 @@ type Sale implements Node {
   endDate: DateTime
   categories(before: String, after: String, first: Int, last: Int): CategoryCountableConnection
   collections(before: String, after: String, first: Int, last: Int): CollectionCountableConnection
-  products(before: String, after: String, first: Int, last: Int): ProductCountableConnection
+  rooms(before: String, after: String, first: Int, last: Int): RoomCountableConnection
   translation(languageCode: LanguageCodeEnum!): SaleTranslation
   channelListings: [SaleChannelListing!]
   discountValue: Float
@@ -4601,7 +4808,7 @@ input SaleInput {
   name: String
   type: DiscountValueTypeEnum
   value: PositiveDecimal
-  products: [ID]
+  rooms: [ID]
   categories: [ID]
   collections: [ID]
   startDate: DateTime
@@ -4681,7 +4888,7 @@ type ShippingError {
   field: String
   message: String
   code: ShippingErrorCode!
-  warehouses: [ID!]
+  hotels: [ID!]
   channels: [ID!]
 }
 
@@ -4712,7 +4919,7 @@ type ShippingMethod implements Node & ObjectWithMetadata {
   maximumOrderPrice: Money
   minimumOrderPrice: Money
   zipCodeRules: [ShippingMethodZipCodeRule]
-  excludedProducts(before: String, after: String, first: Int, last: Int): ProductCountableConnection
+  excludedRooms(before: String, after: String, first: Int, last: Int): RoomCountableConnection
 }
 
 type ShippingMethodChannelListing implements Node {
@@ -4785,14 +4992,14 @@ type ShippingPriceDelete {
   shippingErrors: [ShippingError!]!
 }
 
-type ShippingPriceExcludeProducts {
+type ShippingPriceExcludeRooms {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   shippingMethod: ShippingMethod
   shippingErrors: [ShippingError!]!
 }
 
-input ShippingPriceExcludeProductsInput {
-  products: [ID]!
+input ShippingPriceExcludeRoomsInput {
+  rooms: [ID]!
 }
 
 input ShippingPriceInput {
@@ -4805,7 +5012,7 @@ input ShippingPriceInput {
   shippingZone: ID
 }
 
-type ShippingPriceRemoveProductFromExclude {
+type ShippingPriceRemoveRoomFromExclude {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   shippingMethod: ShippingMethod
   shippingErrors: [ShippingError!]!
@@ -4856,7 +5063,7 @@ type ShippingZone implements Node & ObjectWithMetadata {
   priceRange: MoneyRange
   countries: [CountryDisplay]
   shippingMethods: [ShippingMethod]
-  warehouses: [Warehouse]
+  hotels: [Hotel]
   description: String
 }
 
@@ -4888,7 +5095,7 @@ input ShippingZoneCreateInput {
   description: String
   countries: [String]
   default: Boolean
-  addWarehouses: [ID]
+  addHotels: [ID]
 }
 
 type ShippingZoneDelete {
@@ -4908,8 +5115,8 @@ input ShippingZoneUpdateInput {
   description: String
   countries: [String]
   default: Boolean
-  addWarehouses: [ID]
-  removeWarehouses: [ID]
+  addHotels: [ID]
+  removeHotels: [ID]
 }
 
 type Shop {
@@ -4934,7 +5141,7 @@ type Shop {
   trackInventoryByDefault: Boolean
   defaultWeightUnit: WeightUnitsEnum
   translation(languageCode: LanguageCodeEnum!): ShopTranslation
-  automaticFulfillmentDigitalProducts: Boolean
+  automaticFulfillmentDigitalRooms: Boolean
   defaultDigitalMaxDownloads: Int
   defaultDigitalUrlValidDays: Int
   companyAddress: Address
@@ -4984,7 +5191,7 @@ input ShopSettingsInput {
   chargeTaxesOnShipping: Boolean
   trackInventoryByDefault: Boolean
   defaultWeightUnit: WeightUnitsEnum
-  automaticFulfillmentDigitalProducts: Boolean
+  automaticFulfillmentDigitalRooms: Boolean
   defaultDigitalMaxDownloads: Int
   defaultDigitalUrlValidDays: Int
   defaultMailSenderName: String
@@ -5116,8 +5323,8 @@ input StaffUserInput {
 }
 
 type Stock implements Node {
-  warehouse: Warehouse!
-  productVariant: ProductVariant!
+  hotel: Hotel!
+  roomVariant: RoomVariant!
   quantity: Int!
   id: ID!
   quantityAllocated: Int!
@@ -5160,7 +5367,7 @@ input StockFilterInput {
 }
 
 input StockInput {
-  warehouse: ID!
+  hotel: ID!
   quantity: Int
 }
 
@@ -5246,7 +5453,7 @@ enum TransactionKind {
   CANCEL
 }
 
-union TranslatableItem = ProductTranslatableContent | CollectionTranslatableContent | CategoryTranslatableContent | AttributeTranslatableContent | AttributeValueTranslatableContent | ProductVariantTranslatableContent | PageTranslatableContent | ShippingMethodTranslatableContent | SaleTranslatableContent | VoucherTranslatableContent | MenuItemTranslatableContent
+union TranslatableItem = RoomTranslatableContent | CollectionTranslatableContent | CategoryTranslatableContent | AttributeTranslatableContent | AttributeValueTranslatableContent | RoomVariantTranslatableContent | PageTranslatableContent | ShippingMethodTranslatableContent | SaleTranslatableContent | VoucherTranslatableContent | MenuItemTranslatableContent
 
 type TranslatableItemConnection {
   pageInfo: PageInfo!
@@ -5266,7 +5473,7 @@ enum TranslatableKinds {
   COLLECTION
   MENU_ITEM
   PAGE
-  PRODUCT
+  ROOM
   SALE
   SHIPPING_METHOD
   VARIANT
@@ -5424,16 +5631,16 @@ enum VariantAttributeScope {
 
 type VariantImageAssign {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productVariant: ProductVariant
-  image: ProductImage
-  productErrors: [ProductError!]!
+  roomVariant: RoomVariant
+  image: RoomImage
+  roomErrors: [RoomError!]!
 }
 
 type VariantImageUnassign {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  productVariant: ProductVariant
-  image: ProductImage
-  productErrors: [ProductError!]!
+  roomVariant: RoomVariant
+  image: RoomImage
+  roomErrors: [RoomError!]!
 }
 
 type VariantPricingInfo {
@@ -5468,7 +5675,7 @@ type Voucher implements Node {
   minCheckoutItemsQuantity: Int
   categories(before: String, after: String, first: Int, last: Int): CategoryCountableConnection
   collections(before: String, after: String, first: Int, last: Int): CollectionCountableConnection
-  products(before: String, after: String, first: Int, last: Int): ProductCountableConnection
+  rooms(before: String, after: String, first: Int, last: Int): RoomCountableConnection
   countries: [CountryDisplay]
   translation(languageCode: LanguageCodeEnum!): VoucherTranslation
   discountValue: Float
@@ -5558,7 +5765,7 @@ input VoucherInput {
   startDate: DateTime
   endDate: DateTime
   discountValueType: DiscountValueTypeEnum
-  products: [ID]
+  rooms: [ID]
   collections: [ID]
   categories: [ID]
   minCheckoutItemsQuantity: Int
@@ -5612,123 +5819,13 @@ type VoucherTranslation implements Node {
 enum VoucherTypeEnum {
   SHIPPING
   ENTIRE_ORDER
-  SPECIFIC_PRODUCT
+  SPECIFIC_ROOM
 }
 
 type VoucherUpdate {
   errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
   discountErrors: [DiscountError!]!
   voucher: Voucher
-}
-
-type Warehouse implements Node & ObjectWithMetadata {
-  id: ID!
-  name: String!
-  slug: String!
-  companyName: String!
-  shippingZones(before: String, after: String, first: Int, last: Int): ShippingZoneCountableConnection!
-  address: Address!
-  email: String!
-  privateMetadata: [MetadataItem]!
-  metadata: [MetadataItem]!
-}
-
-input WarehouseAddressInput {
-  streetAddress1: String!
-  streetAddress2: String
-  city: String!
-  cityArea: String
-  postalCode: String
-  country: CountryCode!
-  countryArea: String
-  phone: String
-}
-
-type WarehouseCountableConnection {
-  pageInfo: PageInfo!
-  edges: [WarehouseCountableEdge!]!
-  totalCount: Int
-}
-
-type WarehouseCountableEdge {
-  node: Warehouse!
-  cursor: String!
-}
-
-type WarehouseCreate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  warehouseErrors: [WarehouseError!]!
-  warehouse: Warehouse
-}
-
-input WarehouseCreateInput {
-  slug: String
-  companyName: String
-  email: String
-  name: String!
-  address: WarehouseAddressInput!
-  shippingZones: [ID]
-}
-
-type WarehouseDelete {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  warehouseErrors: [WarehouseError!]!
-  warehouse: Warehouse
-}
-
-type WarehouseError {
-  field: String
-  message: String
-  code: WarehouseErrorCode!
-}
-
-enum WarehouseErrorCode {
-  ALREADY_EXISTS
-  GRAPHQL_ERROR
-  INVALID
-  NOT_FOUND
-  REQUIRED
-  UNIQUE
-}
-
-input WarehouseFilterInput {
-  search: String
-  ids: [ID]
-}
-
-type WarehouseShippingZoneAssign {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  warehouseErrors: [WarehouseError!]!
-  warehouse: Warehouse
-}
-
-type WarehouseShippingZoneUnassign {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  warehouseErrors: [WarehouseError!]!
-  warehouse: Warehouse
-}
-
-enum WarehouseSortField {
-  NAME
-}
-
-input WarehouseSortingInput {
-  direction: OrderDirection!
-  field: WarehouseSortField!
-}
-
-type WarehouseUpdate {
-  errors: [Error!]! @deprecated(reason: "Use typed errors with error codes. This field will be removed after 2020-07-31.")
-  warehouseErrors: [WarehouseError!]!
-  warehouse: Warehouse
-}
-
-input WarehouseUpdateInput {
-  slug: String
-  companyName: String
-  email: String
-  name: String
-  address: WarehouseAddressInput
 }
 
 type Webhook implements Node {
@@ -5793,8 +5890,8 @@ enum WebhookEventTypeEnum {
   INVOICE_DELETED
   INVOICE_SENT
   CUSTOMER_CREATED
-  PRODUCT_CREATED
-  PRODUCT_UPDATED
+  ROOM_CREATED
+  ROOM_UPDATED
   CHECKOUT_QUANTITY_CHANGED
   CHECKOUT_CREATED
   CHECKOUT_UPDATED
@@ -5812,8 +5909,8 @@ enum WebhookSampleEventTypeEnum {
   INVOICE_DELETED
   INVOICE_SENT
   CUSTOMER_CREATED
-  PRODUCT_CREATED
-  PRODUCT_UPDATED
+  ROOM_CREATED
+  ROOM_UPDATED
   CHECKOUT_QUANTITY_CHANGED
   CHECKOUT_CREATED
   CHECKOUT_UPDATED
@@ -5851,7 +5948,7 @@ enum WeightUnitsEnum {
 
 scalar _Any
 
-union _Entity = Address | User | Group | App | ProductVariant | Product | ProductType | Collection | Category | ProductImage | PageType
+union _Entity = Address | User | Group | App | RoomVariant | Room | RoomType | Collection | Category | RoomImage | PageType | Place
 
 type _Service {
   sdl: String

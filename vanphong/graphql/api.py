@@ -22,6 +22,7 @@ from .shop.schema import ShopMutations, ShopQueries
 from .translations.schema import TranslationQueries
 from .hotel.schema import StockQueries, HotelMutations, HotelQueries
 from .webhook.schema import WebhookMutations, WebhookQueries
+from .place.schema import PlaceQueries, PlaceMutations
 
 
 class Query(
@@ -46,6 +47,7 @@ class Query(
     TranslationQueries,
     HotelQueries,
     WebhookQueries,
+    PlaceQueries,
 ):
     pass
 
@@ -72,6 +74,7 @@ class Mutation(
     ShopMutations,
     HotelMutations,
     WebhookMutations,
+    PlaceMutations,
 ):
     pass
 

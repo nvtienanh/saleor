@@ -25,6 +25,7 @@ from ...hotel import error_codes as hotel_error_codes
 from ...webhook import error_codes as webhook_error_codes
 from ...wishlist import error_codes as wishlist_error_codes
 from ..shop import error_codes as shop_error_codes
+from ...place import error_codes as place_error_codes
 from .utils import str_to_enum
 
 # FIXME CoreTaxRateType should be removed after we will drop old api fields dedicated
@@ -120,3 +121,4 @@ HotelErrorCode = graphene.Enum.from_enum(hotel_error_codes.HotelErrorCode)
 WebhookErrorCode = graphene.Enum.from_enum(webhook_error_codes.WebhookErrorCode)
 WishlistErrorCode = graphene.Enum.from_enum(wishlist_error_codes.WishlistErrorCode)
 TranslationErrorCode = graphene.Enum.from_enum(core_error_codes.TranslationErrorCode)
+PlaceErrorCode = graphene.Enum.from_enum(place_error_codes.PlaceErrorCode)
