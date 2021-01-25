@@ -105,6 +105,11 @@ do
 done
 ```
 
+# build-schema 
+```bash
+python manage.py get_graphql_schema > vanphong/graphql/schema.graphql
+```
+
 # Generate Database Modeling
 ## Install
 

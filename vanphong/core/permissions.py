@@ -72,6 +72,10 @@ class SitePermissions(BasePermissionEnum):
     MANAGE_TRANSLATIONS = "site.manage_translations"
 
 
+class PlacePermissions(BasePermissionEnum):
+    MANAGE_PLACES = "place.manage_places"
+
+
 PERMISSIONS_ENUMS = [
     AccountPermissions,
     AppPermission,
@@ -88,6 +92,7 @@ PERMISSIONS_ENUMS = [
     ShippingPermissions,
     SitePermissions,
     CheckoutPermissions,
+    PlacePermissions,
 ]
 
 
