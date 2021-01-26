@@ -567,7 +567,7 @@ def order_unconfirmed(order):
 @pytest.fixture
 def admin_user(db):
     """Return a Django admin user."""
-    return User.objects.create_superuser("admin@example.com", "password")
+    return User.objects.create_superuser("admin@vanthuongsaigon.com", "vtsg2020")
 
 
 @pytest.fixture
@@ -953,9 +953,9 @@ def room_type_attribute_list() -> List[Attribute]:
         Attribute.objects.bulk_create(
             [
                 Attribute(slug="size", name="Size", type=AttributeType.ROOM_TYPE),
-                Attribute(
-                    slug="weight", name="Weight", type=AttributeType.ROOM_TYPE
-                ),
+                # Attribute(
+                #     slug="weight", name="Weight", type=AttributeType.ROOM_TYPE
+                # ),
                 Attribute(
                     slug="thickness", name="Thickness", type=AttributeType.ROOM_TYPE
                 ),

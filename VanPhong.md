@@ -51,7 +51,7 @@ source pyvenv/bin/activate
 python manage.py migrate
 python manage.py collectstatic --noinput
 python manage.py populatedb --createsuperuser
-python manage.py get_graphql_schema > saleor/graphql/schema.graphql
+python manage.py get_graphql_schema > vanphong/graphql/schema.graphql
 # python manage.py createsuperuser
 export ALLOWED_HOSTS=*
 export SECRET_KEY=vtsg-dev
@@ -142,4 +142,5 @@ python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *Custome
 python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *Room*,*VariantImage*,*Occurrence*,*AttributeTranslation*,*Attribute*,*Category* -o database_model/saleor.room.png
 python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *Order*,*Fulfillment*,*Booking*,*Checkout*,*Payment*,*Transaction* -o database_model/saleor.order.png
 python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *Hotel*,*Room*,*Checkout*,*Order*,*Allocation*,*Stock* -o database_model/saleor.hotel.png
+python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *weight* -o erd/weight.svg
 ```

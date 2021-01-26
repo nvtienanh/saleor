@@ -87,7 +87,7 @@ def test_applicable_shipping_methods_weight(
     assert "PL" in shipping_zone.countries
     result = ShippingMethod.objects.applicable_shipping_methods(
         price=Money("0", "USD"),
-        weight=weight,
+        # weight=weight,
         country_code="PL",
         channel_id=channel_USD.id,
     )
@@ -111,7 +111,7 @@ def test_applicable_shipping_methods_country_code_outside_shipping_zone(
     shipping_zone.save()
     result = ShippingMethod.objects.applicable_shipping_methods(
         price=Money("5.0", "USD"),
-        weight=Weight(kg=0),
+        # weight=Weight(kg=0),
         country_code="PL",
         channel_id=channel_USD.id,
     )
@@ -151,7 +151,7 @@ def test_applicable_shipping_methods_inproper_shipping_method_type(
 
     result = ShippingMethod.objects.applicable_shipping_methods(
         price=Money("5.0", "USD"),
-        weight=Weight(kg=5),
+        # weight=Weight(kg=5),
         country_code="PL",
         channel_id=channel_USD.id,
     )
@@ -186,7 +186,7 @@ def test_applicable_shipping_methods(shipping_zone, channel_USD):
     )
     result = ShippingMethod.objects.applicable_shipping_methods(
         price=Money("5.0", "USD"),
-        weight=Weight(kg=5),
+        # weight=Weight(kg=5),
         country_code="PL",
         channel_id=channel_USD.id,
     )
@@ -224,7 +224,7 @@ def test_applicable_shipping_methods_with_excluded_rooms(
     )
     result = ShippingMethod.objects.applicable_shipping_methods(
         price=Money("5.0", "USD"),
-        weight=Weight(kg=5),
+        # weight=Weight(kg=5),
         country_code="PL",
         channel_id=channel_USD.id,
         room_ids=[room.id, room_with_single_variant.id],
@@ -249,7 +249,7 @@ def test_applicable_shipping_methods_not_in_channel(shipping_zone, channel_USD):
     ),
     result = ShippingMethod.objects.applicable_shipping_methods(
         price=Money("5.0", "USD"),
-        weight=Weight(kg=5),
+        # weight=Weight(kg=5),
         country_code="PL",
         channel_id=channel_USD.id,
     )
@@ -278,7 +278,7 @@ def test_use_default_shipping_zone(shipping_zone, channel_USD):
     )
     result = ShippingMethod.objects.applicable_shipping_methods(
         price=Money("5.0", "USD"),
-        weight=Weight(kg=5),
+        # weight=Weight(kg=5),
         country_code="DE",
         channel_id=channel_USD.id,
     )
@@ -372,7 +372,7 @@ def test_applicable_shipping_methods_price_rate_use_proper_channel(
     # when
     result = ShippingMethod.objects.applicable_shipping_methods(
         price=Money("5.0", "USD"),
-        weight=Weight(kg=5),
+        # weight=Weight(kg=5),
         country_code="PL",
         channel_id=channel_USD.id,
     )

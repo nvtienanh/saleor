@@ -222,7 +222,7 @@ class RoomVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
         description = (
             "Represents a version of a room such as different size or color."
         )
-        only_fields = ["id", "name", "room", "sku", "track_inventory", "weight"]
+        only_fields = ["id", "name", "room", "sku", "track_inventory"]
         interfaces = [relay.Node, ObjectWithMetadata]
         model = models.RoomVariant
 
@@ -423,9 +423,11 @@ class RoomVariant(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
     ):
         return graphene.Node.get_node_from_global_id(_info, root.node.id)
 
+    """
     @staticmethod
     def resolve_weight(root: ChannelContext[models.RoomVariant], _info, **_kwargs):
         return convert_weight_to_default_weight_unit(root.node.weight)
+    """
 
 
 @key(fields="id")
@@ -505,7 +507,7 @@ class Room(ChannelContextTypeWithMetadata, CountableDjangoObjectType):
             "seo_description",
             "seo_title",
             "updated_at",
-            "weight",
+            # "weight",
             "default_variant",
             "rating",
         ]
@@ -814,7 +816,7 @@ class RoomType(CountableDjangoObjectType):
             "is_shipping_required",
             "name",
             "slug",
-            "weight",
+            # "weight",
             "tax_type",
         ]
 

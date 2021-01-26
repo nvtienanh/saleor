@@ -1,8 +1,9 @@
 class ShippingMethodType:
     PRICE_BASED = "price"
-    WEIGHT_BASED = "weight"
+    # WEIGHT_BASED = "weight"
 
     CHOICES = [
         (PRICE_BASED, "Price based shipping"),
-        (WEIGHT_BASED, "Weight based shipping"),
+        # TODO: Remove fields related `weight`
+        # (WEIGHT_BASED, "Weight based shipping"),
     ]

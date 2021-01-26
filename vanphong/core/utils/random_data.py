@@ -169,7 +169,7 @@ def create_room_types(room_type_data):
     for room_type in room_type_data:
         pk = room_type["pk"]
         defaults = room_type["fields"]
-        defaults["weight"] = get_weight(defaults["weight"])
+        # defaults["weight"] = get_weight(defaults["weight"])
         RoomType.objects.update_or_create(pk=pk, defaults=defaults)
 
 
@@ -246,7 +246,7 @@ def create_rooms(rooms_data, placeholder_dir, create_images):
             continue
 
         defaults = room["fields"]
-        defaults["weight"] = get_weight(defaults["weight"])
+        # defaults["weight"] = get_weight(defaults["weight"])
         defaults["category_id"] = defaults.pop("category")
         defaults["room_type_id"] = defaults.pop("room_type")
 
@@ -284,7 +284,7 @@ def create_room_variants(variants_data, create_images):
     for variant in variants_data:
         pk = variant["pk"]
         defaults = variant["fields"]
-        defaults["weight"] = get_weight(defaults["weight"])
+        # defaults["weight"] = get_weight(defaults["weight"])
         room_id = defaults.pop("room")
         # We have not created rooms without images
         if room_id not in IMAGES_MAPPING:
@@ -706,10 +706,12 @@ def create_fake_order(discounts, max_order_lines=5):
     order = Order.objects.create(**order_data)
     lines = create_order_lines(order, discounts, random.randrange(1, max_order_lines))
     order.total = sum([line.total_price for line in lines], shipping_price)
+    """
     weight = Weight(kg=0)
     for line in order:
         weight += line.variant.get_weight()
     order.weight = weight
+    """
     order.save()
 
     create_fake_payment(order=order)
@@ -873,11 +875,11 @@ def create_shipping_zone(shipping_methods_names, countries, shipping_zone_name):
                 shipping_zone=shipping_zone,
                 type=(
                     ShippingMethodType.PRICE_BASED
-                    if random.randint(0, 1)
-                    else ShippingMethodType.WEIGHT_BASED
+                    # if random.randint(0, 1)
+                    # else ShippingMethodType.WEIGHT_BASED
                 ),
-                minimum_order_weight=0,
-                maximum_order_weight=None,
+                # minimum_order_weight=0,
+                # maximum_order_weight=None,
             )
             for name in shipping_methods_names
         ]

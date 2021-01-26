@@ -40,7 +40,7 @@ from ..core.sanitizers.editorjs_sanitizer import clean_editor_js
 from ..core.utils import build_absolute_uri
 from ..core.utils.draftjs import json_content_to_raw_text
 from ..core.utils.translations import TranslationProxy
-from ..core.weight import WeightUnits, zero_weight
+# from ..core.weight import WeightUnits, zero_weight
 from ..discount import DiscountInfo
 from ..discount.utils import calculate_discounted_price
 from ..seo.models import SeoModel, SeoModelTranslation
@@ -110,9 +110,11 @@ class RoomType(ModelWithMetadata):
     has_variants = models.BooleanField(default=True)
     is_shipping_required = models.BooleanField(default=True)
     is_digital = models.BooleanField(default=False)
+    """ TODO: Remove fields related `weight`
     weight = MeasurementField(
         measurement=Weight, unit_choices=WeightUnits.CHOICES, default=zero_weight
     )
+    """
 
     class Meta:
         ordering = ("slug",)
@@ -321,9 +323,11 @@ class Room(SeoModel, ModelWithMetadata):
     )
     updated_at = models.DateTimeField(auto_now=True, null=True)
     charge_taxes = models.BooleanField(default=True)
+    """ TODO: Remove fields related `weight`
     weight = MeasurementField(
         measurement=Weight, unit_choices=WeightUnits.CHOICES, blank=True, null=True
     )
+    """
     default_variant = models.OneToOneField(
         "RoomVariant",
         blank=True,
@@ -458,9 +462,11 @@ class RoomVariant(SortableModel, ModelWithMetadata):
     images = models.ManyToManyField("RoomImage", through="VariantImage")
     track_inventory = models.BooleanField(default=True)
 
+    """ TODO: Remove fields related `weight`
     weight = MeasurementField(
         measurement=Weight, unit_choices=WeightUnits.CHOICES, blank=True, null=True
     )
+    """
 
     objects = RoomVariantQueryset.as_manager()
     translated = TranslationProxy()
@@ -488,8 +494,10 @@ class RoomVariant(SortableModel, ModelWithMetadata):
             channel=channel,
         )
 
+    """ TODO: Remove fields related `weight`
     def get_weight(self):
         return self.weight or self.room.weight or self.room.room_type.weight
+    """
 
     def is_shipping_required(self) -> bool:
         return self.room.room_type.is_shipping_required
