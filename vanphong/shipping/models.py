@@ -28,13 +28,15 @@ if TYPE_CHECKING:
     from ..order.models import Order
 
 
+""" TODO: Remove fields related `weight`
 def _applicable_weight_based_methods(weight, qs):
-    """Return weight based shipping methods that are applicable for the total weight."""
+    Return weight based shipping methods that are applicable for the total weight.
     qs = qs.weight_based()
     min_weight_matched = Q(minimum_order_weight__lte=weight)
     no_weight_limit = Q(maximum_order_weight__isnull=True)
     max_weight_matched = Q(maximum_order_weight__gte=weight)
     return qs.filter(min_weight_matched & (no_weight_limit | max_weight_matched))
+"""
 
 
 def _applicable_price_based_methods(price: Money, qs, channel_id):
@@ -56,6 +58,7 @@ def _applicable_price_based_methods(price: Money, qs, channel_id):
     return qs_shipping_method.filter(id__in=applicable_price_based_methods)
 
 
+""" TODO: Remove fields related `weight`
 def _get_weight_type_display(min_weight, max_weight):
     default_unit = get_default_weight_unit()
 
@@ -70,6 +73,7 @@ def _get_weight_type_display(min_weight, max_weight):
         "min_weight": min_weight,
         "max_weight": max_weight,
     }
+"""
 
 
 class ShippingZone(ModelWithMetadata):
@@ -91,8 +95,10 @@ class ShippingMethodQueryset(models.QuerySet):
     def price_based(self):
         return self.filter(type=ShippingMethodType.PRICE_BASED)
 
+    """ TODO: Remove fields related `weight`
     def weight_based(self):
         return self.filter(type=ShippingMethodType.WEIGHT_BASED)
+    """
 
     @staticmethod
     def applicable_shipping_methods_by_channel(shipping_methods, channel_id):
@@ -132,8 +138,10 @@ class ShippingMethodQueryset(models.QuerySet):
             qs = self.exclude_shipping_methods_for_excluded_rooms(qs, room_ids)
 
         price_based_methods = _applicable_price_based_methods(price, qs, channel_id)
+        """ TODO: Remove fields related `weight`
         weight_based_methods = _applicable_weight_based_methods(weight, qs)
-        shipping_methods = price_based_methods | weight_based_methods
+        """
+        shipping_methods = price_based_methods # | weight_based_methods
 
         return shipping_methods
 
@@ -179,6 +187,7 @@ class ShippingMethod(ModelWithMetadata):
     shipping_zone = models.ForeignKey(
         ShippingZone, related_name="shipping_methods", on_delete=models.CASCADE
     )
+    """ TODO: Remove fields related `weight`
     minimum_order_weight = MeasurementField(
         measurement=Weight,
         unit_choices=WeightUnits.CHOICES,
@@ -189,6 +198,7 @@ class ShippingMethod(ModelWithMetadata):
     maximum_order_weight = MeasurementField(
         measurement=Weight, unit_choices=WeightUnits.CHOICES, blank=True, null=True
     )
+    """
     excluded_rooms = models.ManyToManyField(
         "room.Room", blank=True
     )  # type: ignore

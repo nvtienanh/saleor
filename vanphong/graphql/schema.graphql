@@ -2961,7 +2961,6 @@ type Order implements Node & ObjectWithMetadata {
   translatedDiscountName: String
   displayGrossPrices: Boolean!
   customerNote: String!
-  weight: Weight
   redirectUrl: String
   privateMetadata: [MetadataItem]!
   metadata: [MetadataItem]!
@@ -4127,7 +4126,6 @@ type Room implements Node & ObjectWithMetadata {
   category: Category
   updatedAt: DateTime
   chargeTaxes: Boolean!
-  weight: Weight
   defaultVariant: RoomVariant
   rating: Float
   privateMetadata: [MetadataItem]!
@@ -4247,7 +4245,6 @@ input RoomCreateInput {
   slug: String
   taxCode: String
   seo: SeoInput
-  weight: WeightScalar
   rating: Float
   roomType: ID!
 }
@@ -4379,7 +4376,6 @@ input RoomInput {
   slug: String
   taxCode: String
   seo: SeoInput
-  weight: WeightScalar
   rating: Float
 }
 
@@ -4456,7 +4452,6 @@ type RoomType implements Node & ObjectWithMetadata {
   hasVariants: Boolean!
   isShippingRequired: Boolean!
   isDigital: Boolean!
-  weight: Weight
   privateMetadata: [MetadataItem]!
   metadata: [MetadataItem]!
   rooms(channel: String, before: String, after: String, first: Int, last: Int): RoomCountableConnection @deprecated(reason: "Use the top-level `rooms` query with the `roomTypes` filter.")
@@ -4521,7 +4516,6 @@ input RoomTypeInput {
   variantAttributes: [ID]
   isShippingRequired: Boolean
   isDigital: Boolean
-  weight: WeightScalar
   taxCode: String
 }
 
@@ -4560,7 +4554,6 @@ type RoomVariant implements Node & ObjectWithMetadata {
   sku: String!
   room: Room!
   trackInventory: Boolean!
-  weight: Weight
   privateMetadata: [MetadataItem]!
   metadata: [MetadataItem]!
   channelListings: [RoomVariantChannelListing!]
@@ -4588,7 +4581,6 @@ input RoomVariantBulkCreateInput {
   attributes: [BulkAttributeValueInput]!
   sku: String!
   trackInventory: Boolean
-  weight: WeightScalar
   stocks: [StockInput!]
   channelListings: [RoomVariantChannelListingAddInput!]
 }
@@ -4640,7 +4632,6 @@ input RoomVariantCreateInput {
   attributes: [AttributeValueInput]!
   sku: String
   trackInventory: Boolean
-  weight: WeightScalar
   room: ID!
   stocks: [StockInput!]
 }
@@ -4660,7 +4651,6 @@ input RoomVariantInput {
   attributes: [AttributeValueInput]
   sku: String
   trackInventory: Boolean
-  weight: WeightScalar
 }
 
 type RoomVariantReorder {
@@ -4906,8 +4896,6 @@ enum ShippingErrorCode {
 type ShippingMethod implements Node & ObjectWithMetadata {
   id: ID!
   name: String!
-  minimumOrderWeight: Weight
-  maximumOrderWeight: Weight
   maximumDeliveryDays: Int
   minimumDeliveryDays: Int
   privateMetadata: [MetadataItem]!
@@ -4963,7 +4951,6 @@ type ShippingMethodTranslation implements Node {
 
 enum ShippingMethodTypeEnum {
   PRICE
-  WEIGHT
 }
 
 type ShippingMethodZipCodeRule implements Node {
@@ -5004,8 +4991,6 @@ input ShippingPriceExcludeRoomsInput {
 
 input ShippingPriceInput {
   name: String
-  minimumOrderWeight: WeightScalar
-  maximumOrderWeight: WeightScalar
   maximumDeliveryDays: Int
   minimumDeliveryDays: Int
   type: ShippingMethodTypeEnum
@@ -5931,13 +5916,6 @@ input WebhookUpdateInput {
   isActive: Boolean
   secretKey: String
 }
-
-type Weight {
-  unit: WeightUnitsEnum!
-  value: Float!
-}
-
-scalar WeightScalar
 
 enum WeightUnitsEnum {
   KG

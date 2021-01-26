@@ -50,7 +50,7 @@ ORDER_FIELDS = (
     "discount_amount",
     "discount_name",
     "translated_discount_name",
-    "weight",
+    # "weight",
     "private_metadata",
     "metadata",
 )
@@ -211,7 +211,7 @@ def generate_room_payload(room: "Room"):
         "attributes",
         "updated_at",
         "charge_taxes",
-        "weight",
+        # "weight",
         "publication_date",
         "is_published",
         "private_metadata",
@@ -252,8 +252,8 @@ def generate_fulfillment_lines_payload(fulfillment: Fulfillment):
         lines,
         fields=line_fields,
         extra_dict_data={
-            "weight": (lambda fl: fl.order_line.variant.get_weight().g),
-            "weight_unit": "gram",
+            # "weight": (lambda fl: fl.order_line.variant.get_weight().g),
+            # "weight_unit": "gram",
             "room_type": (
                 lambda fl: fl.order_line.variant.room.room_type.name
             ),

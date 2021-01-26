@@ -291,8 +291,7 @@
       "slug": "paint",
       "has_variants": true,
       "is_shipping_required": true,
-      "is_digital": false,
-      "weight": "1.0:kg"
+      "is_digital": false
     }
   },
   {
@@ -308,8 +307,7 @@
       "slug": "music",
       "has_variants": true,
       "is_shipping_required": true,
-      "is_digital": false,
-      "weight": "0.2:kg"
+      "is_digital": false
     }
   },
   {
@@ -325,8 +323,7 @@
       "slug": "juice",
       "has_variants": true,
       "is_shipping_required": true,
-      "is_digital": false,
-      "weight": "1.0:kg"
+      "is_digital": false
     }
   },
   {
@@ -342,8 +339,7 @@
       "slug": "wine",
       "has_variants": false,
       "is_shipping_required": true,
-      "is_digital": false,
-      "weight": "1.0:kg"
+      "is_digital": false
     }
   },
   {
@@ -359,8 +355,7 @@
       "slug": "beer",
       "has_variants": false,
       "is_shipping_required": true,
-      "is_digital": false,
-      "weight": "1.0:kg"
+      "is_digital": false
     }
   },
   {
@@ -376,8 +371,7 @@
       "slug": "cushion",
       "has_variants": true,
       "is_shipping_required": true,
-      "is_digital": false,
-      "weight": "0.5:kg"
+      "is_digital": false
     }
   },
   {
@@ -393,8 +387,7 @@
       "slug": "shoe",
       "has_variants": true,
       "is_shipping_required": true,
-      "is_digital": false,
-      "weight": "1.0:kg"
+      "is_digital": false
     }
   },
   {
@@ -410,8 +403,7 @@
       "slug": "top-clothing",
       "has_variants": true,
       "is_shipping_required": true,
-      "is_digital": false,
-      "weight": "1.0:kg"
+      "is_digital": false
     }
   },
   {
@@ -424,8 +416,7 @@
       "slug": "e-book",
       "has_variants": true,
       "is_shipping_required": false,
-      "is_digital": true,
-      "weight": "0.0:kg"
+      "is_digital": true
     }
   },
   {
@@ -457,8 +448,7 @@
       },
       "category": 20,
       "updated_at": "2020-08-31T06:53:16.102Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -486,8 +476,7 @@
       },
       "category": 20,
       "updated_at": "2020-08-31T06:53:16.307Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -515,8 +504,7 @@
       },
       "category": 20,
       "updated_at": "2020-08-31T06:53:29.317Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -544,8 +532,7 @@
       },
       "category": 20,
       "updated_at": "2020-08-31T06:53:29.548Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -573,8 +560,7 @@
       },
       "category": 20,
       "updated_at": "2020-08-31T06:53:29.787Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -602,8 +588,7 @@
       },
       "category": 14,
       "updated_at": "2020-08-31T06:53:17.155Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -631,8 +616,7 @@
       },
       "category": 14,
       "updated_at": "2020-08-31T06:53:17.312Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -660,8 +644,7 @@
       },
       "category": 14,
       "updated_at": "2020-08-31T06:53:17.473Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -689,8 +672,7 @@
       },
       "category": 14,
       "updated_at": "2020-08-31T06:53:17.630Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -718,8 +700,7 @@
       },
       "category": 14,
       "updated_at": "2020-08-31T06:53:17.782Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -747,8 +728,7 @@
       },
       "category": 14,
       "updated_at": "2020-08-31T06:53:31.827Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -776,8 +756,7 @@
       },
       "category": 14,
       "updated_at": "2020-08-31T06:53:18.105Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -805,8 +784,7 @@
       },
       "category": 14,
       "updated_at": "2020-08-31T06:53:32.287Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -834,8 +812,7 @@
       },
       "category": 14,
       "updated_at": "2020-08-31T06:53:18.411Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -863,8 +840,7 @@
       },
       "category": 15,
       "updated_at": "2020-08-31T06:53:18.558Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -892,8 +868,7 @@
       },
       "category": 15,
       "updated_at": "2020-08-31T06:53:30.364Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -921,8 +896,7 @@
       },
       "category": 15,
       "updated_at": "2020-08-31T06:53:18.900Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -950,8 +924,7 @@
       },
       "category": 15,
       "updated_at": "2020-08-31T06:53:30.527Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -979,8 +952,7 @@
       },
       "category": 22,
       "updated_at": "2020-08-31T06:53:30.677Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1008,8 +980,7 @@
       },
       "category": 22,
       "updated_at": "2020-08-31T06:53:20.430Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1037,8 +1008,7 @@
       },
       "category": 13,
       "updated_at": "2020-08-31T06:53:32.761Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1066,8 +1036,7 @@
       },
       "category": 13,
       "updated_at": "2020-08-31T06:53:33.172Z",
-      "charge_taxes": true,
-      "weight": "1.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1095,8 +1064,7 @@
       },
       "category": 10,
       "updated_at": "2020-08-31T06:53:33.473Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1124,8 +1092,7 @@
       },
       "category": 11,
       "updated_at": "2020-08-31T06:53:22.365Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1153,8 +1120,7 @@
       },
       "category": 11,
       "updated_at": "2020-08-31T06:53:34.274Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1182,8 +1148,7 @@
       },
       "category": 11,
       "updated_at": "2020-08-31T06:53:22.900Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1211,8 +1176,7 @@
       },
       "category": 11,
       "updated_at": "2020-08-31T06:53:35.075Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1240,8 +1204,7 @@
       },
       "category": 10,
       "updated_at": "2020-08-31T06:53:35.478Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1269,8 +1232,7 @@
       },
       "category": 10,
       "updated_at": "2020-08-31T06:53:24.137Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1298,8 +1260,7 @@
       },
       "category": 10,
       "updated_at": "2020-08-31T06:53:36.267Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1327,8 +1288,7 @@
       },
       "category": 10,
       "updated_at": "2020-08-31T06:53:36.707Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1356,8 +1316,7 @@
       },
       "category": 12,
       "updated_at": "2020-08-31T06:53:25.468Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1385,8 +1344,7 @@
       },
       "category": 12,
       "updated_at": "2020-08-31T06:53:25.725Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1414,8 +1372,7 @@
       },
       "category": 12,
       "updated_at": "2020-08-31T06:53:37.920Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1443,8 +1400,7 @@
       },
       "category": 12,
       "updated_at": "2020-08-31T06:53:26.266Z",
-      "charge_taxes": true,
-      "weight": "0.0:kg"
+      "charge_taxes": true
     }
   },
   {
@@ -1469,8 +1425,7 @@
       },
       "category": 23,
       "updated_at": "2020-08-31T06:53:27.068Z",
-      "charge_taxes": false,
-      "weight": "0.0:kg"
+      "charge_taxes": false
     }
   },
   {
@@ -1495,8 +1450,7 @@
       },
       "category": 23,
       "updated_at": "2020-08-31T06:53:27.344Z",
-      "charge_taxes": false,
-      "weight": "0.0:kg"
+      "charge_taxes": false
     }
   },
   {
@@ -1521,8 +1475,7 @@
       },
       "category": 23,
       "updated_at": "2020-08-31T06:53:27.611Z",
-      "charge_taxes": false,
-      "weight": "0.0:kg"
+      "charge_taxes": false
     }
   },
   {
@@ -1547,8 +1500,7 @@
       },
       "category": 23,
       "updated_at": "2020-08-31T06:53:27.873Z",
-      "charge_taxes": false,
-      "weight": "0.0:kg"
+      "charge_taxes": false
     }
   },
   {
@@ -1573,8 +1525,7 @@
       },
       "category": 23,
       "updated_at": "2020-08-31T06:53:28.105Z",
-      "charge_taxes": false,
-      "weight": "0.0:kg"
+      "charge_taxes": false
     }
   },
   {
@@ -1599,8 +1550,7 @@
       },
       "category": 23,
       "updated_at": "2020-08-31T06:53:28.398Z",
-      "charge_taxes": false,
-      "weight": "0.0:kg"
+      "charge_taxes": false
     }
   },
   {
@@ -2536,7 +2486,6 @@
       "name": "1l",
       "room": 61,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -2549,8 +2498,7 @@
       "sku": "546451997",
       "name": "2.5l",
       "room": 61,
-      "track_inventory": true,
-      "weight": "2.5:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2562,8 +2510,7 @@
       "sku": "546451999",
       "name": "5l",
       "room": 61,
-      "track_inventory": true,
-      "weight": "5.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2576,7 +2523,6 @@
       "name": "1l",
       "room": 62,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -2589,8 +2535,7 @@
       "sku": "998223599",
       "name": "2.5l",
       "room": 62,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2602,8 +2547,7 @@
       "sku": "998223594",
       "name": "5l",
       "room": 62,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2616,7 +2560,6 @@
       "name": "1l",
       "room": 63,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -2629,8 +2572,7 @@
       "sku": "998223583",
       "name": "2.5l",
       "room": 63,
-      "track_inventory": true,
-      "weight": "2.5:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2642,8 +2584,7 @@
       "sku": "998223584",
       "name": "5l",
       "room": 63,
-      "track_inventory": true,
-      "weight": "5.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2656,7 +2597,6 @@
       "name": "1l",
       "room": 64,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -2669,8 +2609,7 @@
       "sku": "998323583",
       "name": "2.5l",
       "room": 64,
-      "track_inventory": true,
-      "weight": "2.5:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2682,8 +2621,7 @@
       "sku": "998323584",
       "name": "5l",
       "room": 64,
-      "track_inventory": true,
-      "weight": "5.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2696,7 +2634,6 @@
       "name": "1l",
       "room": 65,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -2709,8 +2646,7 @@
       "sku": "998423583",
       "name": "2.5l",
       "room": 65,
-      "track_inventory": true,
-      "weight": "2.5:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2722,8 +2658,7 @@
       "sku": "998423585",
       "name": "5l",
       "room": 65,
-      "track_inventory": true,
-      "weight": "5.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2736,7 +2671,6 @@
       "name": "500ml",
       "room": 71,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -2749,8 +2683,7 @@
       "sku": "938323582",
       "name": "1l",
       "room": 71,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2762,8 +2695,7 @@
       "sku": "988323522",
       "name": "2l",
       "room": 71,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2776,7 +2708,6 @@
       "name": "",
       "room": 81,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -2790,7 +2721,6 @@
       "name": "",
       "room": 82,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -2804,7 +2734,6 @@
       "name": "",
       "room": 83,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -2818,7 +2747,6 @@
       "name": "",
       "room": 84,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -2832,7 +2760,6 @@
       "name": "45cm x 45cm",
       "room": 85,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -2845,8 +2772,7 @@
       "sku": "698223581",
       "name": "55cm x 55cm",
       "room": 85,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2859,7 +2785,6 @@
       "name": "45cm x 45cm",
       "room": 86,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -2872,8 +2797,7 @@
       "sku": "998223590",
       "name": "55cm x 55cm",
       "room": 86,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2886,7 +2810,6 @@
       "name": "500ml",
       "room": 72,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -2899,8 +2822,7 @@
       "sku": "43226647",
       "name": "1l",
       "room": 72,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2912,8 +2834,7 @@
       "sku": "80884671",
       "name": "2l",
       "room": 72,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2926,7 +2847,6 @@
       "name": "500ml",
       "room": 73,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -2939,8 +2859,7 @@
       "sku": "14925419",
       "name": "1l",
       "room": 73,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2952,8 +2871,7 @@
       "sku": "62426105",
       "name": "2l",
       "room": 73,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2966,7 +2884,6 @@
       "name": "500ml",
       "room": 74,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -2979,8 +2896,7 @@
       "sku": "27512590",
       "name": "1l",
       "room": 74,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -2992,8 +2908,7 @@
       "sku": "40636347",
       "name": "2l",
       "room": 74,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3006,7 +2921,6 @@
       "name": "500ml",
       "room": 75,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -3019,8 +2933,7 @@
       "sku": "79129513",
       "name": "1l",
       "room": 75,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3032,8 +2945,7 @@
       "sku": "75799450",
       "name": "2l",
       "room": 75,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3046,7 +2958,6 @@
       "name": "500ml",
       "room": 76,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -3059,8 +2970,7 @@
       "sku": "5829405",
       "name": "1l",
       "room": 76,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3072,8 +2982,7 @@
       "sku": "84725784",
       "name": "2l",
       "room": 76,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3086,7 +2995,6 @@
       "name": "500ml",
       "room": 77,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -3099,8 +3007,7 @@
       "sku": "94044081",
       "name": "1l",
       "room": 77,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3112,8 +3019,7 @@
       "sku": "80696397",
       "name": "2l",
       "room": 77,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3126,7 +3032,6 @@
       "name": "500ml",
       "room": 78,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -3139,8 +3044,7 @@
       "sku": "81470859",
       "name": "1l",
       "room": 78,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3152,8 +3056,7 @@
       "sku": "30635751",
       "name": "2l",
       "room": 78,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3166,7 +3069,6 @@
       "name": "500ml",
       "room": 79,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -3179,8 +3081,7 @@
       "sku": "57423879",
       "name": "1l",
       "room": 79,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3192,8 +3093,7 @@
       "sku": "21438542",
       "name": "2l",
       "room": 79,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3206,7 +3106,6 @@
       "name": "39",
       "room": 87,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3219,8 +3118,7 @@
       "sku": "398323584",
       "name": "40",
       "room": 87,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3232,8 +3130,7 @@
       "sku": "398323585",
       "name": "41",
       "room": 87,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3245,8 +3142,7 @@
       "sku": "398323586",
       "name": "42",
       "room": 87,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3258,8 +3154,7 @@
       "sku": "398323588",
       "name": "43",
       "room": 87,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3272,7 +3167,6 @@
       "name": "40",
       "room": 88,
       "track_inventory": true,
-      "weight": "1.0:kg",
       "default": true
     }
   },
@@ -3285,8 +3179,7 @@
       "sku": "978223582",
       "name": "41",
       "room": 88,
-      "track_inventory": true,
-      "weight": "1.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3298,8 +3191,7 @@
       "sku": "918323583",
       "name": "40",
       "room": 88,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3311,8 +3203,7 @@
       "sku": "918223582",
       "name": "45",
       "room": 88,
-      "track_inventory": true,
-      "weight": "2.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3325,7 +3216,6 @@
       "name": "S",
       "room": 89,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3338,8 +3228,7 @@
       "sku": "338223582",
       "name": "M",
       "room": 89,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3351,8 +3240,7 @@
       "sku": "118223591",
       "name": "L",
       "room": 89,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3364,8 +3252,7 @@
       "sku": "448323583",
       "name": "XL",
       "room": 89,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3377,8 +3264,7 @@
       "sku": "3128223583",
       "name": "XXL",
       "room": 89,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3391,7 +3277,6 @@
       "name": "S",
       "room": 107,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3404,8 +3289,7 @@
       "sku": "66594736",
       "name": "M",
       "room": 107,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3417,8 +3301,7 @@
       "sku": "50269944",
       "name": "L",
       "room": 107,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3430,8 +3313,7 @@
       "sku": "31352185",
       "name": "XL",
       "room": 107,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3443,8 +3325,7 @@
       "sku": "85364796",
       "name": "XXL",
       "room": 107,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3457,7 +3338,6 @@
       "name": "S",
       "room": 108,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3470,8 +3350,7 @@
       "sku": "90892602",
       "name": "M",
       "room": 108,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3483,8 +3362,7 @@
       "sku": "59014392",
       "name": "L",
       "room": 108,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3496,8 +3374,7 @@
       "sku": "43659438",
       "name": "XL",
       "room": 108,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3509,8 +3386,7 @@
       "sku": "60597697",
       "name": "XXL",
       "room": 108,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3523,7 +3399,6 @@
       "name": "S",
       "room": 109,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3536,8 +3411,7 @@
       "sku": "36260498",
       "name": "M",
       "room": 109,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3549,8 +3423,7 @@
       "sku": "37558859",
       "name": "L",
       "room": 109,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3562,8 +3435,7 @@
       "sku": "19402012",
       "name": "XL",
       "room": 109,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3575,8 +3447,7 @@
       "sku": "17570141",
       "name": "XXL",
       "room": 109,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3589,7 +3460,6 @@
       "name": "S",
       "room": 110,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3602,8 +3472,7 @@
       "sku": "46806935",
       "name": "M",
       "room": 110,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3615,8 +3484,7 @@
       "sku": "71103052",
       "name": "L",
       "room": 110,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3628,8 +3496,7 @@
       "sku": "84812015",
       "name": "XL",
       "room": 110,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3641,8 +3508,7 @@
       "sku": "89820261",
       "name": "XXL",
       "room": 110,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3655,7 +3521,6 @@
       "name": "S",
       "room": 111,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3668,8 +3533,7 @@
       "sku": "38254631",
       "name": "M",
       "room": 111,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3681,8 +3545,7 @@
       "sku": "11511539",
       "name": "L",
       "room": 111,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3694,8 +3557,7 @@
       "sku": "84192227",
       "name": "XL",
       "room": 111,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3707,8 +3569,7 @@
       "sku": "91642659",
       "name": "XXL",
       "room": 111,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3721,7 +3582,6 @@
       "name": "S",
       "room": 112,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3734,8 +3594,7 @@
       "sku": "55101176",
       "name": "M",
       "room": 112,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3747,8 +3606,7 @@
       "sku": "28094954",
       "name": "L",
       "room": 112,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3760,8 +3618,7 @@
       "sku": "40232182",
       "name": "XL",
       "room": 112,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3773,8 +3630,7 @@
       "sku": "21522631",
       "name": "XXL",
       "room": 112,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3787,7 +3643,6 @@
       "name": "S",
       "room": 113,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3800,8 +3655,7 @@
       "sku": "57917658",
       "name": "M",
       "room": 113,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3813,8 +3667,7 @@
       "sku": "42680611",
       "name": "L",
       "room": 113,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3826,8 +3679,7 @@
       "sku": "72289815",
       "name": "XL",
       "room": 113,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3839,8 +3691,7 @@
       "sku": "98653891",
       "name": "XXL",
       "room": 113,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3853,7 +3704,6 @@
       "name": "S",
       "room": 114,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3866,8 +3716,7 @@
       "sku": "68848129",
       "name": "M",
       "room": 114,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3879,8 +3728,7 @@
       "sku": "35342696",
       "name": "L",
       "room": 114,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3892,8 +3740,7 @@
       "sku": "98935349",
       "name": "XL",
       "room": 114,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3905,8 +3752,7 @@
       "sku": "45179543",
       "name": "XXL",
       "room": 114,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3919,7 +3765,6 @@
       "name": "S",
       "room": 115,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3932,8 +3777,7 @@
       "sku": "91406604",
       "name": "M",
       "room": 115,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3945,8 +3789,7 @@
       "sku": "22119503",
       "name": "L",
       "room": 115,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3958,8 +3801,7 @@
       "sku": "19230637",
       "name": "XL",
       "room": 115,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3971,8 +3813,7 @@
       "sku": "61630747",
       "name": "XXL",
       "room": 115,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -3985,7 +3826,6 @@
       "name": "S",
       "room": 116,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -3998,8 +3838,7 @@
       "sku": "21599567",
       "name": "M",
       "room": 116,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4011,8 +3850,7 @@
       "sku": "65363253",
       "name": "L",
       "room": 116,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4024,8 +3862,7 @@
       "sku": "51987722",
       "name": "XL",
       "room": 116,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4037,8 +3874,7 @@
       "sku": "43313080",
       "name": "XXL",
       "room": 116,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4051,7 +3887,6 @@
       "name": "S",
       "room": 117,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -4064,8 +3899,7 @@
       "sku": "66846240",
       "name": "M",
       "room": 117,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4077,8 +3911,7 @@
       "sku": "55365141",
       "name": "L",
       "room": 117,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4090,8 +3923,7 @@
       "sku": "73186143",
       "name": "XL",
       "room": 117,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4103,8 +3935,7 @@
       "sku": "42651772",
       "name": "XXL",
       "room": 117,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4117,7 +3948,6 @@
       "name": "S",
       "room": 118,
       "track_inventory": true,
-      "weight": "0.0:kg",
       "default": true
     }
   },
@@ -4130,8 +3960,7 @@
       "sku": "36334412",
       "name": "M",
       "room": 118,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4143,8 +3972,7 @@
       "sku": "35994675",
       "name": "L",
       "room": 118,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4156,8 +3984,7 @@
       "sku": "10404946",
       "name": "XL",
       "room": 118,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4169,8 +3996,7 @@
       "sku": "45507483",
       "name": "XXL",
       "room": 118,
-      "track_inventory": true,
-      "weight": "0.0:kg"
+      "track_inventory": true
     }
   },
   {
@@ -4183,7 +4009,6 @@
       "name": "MP3",
       "room": 119,
       "track_inventory": true,
-      "weight": null,
       "default": true
     }
   },
@@ -4197,7 +4022,6 @@
       "name": "MP3",
       "room": 120,
       "track_inventory": true,
-      "weight": null,
       "default": true
     }
   },
@@ -4211,7 +4035,6 @@
       "name": "MP3",
       "room": 121,
       "track_inventory": true,
-      "weight": null,
       "default": true
     }
   },
@@ -4225,7 +4048,6 @@
       "name": "MP3",
       "room": 122,
       "track_inventory": true,
-      "weight": null,
       "default": true
     }
   },
@@ -4239,7 +4061,6 @@
       "name": "MP3",
       "room": 123,
       "track_inventory": true,
-      "weight": null,
       "default": true
     }
   },
@@ -4253,7 +4074,6 @@
       "name": "MP3",
       "room": 124,
       "track_inventory": true,
-      "weight": null,
       "default": true
     }
   },

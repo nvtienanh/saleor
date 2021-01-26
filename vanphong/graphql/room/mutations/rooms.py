@@ -490,7 +490,9 @@ class RoomInput(graphene.InputObjectType):
     slug = graphene.String(description="Room slug.")
     tax_code = graphene.String(description="Tax rate for enabled tax gateway.")
     seo = SeoInput(description="Search engine optimization fields.")
+    """ TODO: Remove fields related `weight`
     weight = WeightScalar(description="Weight of the Room.", required=False)
+    """
     rating = graphene.Float(description="Defines the room rating value.")
 
 
@@ -539,6 +541,7 @@ class RoomCreate(ModelMutation):
     def clean_input(cls, info, instance, data):
         cleaned_input = super().clean_input(info, instance, data)
 
+        """ TODO: Remove fields related `weight`
         weight = cleaned_input.get("weight")
         if weight and weight.value < 0:
             raise ValidationError(
@@ -549,6 +552,7 @@ class RoomCreate(ModelMutation):
                     )
                 }
             )
+        """
 
         # Attributes are provided as list of `AttributeValueInput` objects.
         # We need to transform them into the format they're stored in the
@@ -710,7 +714,9 @@ class RoomVariantInput(graphene.InputObjectType):
             "the quantity won't change when customers buy this item."
         )
     )
+    """ TODO: Remove fields related `weight`
     weight = WeightScalar(description="Weight of the Room Variant.", required=False)
+    """
 
 
 class RoomVariantCreateInput(RoomVariantInput):
@@ -784,6 +790,7 @@ class RoomVariantCreate(ModelMutation):
     ):
         cleaned_input = super().clean_input(info, instance, data)
 
+        """ TODO: Remove fields related `weight`
         weight = cleaned_input.get("weight")
         if weight and weight.value < 0:
             raise ValidationError(
@@ -794,6 +801,7 @@ class RoomVariantCreate(ModelMutation):
                     )
                 }
             )
+        """
 
         stocks = cleaned_input.get("stocks")
         if stocks:
@@ -1024,7 +1032,9 @@ class RoomTypeInput(graphene.InputObjectType):
     is_digital = graphene.Boolean(
         description="Determines if rooms are digital.", required=False
     )
+    """ TODO: Remove fields related `weight`
     weight = WeightScalar(description="Weight of the RoomType items.")
+    """
     tax_code = graphene.String(description="Tax rate for enabled tax gateway.")
 
 
@@ -1045,6 +1055,7 @@ class RoomTypeCreate(ModelMutation):
     def clean_input(cls, info, instance, data):
         cleaned_input = super().clean_input(info, instance, data)
 
+        """ TODO: Remove fields related `weight`
         weight = cleaned_input.get("weight")
         if weight and weight.value < 0:
             raise ValidationError(
@@ -1055,6 +1066,7 @@ class RoomTypeCreate(ModelMutation):
                     )
                 }
             )
+        """
 
         try:
             cleaned_input = validate_slug_and_generate_if_needed(

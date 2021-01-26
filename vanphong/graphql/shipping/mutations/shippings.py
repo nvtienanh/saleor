@@ -24,12 +24,14 @@ from ..types import ShippingMethod, ShippingMethodZipCodeRule, ShippingZone
 
 class ShippingPriceInput(graphene.InputObjectType):
     name = graphene.String(description="Name of the shipping method.")
+    """
     minimum_order_weight = WeightScalar(
         description="Minimum order weight to use this shipping method."
     )
     maximum_order_weight = WeightScalar(
         description="Maximum order weight to use this shipping method."
     )
+    """
     maximum_delivery_days = graphene.Int(
         description="Maximum number of days for delivery."
     )
@@ -300,6 +302,7 @@ class ShippingPriceMixin:
             raise ValidationError(errors)
         return cleaned_input
 
+    """
     @classmethod
     def clean_weight(cls, cleaned_input, errors):
         min_weight = cleaned_input.get("minimum_order_weight")
@@ -335,6 +338,7 @@ class ShippingPriceMixin:
                     )
                 }
             )
+    """
 
     @classmethod
     def clean_delivery_time(cls, instance, cleaned_input, errors):

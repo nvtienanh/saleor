@@ -567,7 +567,7 @@ def order_unconfirmed(order):
 @pytest.fixture
 def admin_user(db):
     """Return a Django admin user."""
-    return User.objects.create_superuser("admin@example.com", "password")
+    return User.objects.create_superuser("admin@vanthuongsaigon.com", "vtsg2020")
 
 
 @pytest.fixture

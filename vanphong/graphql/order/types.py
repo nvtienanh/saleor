@@ -461,7 +461,7 @@ class Order(CountableDjangoObjectType):
             "translated_discount_name",
             "user",
             "voucher",
-            "weight",
+            # "weight",
             "redirect_url",
         ]
 

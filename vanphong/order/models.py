@@ -185,9 +185,11 @@ class Order(ModelWithMetadata):
     translated_discount_name = models.CharField(max_length=255, blank=True, null=True)
     display_gross_prices = models.BooleanField(default=True)
     customer_note = models.TextField(blank=True, default="")
+    """ TODO: Remove fields related `weight`
     weight = MeasurementField(
         measurement=Weight, unit_choices=WeightUnits.CHOICES, default=zero_weight
     )
+    """
     redirect_url = models.URLField(blank=True, null=True)
     objects = OrderQueryset.as_manager()
 
@@ -346,8 +348,10 @@ class Order(ModelWithMetadata):
     def total_balance(self):
         return self.total_captured - self.total.gross
 
+    """ TODO: Remove fields related `weight`
     def get_total_weight(self, *_args):
         return self.weight
+    """
 
 
 class OrderLineQueryset(models.QuerySet):
