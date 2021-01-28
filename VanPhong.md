@@ -142,5 +142,5 @@ python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *Custome
 python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *Room*,*VariantImage*,*Occurrence*,*AttributeTranslation*,*Attribute*,*Category* -o database_model/saleor.room.png
 python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *Order*,*Fulfillment*,*Booking*,*Checkout*,*Payment*,*Transaction* -o database_model/saleor.order.png
 python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *Hotel*,*Room*,*Checkout*,*Order*,*Allocation*,*Stock* -o database_model/saleor.hotel.png
-python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *weight* -o erd/weight.svg
+python manage.py graph_models --pygraphviz -a --arrow-shape normal g -I *Hotel*,*Room* -o erd/hotel.svg
 ```

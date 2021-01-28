@@ -209,9 +209,11 @@ def validate_draft_order(order, country):
     Returns a list of errors if any were found.
     """
     validate_billing_address(order)
+    """TODO: remove `shipping` fields
     if order.is_shipping_required():
         validate_shipping_address(order)
         validate_shipping_method(order)
+    """
     validate_total_quantity(order)
     validate_order_lines(order, country)
     validate_room_is_published(order)

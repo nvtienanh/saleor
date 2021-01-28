@@ -12,10 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RemoveField(
             model_name='order',
-            name='channel',
-        ),
-        migrations.RemoveField(
-            model_name='order',
             name='shipping_address',
         ),
         migrations.RemoveField(

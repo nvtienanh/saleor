@@ -33,9 +33,11 @@ class HotelCreateInput(HotelInput):
     address = HotelAddressInput(
         description="Address of the hotel.", required=True
     )
+    """TODO remove `shipping` fields
     shipping_zones = graphene.List(
         graphene.ID, description="Shipping zones supported by the hotel."
     )
+    """
 
 
 class HotelUpdateInput(HotelInput):
@@ -55,11 +57,12 @@ class Hotel(CountableDjangoObjectType):
             "name",
             "slug",
             "company_name",
-            "shipping_zones",
+            # "shipping_zones",
             "address",
             "email",
         ]
 
+    """TODO remove `shipping` fields
     @staticmethod
     def resolve_shipping_zones(root, *_args, **_kwargs):
         instances = root.shipping_zones.all()
@@ -68,6 +71,7 @@ class Hotel(CountableDjangoObjectType):
             for shipping_zone in instances
         ]
         return shipping_zones
+    """
 
 
 class Stock(CountableDjangoObjectType):

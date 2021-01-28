@@ -112,9 +112,11 @@ class AccountInput(graphene.InputObjectType):
     default_billing_address = AddressInput(
         description="Billing address of the customer."
     )
+    """TODO: remove `shipping` fields
     default_shipping_address = AddressInput(
         description="Shipping address of the customer."
     )
+    """
 
 
 class AccountUpdate(BaseCustomerCreate):

@@ -43,9 +43,11 @@ class Address(CountableDjangoObjectType):
     country = graphene.Field(
         CountryDisplay, required=True, description="Shop's default country."
     )
+    """TODO: remove `shipping` fields
     is_default_shipping_address = graphene.Boolean(
         required=False, description="Address is user's default shipping address."
     )
+    """
     is_default_billing_address = graphene.Boolean(
         required=False, description="Address is user's default billing address."
     )
@@ -73,15 +75,16 @@ class Address(CountableDjangoObjectType):
     def resolve_country(root: models.Address, _info):
         return CountryDisplay(code=root.country.code, country=root.country.name)
 
+    """TODO: remove `shipping` fields
     @staticmethod
     def resolve_is_default_shipping_address(root: models.Address, _info):
-        """Look if the address is the default shipping address of the user.
+        # Look if the address is the default shipping address of the user.
 
-        This field is added through annotation when using the
-        `resolve_addresses` resolver. It's invalid for
-        `resolve_default_shipping_address` and
-        `resolve_default_billing_address`
-        """
+        # This field is added through annotation when using the
+        # `resolve_addresses` resolver. It's invalid for
+        # `resolve_default_shipping_address` and
+        # `resolve_default_billing_address`
+        # 
         if not hasattr(root, "user_default_shipping_address_pk"):
             return None
 
@@ -91,6 +94,7 @@ class Address(CountableDjangoObjectType):
         if user_default_shipping_address_pk == root.pk:
             return True
         return False
+    """
 
     @staticmethod
     def resolve_is_default_billing_address(root: models.Address, _info):
@@ -249,7 +253,7 @@ class User(CountableDjangoObjectType):
         only_fields = [
             "date_joined",
             "default_billing_address",
-            "default_shipping_address",
+            # "default_shipping_address",
             "email",
             "first_name",
             "id",

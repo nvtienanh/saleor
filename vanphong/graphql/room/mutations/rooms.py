@@ -1026,12 +1026,16 @@ class RoomTypeInput(graphene.InputObjectType):
         ),
         name="variantAttributes",
     )
+    """TODO: remove `shipping` fields
     is_shipping_required = graphene.Boolean(
         description="Determines if shipping is required for rooms of this variant."
     )
+    """
+    """TODO: remove `digital` fields
     is_digital = graphene.Boolean(
         description="Determines if rooms are digital.", required=False
     )
+    """
     """ TODO: Remove fields related `weight`
     weight = WeightScalar(description="Weight of the RoomType items.")
     """

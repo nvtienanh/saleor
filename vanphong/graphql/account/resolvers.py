@@ -23,10 +23,10 @@ USER_SEARCH_FIELDS = (
     "email",
     "first_name",
     "last_name",
-    "default_shipping_address__first_name",
-    "default_shipping_address__last_name",
-    "default_shipping_address__city",
-    "default_shipping_address__country",
+    # "default_shipping_address__first_name",
+    # "default_shipping_address__last_name",
+    # "default_shipping_address__city",
+    # "default_shipping_address__country",
 )
 
 

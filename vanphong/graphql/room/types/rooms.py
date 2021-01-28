@@ -812,8 +812,8 @@ class RoomType(CountableDjangoObjectType):
         only_fields = [
             "has_variants",
             "id",
-            "is_digital",
-            "is_shipping_required",
+            # "is_digital",
+            # "is_shipping_required",
             "name",
             "slug",
             # "weight",

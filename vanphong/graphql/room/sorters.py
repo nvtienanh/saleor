@@ -232,16 +232,16 @@ class RoomOrder(ChannelSortInputObjectType):
 
 class RoomTypeSortField(graphene.Enum):
     NAME = ["name", "slug"]
-    DIGITAL = ["is_digital", "name", "slug"]
-    SHIPPING_REQUIRED = ["is_shipping_required", "name", "slug"]
+    # DIGITAL = ["is_digital", "name", "slug"]
+    # SHIPPING_REQUIRED = ["is_shipping_required", "name", "slug"]
 
     @property
     def description(self):
         # pylint: disable=no-member
         descriptions = {
             RoomTypeSortField.NAME.name: "name",
-            RoomTypeSortField.DIGITAL.name: "type",
-            RoomTypeSortField.SHIPPING_REQUIRED.name: "shipping",
+            # RoomTypeSortField.DIGITAL.name: "type",
+            # RoomTypeSortField.SHIPPING_REQUIRED.name: "shipping",
         }
         if self.name in descriptions:
             return f"Sort rooms by {descriptions[self.name]}."

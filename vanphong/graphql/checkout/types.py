@@ -160,6 +160,7 @@ class CheckoutLine(CountableDjangoObjectType):
             .then(with_checkout)
         )
 
+    """TODO: remove `shipping` fields
     @staticmethod
     def resolve_requires_shipping(root: models.CheckoutLine, info):
         def is_shipping_required(room_type):
@@ -170,6 +171,7 @@ class CheckoutLine(CountableDjangoObjectType):
             .load(root.variant_id)
             .then(is_shipping_required)
         )
+    """
 
 
 class Checkout(CountableDjangoObjectType):
@@ -187,9 +189,11 @@ class Checkout(CountableDjangoObjectType):
     gift_cards = graphene.List(
         GiftCard, description="List of gift cards associated with this checkout."
     )
+    """TODO: remove `shipping` fields
     is_shipping_required = graphene.Boolean(
         description="Returns True, if checkout requires shipping.", required=True
     )
+    """
     lines = graphene.List(
         CheckoutLine,
         description=(
@@ -197,6 +201,7 @@ class Checkout(CountableDjangoObjectType):
             "an item in the checkout."
         ),
     )
+    """TODO: remove `shipping` fields
     shipping_price = graphene.Field(
         TaxedMoney,
         description="The price of the shipping, with all the taxes included.",
@@ -205,6 +210,7 @@ class Checkout(CountableDjangoObjectType):
         ShippingMethod,
         description="The shipping method related with checkout.",
     )
+    """
     subtotal_price = graphene.Field(
         TaxedMoney,
         description="The price of the checkout before shipping, with taxes included.",
@@ -224,12 +230,12 @@ class Checkout(CountableDjangoObjectType):
             "created",
             "discount_name",
             "gift_cards",
-            "is_shipping_required",
+            # "is_shipping_required",
             "last_change",
             "channel",
             "note",
             "quantity",
-            "shipping_address",
+            # "shipping_address",
             "translated_discount_name",
             "user",
             "voucher_code",
@@ -240,11 +246,13 @@ class Checkout(CountableDjangoObjectType):
         interfaces = [graphene.relay.Node, ObjectWithMetadata]
         filter_fields = ["token"]
 
+    """TODO: remove `shipping` fields
     @staticmethod
     def resolve_shipping_address(root: models.Checkout, info):
         if not root.shipping_address_id:
             return
         return AddressByIdLoader(info.context).load(root.shipping_address_id)
+    """
 
     @staticmethod
     def resolve_billing_address(root: models.Checkout, info):
@@ -263,6 +271,7 @@ class Checkout(CountableDjangoObjectType):
     def resolve_email(root: models.Checkout, _info):
         return root.get_customer_email()
 
+    """TODO: remove `shipping` fields
     @staticmethod
     def resolve_shipping_method(root: models.Checkout, info):
         if not root.shipping_method_id:
@@ -280,6 +289,7 @@ class Checkout(CountableDjangoObjectType):
         return Promise.all([shipping_method, channel]).then(
             wrap_shipping_method_with_channel_context
         )
+    """
 
     @staticmethod
     # TODO: We should optimize it in/after PR#5819
@@ -298,7 +308,7 @@ class Checkout(CountableDjangoObjectType):
             )
             return max(taxed_total, zero_taxed_money(root.currency))
 
-        address_id = root.shipping_address_id or root.billing_address_id
+        address_id = root.billing_address_id
         address = (
             AddressByIdLoader(info.context).load(address_id) if address_id else None
         )
@@ -321,7 +331,7 @@ class Checkout(CountableDjangoObjectType):
                 discounts=discounts,
             )
 
-        address_id = root.shipping_address_id or root.billing_address_id
+        address_id = root.billing_address_id
         address = (
             AddressByIdLoader(info.context).load(address_id) if address_id else None
         )
@@ -331,6 +341,7 @@ class Checkout(CountableDjangoObjectType):
         )
         return Promise.all([address, lines, discounts]).then(calculate_subtotal_price)
 
+    """TODO: remove `shipping` fields
     @staticmethod
     # TODO: We should optimize it in/after PR#5819
     def resolve_shipping_price(root: models.Checkout, info):
@@ -354,11 +365,13 @@ class Checkout(CountableDjangoObjectType):
             info.context.request_time
         )
         return Promise.all([address, lines, discounts]).then(calculate_shipping_price)
+    """
 
     @staticmethod
     def resolve_lines(root: models.Checkout, info):
         return CheckoutLinesByCheckoutTokenLoader(info.context).load(root.token)
 
+    """TODO: remove `shipping` fields
     @staticmethod
     # TODO: We should optimize it in/after PR#5819
     def resolve_available_shipping_methods(root: models.Checkout, info):
@@ -435,6 +448,7 @@ class Checkout(CountableDjangoObjectType):
         return Promise.all([address, lines, discounts, channel]).then(
             calculate_available_shipping_methods
         )
+    """
 
     @staticmethod
     def resolve_available_payment_gateways(root: models.Checkout, info):
@@ -444,6 +458,7 @@ class Checkout(CountableDjangoObjectType):
     def resolve_gift_cards(root: models.Checkout, _info):
         return root.gift_cards.all()
 
+    """TODO: remove `shipping` fields
     @staticmethod
     def resolve_is_shipping_required(root: models.Checkout, info):
         def is_shipping_required(lines):
@@ -463,3 +478,4 @@ class Checkout(CountableDjangoObjectType):
             .load(root.token)
             .then(is_shipping_required)
         )
+    """

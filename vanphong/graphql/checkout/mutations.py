@@ -16,11 +16,11 @@ from ...checkout.utils import (
     add_variant_to_checkout,
     add_variants_to_checkout,
     change_billing_address_in_checkout,
-    change_shipping_address_in_checkout,
+    # change_shipping_address_in_checkout,
     fetch_checkout_lines,
     get_user_checkout,
-    get_valid_shipping_methods_for_checkout,
-    is_shipping_required,
+    # get_valid_shipping_methods_for_checkout,
+    # is_shipping_required,
     recalculate_checkout_discount,
     remove_promo_code_from_checkout,
 )
@@ -44,13 +44,14 @@ from .types import Checkout, CheckoutLine
 ERROR_DOES_NOT_SHIP = "This checkout doesn't need shipping"
 
 
+"""TODO: remove `shipping` fields
 def clean_shipping_method(
     checkout: models.Checkout,
     lines: Iterable[CheckoutLineInfo],
     method: Optional[models.ShippingMethod],
     discounts,
 ) -> bool:
-    """Check if current shipping method is valid."""
+    # Check if current shipping method is valid.
 
     if not method:
         # no shipping method was provided, it is valid
@@ -93,7 +94,7 @@ def update_checkout_shipping_method_if_invalid(
         ).first()
         checkout.shipping_method = cheapest_alternative
         checkout.save(update_fields=["shipping_method", "last_change"])
-
+"""
 
 def check_lines_quantity(variants, quantities, country):
     """Clean quantities and check if stock is sufficient for each checkout line."""
@@ -174,6 +175,7 @@ class CheckoutCreateInput(graphene.InputObjectType):
         required=True,
     )
     email = graphene.String(description="The customer's email address.")
+    """TODO: remove `shipping` fields
     shipping_address = AddressInput(
         description=(
             "The mailing address to where the checkout will be shipped. "
@@ -181,6 +183,7 @@ class CheckoutCreateInput(graphene.InputObjectType):
             "doesn't contain shippable items."
         )
     )
+    """
     billing_address = AddressInput(description="Billing address of the customer.")
 
 
@@ -225,6 +228,7 @@ class CheckoutCreate(ModelMutation, I18nMixin):
         check_lines_quantity(variants, quantities, country)
         return variants, quantities
 
+    """TODO: remove `shipping` fields
     @classmethod
     def retrieve_shipping_address(cls, user, data: dict) -> Optional[models.Address]:
         if data.get("shipping_address") is not None:
@@ -232,6 +236,7 @@ class CheckoutCreate(ModelMutation, I18nMixin):
         if user.is_authenticated:
             return user.default_shipping_address
         return None
+    """
 
     @classmethod
     def retrieve_billing_address(cls, user, data: dict) -> Optional[models.Address]:
@@ -293,11 +298,13 @@ class CheckoutCreate(ModelMutation, I18nMixin):
         cleaned_input["channel"] = channel
         cleaned_input["currency"] = channel.currency_code
 
+        """TODO: remove `shipping` fields
         # set country to one from shipping address
         shipping_address = cleaned_input.get("shipping_address")
         if shipping_address and shipping_address.country:
             if shipping_address.country != country:
                 country = shipping_address.country
+        """
         cleaned_input["country"] = country
 
         # Resolve and process the lines, retrieving the variants and quantities
@@ -308,7 +315,9 @@ class CheckoutCreate(ModelMutation, I18nMixin):
                 cleaned_input["quantities"],
             ) = cls.clean_checkout_lines(lines, country, cleaned_input["channel"].id)
 
+        """TODO: remove `shipping` fields
         cleaned_input["shipping_address"] = cls.retrieve_shipping_address(user, data)
+        """
         cleaned_input["billing_address"] = cls.retrieve_billing_address(user, data)
 
         # Use authenticated user's email as default email
@@ -344,11 +353,13 @@ class CheckoutCreate(ModelMutation, I18nMixin):
                     code=exc.code,
                 )
 
+        """TODO: remove `shipping` fields
         # Save addresses
         shipping_address = cleaned_input.get("shipping_address")
         if shipping_address and instance.is_shipping_required():
             shipping_address.save()
             instance.shipping_address = shipping_address.get_copy()
+        """
 
         billing_address = cleaned_input.get("billing_address")
         if billing_address:
@@ -437,9 +448,11 @@ class CheckoutLinesAdd(BaseMutation):
             info.context.plugins.checkout_quantity_changed(checkout)
 
         lines = fetch_checkout_lines(checkout)
+        """TODO: remove `shipping` fields
         update_checkout_shipping_method_if_invalid(
             checkout, lines, info.context.discounts
         )
+        """
         recalculate_checkout_discount(
             info.context.plugins, checkout, lines, info.context.discounts
         )
@@ -486,9 +499,11 @@ class CheckoutLineDelete(BaseMutation):
             info.context.plugins.checkout_quantity_changed(checkout)
 
         lines = fetch_checkout_lines(checkout)
+        """TODO: remove `shipping` fields
         update_checkout_shipping_method_if_invalid(
             checkout, lines, info.context.discounts
         )
+        """
         recalculate_checkout_discount(
             info.context.plugins, checkout, lines, info.context.discounts
         )
@@ -572,6 +587,7 @@ class CheckoutCustomerDetach(BaseMutation):
         return CheckoutCustomerDetach(checkout=checkout)
 
 
+"""TODO: remove `shipping` fields
 class CheckoutShippingAddressUpdate(BaseMutation, I18nMixin):
     checkout = graphene.Field(Checkout, description="An updated checkout.")
 
@@ -661,6 +677,8 @@ class CheckoutShippingAddressUpdate(BaseMutation, I18nMixin):
 
 
 class CheckoutBillingAddressUpdate(CheckoutShippingAddressUpdate):
+"""
+class CheckoutBillingAddressUpdate(BaseMutation, I18nMixin):
     checkout = graphene.Field(Checkout, description="An updated checkout.")
 
     class Arguments:
@@ -714,6 +732,7 @@ class CheckoutEmailUpdate(BaseMutation):
         return CheckoutEmailUpdate(checkout=checkout)
 
 
+"""TODO: remove `shipping` fields
 class CheckoutShippingMethodUpdate(BaseMutation):
     checkout = graphene.Field(Checkout, description="An updated checkout.")
 
@@ -775,6 +794,7 @@ class CheckoutShippingMethodUpdate(BaseMutation):
         )
         info.context.plugins.checkout_updated(checkout)
         return CheckoutShippingMethodUpdate(checkout=checkout)
+"""
 
 
 class CheckoutComplete(BaseMutation):

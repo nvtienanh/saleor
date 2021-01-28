@@ -8,8 +8,8 @@ from .filters import StockFilterInput, HotelFilterInput
 from .mutations import (
     HotelCreate,
     HotelDelete,
-    HotelShippingZoneAssign,
-    HotelShippingZoneUnassign,
+    # HotelShippingZoneAssign,
+    # HotelShippingZoneUnassign,
     HotelUpdate,
 )
 from .sorters import HotelSortingInput
@@ -50,8 +50,10 @@ class HotelMutations(graphene.ObjectType):
     create_hotel = HotelCreate.Field()
     update_hotel = HotelUpdate.Field()
     delete_hotel = HotelDelete.Field()
+    """TODO remove `shipping` fields
     assign_hotel_shipping_zone = HotelShippingZoneAssign.Field()
     unassign_hotel_shipping_zone = HotelShippingZoneUnassign.Field()
+    """
 
 
 class StockQueries(graphene.ObjectType):

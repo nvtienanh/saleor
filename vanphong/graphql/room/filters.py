@@ -225,10 +225,12 @@ def filter_room_type_configurable(qs, _, value):
 
 
 def filter_room_type(qs, _, value):
+    """TODO: remove `shipping` fields
     if value == RoomTypeEnum.DIGITAL:
         qs = qs.filter(is_digital=True)
     elif value == RoomTypeEnum.SHIPPABLE:
         qs = qs.filter(is_shipping_required=True)
+    """
     return qs
 
 

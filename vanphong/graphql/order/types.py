@@ -299,7 +299,7 @@ class OrderLine(CountableDjangoObjectType):
         only_fields = [
             "digital_content_url",
             "id",
-            "is_shipping_required",
+            # "is_shipping_required",
             "room_name",
             "variant_name",
             "room_sku",
@@ -431,9 +431,11 @@ class Order(CountableDjangoObjectType):
     user_email = graphene.String(
         required=False, description="Email address of the customer."
     )
+    """TODO: remove `shipping` fields
     is_shipping_required = graphene.Boolean(
         description="Returns True, if order requires shipping.", required=True
     )
+    """
 
     class Meta:
         description = "Represents an order in the shop."
@@ -450,11 +452,11 @@ class Order(CountableDjangoObjectType):
             "gift_cards",
             "id",
             "language_code",
-            "shipping_address",
-            "shipping_method",
-            "shipping_method_name",
-            "shipping_price",
-            "shipping_tax_rate",
+            # "shipping_address",
+            # "shipping_method",
+            # "shipping_method_name",
+            # "shipping_price",
+            # "shipping_tax_rate",
             "status",
             "token",
             "tracking_client_id",
@@ -472,6 +474,7 @@ class Order(CountableDjangoObjectType):
             return root.billing_address
         return obfuscate_address(root.billing_address)
 
+    """TODO: remove `shipping` fields
     @staticmethod
     def resolve_shipping_address(root: models.Order, info):
         requester = get_user_or_app_from_context(info.context)
@@ -482,6 +485,7 @@ class Order(CountableDjangoObjectType):
     @staticmethod
     def resolve_shipping_price(root: models.Order, _info):
         return root.shipping_price
+    """
 
     @staticmethod
     def resolve_actions(root: models.Order, _info):
@@ -644,9 +648,11 @@ class Order(CountableDjangoObjectType):
             return root.invoices.all()
         raise PermissionDenied()
 
+    """TODO: remove `shipping` fields
     @staticmethod
     def resolve_is_shipping_required(root: models.Order, _info):
         return root.is_shipping_required()
+    """
 
     @staticmethod
     def resolve_gift_cards(root: models.Order, _info):

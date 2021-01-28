@@ -12,7 +12,9 @@ from ..core.utils import (
     validate_required_string_field,
     validate_slug_and_generate_if_needed,
 )
+"""TODO remove `shipping` fields
 from ..shipping.types import ShippingZone
+"""
 from .types import Hotel, HotelCreateInput, HotelUpdateInput
 
 ADDRESS_FIELDS = [
@@ -46,12 +48,14 @@ class HotelMixin:
                 error.code = HotelErrorCode.REQUIRED.value
                 raise ValidationError({"name": error})
 
+        """TODO remove `shipping` fields
         shipping_zones = cleaned_input.get("shipping_zones", [])
         if not validate_hotel_count(shipping_zones, instance):
             msg = "Shipping zone can be assigned only to one hotel."
             raise ValidationError(
                 {"shipping_zones": msg}, code=HotelErrorCode.INVALID
             )
+        """
         return cleaned_input
 
     @classmethod
@@ -79,6 +83,7 @@ class HotelCreate(HotelMixin, ModelMutation, I18nMixin):
         return address_form.save()
 
 
+"""TODO remove `shipping` fields
 class HotelShippingZoneAssign(HotelMixin, ModelMutation, I18nMixin):
     class Meta:
         model = models.Hotel
@@ -129,6 +134,7 @@ class HotelShippingZoneUnassign(HotelMixin, ModelMutation, I18nMixin):
         )
         hotel.shipping_zones.remove(*shipping_zones)
         return HotelShippingZoneAssign(hotel=hotel)
+"""
 
 
 class HotelUpdate(HotelMixin, ModelMutation, I18nMixin):

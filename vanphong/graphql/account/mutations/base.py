@@ -349,9 +349,11 @@ class UserAddressInput(graphene.InputObjectType):
     default_billing_address = AddressInput(
         description="Billing address of the customer."
     )
+    """TODO: remove `shipping` fields
     default_shipping_address = AddressInput(
         description="Shipping address of the customer."
     )
+    """
 
 
 class CustomerInput(UserInput, UserAddressInput):
@@ -380,10 +382,13 @@ class BaseCustomerCreate(ModelMutation, I18nMixin):
 
     @classmethod
     def clean_input(cls, info, instance, data):
+        """TODO: remove `shipping` fields
         shipping_address_data = data.pop(SHIPPING_ADDRESS_FIELD, None)
+        """
         billing_address_data = data.pop(BILLING_ADDRESS_FIELD, None)
         cleaned_input = super().clean_input(info, instance, data)
 
+        """TODO: remove `shipping` fields
         if shipping_address_data:
             shipping_address = cls.validate_address(
                 shipping_address_data,
@@ -391,6 +396,7 @@ class BaseCustomerCreate(ModelMutation, I18nMixin):
                 info=info,
             )
             cleaned_input[SHIPPING_ADDRESS_FIELD] = shipping_address
+        """
 
         if billing_address_data:
             billing_address = cls.validate_address(
@@ -414,6 +420,7 @@ class BaseCustomerCreate(ModelMutation, I18nMixin):
     @transaction.atomic
     def save(cls, info, instance, cleaned_input):
         # FIXME: save address in user.addresses as well
+        """TODO: remove `shipping` fields
         default_shipping_address = cleaned_input.get(SHIPPING_ADDRESS_FIELD)
         if default_shipping_address:
             default_shipping_address = info.context.plugins.change_user_address(
@@ -421,6 +428,7 @@ class BaseCustomerCreate(ModelMutation, I18nMixin):
             )
             default_shipping_address.save()
             instance.default_shipping_address = default_shipping_address
+        """
         default_billing_address = cleaned_input.get(BILLING_ADDRESS_FIELD)
         if default_billing_address:
             default_billing_address = info.context.plugins.change_user_address(

@@ -114,11 +114,13 @@ class Order(ModelWithMetadata):
     shipping_method_name = models.CharField(
         max_length=255, null=True, default=None, blank=True, editable=False
     )
+    """
     channel = models.ForeignKey(
         Channel,
         related_name="orders",
         on_delete=models.PROTECT,
     )
+    """TODO: remove `shipping` fields
     shipping_price_net_amount = models.DecimalField(
         max_digits=settings.DEFAULT_MAX_DIGITS,
         decimal_places=settings.DEFAULT_DECIMAL_PLACES,

@@ -17,8 +17,8 @@ from .mutations import (
     CheckoutLinesAdd,
     CheckoutLinesUpdate,
     CheckoutRemovePromoCode,
-    CheckoutShippingAddressUpdate,
-    CheckoutShippingMethodUpdate,
+    # CheckoutShippingAddressUpdate,
+    # CheckoutShippingMethodUpdate,
 )
 from .resolvers import resolve_checkout, resolve_checkout_lines, resolve_checkouts
 from .types import Checkout, CheckoutLine
@@ -75,5 +75,7 @@ class CheckoutMutations(graphene.ObjectType):
     checkout_lines_update = CheckoutLinesUpdate.Field()
     checkout_remove_promo_code = CheckoutRemovePromoCode.Field()
     checkout_payment_create = CheckoutPaymentCreate.Field()
+    """TODO: remove `shipping` fields
     checkout_shipping_address_update = CheckoutShippingAddressUpdate.Field()
     checkout_shipping_method_update = CheckoutShippingMethodUpdate.Field()
+    """
