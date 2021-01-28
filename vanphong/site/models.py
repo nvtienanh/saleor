@@ -45,9 +45,11 @@ class SiteSettings(models.Model):
     charge_taxes_on_shipping = models.BooleanField(default=True)
     """
     track_inventory_by_default = models.BooleanField(default=True)
+    """TODO: remove `weight` fields
     default_weight_unit = models.CharField(
         max_length=10, choices=WeightUnits.CHOICES, default=WeightUnits.KILOGRAM
     )
+    """
     automatic_fulfillment_digital_rooms = models.BooleanField(default=False)
     default_digital_max_downloads = models.IntegerField(blank=True, null=True)
     default_digital_url_valid_days = models.IntegerField(blank=True, null=True)

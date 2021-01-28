@@ -111,7 +111,9 @@ class RoomType(ModelWithMetadata):
     """TODO: remove `shipping` fields
     is_shipping_required = models.BooleanField(default=True)
     """
+    """TODO: remove `is_digital` fields
     is_digital = models.BooleanField(default=False)
+    """
     """ TODO: Remove fields related `weight`
     weight = MeasurementField(
         measurement=Weight, unit_choices=WeightUnits.CHOICES, default=zero_weight
@@ -501,8 +503,10 @@ class RoomVariant(SortableModel, ModelWithMetadata):
         return self.weight or self.room.weight or self.room.room_type.weight
     """
 
+    """ TODO: Remove fields related `shipping`
     def is_shipping_required(self) -> bool:
         return self.room.room_type.is_shipping_required
+    """
 
     def is_digital(self) -> bool:
         is_digital = self.room.room_type.is_digital
