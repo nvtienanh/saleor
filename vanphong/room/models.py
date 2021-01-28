@@ -108,7 +108,9 @@ class RoomType(ModelWithMetadata):
     name = models.CharField(max_length=250)
     slug = models.SlugField(max_length=255, unique=True, allow_unicode=True)
     has_variants = models.BooleanField(default=True)
+    """TODO: remove `shipping` fields
     is_shipping_required = models.BooleanField(default=True)
+    """
     is_digital = models.BooleanField(default=False)
     """ TODO: Remove fields related `weight`
     weight = MeasurementField(

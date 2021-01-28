@@ -92,15 +92,18 @@ class Order(ModelWithMetadata):
     billing_address = models.ForeignKey(
         Address, related_name="+", editable=False, null=True, on_delete=models.SET_NULL
     )
+    """TODO: remove `shipping` fields
     shipping_address = models.ForeignKey(
         Address, related_name="+", editable=False, null=True, on_delete=models.SET_NULL
     )
+    """
     user_email = models.EmailField(blank=True, default="")
 
     currency = models.CharField(
         max_length=settings.DEFAULT_CURRENCY_CODE_LENGTH,
     )
 
+    """TODO: remove `shipping` fields
     shipping_method = models.ForeignKey(
         ShippingMethod,
         blank=True,
@@ -144,6 +147,7 @@ class Order(ModelWithMetadata):
     shipping_tax_rate = models.DecimalField(
         max_digits=5, decimal_places=4, default=Decimal("0.0")
     )
+    """
 
     token = models.CharField(max_length=36, unique=True, blank=True)
     # Token of a checkout instance that this order was created from
@@ -385,7 +389,9 @@ class OrderLine(models.Model):
     translated_room_name = models.CharField(max_length=386, default="", blank=True)
     translated_variant_name = models.CharField(max_length=255, default="", blank=True)
     room_sku = models.CharField(max_length=255)
+    """TODO: remove `shipping` fields
     is_shipping_required = models.BooleanField()
+    """
     quantity = models.IntegerField(validators=[MinValueValidator(1)])
     quantity_fulfilled = models.IntegerField(
         validators=[MinValueValidator(0)], default=0

@@ -30,9 +30,11 @@ class Hotel(ModelWithMetadata):
     name = models.CharField(max_length=250)
     slug = models.SlugField(max_length=255, unique=True, allow_unicode=True)
     company_name = models.CharField(blank=True, max_length=255)
+    """TODO: remove `shipping` fields
     shipping_zones = models.ManyToManyField(
         ShippingZone, blank=True, related_name="hotels"
     )
+    """
     address = models.ForeignKey(Address, on_delete=models.PROTECT)
     email = models.EmailField(blank=True, default="")
 

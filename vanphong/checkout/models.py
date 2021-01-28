@@ -57,6 +57,7 @@ class Checkout(ModelWithMetadata):
     billing_address = models.ForeignKey(
         Address, related_name="+", editable=False, null=True, on_delete=models.SET_NULL
     )
+    """TODO: remove `shipping` fields
     shipping_address = models.ForeignKey(
         Address, related_name="+", editable=False, null=True, on_delete=models.SET_NULL
     )
@@ -67,6 +68,7 @@ class Checkout(ModelWithMetadata):
         related_name="checkouts",
         on_delete=models.SET_NULL,
     )
+    """
     note = models.TextField(blank=True, default="")
 
     currency = models.CharField(

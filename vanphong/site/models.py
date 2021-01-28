@@ -41,7 +41,9 @@ class SiteSettings(models.Model):
     )
     include_taxes_in_prices = models.BooleanField(default=True)
     display_gross_prices = models.BooleanField(default=True)
+    """TODO: remove `shipping` fields
     charge_taxes_on_shipping = models.BooleanField(default=True)
+    """
     track_inventory_by_default = models.BooleanField(default=True)
     default_weight_unit = models.CharField(
         max_length=10, choices=WeightUnits.CHOICES, default=WeightUnits.KILOGRAM
