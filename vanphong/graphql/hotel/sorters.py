@@ -5,6 +5,7 @@ from ..core.types import SortInputObjectType
 
 class HotelSortField(graphene.Enum):
     NAME = ["name", "slug"]
+    RATING = ["star_rating"]
 
     @property
     def description(self):

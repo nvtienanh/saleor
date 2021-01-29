@@ -519,6 +519,69 @@ def create_address(save=True):
     return address
 
 
+def create_hotel_address(save=True):
+    street_address_1 = [
+        '132-134 Đồng Khởi, Bến Nghé, Quận 1',
+        '3A Võ Văn Tần, Phường 6, Quận 3',
+        '90 Nguyễn Thị Minh Khai, Phường 6, Quận 3',
+        '19bis Nguyễn Thị Minh Khai, Bến Nghé, Quận 1',
+        '167 Hai Bà Trưng, Phường 6, Quận 3',
+        '204 Nguyễn Thị Minh Khai, Phường 6, Quận 3',
+        '263 Lê Hồng Phong, Phường Thắng Tam, Thành phố Vũng Tàu',
+        '2 Trương Công Định, Phường 1, Thành phố Vũng Tàu',
+        '03-05 Thùy Vân, Phường 2, Thành phố Vũng Tàu',
+        '66/15 Hạ Long, Phường 2, Thành phố Vũng Tàu',
+        '36 Bạch Đằng, Street, Hải Châu',
+        '68 Phan Châu Trinh, Hải Châu 1, Hải Châu',
+        '50 Bạch Đằng, Hải Châu 1, Hải Châu',
+        '2 Ông Ích Khiêm, Thanh Bình, Hải Châu',
+        '684 Phố Minh Khai, Vĩnh Phú, Hai Bà Trưng',
+        '64 Nguyễn Lương Bằng, Chợ Dừa, Đống Đa',
+        '120 P. Trung Kính, Yên Hoà, Cầu Giấy',
+        'Ngõ 89, C34, Đường Lê Đức Thọ, Mỹ Đình, Nam Từ Liêm'
+    ]
+
+    city = [
+        'Hồ Chí Minh',
+        'Hồ Chí Minh',
+        'Hồ Chí Minh',
+        'Hồ Chí Minh',
+        'Hồ Chí Minh',
+        'Hồ Chí Minh',
+        'Bà Rịa - Vũng Tàu',
+        'Bà Rịa - Vũng Tàu',
+        'Bà Rịa - Vũng Tàu',
+        'Bà Rịa - Vũng Tàu',
+        'Đà Nẵng',
+        'Đà Nẵng',
+        'Đà Nẵng',
+        'Đà Nẵng',
+        'Hà Nội',
+        'Hà Nội',
+        'Hà Nội',
+        'Hà Nội'
+    ]
+    idx = random.randint(0, len(city) - 1)
+    address = Address(
+        first_name=fake.first_name(),
+        last_name=fake.last_name(),
+        street_address_1=street_address_1[idx],
+        city=city[idx],
+        country='VN',
+    )
+
+    if address.country == "US":
+        state = fake.state_abbr()
+        address.country_area = state
+        address.postal_code = fake.postalcode_in_state(state)
+    else:
+        address.postal_code = fake.postalcode()
+
+    if save:
+        address.save()
+    return address
+
+
 def create_fake_user(save=True):
     address = create_address(save=save)
     email = get_email(address.first_name, address.last_name)
@@ -1193,14 +1256,78 @@ def create_shipping_zones():
 
 
 def create_hotels():
-    for shipping_zone in ShippingZone.objects.all():
-        shipping_zone_name = shipping_zone.name
+    names = [
+        'Hotel Continental Saigon',
+        'Aristo Saigon Hotel',
+        'Orchids Saigon Hotel',
+        'Au Lac Legend Hotel',
+        'Cozrum Homes Citi Town',
+        'Novotel Saigon Centre',
+        'Saigon Star Hotel',
+    ]
+    images = [
+        'https://pix6.agoda.net/hotelImages/109/10972/10972_14012411520018144641.jpg',
+        'https://pix6.agoda.net/hotelImages/119/1196034/1196034_16081010180045359950.jpg',
+        'https://pix6.agoda.net/hotelImages/5753815/-1/de9c0cc37280dd5c4fc3e0a81d776631.jpg',
+        'https://pix6.agoda.net/hotelImages/6262380/-1/ce89fd3eaa2e9d6b918e3d052a6888cb.jpg',
+        'https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/67768503-e8e43dd99e73dfb303794c64d964981b.jpeg',
+        'https://pix6.agoda.net/hotelImages/7540317/0/34b33d8dd4c28699b35d06ba5f8bcb8c.jpg',
+        'https://pix6.agoda.net/hotelImages/10992/-1/884ce6426c8bd29d2199f34cb5408b9d.jpg'
+    ]
+    latlngs = [
+        [10.7769109, 106.7026179],
+        [10.7809692, 106.6947739],
+        [10.7810773, 106.6933553],
+        [10.7808795, 106.6937646],
+        [10.7847721, 106.698172],
+        [10.7843214, 106.6936914],
+        [10.775316, 106.6884047],
+    ]
+    payments = [
+        'Không cần trả trước',
+        'Thanh toán online giảm 5%',
+        'Hoàn tiền miễn phí',
+    ]
+    details = [
+        'Có hồ bơi, phòng gym miễn phí',
+        'Phục vụ ăn sáng miễn phí',
+        'Có xe đưa đón sân bay',
+        'Có dịch vụ massage và xông hơi',
+    ]
+    distances = [
+        'Cách phó đi bộ 200 m',
+        'Gần sân bay (3km)',
+        '10 phút xe buýt đến trung tâm',
+        'Gần trung tâm mua sắm',
+    ]
+    idx = 0
+    for hotel in names:
+        hotel_name = names[idx]
+        hotel_image = images[idx]
+
+        defaults={
+                "company_name": fake.company(),
+                "currency": "USD",
+                "address": create_hotel_address(),
+                "image_url": hotel_image,
+                "star_rating": random.randint(1, 5),
+                "latitude": latlngs[idx][0],
+                "longitude": latlngs[idx][1],
+                "price_per_hour_amount": Decimal(random.randint(2, 7)),
+                "price_per_night_amount": Decimal(random.randint(9, 30)),
+                "email": fake.email(),
+                "payment": random.choice(payments),
+                "detail": random.choice(details),
+                "distance": random.choice(distances),
+            }
+        set_field_as_money(defaults, "price_per_night")
+        set_field_as_money(defaults, "price_per_hour")
         hotel, _ = Hotel.objects.update_or_create(
-            name=shipping_zone_name,
-            slug=slugify(shipping_zone_name),
-            defaults={"company_name": fake.company(), "address": create_address()},
+            name=hotel_name,
+            slug=slugify(hotel_name),
+            defaults=defaults,
         )
-        hotel.shipping_zones.add(shipping_zone)
+        idx = idx + 1
 
 
 def create_vouchers():

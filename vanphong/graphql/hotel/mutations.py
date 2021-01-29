@@ -4,11 +4,14 @@ from django.core.exceptions import ValidationError
 from ...core.permissions import RoomPermissions
 from ...hotel import models
 from ...hotel.error_codes import HotelErrorCode
+from ...hotel.thumbnails import create_hotel_cover_image_thumbnails
 from ...hotel.validation import validate_hotel_count  # type: ignore
 from ..account.i18n import I18nMixin
-from ..core.mutations import ModelDeleteMutation, ModelMutation
+from ..core.mutations import BaseMutation, ModelDeleteMutation, ModelMutation
+from ..core.types import Upload
 from ..core.types.common import HotelError
 from ..core.utils import (
+    validate_image_file,
     validate_required_string_field,
     validate_slug_and_generate_if_needed,
 )
@@ -81,6 +84,74 @@ class HotelCreate(HotelMixin, ModelMutation, I18nMixin):
     def prepare_address(cls, cleaned_data, *args):
         address_form = cls.validate_address_form(cleaned_data["address"])
         return address_form.save()
+
+
+class HotelCoverImageUpdate(BaseMutation):
+    hotel = graphene.Field(Hotel, description="An updated hotel instance.")
+
+    class Arguments:
+        image = Upload(
+            required=True,
+            description="Represents an image file in a multipart request.",
+        )
+        hotel = graphene.ID(
+            required=True, description="ID of a hotel.", name="hotel"
+        )
+
+    class Meta:
+        # TODO: Change permission
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        description = (
+            "Create a hotel cover image. Only for staff members. This mutation must be sent "
+            "as a `multipart` request. More detailed specs of the upload format can be "
+            "found here: https://github.com/jaydenseric/graphql-multipart-request-spec"
+        )
+        error_type_class = HotelError
+        error_type_field = "hotel_errors"
+
+    @classmethod
+    def perform_mutation(cls, _root, info, image, hotel):
+        hotel_id = hotel
+        hotel = cls.get_node_or_error(
+            info, hotel_id, field="hotel", only_type=Hotel
+        )
+        image_data = info.context.FILES.get(image)
+        validate_image_file(image_data, "image")
+
+        if hotel.cover_image:
+            hotel.cover_image.delete_sized_images()
+            hotel.cover_image.delete()
+        hotel.cover_image = image_data
+        hotel.save()
+        create_hotel_cover_image_thumbnails.delay(hotel_id=hotel.pk)
+
+        return HotelCoverImageUpdate(hotel=hotel)
+
+
+class HotelCoverImageDelete(BaseMutation):
+    hotel = graphene.Field(Hotel, description="An updated hotel instance.")
+
+    class Arguments:
+        hotel = graphene.ID(
+            required=True, description="ID of a hotel.", name="hotel"
+        )
+
+    class Meta:
+        description = "Deletes a hotel cover image."
+        # TODO: Change permission
+        permissions = (RoomPermissions.MANAGE_ROOMS,)
+        error_type_class = HotelError
+        error_type_field = "hotel_errors"
+
+    @classmethod
+    def perform_mutation(cls, _root, info, hotel):
+        hotel_id = hotel
+        hotel = cls.get_node_or_error(
+            info, hotel_id, field="hotel", only_type=Hotel
+        )
+        hotel.cover_image.delete_sized_images()
+        hotel.cover_image.delete()
+        return HotelCoverImageDelete(hotel=hotel)
 
 
 """TODO remove `shipping` fields

@@ -2,9 +2,12 @@ import itertools
 import uuid
 from typing import Set
 
+from django.conf import settings
 from django.db import models
 from django.db.models import F, Sum
 from django.db.models.functions import Coalesce
+from django_prices.models import MoneyField
+from versatileimagefield.fields import VersatileImageField
 
 from ..account.models import Address
 from ..core.models import ModelWithMetadata
@@ -38,10 +41,44 @@ class Hotel(ModelWithMetadata):
     address = models.ForeignKey(Address, on_delete=models.PROTECT)
     email = models.EmailField(blank=True, default="")
 
-    objects = HotelQueryset.as_manager()
+    star_rating = models.PositiveIntegerField(blank=True, default=2)
+
+    # Location on Maps (latitude and longitude)
+    latitude = models.FloatField(null=True)
+    longitude = models.FloatField(null=True)
+    # images = models.ManyToManyField("HotelImage", through="HotelImages")
+
+    distance = models.TextField(null=True, blank=True, default="")
+    payment = models.TextField(null=True, blank=True, default="")
+    image_url = models.TextField(null=True, blank=True, default="")
+    detail = models.TextField(null=True, blank=True, default="")
+
+    currency = models.CharField(
+        max_length=settings.DEFAULT_CURRENCY_CODE_LENGTH,
+        default=settings.DEFAULT_CURRENCY,
+    )
+
+    price_per_hour_amount = models.DecimalField(
+        default=0.0,
+        max_digits=settings.DEFAULT_MAX_DIGITS,
+        decimal_places=settings.DEFAULT_DECIMAL_PLACES,
+    )
+    price_per_hour = MoneyField(amount_field="price_per_hour_amount", currency_field="currency")
+
+    price_per_night_amount = models.DecimalField(
+        default=0.0,
+        max_digits=settings.DEFAULT_MAX_DIGITS,
+        decimal_places=settings.DEFAULT_DECIMAL_PLACES,
+    )
+    price_per_night = MoneyField(amount_field="price_per_night_amount", currency_field="currency")
+
+    cover_image = VersatileImageField(upload_to="hotel-cover-images", blank=True, null=True)
+
+    # objects = HotelQueryset.as_manager()
 
     class Meta:
-        ordering = ("-slug",)
+        app_label = "hotel"
+        ordering = ("-name",)
 
     def __str__(self):
         return self.name
@@ -57,6 +94,7 @@ class Hotel(ModelWithMetadata):
         address.delete()
 
 
+# TODO remove `Stock` object
 class StockQuerySet(models.QuerySet):
     def annotate_available_quantity(self):
         return self.annotate(
@@ -89,6 +127,7 @@ class StockQuerySet(models.QuerySet):
         )
 
 
+# TODO: remove Stock object
 class Stock(models.Model):
     hotel = models.ForeignKey(Hotel, null=False, on_delete=models.CASCADE)
     room_variant = models.ForeignKey(

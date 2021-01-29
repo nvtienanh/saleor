@@ -6,6 +6,8 @@ from ..core.fields import FilterInputConnectionField
 from ..decorators import one_of_permissions_required, permission_required
 from .filters import StockFilterInput, HotelFilterInput
 from .mutations import (
+    HotelCoverImageDelete,
+    HotelCoverImageUpdate,
     HotelCreate,
     HotelDelete,
     # HotelShippingZoneAssign,
@@ -50,6 +52,8 @@ class HotelMutations(graphene.ObjectType):
     create_hotel = HotelCreate.Field()
     update_hotel = HotelUpdate.Field()
     delete_hotel = HotelDelete.Field()
+    hotel_cover_image_update = HotelCoverImageUpdate.Field()
+    hotel_cover_image_delete = HotelCoverImageDelete.Field()
     """TODO remove `shipping` fields
     assign_hotel_shipping_zone = HotelShippingZoneAssign.Field()
     unassign_hotel_shipping_zone = HotelShippingZoneUnassign.Field()
